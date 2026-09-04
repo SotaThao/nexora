@@ -259,6 +259,10 @@ export const qk = {
     return key
   },
   staffWorkOrderDetail: (orderId?: string) => ['staffWorkOrders', 'detail', orderId ?? ''],
+  // Under the same root so one invalidation after a save refreshes the picker too — a service the
+  // owner just retired must stop being offered.
+  staffWorkOrderServiceCatalog: (orderId?: string) =>
+    ['staffWorkOrders', 'serviceCatalog', orderId ?? ''],
   staffClockScanPreview: (businessId?: string, token?: string) =>
     ['staffClockScanPreview', businessId ?? '', token ?? ''],
   // POS Merchant Ops — Checkout (US-14 / US-025, refactored to Order in US-026)
@@ -305,6 +309,30 @@ export const qk = {
 
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],
+
+  // Merchant OneQR (one master QR per business)
+  merchantOneQr: ()            => ['merchantOneQr'],
+  // Deliberately NOT nested under `merchantOneQr`: the module catalog is static
+  // registry data, not part of the business's OneQR record. Nesting it would
+  // make every save/toggle invalidation refetch it for no reason.
+  merchantOneQrModuleCatalog: () => ['merchantOneQrModuleCatalog'],
+
+  // Public OneQR landing. `authMode` sits in the key because the same slug
+  // renders a different audience once a session exists — signing in/out must
+  // refetch rather than reuse the anonymous Customer view.
+  publicOneQrLanding: (
+    businessSlug?: string | null,
+    sessionId?: string | null,
+    authMode?: string | null,
+    // Raw `?as=` value — each requested view is a distinct server response.
+    viewAs?: string | null,
+  ) => [
+    'publicOneQrLanding',
+    businessSlug ?? '',
+    sessionId ?? '',
+    authMode ?? '',
+    viewAs ?? '',
+  ],
 
   // Merchant Physical Cards (QR/NFC hardware)
   merchantPhysicalCards: (filters = EMPTY) => ['merchantPhysicalCards', filters],

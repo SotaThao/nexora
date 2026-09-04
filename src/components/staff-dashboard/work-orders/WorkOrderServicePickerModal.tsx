@@ -10,6 +10,7 @@ import {
 import {
   WORK_ORDER_PICKER_MODE,
   filterWorkOrderCatalogCategories,
+  type WorkOrderCatalogCategory,
   type WorkOrderCatalogService,
   type WorkOrderPickerMode,
 } from './workOrderServiceCatalog'
@@ -19,6 +20,8 @@ import { formatWorkOrderDurationMinutes, formatWorkOrderMoney } from './workOrde
 interface WorkOrderServicePickerModalProps {
   mode: WorkOrderPickerMode
   initialServiceId?: string
+  categories: WorkOrderCatalogCategory[]
+  isLoading?: boolean
   onConfirm: (service: WorkOrderCatalogService) => void
   onClose: () => void
 }
@@ -26,6 +29,8 @@ interface WorkOrderServicePickerModalProps {
 export default function WorkOrderServicePickerModal({
   mode,
   initialServiceId = '',
+  categories: catalog,
+  isLoading = false,
   onConfirm,
   onClose,
 }: WorkOrderServicePickerModalProps) {
@@ -33,7 +38,7 @@ export default function WorkOrderServicePickerModal({
   const isEdit = mode === WORK_ORDER_PICKER_MODE.edit
   const [query, setQuery] = useState('')
   const [selectedId, setSelectedId] = useState(initialServiceId)
-  const categories = useMemo(() => filterWorkOrderCatalogCategories(query), [query])
+  const categories = useMemo(() => filterWorkOrderCatalogCategories(query, catalog), [query, catalog])
   const selected = useMemo(
     () => categories.flatMap((category) => category.services).find((service) => service.id === selectedId),
     [categories, selectedId],
@@ -65,6 +70,12 @@ export default function WorkOrderServicePickerModal({
         </>
       )}
     >
+      {isEdit ? (
+        <p className={WORK_ORDERS_LAYOUT_CLASS.approvalHelp}>
+          {t(WORK_ORDERS_I18N.removeAddOnWarning)}
+        </p>
+      ) : null}
+
       <label className={WORK_ORDERS_LAYOUT_CLASS.pickerSearchWrap}>
         <Search className={WORK_ORDERS_LAYOUT_CLASS.pickerSearchIcon} aria-hidden="true" />
         <input
@@ -78,7 +89,9 @@ export default function WorkOrderServicePickerModal({
       </label>
 
       {categories.length === 0 ? (
-        <p className={WORK_ORDERS_LAYOUT_CLASS.pickerEmpty}>{t(WORK_ORDERS_I18N.pickerEmpty)}</p>
+        <p className={WORK_ORDERS_LAYOUT_CLASS.pickerEmpty}>
+          {t(pickerEmptyKey(isLoading, catalog.length, query))}
+        </p>
       ) : (
         <div className={WORK_ORDERS_LAYOUT_CLASS.pickerList}>
           {categories.map((category) => (
@@ -116,4 +129,12 @@ export default function WorkOrderServicePickerModal({
       )}
     </WorkOrderModalFrame>
   )
+}
+
+// "No match" and "nothing to offer at all" are different answers: the second one means the owner
+// has not set this technician up for any service yet, which searching harder will never fix.
+function pickerEmptyKey(isLoading: boolean, catalogSize: number, query: string): string {
+  if (isLoading) return WORK_ORDERS_I18N.pickerLoading
+  if (catalogSize === 0) return WORK_ORDERS_I18N.pickerNoneAssignable
+  return query.trim() ? WORK_ORDERS_I18N.pickerEmpty : WORK_ORDERS_I18N.pickerNoneAssignable
 }

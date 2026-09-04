@@ -99,10 +99,52 @@ export function formatWorkOrderMonthLabel(year: number, month: number, language:
     .format(new Date(year, month - 1, 1))
 }
 
-export function formatWorkOrderCheckedInAt(iso: string, language: string): string {
+export function formatWorkOrderCheckedInAt(
+  iso: string,
+  language: string,
+  timeZone?: string | null,
+): string {
   const date = parseApiUtcDateTime(iso)
   if (!date) return ''
-  return formatTimePart(date, isWorkOrderVietnamese(language))
+  return formatTimePart(salonWallClockDate(date, timeZone), isWorkOrderVietnamese(language))
+}
+
+const SALON_CLOCK_ANCHOR_YEAR = 2000
+const SALON_CLOCK_ANCHOR_MONTH = 0
+const SALON_CLOCK_ANCHOR_DAY = 1
+
+function anchoredClockDate(hour: number, minute: number): Date {
+  return new Date(
+    SALON_CLOCK_ANCHOR_YEAR,
+    SALON_CLOCK_ANCHOR_MONTH,
+    SALON_CLOCK_ANCHOR_DAY,
+    hour,
+    minute,
+  )
+}
+
+/**
+ * Re-anchor a UTC instant (`checkedInAt`) onto the salon's wall clock so it reads the same on a
+ * technician's phone in any timezone. Without `timeZone` it falls back to the device zone.
+ */
+function salonWallClockDate(date: Date, timeZone?: string | null): Date {
+  const zone = timeZone?.trim()
+  if (!zone) return date
+  try {
+    const parts = new Intl.DateTimeFormat(WORK_ORDER_DATE_LOCALE.en, {
+      timeZone: zone,
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).formatToParts(date)
+    const get = (type: string) => Number(parts.find((part) => part.type === type)?.value ?? '')
+    const hour = get('hour')
+    const minute = get('minute')
+    if (!Number.isFinite(hour) || !Number.isFinite(minute)) return date
+    return anchoredClockDate(hour, minute)
+  } catch {
+    return date
+  }
 }
 
 const WALL_CLOCK_TIME = /T(\d{2}):(\d{2})/
@@ -121,8 +163,9 @@ export function formatWorkOrderWallClockTime(iso: string, language?: string): st
 export function formatWorkOrderTicketTime(
   ticket: { scheduledAt?: string | null; checkedInAt: string },
   language: string,
+  timeZone?: string | null,
 ): string {
-  const clock = formatWorkOrderTicketClock(ticket, language)
+  const clock = formatWorkOrderTicketClock(ticket, language, timeZone)
   if (clock.value === WORK_ORDER_EMPTY_PLACEHOLDER) return WORK_ORDER_EMPTY_PLACEHOLDER
   return `${clock.value} ${clock.period}`
 }
@@ -131,18 +174,24 @@ export type WorkOrderClockParts = { value: string; period: string }
 
 function ticketClockDate(
   ticket: { scheduledAt?: string | null; checkedInAt: string },
+  timeZone?: string | null,
 ): Date | null {
-  const iso = ticket.scheduledAt?.trim() || ticket.checkedInAt
-  const match = WALL_CLOCK_TIME.exec(iso)
-  if (match) return new Date(2000, 0, 1, Number(match[1]), Number(match[2]))
-  return parseApiUtcDateTime(iso)
+  const scheduled = ticket.scheduledAt?.trim()
+  if (scheduled) {
+    // The API already returns ScheduledAt with the salon's offset — read the wall clock as-is.
+    const match = WALL_CLOCK_TIME.exec(scheduled)
+    if (match) return anchoredClockDate(Number(match[1]), Number(match[2]))
+  }
+  const checkedIn = parseApiUtcDateTime(ticket.checkedInAt)
+  return checkedIn ? salonWallClockDate(checkedIn, timeZone) : null
 }
 
 export function formatWorkOrderTicketClock(
   ticket: { scheduledAt?: string | null; checkedInAt: string },
   language: string,
+  timeZone?: string | null,
 ): WorkOrderClockParts {
-  const date = ticketClockDate(ticket)
+  const date = ticketClockDate(ticket, timeZone)
   if (!date) {
     return { value: WORK_ORDER_EMPTY_PLACEHOLDER, period: WORK_ORDER_EMPTY_PLACEHOLDER }
   }
@@ -186,17 +235,21 @@ export function workOrderTicketMatchesFilter(
   return WORK_ORDER_FILTER_STATUSES[filter].includes(status)
 }
 
-export function workOrderTicketRank(ticket: WorkOrderListItem): number {
-  const iso = ticket.scheduledAt?.trim() || ticket.checkedInAt
-  const match = WALL_CLOCK_TIME.exec(iso)
-  if (match) return Number(match[1]) * 60 + Number(match[2])
-  const date = parseApiUtcDateTime(iso)
+const MINUTES_PER_HOUR = 60
+
+export function workOrderTicketRank(ticket: WorkOrderListItem, timeZone?: string | null): number {
+  const date = ticketClockDate(ticket, timeZone)
   if (!date) return 0
-  return date.getHours() * 60 + date.getMinutes()
+  return date.getHours() * MINUTES_PER_HOUR + date.getMinutes()
 }
 
-export function sortWorkOrderTicketsByTime(tickets: WorkOrderListItem[]): WorkOrderListItem[] {
-  return tickets.slice().sort((left, right) => workOrderTicketRank(left) - workOrderTicketRank(right))
+export function sortWorkOrderTicketsByTime(
+  tickets: WorkOrderListItem[],
+  timeZone?: string | null,
+): WorkOrderListItem[] {
+  return tickets
+    .slice()
+    .sort((left, right) => workOrderTicketRank(left, timeZone) - workOrderTicketRank(right, timeZone))
 }
 
 export function newestAssignedWorkOrder(

@@ -1,5 +1,8 @@
 import { PosOrderStatus } from '../../../constants/posOrderStatus'
+import type { StaffWorkOrderCatalogItem } from '../../../data/repositories/staffWorkOrders'
+import type { SaveStaffWorkOrderServiceLinePayload } from '../../../types/repositories'
 import { PosOrderItemStatus } from '../../../constants/posOrderItemStatus'
+
 import type { WorkOrderItem } from './constants'
 
 export const WORK_ORDER_SERVICE_APPROVAL = {
@@ -27,6 +30,8 @@ export type WorkOrderCatalogCategory = {
 export type WorkOrderEditableLine = {
   key: string
   id?: string
+  /** Null on a custom (off-menu) line, which travels as name + price instead. */
+  posServiceId?: string | null
   serviceName: string
   unitPrice: number
   durationMinutes: number
@@ -38,8 +43,8 @@ export type WorkOrderEditableLine = {
 }
 
 export const WORK_ORDER_CUSTOM_SERVICE_DEFAULT_DURATION = 30
-export const WORK_ORDER_CUSTOM_SERVICE_MAX_DURATION = 999
-export const WORK_ORDER_CUSTOM_SERVICE_MAX_PRICE = 9999.99
+export const WORK_ORDER_CUSTOM_SERVICE_MAX_DURATION = 10000
+export const WORK_ORDER_CUSTOM_SERVICE_MAX_PRICE = 10000
 export const WORK_ORDER_APPROVAL_CODE_LENGTH = 4
 export const WORK_ORDER_PICKER_MODE = {
   add: 'add',
@@ -81,6 +86,7 @@ export const WORK_ORDER_MOCK_SERVICE_CATEGORIES: WorkOrderCatalogCategory[] = [
 ]
 
 const LOCAL_LINE_PREFIX = 'wo-local-'
+const UNCATEGORIZED_ID = 'uncategorized'
 
 function nextLocalLineKey(): string {
   return `${LOCAL_LINE_PREFIX}${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
@@ -100,6 +106,7 @@ export function toWorkOrderEditableLines(items: WorkOrderItem[]): WorkOrderEdita
   return items.map((item, index) => ({
     key: item.id || `api-${index}`,
     id: item.id,
+    posServiceId: item.posServiceId,
     serviceName: item.serviceName,
     unitPrice: item.lineTotal || item.unitPrice,
     durationMinutes: item.durationMinutes,
@@ -205,6 +212,42 @@ export function workOrderHasInServiceService(lines: WorkOrderEditableLine[]): bo
   return parentLineHasStatus(lines, PosOrderItemStatus.Started)
 }
 
+// find something, not a statement about where a service "really" belongs. Anything with no category
+// still has to be reachable, hence the trailing bucket.
+export function buildWorkOrderCatalogCategories(
+  items: StaffWorkOrderCatalogItem[],
+  uncategorizedLabel: string,
+): WorkOrderCatalogCategory[] {
+  const byCategory = new Map<string, WorkOrderCatalogCategory>()
+
+  items.forEach((item) => {
+    const service: WorkOrderCatalogService = {
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      durationMin: item.durationMinutes,
+    }
+    const categories = item.categories.length > 0
+      ? item.categories
+      : [{ id: UNCATEGORIZED_ID, name: uncategorizedLabel }]
+
+    categories.forEach((category) => {
+      const existing = byCategory.get(category.id)
+      if (existing) {
+        existing.services.push(service)
+        return
+      }
+      byCategory.set(category.id, { id: category.id, name: category.name, services: [service] })
+    })
+  })
+
+  return [...byCategory.values()].sort((a, b) => {
+    if (a.id === UNCATEGORIZED_ID) return 1
+    if (b.id === UNCATEGORIZED_ID) return -1
+    return a.name.localeCompare(b.name)
+  })
+}
+
 /**
  * One ticket footer action, from the lowest parent-line status that still needs work.
  * Assigned beats In Service: a ticket with both only shows Start Service.
@@ -241,7 +284,7 @@ export function matchWorkOrderCatalogServiceByName(
 
 export function filterWorkOrderCatalogCategories(
   query: string,
-  categories: WorkOrderCatalogCategory[] = WORK_ORDER_MOCK_SERVICE_CATEGORIES,
+  categories: WorkOrderCatalogCategory[],
 ): WorkOrderCatalogCategory[] {
   const needle = query.trim().toLowerCase()
   if (!needle) return categories
@@ -258,16 +301,20 @@ export function filterWorkOrderCatalogCategories(
 
 function lineFromCatalog(
   service: WorkOrderCatalogService,
-  extras?: Pick<WorkOrderEditableLine, 'key' | 'technicianName' | 'isAddOn'>,
+  extras?: Pick<WorkOrderEditableLine, 'key' | 'id' | 'technicianName' | 'isAddOn' | 'lineStatus' | 'isMine'>,
 ): WorkOrderEditableLine {
   return {
     key: extras?.key ?? nextLocalLineKey(),
+    id: extras?.id,
+    posServiceId: service.id,
     serviceName: service.name,
     unitPrice: service.price,
     durationMinutes: service.durationMin,
     isAddOn: extras?.isAddOn ?? false,
     technicianName: extras?.technicianName ?? null,
     approval: WORK_ORDER_SERVICE_APPROVAL.pending,
+    lineStatus: extras?.lineStatus,
+    isMine: extras?.isMine,
   }
 }
 
@@ -278,6 +325,8 @@ export function addWorkOrderCatalogService(
   return [...lines, lineFromCatalog(service)]
 }
 
+// Keeps the line's identity (id/key) so the save swaps the existing service rather than deleting
+// the line and adding another one, which would throw away its place on the ticket.
 export function replaceWorkOrderCatalogService(
   lines: WorkOrderEditableLine[],
   key: string,
@@ -287,25 +336,40 @@ export function replaceWorkOrderCatalogService(
     if (line.key !== key) return line
     return lineFromCatalog(service, {
       key: line.key,
+      id: line.id,
       technicianName: line.technicianName,
       isAddOn: line.isAddOn,
+      lineStatus: line.lineStatus,
+      isMine: line.isMine,
     })
   })
 }
 
 export function addWorkOrderCustomService(
   lines: WorkOrderEditableLine[],
-  input: { name: string; price: number; durationMinutes: number },
+  input: { name: string; price: number },
 ): WorkOrderEditableLine[] {
   return [
     ...lines,
-    lineFromCatalog({
-      id: nextLocalLineKey(),
-      name: input.name,
-      price: input.price,
-      durationMin: input.durationMinutes,
-    }),
+    {
+      key: nextLocalLineKey(),
+      posServiceId: null,
+      serviceName: input.name,
+      unitPrice: input.price,
+      // No duration is stored for an off-menu line, so the row shows a placeholder instead of "0m".
+      durationMinutes: 0,
+      isAddOn: false,
+      technicianName: null,
+      approval: WORK_ORDER_SERVICE_APPROVAL.pending,
+    },
   ]
+}
+
+export function removeWorkOrderServiceLine(
+  lines: WorkOrderEditableLine[],
+  key: string,
+): WorkOrderEditableLine[] {
+  return lines.filter((line) => line.key !== key)
 }
 
 export function markWorkOrderLinePending(
@@ -328,50 +392,42 @@ export function setWorkOrderPendingApproval(
   ))
 }
 
-export function parseWorkOrderLast4(value: string): string {
-  return value.replace(/\D/g, '').slice(0, WORK_ORDER_APPROVAL_CODE_LENGTH)
+// The technician's own parent lines, exactly as they now stand. A line of theirs that is missing
+// here is what tells the server to remove it, so add-ons and other technicians' lines must never
+// be included — leaving one out would be read as "delete it".
+export function toSaveWorkOrderServiceLinesPayload(
+  lines: WorkOrderEditableLine[],
+): SaveStaffWorkOrderServiceLinePayload[] {
+  return lines
+    .filter((line) => !line.isAddOn && line.isMine !== false)
+    .map((line) => (
+      line.posServiceId
+        ? { id: line.id ?? null, posServiceId: line.posServiceId }
+        : { id: line.id ?? null, customServiceName: line.serviceName, price: line.unitPrice }
+    ))
 }
 
-export function clampWorkOrderDurationInput(raw: string): string {
-  const digits = raw.replace(/\D/g, '').slice(0, String(WORK_ORDER_CUSTOM_SERVICE_MAX_DURATION).length)
-  if (!digits) return ''
-  const value = Number(digits)
-  if (!Number.isFinite(value) || value <= 0) return digits
-  return String(Math.min(WORK_ORDER_CUSTOM_SERVICE_MAX_DURATION, value))
+export function parseWorkOrderLast4(value: string): string {
+  return value.replace(/\D/g, '').slice(0, WORK_ORDER_APPROVAL_CODE_LENGTH)
 }
 
 export function clampWorkOrderPriceInput(raw: string): string {
   const cleaned = raw.replace(/[^\d.]/g, '')
   if (!cleaned) return ''
   const [whole = '', ...fractionParts] = cleaned.split('.')
-  const wholeCapped = whole.slice(0, 4)
+  const wholeCapped = whole.slice(0, String(WORK_ORDER_CUSTOM_SERVICE_MAX_PRICE).length)
   if (fractionParts.length === 0) return wholeCapped
   return `${wholeCapped}.${fractionParts.join('').slice(0, 2)}`
 }
 
-export function isValidCustomWorkOrderService(input: {
-  name: string
-  price: number
-  durationMinutes: number
-}): boolean {
+export function isValidCustomWorkOrderService(input: { name: string; price: number }): boolean {
   return Boolean(input.name.trim())
     && Number.isFinite(input.price)
-    && input.price >= 0
+    && input.price > 0
     && input.price <= WORK_ORDER_CUSTOM_SERVICE_MAX_PRICE
-    && Number.isFinite(input.durationMinutes)
-    && input.durationMinutes > 0
-    && input.durationMinutes <= WORK_ORDER_CUSTOM_SERVICE_MAX_DURATION
 }
 
-export function canSubmitCustomWorkOrderService(raw: {
-  name: string
-  price: string
-  duration: string
-}): boolean {
-  if (!raw.name.trim() || !raw.price.trim() || !raw.duration.trim()) return false
-  return isValidCustomWorkOrderService({
-    name: raw.name,
-    price: Number(raw.price),
-    durationMinutes: Number(raw.duration),
-  })
+export function canSubmitCustomWorkOrderService(raw: { name: string; price: string }): boolean {
+  if (!raw.name.trim() || !raw.price.trim()) return false
+  return isValidCustomWorkOrderService({ name: raw.name, price: Number(raw.price) })
 }

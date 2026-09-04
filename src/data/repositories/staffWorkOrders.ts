@@ -8,6 +8,8 @@ import httpClient from '../../lib/httpClient'
 import { PosOrderStatus } from '../../constants/posOrderStatus'
 import type {
   CompleteStaffWorkOrderServicePayload,
+  SaveStaffWorkOrderServiceLinesPayload,
+  StaffWorkOrderCatalogItemApiDto,
   StaffWorkOrderDetailApiDto,
   StaffWorkOrderItemApiDto,
   StaffWorkOrderListItemApiDto,
@@ -16,8 +18,18 @@ import type {
 
 type HttpClient = typeof httpClient
 
+export type StaffWorkOrderCatalogItem = {
+  id: string
+  name: string
+  price: number
+  durationMinutes: number
+  categories: { id: string; name: string }[]
+}
+
 export type StaffWorkOrderItem = {
   id: string
+  /** Null on a custom (off-menu) line — the editor sends name and price back instead. */
+  posServiceId: string | null
   serviceName: string
   unitPrice: number
   lineTotal: number
@@ -70,6 +82,9 @@ const STAFF_WORK_ORDER_ACTION = {
   startService: 'start-service',
   completeService: 'complete-service',
 } as const
+
+const STAFF_WORK_ORDER_SERVICE_CATALOG = 'service-catalog'
+const STAFF_WORK_ORDER_MY_SERVICE_LINES = 'my-service-lines'
 
 const PENDING_ACCEPTANCE_COUNT_PATH = `${STAFF_WORK_ORDERS_API_PATH}/pending-acceptance-count`
 
@@ -145,6 +160,7 @@ function normalizeListItem(dto: StaffWorkOrderListItemApiDto): StaffWorkOrderLis
 function normalizeItem(dto: StaffWorkOrderItemApiDto): StaffWorkOrderItem {
   return {
     id: readText(dto, 'id', 'Id'),
+    posServiceId: readOptionalText(dto, 'posServiceId', 'PosServiceId'),
     serviceName: readText(dto, 'serviceName', 'ServiceName'),
     unitPrice: readNumber(dto, 'unitPrice', 'UnitPrice'),
     lineTotal: readNumber(dto, 'lineTotal', 'LineTotal'),
@@ -185,6 +201,24 @@ function normalizeDetail(dto: StaffWorkOrderDetailApiDto | null): StaffWorkOrder
   }
 }
 
+function normalizeCatalogItem(dto: StaffWorkOrderCatalogItemApiDto): StaffWorkOrderCatalogItem | null {
+  const id = readText(dto, 'id', 'Id')
+  if (!id) return null
+  const categories = readValue<{ id?: string; name?: string }[]>(dto, 'categories', 'Categories') ?? []
+  return {
+    id,
+    name: readText(dto, 'name', 'Name'),
+    price: readNumber(dto, 'price', 'Price'),
+    durationMinutes: readNumber(dto, 'durationMinutes', 'DurationMinutes'),
+    categories: (Array.isArray(categories) ? categories : [])
+      .map((category) => ({
+        id: readText(category, 'id', 'Id'),
+        name: readText(category, 'name', 'Name'),
+      }))
+      .filter((category) => Boolean(category.id)),
+  }
+}
+
 function buildListParams(query: StaffWorkOrdersListQuery): Record<string, string | string[]> {
   const params: Record<string, string | string[]> = {
     [LIST_QUERY_PARAM.businessId]: query.businessId,
@@ -221,6 +255,30 @@ function createStaffWorkOrdersRepository(client: HttpClient = httpClient) {
 
     async getWorkOrderDetail(orderId: string): Promise<StaffWorkOrderDetail | null> {
       const res = await client.get<StaffWorkOrderDetailApiDto>(workOrderDetailPath(orderId))
+      return normalizeDetail(res)
+    },
+
+    // Already narrowed server-side to what this technician is qualified for, so anything listed
+    // here is something the save will accept.
+    async getMyServiceCatalog(orderId: string): Promise<StaffWorkOrderCatalogItem[]> {
+      const res = await client.get<StaffWorkOrderCatalogItemApiDto[]>(
+        `${workOrderDetailPath(orderId)}/${STAFF_WORK_ORDER_SERVICE_CATALOG}`,
+      )
+      if (!Array.isArray(res)) return []
+      return res
+        .map(normalizeCatalogItem)
+        .filter((item): item is StaffWorkOrderCatalogItem => item != null)
+    },
+
+    // One call for the whole basket: the customer approves once, so the change lands once.
+    async saveMyServiceLines(
+      orderId: string,
+      payload: SaveStaffWorkOrderServiceLinesPayload,
+    ): Promise<StaffWorkOrderDetail | null> {
+      const res = await client.put<StaffWorkOrderDetailApiDto>(
+        `${workOrderDetailPath(orderId)}/${STAFF_WORK_ORDER_MY_SERVICE_LINES}`,
+        payload,
+      )
       return normalizeDetail(res)
     },
 

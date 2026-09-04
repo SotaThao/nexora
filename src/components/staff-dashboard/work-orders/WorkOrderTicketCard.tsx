@@ -18,13 +18,19 @@ import {
 
 interface WorkOrderTicketCardProps {
   ticket: WorkOrderListItem
+  timeZone?: string | null
   isActive?: boolean
   onSelect: () => void
 }
 
-export default function WorkOrderTicketCard({ ticket, isActive = false, onSelect }: WorkOrderTicketCardProps) {
+export default function WorkOrderTicketCard({
+  ticket,
+  timeZone,
+  isActive = false,
+  onSelect,
+}: WorkOrderTicketCardProps) {
   const { t, currentLanguage } = useTranslation()
-  const clock = formatWorkOrderTicketClock(ticket, currentLanguage)
+  const clock = formatWorkOrderTicketClock(ticket, currentLanguage, timeZone)
 
   return (
     <button type="button" className={workOrderTicketCardClass(isActive)} onClick={onSelect}>

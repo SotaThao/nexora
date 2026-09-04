@@ -51,6 +51,7 @@ import PosOnboardingLayout from "./PosOnboardingLayout";
 import RootRedirect from "./RootRedirect";
 import { VoiceCallPlanRoute } from "../data/voiceTrial/domain";
 import { PUBLIC_BOOKING_ROUTE } from "../components/public/booking/constants";
+import { ONEQR_ROUTE } from "../constants/oneQr";
 
 const SetupWizard = lazyWithRetry(() => import("../components/SetupWizard"));
 const DashboardOwnerShell = lazyWithRetry(
@@ -138,6 +139,9 @@ const ResetPassword = lazyWithRetry(
 const LoginScreen = lazyWithRetry(() => import("./LoginScreen"));
 const QrRedirectPage = lazyWithRetry(
   () => import("../components/public/QrRedirectPage"),
+);
+const OneQrLandingPage = lazyWithRetry(
+  () => import("../components/public/oneqr/OneQrLandingPage"),
 );
 const PrivacyPolicyPage = lazyWithRetry(
   () => import("../components/legal/PrivacyPolicyPage"),
@@ -322,6 +326,7 @@ export default function AppRouter() {
           <Route path="/merchant/payments/:paymentId" element={<PaymentsRedirect />} />
           <Route path="/qr/:code" element={<QrRedirectPage />} />
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
+          <Route path={ONEQR_ROUTE.path} element={<OneQrLandingPage />} />
           <Route path={PUBLIC_BOOKING_ROUTE.path} element={<PublicBookingPage />} />
           <Route path="/booking/:businessSlug" element={<PublicPosBookingPage />} />
           <Route path="/booking/manage/:manageToken" element={<ManageBookingPage />} />

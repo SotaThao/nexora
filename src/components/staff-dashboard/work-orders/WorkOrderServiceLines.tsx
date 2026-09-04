@@ -52,7 +52,7 @@ interface WorkOrderServiceLinesProps {
   onAddService: () => void
   onAddCustomService: () => void
   onChangeService: (key: string) => void
-  onRemoveService?: (key: string) => void
+  onRemoveService: (key: string) => void
   /** Omitted on read-only views; without it the rows render without line-status buttons. */
   actions?: WorkOrderLineActions
 }
@@ -148,7 +148,7 @@ function WorkOrderServiceLineRow({
   canEdit: boolean
   actions?: WorkOrderLineActions
   onChangeService: () => void
-  onRemoveService?: () => void
+  onRemoveService: () => void
 }) {
   const { t } = useTranslation()
   const canAct = Boolean(actions) && Boolean(line.isMine) && !line.isAddOn

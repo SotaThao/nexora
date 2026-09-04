@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffWorkOrders } from '../../../data/hooks/useStaffWorkOrders'
-import { formatLocalDateIso } from '../../../utils/localDate'
+import { formatDateIsoInTimeZone } from '../../../utils/localDate'
 import { STAFF_SALONS_PATH } from '../staffSalonPaths'
 import {
   WORK_ORDER_EMPTY_PLACEHOLDER,
@@ -59,7 +59,7 @@ export default function StaffWorkOrderTickets({
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const fromSalons = workOrderLocationFromPath(location.state) === STAFF_SALONS_PATH
-  const todayIso = formatLocalDateIso(new Date())
+  const todayIso = formatDateIsoInTimeZone(new Date(), salon.timeZone)
   const selectedDateIso = parseWorkOrderListDate(
     searchParams.get(WORK_ORDER_QUERY_PARAM.date),
     todayIso,
@@ -94,8 +94,9 @@ export default function StaffWorkOrderTickets({
   const visibleTickets = useMemo(
     () => sortWorkOrderTicketsByTime(
       tickets.filter((ticket) => workOrderTicketMatchesFilter(ticket.status, filter)),
+      salon.timeZone,
     ),
-    [filter, tickets],
+    [filter, salon.timeZone, tickets],
   )
 
   const updateListParams = (dateIso: string, nextFilter: WorkOrderTicketFilter) => {
@@ -193,6 +194,7 @@ export default function StaffWorkOrderTickets({
           isLoading={isListLoading}
           isError={workOrdersQuery.isError}
           tickets={listTickets}
+          timeZone={salon.timeZone}
           selectedTicketId={selectedTicketId}
           hasFeatured={Boolean(featuredTicket)}
           onRetry={() => void workOrdersQuery.refetch()}
@@ -203,6 +205,7 @@ export default function StaffWorkOrderTickets({
       {selectedTicketId ? (
         <StaffWorkOrderDetail
           orderId={selectedTicketId}
+          timeZone={salon.timeZone}
           onBack={() => navigate(listHref(), withListState())}
         />
       ) : null}
@@ -251,6 +254,7 @@ function WorkOrderTicketResults({
   isLoading,
   isError,
   tickets,
+  timeZone,
   selectedTicketId,
   hasFeatured,
   onRetry,
@@ -259,6 +263,7 @@ function WorkOrderTicketResults({
   isLoading: boolean
   isError: boolean
   tickets: WorkOrderListItem[]
+  timeZone?: string | null
   selectedTicketId?: string
   hasFeatured: boolean
   onRetry: () => void
@@ -290,6 +295,7 @@ function WorkOrderTicketResults({
         <WorkOrderTicketCard
           key={ticket.id}
           ticket={ticket}
+          timeZone={timeZone}
           isActive={ticket.id === selectedTicketId}
           onSelect={() => onSelect(ticket.id)}
         />

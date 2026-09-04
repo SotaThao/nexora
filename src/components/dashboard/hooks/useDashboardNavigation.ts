@@ -8,10 +8,12 @@ import {
   DASHBOARD_MENU_ID,
   normalizeDashboardSettingsTab,
 } from '../constants'
+import { buildTouchpointsSearch } from '../../touchpoints/touchpointSections'
 
 type NavigateMenuOptions = {
   closeDrawer?: boolean
   tab?: string
+  section?: string
 }
 
 export const DESKTOP_SIDEBAR_STORAGE_KEY = 'nexora:dashboard:desktop-sidebar-open'
@@ -115,29 +117,32 @@ export function useDashboardNavigation() {
     }
   }, [activeMenu, isPaymentsPayoutsActive])
 
-  const buildMenuRoute = (menuId: string, tab?: string) => {
+  const buildMenuRoute = (menuId: string, tab?: string, section?: string) => {
     const base = buildDashboardMenuPath(menuId)
+    if (menuId === DASHBOARD_MENU_ID.touchpoints) {
+      return `${base}?${buildTouchpointsSearch({ tab, section })}`
+    }
     if (!tab) return base
     return `${base}?tab=${encodeURIComponent(tab)}`
   }
 
-  const handleNavigateMenu = (menuId: string, tab?: string) => {
+  const handleNavigateMenu = (menuId: string, tab?: string, section?: string) => {
     if (menuId === DASHBOARD_MENU_ID.productManagement) {
       void openProductManagement()
       return
     }
-    navigate(buildMenuRoute(menuId, tab))
+    navigate(buildMenuRoute(menuId, tab, section))
   }
 
   const navigateMenu = (menuId: string, options: NavigateMenuOptions = {}) => {
-    const { closeDrawer = true, tab } = options
+    const { closeDrawer = true, tab, section } = options
     if (menuId === DASHBOARD_MENU_ID.productManagement) {
       void openProductManagement().finally(() => {
         if (closeDrawer) setIsMobileMenuOpen(false)
       })
       return
     }
-    navigate(buildMenuRoute(menuId, tab))
+    navigate(buildMenuRoute(menuId, tab, section))
     if (closeDrawer) setIsMobileMenuOpen(false)
   }
 

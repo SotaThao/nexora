@@ -41,12 +41,13 @@ export const WORK_ORDERS_I18N = {
   selectTicket: 'staff_dashboard.work_orders.select_ticket',
   selectTicketHint: 'staff_dashboard.work_orders.select_ticket_hint',
   removeService: 'staff_dashboard.work_orders.remove_service',
-  toastRemoveService: 'staff_dashboard.work_orders.toast_remove_service',
   durationStation: 'staff_dashboard.work_orders.duration_station',
   emptySalons: 'staff_dashboard.work_orders.empty_salons',
   emptySalonsBody: 'staff_dashboard.work_orders.empty_salons_body',
   loading: 'staff_dashboard.work_orders.loading',
   loadError: 'staff_dashboard.work_orders.load_error',
+  detailUnavailable: 'staff_dashboard.work_orders.detail_unavailable',
+  notAssignedToYou: 'staff_dashboard.work_orders.not_assigned_to_you',
   retry: 'staff_dashboard.work_orders.retry',
   technicianNamed: 'staff_dashboard.work_orders.technician_named',
   unassigned: 'staff_dashboard.work_orders.unassigned',
@@ -96,6 +97,9 @@ export const WORK_ORDERS_I18N = {
   pickerSearchPlaceholder: 'staff_dashboard.work_orders.picker_search_placeholder',
   pickerSearchAria: 'staff_dashboard.work_orders.picker_search_aria',
   pickerEmpty: 'staff_dashboard.work_orders.picker_empty',
+  pickerUncategorized: 'staff_dashboard.work_orders.picker_uncategorized',
+  pickerLoading: 'staff_dashboard.work_orders.picker_loading',
+  pickerNoneAssignable: 'staff_dashboard.work_orders.picker_none_assignable',
   pickerConfirmAdd: 'staff_dashboard.work_orders.picker_confirm_add',
   pickerConfirmEdit: 'staff_dashboard.work_orders.picker_confirm_edit',
   pickerClose: 'staff_dashboard.work_orders.picker_close',
@@ -116,13 +120,14 @@ export const WORK_ORDERS_I18N = {
   approvalTitle: 'staff_dashboard.work_orders.approval_title',
   approvalCancel: 'staff_dashboard.work_orders.approval_cancel',
   approvalCopy: 'staff_dashboard.work_orders.approval_copy',
+  approvalRemovedLabel: 'staff_dashboard.work_orders.approval_removed_label',
+  approvalSaving: 'staff_dashboard.work_orders.approval_saving',
   approvalHelp: 'staff_dashboard.work_orders.approval_help',
   approvalCodePlaceholder: 'staff_dashboard.work_orders.approval_code_placeholder',
   approvalCodeAria: 'staff_dashboard.work_orders.approval_code_aria',
   approvalSubmit: 'staff_dashboard.work_orders.approval_submit',
-  toastAddService: 'staff_dashboard.work_orders.toast_add_service',
-  toastChangeService: 'staff_dashboard.work_orders.toast_change_service',
-  toastCustomService: 'staff_dashboard.work_orders.toast_custom_service',
+  approvalError: 'staff_dashboard.work_orders.approval_error',
+  removeAddOnWarning: 'staff_dashboard.work_orders.remove_addon_warning',
   completedNotesTitle: 'staff_dashboard.work_orders.completed_notes_title',
   completedNotesFallback: 'staff_dashboard.work_orders.completed_notes_fallback',
 } as const
@@ -175,6 +180,7 @@ export const WORK_ORDER_FILTER_I18N: Record<WorkOrderTicketFilter, string> = {
 }
 
 export const WORK_ORDER_FILTER_TABS: WorkOrderTicketFilter[] = [
+  WORK_ORDER_TICKET_FILTER.All,
   WORK_ORDER_TICKET_FILTER.Assigned,
   WORK_ORDER_TICKET_FILTER.InService,
   WORK_ORDER_TICKET_FILTER.Completed,
@@ -494,7 +500,6 @@ export const WORK_ORDER_EMPTY_PLACEHOLDER = '_'
 export const WORK_ORDER_COMPLETION_NOTE_MAX_LENGTH = 500
 export const WORK_ORDER_COMPLETION_NOTE_SEPARATOR = '. '
 /** Corner snack duration for add/change/custom/remove — blocking modal toast stays for errors. */
-export const WORK_ORDER_SNACK_DURATION_MS = 3200
 export const WORK_ORDER_TOAST_TYPE = {
   success: 'success',
   error: 'error',

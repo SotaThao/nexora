@@ -36,6 +36,10 @@ export const errorCodeToI18nKey = {
   USER_NOT_MERCHANT: 'errors.user_not_merchant',
   TOUCHPOINT_STARTER_LIMIT_REACHED: 'errors.touchpoint_starter_limit_reached',
 
+  // OneQR — a module the platform admin deactivated cannot be saved into a
+  // landing page. The response also carries the offending keys.
+  ONEQR_MODULE_DISABLED: 'errors.oneqr_module_disabled',
+
   // Direct payment (US-60 / direct-payment-qr-flow)
   PAYMENT_NOT_FOUND: 'errors.payment_not_found',
   PAYMENT_INVALID_STATUS: 'errors.payment_invalid_status',
@@ -293,6 +297,10 @@ export const errorCodeToI18nKey = {
   SERVICE_LINE_NOT_ASSIGNED: 'errors.pos_service_line_not_assigned',
   SERVICE_LINE_ALREADY_COMPLETED: 'errors.pos_service_line_already_completed',
   SERVICE_LINE_NOTE_TOO_LONG: 'errors.pos_service_line_note_too_long',
+  SERVICE_LINE_NOT_OWNED_BY_STAFF: 'errors.pos_service_line_not_owned_by_staff',
+  POS_STAFF_SERVICE_LINE_EDIT_DISABLED: 'errors.pos_staff_service_line_edit_disabled',
+  POS_CUSTOMER_VERIFICATION_FAILED: 'errors.pos_customer_verification_failed',
+  POS_SERVICE_NOT_ASSIGNABLE_TO_STAFF: 'errors.pos_service_not_assignable_to_staff',
   PRODUCT_LINE_NOT_FOUND: 'errors.pos_product_line_not_found',
   NO_STAFF_ASSIGNED_TO_START_SERVICE: 'errors.pos_no_staff_assigned_to_start_service',
   NOT_ALL_SERVICE_LINES_ASSIGNED: 'errors.pos_not_all_service_lines_assigned',
