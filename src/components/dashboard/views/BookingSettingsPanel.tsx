@@ -4454,19 +4454,13 @@ export default function BookingSettingsPanel() {
           categoryIds: serviceModalDraft.categoryIds,
           photoPreviewUrl: serviceModalPhotoPreviewUrl,
         }}
-        categories={serviceModalCategoryOptions.map((category) => {
-          const isOther = isOtherServicesCategory(category);
-          const { onlyOther, hasRealCategories } =
-            serviceModalCategorySelection;
-          return {
+        categories={serviceModalCategoryOptions
+          .filter((category) => !isOtherServicesCategory(category))
+          .map((category) => ({
             id: category.id,
             name: category.name,
-            disabled: isOther && (onlyOther || hasRealCategories),
-            checked: isOther
-              ? onlyOther || serviceModalDraft.categoryIds.includes(category.id)
-              : serviceModalDraft.categoryIds.includes(category.id),
-          };
-        })}
+            checked: serviceModalDraft.categoryIds.includes(category.id),
+          }))}
         controller={{
           onClose: closeServiceModal,
           onFieldChange: updateServiceModalField,

@@ -5166,7 +5166,7 @@
             "serviceModalEditSub": "Cập nhật thông tin dịch vụ và danh mục.",
             "serviceModalCategory": "Danh mục",
             "serviceModalCategories": "Danh mục",
-            "serviceModalCategoriesHelp": "Chọn ít nhất một danh mục. Other services sẽ được gửi với danh sách category rỗng.",
+            "serviceModalCategoriesHelp": "Chọn ít nhất một danh mục.",
             "serviceModalCategoriesEmpty": "Chưa có danh mục. Tạo trong Quản lý danh mục.",
             "serviceModalName": "Tên dịch vụ",
             "serviceModalPrice": "Giá",

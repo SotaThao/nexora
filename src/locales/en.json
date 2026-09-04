@@ -5166,7 +5166,7 @@
             "serviceModalEditSub": "Update the service details and categories.",
             "serviceModalCategory": "Category",
             "serviceModalCategories": "Categories",
-            "serviceModalCategoriesHelp": "Select at least one category. Other services is sent as an empty category list.",
+            "serviceModalCategoriesHelp": "Select at least one category.",
             "serviceModalCategoriesEmpty": "No categories yet. Create some in Manage Categories.",
             "serviceModalName": "Service name",
             "serviceModalPrice": "Price",

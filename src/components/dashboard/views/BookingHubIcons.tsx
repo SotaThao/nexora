@@ -87,8 +87,8 @@ export function CurrencyDollarIcon({ className }: IconProps) {
   return (
     <HubIcon className={className}>
       <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-      <path d="M12 7v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M9.5 9.5c0-1.1 1.12-2 2.5-2s2.5.9 2.5 2-.9 2-2.5 2.2-2.5 2.2-2.5 1.1-2.5 2.3 1.12 2 2.5 2 2.5-.9 2.5-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M12 18V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </HubIcon>
   )
 }
