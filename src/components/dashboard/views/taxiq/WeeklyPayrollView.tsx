@@ -161,6 +161,7 @@ export default function WeeklyPayrollView({ businessId }: { businessId: string }
                     <th className="px-4 py-3">{t('taxiq.weeklyPayroll.columns.commission')}</th>
                     <th className="px-4 py-3">{t('taxiq.weeklyPayroll.columns.bonus')}</th>
                     <th className="px-4 py-3">{t('taxiq.weeklyPayroll.columns.tips')}</th>
+                    <th className="px-4 py-3">{t('taxiq.weeklyPayroll.columns.discountBorne')}</th>
                     <th className="px-4 py-3">{t('taxiq.weeklyPayroll.columns.takeHome')}</th>
                     <th className="px-4 py-3">{t('taxiq.weeklyPayroll.columns.actions')}</th>
                   </tr>
@@ -184,6 +185,13 @@ export default function WeeklyPayrollView({ businessId }: { businessId: string }
                         {row.bonus > 0 ? `+${formatCurrency(row.bonus)}` : t('taxiq.weeklyPayroll.noBonus')}
                       </td>
                       <td className="px-4 py-3 text-nexoraText">{formatCurrency(row.tips)}</td>
+                      <td className="px-4 py-3 text-nexoraText">
+                        {row.discountBorne > 0 ? (
+                          <span className="font-bold text-amber-700">-{formatCurrency(row.discountBorne)}</span>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
                       <td className="px-4 py-3 font-bold text-nexoraText">{formatCurrency(row.takeHome)}</td>
                       <td className="px-4 py-3">
                         <div className="flex flex-col items-start gap-1">

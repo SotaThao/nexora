@@ -6,6 +6,28 @@ export function formatLocalDateIso(date: Date): string {
   return `${year}-${month}-${day}`
 }
 
+/** YYYY-MM-DD in an IANA zone (salon calendar day). Falls back to the runtime local zone. */
+export function formatDateIsoInTimeZone(date: Date, timeZone?: string | null): string {
+  const zone = timeZone?.trim()
+  if (!zone) return formatLocalDateIso(date)
+  try {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: zone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(date)
+    const get = (type: string) => parts.find((part) => part.type === type)?.value ?? ''
+    const year = get('year')
+    const month = get('month')
+    const day = get('day')
+    if (!year || !month || !day) return formatLocalDateIso(date)
+    return `${year}-${month}-${day}`
+  } catch {
+    return formatLocalDateIso(date)
+  }
+}
+
 /**
  * Parse BE datetime strings. Wire values often omit `Z` / offset but are UTC
  * (e.g. `2026-09-06T01:26:32.369146`). Treat bare ISO as UTC, then callers
@@ -51,11 +73,11 @@ export function formatMemberSinceDate(
   return date.toLocaleDateString(locale, { month: 'short', year: 'numeric' })
 }
 
-/** Sáng/Chiều (VI) or AM/PM (EN) for the given date's local hour. Shared by every date+time formatter below so the Sáng/Chiều cutoff (hour < 12) never drifts between them. */
+/** Sáng/Chiều (VI) or am/pm (EN) for the given date's local hour. Shared by every date+time formatter below so the Sáng/Chiều cutoff (hour < 12) never drifts between them. */
 export function getMeridiem(date: Date, isVietnamese: boolean): string {
   return date.getHours() < 12
-    ? (isVietnamese ? 'Sáng' : 'AM')
-    : (isVietnamese ? 'Chiều' : 'PM')
+    ? (isVietnamese ? 'Sáng' : 'am')
+    : (isVietnamese ? 'Chiều' : 'pm')
 }
 
 /**

@@ -5,6 +5,7 @@ import {
 import {
   PackageHistoryUiStatus,
   SubscriptionBillingCycle,
+  SubscriptionPaymentStatus,
   type SubscriptionPackage,
   type SubscriptionPaymentMethod,
 } from '../../../../data/repositories/subscriptionPayments'
@@ -35,6 +36,38 @@ export function isVoiceAiPlanBelowCurrent(
   const planRank = getVoiceAiPlanRank(planId)
   if (currentRank < 0 || planRank < 0) return false
   return planRank < currentRank
+}
+
+/**
+ * A lower tier is never purchasable regardless of cycle — a longer (yearly) cycle can't
+ * compensate for a lower tier (e.g. Pro monthly -> Starter yearly is blocked).
+ */
+export function isVoiceAiUpgradeMove(
+  planId: PaidServicePlanId,
+  targetPeriodInMonths: number | null | undefined,
+  currentPlanId: PaidServicePlanId | null | undefined,
+  currentPeriodInMonths: number | null | undefined,
+): boolean {
+  if (!currentPlanId) return true
+  const targetPeriod = targetPeriodInMonths ?? 1
+  const currentPeriod = currentPeriodInMonths ?? 1
+  const currentRank = getVoiceAiPlanRank(currentPlanId)
+  const targetRank = getVoiceAiPlanRank(planId)
+  if (currentRank < 0 || targetRank < 0) return false
+  if (targetRank < currentRank) return false
+  if (targetPeriod > currentPeriod) return true
+  if (targetPeriod < currentPeriod) return false
+  return targetRank > currentRank
+}
+
+export function isVoiceAiPlanCurrentCycle(
+  planId: PaidServicePlanId,
+  targetPeriodInMonths: number | null | undefined,
+  currentPlanId: PaidServicePlanId | null | undefined,
+  currentPeriodInMonths: number | null | undefined,
+): boolean {
+  if (!currentPlanId || planId !== currentPlanId) return false
+  return (targetPeriodInMonths ?? 1) === (currentPeriodInMonths ?? 1)
 }
 
 /** Sub-views under AI Hub → Plans. */
@@ -164,6 +197,20 @@ export function formatPackageHistoryAmount(amount: number, currency = 'USD'): st
   return `${amount.toFixed(2)} ${currency}`
 }
 
+export function formatPackageBillingMoney(amount: number, currency = 'USD'): string {
+  if (!Number.isFinite(amount)) return BOOKING_HUB_EMPTY_CELL
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency || 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount)
+  } catch {
+    return formatPackageHistoryAmount(amount, currency)
+  }
+}
+
 /** Wallet row balance in USD (balance × rate). */
 export function formatWalletBalanceUsd(method: SubscriptionPaymentMethod): string {
   const usd = getWalletBalanceUsd(method)
@@ -238,11 +285,11 @@ export function indexVoiceAiPackagesByPlan(
 
 export const PACKAGE_HISTORY_PAGE_SIZE = 10
 
-/** Em dash for missing term (e.g. credit top-up with `periodInMonths: 0`). */
-export const PACKAGE_HISTORY_EMPTY_TERM = '—' as const
+/** Placeholder for missing term (e.g. credit top-up with `periodInMonths: 0`). */
+export const PACKAGE_HISTORY_EMPTY_TERM = BOOKING_HUB_EMPTY_CELL
 
 /**
- * Term column label. `periodInMonths <= 0` (credit packs) → em dash.
+ * Term column label. `periodInMonths <= 0` (credit packs) → `_`.
  * Positive months → localized “N month(s)”.
  */
 export function formatPackageHistoryTerm(
@@ -330,6 +377,49 @@ export function resolvePackageHistoryDisplayAt(item: {
   createdAt: string
 }): string {
   return item.paidAt || item.createdAt
+}
+
+/** Table Action: paid → view invoice; otherwise payment details. */
+export enum PackageHistoryRowAction {
+  ViewInvoice = 'viewInvoice',
+  PaymentDetails = 'paymentDetails',
+}
+
+export function resolvePackageHistoryRowAction(
+  paymentStatus: SubscriptionPaymentStatus,
+): PackageHistoryRowAction {
+  return paymentStatus === SubscriptionPaymentStatus.Paid
+    ? PackageHistoryRowAction.ViewInvoice
+    : PackageHistoryRowAction.PaymentDetails
+}
+
+export const PACKAGE_HISTORY_ROW_ACTION_LABEL_KEY: Record<
+  PackageHistoryRowAction,
+  string
+> = {
+  [PackageHistoryRowAction.ViewInvoice]: 'packageHistoryActionViewInvoice',
+  [PackageHistoryRowAction.PaymentDetails]: 'packageHistoryActionPaymentDetails',
+}
+
+export enum PackageHistoryDocumentKind {
+  Invoice = 'invoice',
+  Receipt = 'receipt',
+}
+
+export function packageHistoryTransactionKey(
+  item: { orderId: string; referenceId: string },
+): string {
+  return item.orderId
+}
+
+export function packageHistoryDocumentFileName(
+  kind: PackageHistoryDocumentKind,
+  transactionId: string,
+): string {
+  const id = transactionId.trim().replace(/[^\w.-]+/g, '-') || 'document'
+  const prefix =
+    kind === PackageHistoryDocumentKind.Invoice ? 'Invoice' : 'Receipt'
+  return `${prefix}-${id}.html`
 }
 
 /** Fallback feature list when VoiceAI catalog omits featuresEn/Vi. */

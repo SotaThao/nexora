@@ -1,6 +1,7 @@
 import type { ApiError } from './api'
 import type { LooseObject } from './domain'
 import type { PosOrderStatus } from '../constants/posOrderStatus'
+import type { PosCheckoutPaymentMethodType } from '../constants/posCheckoutPaymentMethod'
 import type {
   MerchantSetup,
   NotificationRecord,
@@ -19,6 +20,7 @@ import type {
   UserProfile,
 } from './domain'
 export type { ApiError }
+export type { PosCheckoutPaymentMethodType } from '../constants/posCheckoutPaymentMethod'
 
 // --- API raw DTOs (Swagger-aligned, optional fields) ---
 
@@ -30,14 +32,20 @@ export interface BusinessApiDto {
   businessSlug?: string
   businessType?: string
   address?: string
+  city?: string
+  state?: string
+  zipCode?: string
+  country?: string
   phone?: string
   website?: string
+  timeZone?: string | null
   logoUrl?: string | null
   bookingNotificationPhone?: string
   salesTaxRatePercent?: number
   googleReviewUrl?: string
   yelpUrl?: string
   facebookUrl?: string
+  instagramUrl?: string
   feedbackEmail?: string
   isPublic?: boolean
   onboardingStep?: number
@@ -160,9 +168,24 @@ export interface PosStaffProfileApiDto {
 // POS Merchant Ops — Front Desk access self-check (US-12)
 export interface PosAccessApiDto {
   canManageOperations?: boolean
+  // Gated on its own `view_pos_report` permission, not on the Operations area — the report exposes
+  // every technician's earnings, so operating the front desk does not imply reading it.
+  canViewReport?: boolean
 }
 
 // POS Merchant Ops — Check-in & Waitlist (US-12, refactored to Order in US-026)
+/**
+ * Service progress of one ticket, so a board does not have to be opened to read it.
+ * Counts parent service lines only — an add-on has no lifecycle of its own.
+ */
+export interface PosServiceLineRollupApiDto {
+  serviceLineCount: number
+  completedServiceLineCount: number
+  pendingAcceptanceCount: number
+  /** Technicians who have not yet accepted their line on this ticket. */
+  pendingAcceptanceTechnicianNames: string[]
+}
+
 export interface PosWaitlistOrderApiDto {
   id: string
   orderNumber: string
@@ -170,6 +193,7 @@ export interface PosWaitlistOrderApiDto {
   checkedInAt: string
   waitMinutes: number
   serviceNames: string[]
+  serviceLines: PosServiceLineRollupApiDto
 }
 
 // US-17 — Order Workspace (Create mode) sends the whole draft (service + product lines,
@@ -218,11 +242,24 @@ export interface OrderListItemApiDto {
   id: string
   orderNumber: string
   customerName: string
+  customerPhone?: string | null
+  /** Dial code with a leading "+" when the backend resolved the number. */
+  customerPhoneCountryCode?: string | null
+  /** Full E.164 number when the backend resolved the number. */
+  customerPhoneE164?: string | null
   status: string
   checkedInAt: string
   elapsedMinutes: number
   serviceNames: string[]
   technicianNames: string[]
+  // Self check-in leaves these for the front desk to resolve: a customer who picked "First
+  // Available" has no technician on the line, and one who skipped the menu has no service line at
+  // all. Both are legitimate orders, and both need a person to finish them. Computed server-side
+  // over every order, not just kiosk ones — a line the front desk itself cleared needs the same
+  // flag.
+  hasUnassignedService: boolean
+  hasNoServiceLine: boolean
+  serviceLines: PosServiceLineRollupApiDto
 }
 
 // POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filterable.
@@ -230,11 +267,19 @@ export interface CompletedOrderListItemApiDto {
   id: string
   orderNumber: string
   customerName: string
+  /** National number only, digits without the country code. */
   customerPhone?: string | null
+  /** Dial code with a leading "+" (e.g. "+1"). Null when the backend could not resolve the number. */
+  customerPhoneCountryCode?: string | null
+  /** Full E.164 number. Null when the backend could not resolve the number. */
+  customerPhoneE164?: string | null
   completedAt?: string | null
   serviceNames: string[]
   technicianNames: string[]
   total: number
+  /** The order-level discount frozen at checkout — always absorbed by the salon. */
+  orderDiscountAmount?: number
+  appliedPromotionName?: string | null
   paymentMethodType?: string | null
 }
 
@@ -245,6 +290,65 @@ export interface CompletedOrdersListQuery {
   dateTo?: string
   customerName?: string
   customerPhone?: string
+}
+
+// Staff Work Orders (technician read-only view) — GET /api/v1/staff/pos/work-orders
+export interface StaffWorkOrderListItemApiDto {
+  id?: string
+  orderNumber?: string
+  customerName?: string
+  status?: string
+  checkedInAt?: string
+  scheduledAt?: string | null
+  serviceNames?: string[]
+  technicianNames?: string[]
+  stationNumber?: number | null
+  beeper?: string | null
+}
+
+export interface StaffWorkOrderItemApiDto {
+  id?: string
+  serviceName?: string
+  unitPrice?: number
+  lineTotal?: number
+  durationMinutes?: number
+  isAddOn?: boolean
+  note?: string | null
+  technicianName?: string | null
+  posStaffProfileId?: string | null
+  /** See PosOrderItemStatus — drives the Accept/Decline/Start/Complete buttons. */
+  lineStatus?: string | null
+  isMine?: boolean
+  acceptedAt?: string | null
+  startedAt?: string | null
+  completedAt?: string | null
+}
+
+export interface StaffWorkOrderDetailApiDto {
+  id?: string
+  businessId?: string
+  orderNumber?: string
+  customerName?: string
+  status?: string
+  checkedInAt?: string
+  scheduledAt?: string | null
+  stationNumber?: number | null
+  beeper?: string | null
+  customerNotes?: string | null
+  serviceTotal?: number
+  canStartService?: boolean
+  canCompleteService?: boolean
+  items?: StaffWorkOrderItemApiDto[]
+}
+
+export interface StaffWorkOrdersListQuery {
+  businessId: string
+  date: string
+  status?: PosOrderStatus[]
+}
+
+export interface CompleteStaffWorkOrderServicePayload {
+  note?: string | null
 }
 
 export interface CompletedOrdersPage {
@@ -260,7 +364,12 @@ export interface CompletedOrdersPage {
 export interface PosCustomerListItemApiDto {
   id: string
   name?: string | null
+  /** National number only, digits without the country code. */
   phone: string
+  /** Dial code with a leading "+" (e.g. "+1"). Null when the backend could not resolve the number. */
+  phoneCountryCode?: string | null
+  /** Full E.164 number. Null when the backend could not resolve the number. */
+  phoneE164?: string | null
   status: string
   totalVisit: number
   lastVisit?: string | null
@@ -286,7 +395,12 @@ export interface PosCustomerListPage {
 export interface PosCustomerDetailApiDto {
   id: string
   name?: string | null
+  /** National number only, digits without the country code. */
   phone: string
+  /** Dial code with a leading "+" (e.g. "+1"). Null when the backend could not resolve the number. */
+  phoneCountryCode?: string | null
+  /** Full E.164 number. Null when the backend could not resolve the number. */
+  phoneE164?: string | null
   email?: string | null
   address?: string | null
   dateOfBirth?: string | null
@@ -334,11 +448,142 @@ export interface TurnBoardStationApiDto {
   currentOrderId?: string | null
   currentOrderNumber?: string | null
   currentCustomerName?: string | null
+  currentCustomerPhone?: string | null
   currentServiceNames: string[]
   assignedAt?: string | null
+  /** See PosOrderItemStatus — the lifecycle of this technician's own line on the ticket above. */
+  currentLineStatus?: string | null
+  /** Lines across the whole salon still waiting for THIS technician to accept. */
+  pendingAcceptanceCount?: number
+  // Not in the live contract yet (BE is adding it) — optional so today's response (neither field
+  // present) reads as "not local staff", not as a false positive block on every station's Beep.
+  isLocalStaff?: boolean
+  email?: string | null
 }
 
 // POS Front Desk — Time Clock tab
+export interface PosDevicePairingQrApiDto {
+  businessId: string
+  token: string
+  rotationNumber: number
+  issuedAt: string
+  expiresAt: string
+  // Full URL the tablet's camera opens. Carries the operator who generated it.
+  pairingUrl: string
+  // PNG data URI rendered server-side — the dashboard has no QR-drawing library.
+  qrImageDataUri: string
+}
+
+export interface PosDevicePairingQrStatusApiDto {
+  // Flips once a tablet pairs with this exact token, and never flips back — the dashboard stops
+  // polling and asks for a fresh code the moment it does.
+  used: boolean
+}
+
+export type PosDeviceStatusApi = 'Active' | 'Revoked' | 'Expired'
+
+export interface PosDeviceListItemApiDto {
+  id: string
+  name: string
+  // Sent computed by the server. Never re-derive "expired" from lastSeenAt on the client — the
+  // nightly sweep owns that transition and the two would disagree for up to a day.
+  status: PosDeviceStatusApi
+  deviceType: string
+  pairedAt: string
+  pairedByName: string | null
+  lastSeenAt: string
+  userAgent: string | null
+  revokedAt: string | null
+  revokedByName: string | null
+  expiredAt: string | null
+  // True when the tablet signed itself out rather than an operator revoking it.
+  signedOutOnDevice: boolean
+}
+
+// Self Check-In kiosk — everything below is served under the device token, never a user session.
+export type PosCheckInLayout = 'SinglePage' | 'Wizard'
+
+export interface SelfCheckInContextApiDto {
+  businessName: string
+  logoUrl: string | null
+  deviceName: string
+  // The tablet has no merchant session, so the layout it should render rides along with the
+  // branding it already fetches rather than coming from the settings endpoint.
+  checkInLayout: PosCheckInLayout
+}
+
+export interface SelfCheckInServiceApiDto {
+  id: string
+  name: string
+  price: number
+  durationMinutes: number
+  description: string | null
+  photoUrl: string | null
+  categories: { id: string; name: string }[]
+}
+
+export interface SelfCheckInTechnicianApiDto {
+  posStaffProfileId: string
+  displayName: string
+  photoUrl: string | null
+  // Services this technician is assigned to. Lets the kiosk decide on the spot whether the
+  // technician the customer picked up front can actually do what they then chose — no round trip
+  // per service, and the same data drives the per-service dropdown on the overview.
+  serviceIds: string[]
+  // Informational, never a block — a busy technician can still be asked for. Shown on both
+  // surfaces since the one-page check-in renders the identical grid.
+  isBusy: boolean
+}
+
+export interface SelfCheckInOrderResultApiDto {
+  orderId: string
+  orderNumber: string
+}
+
+// Front desk twin of SelfCheckInTechnicianApiDto — same rules, merchant session instead of a
+// device token.
+export interface CheckInTechnicianApiDto {
+  posStaffProfileId: string
+  displayName: string
+  photoUrl: string | null
+  serviceIds: string[]
+  isBusy: boolean
+  // Not in the live contract yet (BE is adding it) — optional so today's response (neither field
+  // present) reads as "not local staff", not as a false positive block on every technician's Beep.
+  isLocalStaff?: boolean
+  email?: string | null
+}
+
+export interface CheckInActiveVisitApiDto {
+  orderNumber: string
+}
+
+export interface PosCheckInSettingsApiDto {
+  kioskCheckInLayout: PosCheckInLayout
+  frontDeskCheckInLayout: PosCheckInLayout
+}
+
+// Both front-desk check-in paths answer with this: a walk-in opening a new order and a booked
+// guest converting their appointment.
+export interface PosCheckInResultApiDto {
+  orderId: string
+  orderNumber: string
+}
+
+export interface SelfCheckInBookingItemApiDto {
+  posServiceId: string
+  posStaffProfileId: string | null
+}
+
+export interface SelfCheckInBookingApiDto {
+  bookingId: string
+  // Wall clock at the salon, already resolved server-side — the raw stored value means different
+  // things depending on which flow created the booking.
+  scheduledAt: string
+  customerName: string
+  items: SelfCheckInBookingItemApiDto[]
+}
+
 export interface ClockQrTokenApiDto {
   businessId: string
   token: string
@@ -369,6 +614,10 @@ export interface TimeClockRosterRowApiDto {
   // Open shift started before today — forgot to clock out, nightly job has not run yet.
   hasForgottenEntry: boolean
   forgottenEntryClockInAt?: string | null
+  // Not in the live contract yet (BE is adding it) — optional so today's response (neither field
+  // present) reads as "not local staff", not as a false positive block on every row's Beep.
+  isLocalStaff?: boolean
+  email?: string | null
 }
 
 export interface TimeClockRosterApiDto {
@@ -392,6 +641,76 @@ export interface BeepStaffResultApiDto {
   beepedAt: string
   // False when the tech has no account to notify — the front desk still needs to know.
   delivered: boolean
+}
+
+// Two-way beep. The salon-side feed (GET .../time-clock/beeps) is the single source of truth for
+// beep state on the front desk: the roster is one row per staff member and cannot carry three
+// calls to the same tech, each with its own reply.
+export interface PosBeepApiDto {
+  beepId: string
+  posStaffProfileId: string
+  staffDisplayName: string
+  staffPhotoUrl?: string | null
+  // False for a tech added for payout only — explains a beep that will never be answered.
+  hasAppAccount: boolean
+  message?: string | null
+  beepedAt: string
+  // PosStaffBeepStatus. Effective value: Expired is computed server-side, never stored.
+  status: string
+  respondedAt?: string | null
+  delayMinutes?: number | null
+  responseNote?: string | null
+  resolvedAt?: string | null
+  resolvedByDisplayName?: string | null
+  nudgeCount: number
+  lastNudgedAt?: string | null
+  sentByDisplayName?: string | null
+  expiresAt: string
+  nextNudgeAllowedAt: string
+  // Server-computed so the front desk never re-implements the rules.
+  canNudge: boolean
+  canResolve: boolean
+}
+
+// The tech's own view. Spans every salon they are linked to, so businessName says which front desk
+// is calling.
+export interface ActiveStaffBeepApiDto {
+  beepId: string
+  businessId: string
+  businessName: string
+  businessStaffLinkId: string
+  posStaffProfileId: string
+  message?: string | null
+  beepedAt: string
+  expiresAt: string
+  status: string
+  respondedAt?: string | null
+  delayMinutes?: number | null
+  responseNote?: string | null
+  nudgeCount: number
+  lastNudgedAt?: string | null
+}
+
+export interface ActiveStaffBeepsApiDto {
+  // Owned by the server so the Busy chips cannot drift from the validator.
+  allowedDelayMinutes: number[]
+  beeps: ActiveStaffBeepApiDto[]
+}
+
+export interface RespondToBeepRequest {
+  // PosStaffBeepResponse
+  response: string
+  // Required for Busy, must be omitted otherwise.
+  delayMinutes?: number
+  note?: string
+}
+
+export interface StaffBeepResponseResultApiDto {
+  beepId: string
+  status: string
+  respondedAt?: string | null
+  delayMinutes?: number | null
+  responseNote?: string | null
 }
 
 export interface ClockScanPreviewApiDto {
@@ -423,15 +742,58 @@ export interface InServiceOrderApiDto {
 
 export interface OrderServiceLineApiDto {
   id: string
-  posServiceId: string
+  /** Null on a custom (off-menu) line — nothing in the catalog to qualify a technician against. */
+  posServiceId: string | null
   serviceName: string
   unitPrice: number
   quantity: number
+  /** Original price of the line, before any discount. Commission and tip weight use this. */
   lineTotal: number
+  /** 'Percent' | 'Amount' — see PosServiceDiscountType. Null when the line is not discounted. */
+  discountType?: string | null
+  discountValue?: number | null
+  discountAmount: number
+  /** 'Salon' | 'Staff' | 'Split' — see PosDiscountBearer. */
+  discountBearer?: string | null
+  /** The part of discountAmount deducted from the technician's pay. */
+  staffDiscountShare: number
+  discountNote?: string | null
+  /** What the customer pays for this line. */
+  lineTotalAfterDiscount: number
+  /** False when the assigned technician is on hourly/fixed pay, or nobody is assigned yet. */
+  canAssignDiscountToStaff: boolean
   assignedPosStaffProfileId?: string | null
   technicianName?: string | null
   note?: string | null
+  /** See PosOrderItemStatus — Unassigned/PendingAcceptance/Assigned/Started/Completed. */
+  lineStatus: string
+  acceptedAt?: string | null
+  startedAt?: string | null
   completedAt?: string | null
+  /** Extras sold against this service, in the order they were rung up. */
+  addOns: OrderServiceAddOnLineApiDto[]
+}
+
+/**
+ * An extra sold against a service line. It carries no technician of its own — the technician is
+ * always the parent service's — and no quantity: two of the same add-on are two lines.
+ */
+export interface OrderServiceAddOnLineApiDto {
+  id: string
+  serviceAddOnId: string
+  addOnName: string
+  unitPrice: number
+  lineTotal: number
+  /** 'Percent' | 'Amount'. Null when the add-on is not discounted. */
+  discountType?: string | null
+  discountValue?: number | null
+  discountAmount: number
+  /** 'Salon' | 'Staff' | 'Split'. */
+  discountBearer?: string | null
+  staffDiscountShare: number
+  discountNote?: string | null
+  lineTotalAfterDiscount: number
+  canAssignDiscountToStaff: boolean
 }
 
 export interface OrderProductLineApiDto {
@@ -440,6 +802,72 @@ export interface OrderProductLineApiDto {
   unitPrice: number
   quantity: number
   lineTotal: number
+}
+
+/**
+ * One order-level discount slot. A promotionId wins: the backend then reads type/value from the
+ * promotion and ignores what is sent here. Both null clears the discount.
+ */
+export interface SetOrderDiscountPayload {
+  promotionId?: string | null
+  /** 'Percent' | 'Amount'. Null with no promotionId clears the order-level discount. */
+  discountType: string | null
+  discountValue: number | null
+  discountNote?: string | null
+}
+
+/** An offer this visit qualifies for, judged on its check-in time in salon-local time. */
+export interface EligiblePromotionApiDto {
+  id: string
+  name: string
+  badgeLabel?: string | null
+  /** 'Percent' | 'Amount'. */
+  discountType: string
+  discountValue: number
+  /** Day names, e.g. ['Monday', 'Tuesday']. */
+  daysOfWeek: string[]
+  /** 'HH:mm:ss' in salon-local time. */
+  startTime: string
+  endTime: string
+}
+
+export interface PosPromotionApiDto extends EligiblePromotionApiDto {
+  isActive: boolean
+  /** False once a visit has used the promotion — it can only be deactivated from then on. */
+  canDelete: boolean
+}
+
+export interface PosPromotionPayload {
+  name: string
+  badgeLabel: string | null
+  discountType: string
+  discountValue: number
+  daysOfWeek: string[]
+  startTime: string
+  endTime: string
+  isActive: boolean
+}
+
+export interface AddOrderCustomServiceLinePayload {
+  customServiceName: string
+  price: number
+  note: string | null
+  /** Null is "First available" — the line is left for someone on the floor to take. */
+  posStaffProfileId: string | null
+}
+
+/** Exactly one target: a catalog service, or a custom name + price. */
+export type UpdateOrderServiceLineTarget =
+  | { posServiceId: string }
+  | { customServiceName: string; price: number }
+
+export interface SetOrderServiceLineDiscountPayload {
+  /** 'Percent' | 'Amount'. Null clears the discount on the line. */
+  discountType: string | null
+  discountValue: number | null
+  /** 'Salon' | 'Staff' | 'Split'. Required whenever discountType is set. */
+  discountBearer: string | null
+  discountNote: string | null
 }
 
 export interface OrderStaffTipShareApiDto {
@@ -453,14 +881,33 @@ export interface OrderDetailApiDto {
   orderNumber: string
   customerName: string
   customerEmail?: string | null
+  /** National number only, digits without the country code. */
   customerPhone?: string | null
+  /** Dial code with a leading "+" (e.g. "+1"). Null when the backend could not resolve the number. */
+  customerPhoneCountryCode?: string | null
+  /** Full E.164 number. Null when the backend could not resolve the number. */
+  customerPhoneE164?: string | null
   status: string
   serviceLines: OrderServiceLineApiDto[]
   productLines: OrderProductLineApiDto[]
   servicesSubtotal: number
   productsSubtotal: number
   tipAmount: number
+  /** Sum of every service-line discount on this order. */
   discountAmount: number
+  /** 'Percent' | 'Amount'. Null when no order-level discount is applied. */
+  orderDiscountType?: string | null
+  orderDiscountValue?: number | null
+  /** Resolved live while the order is open; the frozen snapshot once Completed. */
+  orderDiscountAmount: number
+  /** The most an order-level discount can still take off: servicesSubtotal less discountAmount. */
+  orderDiscountCap: number
+  orderDiscountNote?: string | null
+  /** Null when the cashier typed the discount instead of picking a promotion. */
+  appliedPromotionId?: string | null
+  appliedPromotionName?: string | null
+  /** servicesSubtotal less both discounts — the figure sales tax is charged on. */
+  servicesNet: number
   salesTaxAmount: number
   total: number
   staffTipShares: OrderStaffTipShareApiDto[]
@@ -468,6 +915,42 @@ export interface OrderDetailApiDto {
   receiptEmail?: string | null
   receiptPhone?: string | null
   completedAt?: string | null
+}
+
+/** One option in the "+ Add-On" picker, scoped to the service line it was opened from. */
+export interface ServiceLineAddOnOptionApiDto {
+  id: string
+  name: string
+  price: number
+}
+
+/** Settings view of a service's own add-on list — includes retired ones so they can be re-enabled. */
+export interface ServiceAddOnApiDto {
+  id: string
+  name: string
+  price: number
+  displayOrder: number
+  isActive: boolean
+  /** False once the add-on has been sold — it can then only be deactivated. */
+  canDelete: boolean
+}
+
+/** A service that owns at least one add-on, offered as a copy source. */
+export interface ServiceAddOnCopySourceApiDto {
+  id: string
+  name: string
+  /** Includes inactive add-ons — the copy carries those over too. */
+  addOnCount: number
+}
+
+export interface ServiceAddOnInput {
+  name: string
+  price: number
+}
+
+export interface UpdateServiceAddOnInput extends ServiceAddOnInput {
+  displayOrder: number
+  isActive: boolean
 }
 
 export interface CatalogCategoryApiDto {
@@ -505,6 +988,12 @@ export interface AssignableStaffApiDto {
 // POS Booking — per-business booking rules (Ticket 2). Owner-configurable; Staff can
 // read/write too when their PosRole grants the Operations permission, same access rule
 // as Orders (see IPosOperationsAccessService, backend).
+/** Salon-wide rules for how a ticket's service lines move through their own lifecycle. */
+export interface PosOrderSettingsApiDto {
+  requireStaffAcceptance: boolean
+  warnOnServiceLineStatusMismatch: boolean
+}
+
 export interface PosBookingSettingsApiDto {
   autoConfirmEnabled: boolean
   minLeadTimeMinutes: number
@@ -538,10 +1027,71 @@ export interface CreateBookingPayload {
 }
 
 // POS Booking — Staff/Owner Booking Management screen (Ticket 9)
+export interface ReceiptServiceLineApiDto {
+  serviceName: string
+  // Null when the line was never assigned — the page shows its "First available" label.
+  technicianName: string | null
+  unitPrice: number
+  quantity: number
+  /** Original price of the line, before any discount. */
+  lineTotal: number
+  /** Zero when this line was not discounted. Who absorbed it is deliberately not on the receipt. */
+  discountAmount: number
+  /** What the customer paid for this line. */
+  lineTotalAfterDiscount: number
+  /** Extras performed as part of this service, each printed on its own indented line. */
+  addOns: ReceiptAddOnLineApiDto[]
+}
+
+export interface ReceiptAddOnLineApiDto {
+  addOnName: string
+  lineTotal: number
+  discountAmount: number
+  lineTotalAfterDiscount: number
+}
+
+export interface ReceiptProductLineApiDto {
+  productName: string
+  unitPrice: number
+  quantity: number
+  lineTotal: number
+}
+
+export interface ReceiptApiDto {
+  salonName: string
+  ticketNumber: string
+  // UTC instant; rendered in `timeZone` by the page.
+  completedAt: string
+  // The salon's IANA zone id, or null when the business has none set.
+  timeZone: string | null
+  customerName: string
+  serviceLines: ReceiptServiceLineApiDto[]
+  productLines: ReceiptProductLineApiDto[]
+  servicesSubtotal: number
+  productsSubtotal: number
+  tipAmount: number
+  discountAmount: number
+  /** The order-level discount ("Discount all services"), frozen at checkout. */
+  orderDiscountAmount: number
+  /** 'Percent' | 'Amount'. Null when no order-level discount was applied. */
+  orderDiscountType?: string | null
+  orderDiscountValue?: number | null
+  /** The promotion's name as it was when applied — a later rename never rewrites this receipt. */
+  appliedPromotionName?: string | null
+  salesTaxAmount: number
+  total: number
+  paymentMethodType: string | null
+}
+
 export interface BookingListItemApiDto {
   bookingId: string
   customerName: string
+  /** National number only, digits without the country code. */
   customerPhone?: string | null
+  /** Dial code with a leading "+" (e.g. "+1"). Null when the backend could not resolve the number. */
+  customerPhoneCountryCode?: string | null
+  /** Full E.164 number. Null when the backend could not resolve the number. */
+  customerPhoneE164?: string | null
   // ISO 8601, always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
   createdAt: string
   // ISO 8601 with offset — always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
@@ -581,7 +1131,12 @@ export interface BookingDetailServiceApiDto {
 export interface BookingDetailApiDto {
   bookingId: string
   customerName: string
+  /** National number only, digits without the country code. */
   customerPhone?: string | null
+  /** Dial code with a leading "+" (e.g. "+1"). Null when the backend could not resolve the number. */
+  customerPhoneCountryCode?: string | null
+  /** Full E.164 number. Null when the backend could not resolve the number. */
+  customerPhoneE164?: string | null
   customerEmail?: string | null
   // ISO 8601, always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
   createdAt: string
@@ -721,8 +1276,6 @@ export interface ManageBookingApiDto {
 export interface ManageBookingReschedulePayload {
   scheduledAt: string
 }
-
-export type PosCheckoutPaymentMethodType = 'Card' | 'Cash' | 'GiftCard' | 'SplitPay'
 
 export interface CompleteOrderPayload {
   paymentMethodType: PosCheckoutPaymentMethodType
@@ -1086,6 +1639,8 @@ export interface StaffListItemApiDto {
   inviteId?: string
   staffLinkId?: string
   staffProfileId?: string | null
+  userProfileId?: string | null
+  userId?: string | null
   staffCode?: string | null
   refCode?: string | null
   source?: string | null
@@ -1114,8 +1669,39 @@ export interface StaffListItemApiDto {
   paymentMethods?: StaffPaymentMethodApiDto[]
   invites?: StaffInviteSummaryApiDto[]
   isLocalStaff?: boolean
-  staffProfile?: { staffCode?: string | null; phoneNumber?: string; phone?: string; email?: string }
-  user?: { phoneNumber?: string; phone?: string; email?: string }
+  staffProfile?: { phoneNumber?: string; phone?: string; email?: string }
+  user?: { id?: string; userProfileId?: string; phoneNumber?: string; phone?: string; email?: string }
+}
+
+/**
+ * `GET /api/v1/merchant/staff/{staffCode}` — StaffDetailByCodeDto.
+ * Includes `userProfileId` and paymentMethods with optional VlinkPay `cryptoAddresses`.
+ */
+export interface StaffDetailByCodeApiDto extends StaffListItemApiDto {
+  linkId: string
+  itemType: string
+  staffProfileId: string
+  userProfileId: string | null
+  staffCode: string
+  displayName: string
+  nicknameAtBusiness: string | null
+  photoUrl: string | null
+  position: string | null
+  bio: string | null
+  roleAtBusiness: string | null
+  status: string
+  sortOrder: number
+  isProfileComplete: boolean
+  isLocalStaff: boolean
+  tipCount: number
+  averageRating: number
+  email: string | null
+  phoneNumber: string | null
+  firstName: string | null
+  lastName: string | null
+  joinDate: string | null
+  invites: StaffInviteSummaryApiDto[]
+  paymentMethods: StaffPaymentMethodApiDto[]
 }
 
 export interface LocalStaffApiDto {

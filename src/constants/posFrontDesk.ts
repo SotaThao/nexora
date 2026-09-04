@@ -9,11 +9,13 @@
 export enum PosFrontDeskTab {
   CheckIn = 'checkin',
   OrderList = 'orderlist',
+  CheckoutCustomer = 'checkoutcustomer',
   TurnBoard = 'turnboard',
   Completed = 'completed',
   Booking = 'booking',
   TimeClock = 'timeclock',
   Customer = 'customer',
+  Report = 'report',
 }
 
 /** Render order of the tab bar. */
@@ -21,10 +23,12 @@ export const POS_FRONT_DESK_TABS: PosFrontDeskTab[] = [
   PosFrontDeskTab.CheckIn,
   PosFrontDeskTab.OrderList,
   PosFrontDeskTab.TurnBoard,
+  PosFrontDeskTab.CheckoutCustomer,
   PosFrontDeskTab.Completed,
   PosFrontDeskTab.Booking,
   PosFrontDeskTab.TimeClock,
   PosFrontDeskTab.Customer,
+  PosFrontDeskTab.Report,
 ]
 
 export const DEFAULT_POS_FRONT_DESK_TAB = PosFrontDeskTab.OrderList
@@ -33,17 +37,37 @@ export const DEFAULT_POS_FRONT_DESK_TAB = PosFrontDeskTab.OrderList
 export const POS_FRONT_DESK_TAB_PARAM = 'tab'
 
 /**
+ * Report period deep-link params, e.g. `?tab=report&mode=Daily&dates=2026-08-21`.
+ * The plural query-key names are kept for backwards-compatible links, but the picker now keeps
+ * exactly one day, one ISO week, or one month.
+ */
+export const REPORT_MODE_PARAM = 'mode'
+export const REPORT_DATES_PARAM = 'dates'
+export const REPORT_WEEKS_PARAM = 'weeks'
+export const REPORT_MONTH_PARAM = 'month'
+
+/**
  * Order List (US-17) folded the old standalone Waitlist tab in as a filter — Waiting + InService
  * both come from the same useOrderList query, so this stays a client-side filter, not a query.
  */
 export enum OrderListFilter {
   All = 'all',
+  NotArrived = 'notarrived',
   Waiting = 'waiting',
   InService = 'inservice',
 }
 
+/**
+ * Guest-journey order: not arrived -> waiting -> in service.
+ *
+ * NotArrived is the odd one out — it is not a ticket status. A booking only becomes a ticket at
+ * check-in, so that chip reads today's booking list while the other three filter the order list.
+ * All (= the whole day's guests) counts and lists them too, after its tickets, in a row shape of
+ * their own — a booking has no ticket number, status or elapsed time to put in those columns.
+ */
 export const ORDER_LIST_FILTERS: OrderListFilter[] = [
   OrderListFilter.All,
+  OrderListFilter.NotArrived,
   OrderListFilter.Waiting,
   OrderListFilter.InService,
 ]

@@ -380,6 +380,7 @@ export default function DashboardSidebar({
                       activeMenu,
                       activeSubTab,
                       sub.id,
+                      location.pathname,
                     )
                     return (
                       <button

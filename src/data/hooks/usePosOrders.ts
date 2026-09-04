@@ -3,17 +3,20 @@
  * to Order in US-026). Usable by both Owner and Staff sessions (gated server-side via
  * IPosOperationsAccessService) — see usePosAccess for the FE show/hide check.
  */
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData, type QueryKey } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import { useSessionRole } from '../../auth/useSessionRole'
 import posOrdersRepository from '../repositories/posOrders'
+import { isPersistedLineId, unlessOptimisticId } from '../../utils/uuid'
 import type {
   AssignableStaffApiDto,
   CheckInOrderPayload,
   CompletedOrdersListQuery,
   CompletedOrdersPage,
   CustomerLookupResultApiDto,
+  OrderDetailApiDto,
   OrderListItemApiDto,
+  PosCheckInResultApiDto,
   PosWaitlistOrderApiDto,
 } from '../../types/repositories'
 
@@ -35,7 +38,7 @@ export function useWaitlist(businessId?: string) {
 
 export function useCheckInOrder(businessId?: string) {
   const queryClient = useQueryClient()
-  return useMutation<string, Error, CheckInOrderPayload>({
+  return useMutation<PosCheckInResultApiDto, Error, CheckInOrderPayload>({
     mutationFn: (payload) => posOrdersRepository.checkInOrder(businessId as string, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
@@ -45,8 +48,8 @@ export function useCheckInOrder(businessId?: string) {
 }
 
 // Check-in "returning customer" suggestion (Ticket 2) — only fires once `phone` has
-// enough digits to plausibly be a real number; caller (CustomerHeaderBar) is responsible
-// for debouncing keystrokes before this becomes enabled.
+// enough digits to plausibly be a real number; the caller is responsible for debouncing
+// keystrokes before this becomes enabled.
 export function useCustomerLookupByPhone(businessId?: string, phone?: string) {
   const { isAuthenticated } = useSessionRole()
   const digitCount = (phone ?? '').replace(/\D/g, '').length
@@ -55,33 +58,45 @@ export function useCustomerLookupByPhone(businessId?: string, phone?: string) {
     queryFn: () => posOrdersRepository.getCustomerLookupByPhone(businessId as string, phone as string),
     enabled: isAuthenticated && Boolean(businessId) && digitCount >= CUSTOMER_LOOKUP_MIN_DIGITS,
     retry: false,
-    staleTime: 30000,
+    // Never cached beyond the visit it belongs to. The key already includes the full phone, so a
+    // staleTime deduped nothing across guests — it only served a stale answer back for the same
+    // number, which is how a guest who checked in minutes ago came back as "no name on file".
+    gcTime: 0,
+    staleTime: 0,
   })
 }
 
 // Order List tab (US-17) — Waiting + InService combined.
-export function useOrderList(businessId?: string) {
+export function useOrderList(
+  businessId?: string,
+  options?: { enabled?: boolean; refetchInterval?: number | false },
+) {
   const { isAuthenticated } = useSessionRole()
   return useQuery<OrderListItemApiDto[]>({
     queryKey: qk.merchantPosOrderList(businessId),
     queryFn: () => posOrdersRepository.getOrderList(businessId as string),
-    enabled: isAuthenticated && Boolean(businessId),
+    enabled: isAuthenticated && Boolean(businessId) && (options?.enabled ?? true),
     retry: false,
-    refetchInterval: 15000,
+    refetchInterval: options?.refetchInterval ?? 15000,
   })
 }
 
 // Completed Orders panel (US-17 follow-up) — paginated + filterable by date range/
 // customer name/phone. keepPreviousData avoids a flicker back to an empty list while the
 // user is paging or adjusting filters.
-export function useCompletedOrders(businessId: string | undefined, filters: CompletedOrdersListQuery) {
+export function useCompletedOrders(
+  businessId: string | undefined,
+  filters: CompletedOrdersListQuery,
+  options?: { enabled?: boolean; refetchInterval?: number | false },
+) {
   const { isAuthenticated } = useSessionRole()
   return useQuery<CompletedOrdersPage>({
     queryKey: qk.merchantPosCompletedOrders(businessId, filters),
     queryFn: () => posOrdersRepository.getCompletedOrders(businessId as string, filters),
-    enabled: isAuthenticated && Boolean(businessId),
+    enabled: isAuthenticated && Boolean(businessId) && (options?.enabled ?? true),
     placeholderData: keepPreviousData,
     retry: false,
+    refetchInterval: options?.refetchInterval,
   })
 }
 
@@ -98,20 +113,69 @@ export function useCancelOrder(businessId?: string) {
 
 // US-026 — assigns one staff member to one service line (not the whole order).
 // Does not by itself flip the order to InService — see useStartOrderService.
+// `technicianName` is UI-only: it patches the ticket line immediately so the desk never
+// flashes the previous technician while GetOrderDetailQuery round-trips.
 export function useAssignStaffToServiceLine(businessId?: string) {
   const queryClient = useQueryClient()
   return useMutation<
     boolean,
     Error,
-    { orderId: string; serviceLineId: string; posStaffProfileId?: string; note?: string }
+    {
+      orderId: string
+      serviceLineId: string
+      posStaffProfileId?: string
+      technicianName?: string | null
+      note?: string
+    },
+    { previousOrder?: OrderDetailApiDto; queryKey: QueryKey }
   >({
     mutationFn: ({ orderId, serviceLineId, posStaffProfileId, note }) =>
-      posOrdersRepository.assignStaffToServiceLine(businessId as string, orderId, serviceLineId, posStaffProfileId, note),
-    onSuccess: (_result, { orderId }) => {
-      queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
-      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
-      queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
-      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
+      unlessOptimisticId(
+        serviceLineId,
+        () =>
+          posOrdersRepository.assignStaffToServiceLine(
+            businessId as string,
+            orderId,
+            serviceLineId,
+            posStaffProfileId,
+            note,
+          ),
+        false,
+      ),
+    onMutate: async ({ orderId, serviceLineId, posStaffProfileId, technicianName, note }) => {
+      if (!isPersistedLineId(serviceLineId)) return
+      const queryKey = qk.merchantPosOrderDetail(businessId, orderId)
+      await queryClient.cancelQueries({ queryKey })
+      const previousOrder = queryClient.getQueryData<OrderDetailApiDto>(queryKey)
+      if (previousOrder) {
+        queryClient.setQueryData<OrderDetailApiDto>(queryKey, {
+          ...previousOrder,
+          serviceLines: previousOrder.serviceLines.map((line) =>
+            line.id === serviceLineId
+              ? {
+                  ...line,
+                  assignedPosStaffProfileId: posStaffProfileId ?? null,
+                  technicianName: technicianName ?? null,
+                  note: note ?? line.note,
+                }
+              : line,
+          ),
+        })
+      }
+      return { previousOrder, queryKey }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousOrder) {
+        queryClient.setQueryData(context.queryKey, context.previousOrder)
+      }
+    },
+    onSuccess: async (_result, { orderId }) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) }),
+        queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) }),
+        queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) }),
+        queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) }),
+      ])
     },
   })
 }
@@ -144,18 +208,39 @@ export function useAssignableStaffForService(businessId?: string, posServiceId?:
   })
 }
 
-// Inverse of useAssignableStaffForService — which services the chosen technician can
-// perform, used by Check-in Step 2 to disable services outside that technician's skill
-// set. Undefined posStaffProfileId (First Available) means no filtering — caller should
-// simply not pass it, leaving every service enabled.
-export function useAssignableServicesForStaff(businessId?: string, posStaffProfileId?: string) {
-  const { isAuthenticated } = useSessionRole()
-  return useQuery<string[]>({
-    queryKey: qk.merchantPosAssignableServices(businessId, posStaffProfileId),
-    queryFn: () => posOrdersRepository.getAssignableServicesForStaff(businessId as string, posStaffProfileId as string),
-    enabled: isAuthenticated && Boolean(businessId) && Boolean(posStaffProfileId),
-    retry: false,
+// Accept / decline / start one service line. All three invalidate the same boards: declining
+// hands the line back to the floor, and starting can flip the whole ticket to In Service.
+function useServiceLineAction(
+  businessId: string | undefined,
+  action: (businessId: string, orderId: string, serviceLineId: string) => Promise<boolean>,
+) {
+  const queryClient = useQueryClient()
+  return useMutation<boolean, Error, { orderId: string; serviceLineId: string }>({
+    mutationFn: ({ orderId, serviceLineId }) =>
+      unlessOptimisticId(
+        serviceLineId,
+        () => action(businessId as string, orderId, serviceLineId),
+        false,
+      ),
+    onSuccess: (_result, { orderId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
+    },
   })
+}
+
+export function useAcceptServiceLine(businessId?: string) {
+  return useServiceLineAction(businessId, posOrdersRepository.acceptServiceLine)
+}
+
+export function useRejectServiceLine(businessId?: string) {
+  return useServiceLineAction(businessId, posOrdersRepository.rejectServiceLine)
+}
+
+export function useStartServiceLine(businessId?: string) {
+  return useServiceLineAction(businessId, posOrdersRepository.startServiceLine)
 }
 
 // US-026 — frees the assigned staff on this line immediately, independent of the
@@ -164,10 +249,16 @@ export function useMarkServiceLineDone(businessId?: string) {
   const queryClient = useQueryClient()
   return useMutation<boolean, Error, { orderId: string; serviceLineId: string }>({
     mutationFn: ({ orderId, serviceLineId }) =>
-      posOrdersRepository.markServiceLineDone(businessId as string, orderId, serviceLineId),
+      unlessOptimisticId(
+        serviceLineId,
+        () => posOrdersRepository.markServiceLineDone(businessId as string, orderId, serviceLineId),
+        false,
+      ),
     onSuccess: (_result, { orderId }) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
     },
   })
 }

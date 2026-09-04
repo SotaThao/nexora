@@ -20,6 +20,7 @@ import ManagePlanView from '../views/ManagePlanView'
 import BookingHubView from '../views/BookingHubView'
 import AiVoiceSetupGuideView from '../views/AiVoiceSetupGuideView'
 import PackageManagementView from '../views/packageManagement/PackageManagementView'
+import PackageBillingDetailView from '../views/packageManagement/PackageBillingDetailView'
 import TipPlatformCheckoutModal from '../views/packageManagement/TipPlatformCheckoutModal'
 import { useTipPlatformCheckoutFlow } from '../views/packageManagement/useTipPlatformCheckoutFlow'
 import CompleteStoreSetupGateModal from '../modals/CompleteStoreSetupGateModal'
@@ -63,8 +64,11 @@ import PosRolesView from '../views/pos/PosRolesView'
 import PosCategoriesView from '../views/pos/PosCategoriesView'
 import PosServicesView from '../views/pos/PosServicesView'
 import PosProductsView from '../views/pos/PosProductsView'
+import PosPromotionsView from '../views/pos/PosPromotionsView'
 import PosStaffProfileView from '../views/pos/PosStaffProfileView'
 import PosFrontDeskView from '../views/pos/PosFrontDeskView'
+import { formatBusinessAddress } from '../views/pos/posDisplay'
+import PosDevicesView from '../views/pos/devices/PosDevicesView'
 import ResponsiveStaffRoute from './ResponsiveStaffRoute'
 import {
   StaffDetailRouteContent,
@@ -387,6 +391,22 @@ export function PosProductsRoute() {
   return <PosProductsView />
 }
 
+// Promotions are catalog data like Services/Products — not gated behind verificationStatus/KYB.
+// businessId is explicit because the endpoints are per-business (a Staff caller with Operations
+// access may be linked to more than one salon).
+export function PosPromotionsRoute() {
+  const { data: merchantSetupData } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+  if (!businessId) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={1} />
+      </div>
+    )
+  }
+  return <PosPromotionsView businessId={businessId} />
+}
+
 // Staff profile (role/pay/tips/tax filing) is not salon identity data either —
 // not gated behind verificationStatus/KYB, same rationale as the other POS catalog routes.
 export function PosStaffProfileRoute() {
@@ -400,7 +420,11 @@ export function PosFrontDeskRoute() {
   const { data: merchantSetupData } = useMerchantSetup()
   const businessId = merchantSetupData?.businessInfo?.businessId
   const businessName = merchantSetupData?.businessInfo?.name
+  const businessLogoUrl = merchantSetupData?.businessInfo?.logo
+  const businessAddress = formatBusinessAddress(merchantSetupData?.businessInfo ?? {})
+  const businessPhone = merchantSetupData?.businessInfo?.phone
   const businessSlug = merchantSetupData?.businessInfo?.slug
+  const businessTimeZone = merchantSetupData?.businessInfo?.timeZone
   if (!businessId) {
     return (
       <div className="nexora-card p-6">
@@ -408,7 +432,32 @@ export function PosFrontDeskRoute() {
       </div>
     )
   }
-  return <PosFrontDeskView businessId={businessId} businessName={businessName} businessSlug={businessSlug} />
+  return (
+    <PosFrontDeskView
+      businessId={businessId}
+      businessName={businessName}
+      businessLogoUrl={businessLogoUrl}
+      businessAddress={businessAddress}
+      businessPhone={businessPhone}
+      businessSlug={businessSlug}
+      businessTimeZone={businessTimeZone ?? null}
+    />
+  )
+}
+
+// Check-In Devices (POS Self Check-In) — pairing and managing the tablets customers use to check
+// themselves in. Gated server-side on manage_checkin_devices, not on being the Owner.
+export function PosDevicesRoute() {
+  const { data: merchantSetupData } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+  if (!businessId) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={1} />
+      </div>
+    )
+  }
+  return <PosDevicesView businessId={businessId} />
 }
 
 export function TaxIqOverviewRoute() {
@@ -1102,12 +1151,17 @@ export function PackageManagementRoute() {
   return <PackageManagementView />
 }
 
+export function PackageBillingDetailRoute() {
+  return <PackageBillingDetailView />
+}
+
 export function SubscriptionsRoute() {
   const ctx = useOutletContext<LooseObject>()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const {
     tipPlatformSubscription,
+    currentPeriodInMonths,
     packages,
     paymentPlan,
     selectedPackage,
@@ -1129,6 +1183,7 @@ export function SubscriptionsRoute() {
     <>
       <ManagePlanView
         currentSubscription={tipPlatformSubscription}
+        currentPeriodInMonths={currentPeriodInMonths}
         packages={packages}
         onSelectPlan={handleSelectPlan}
       />
@@ -1138,6 +1193,8 @@ export function SubscriptionsRoute() {
         paymentPlanPrice={paymentPlanPrice}
         billingCycle={checkoutBillingCycle}
         currentSubscription={tipPlatformSubscription}
+        currentPeriodInMonths={currentPeriodInMonths}
+        catalogPackages={packages}
         onClose={clearCheckout}
       />
       <CompleteStoreSetupGateModal

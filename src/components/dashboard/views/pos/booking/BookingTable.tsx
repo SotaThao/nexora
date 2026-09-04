@@ -1,9 +1,73 @@
 // BookingTable — Ticket 9, table view for the Booking tab.
+import { CalendarClock, Check, Eye, Loader2, X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { PosOrderStatus } from '../../../../../constants/posOrderStatus'
 import type { BookingListItemApiDto } from '../../../../../types/repositories'
-import { formatBookingWallClock, statusLabelKey } from './bookingFormatters'
-import { formatPosDateTime } from '../posDateTime'
+import { formatCustomerPhone } from '../customer/customerFormatters'
+import {
+  formatBookingHubDateDisplay,
+  formatBookingHubDateTimeParts,
+  formatBookingHubTimeDisplay,
+} from '../../bookingHubFormatters'
+import { resolveBookingWallClockParts, statusLabelKey } from './bookingFormatters'
+import {
+  POS_TABLE_HEADER_CELL_CLASS,
+  POS_TABLE_HEADER_ROW_CLASS,
+  POS_TABLE_STICKY_ACTION_CELL_CLASS,
+  POS_TABLE_STICKY_ACTION_HEADER_CLASS,
+} from '../posTableStyles'
+
+const STATUS_STYLES: Record<string, { row: string; badge: string }> = {
+  [PosOrderStatus.Pending]: {
+    row: 'bg-amber-50/30 hover:bg-amber-50/55',
+    badge: 'border-amber-200 bg-amber-50 text-amber-700',
+  },
+  [PosOrderStatus.Confirmed]: {
+    row: 'bg-sky-50/25 hover:bg-sky-50/50',
+    badge: 'border-sky-200 bg-sky-50 text-sky-700',
+  },
+  [PosOrderStatus.Waiting]: {
+    row: 'bg-violet-50/25 hover:bg-violet-50/50',
+    badge: 'border-violet-200 bg-violet-50 text-violet-700',
+  },
+  [PosOrderStatus.InService]: {
+    row: 'bg-cyan-50/25 hover:bg-cyan-50/50',
+    badge: 'border-cyan-200 bg-cyan-50 text-cyan-700',
+  },
+  [PosOrderStatus.Completed]: {
+    row: 'bg-emerald-50/25 hover:bg-emerald-50/50',
+    badge: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+  },
+  [PosOrderStatus.Cancelled]: {
+    row: 'bg-rose-50/25 hover:bg-rose-50/50',
+    badge: 'border-rose-200 bg-rose-50 text-rose-600',
+  },
+}
+
+const DEFAULT_STATUS_STYLE = {
+  row: 'bg-white hover:bg-nexoraCanvas/70',
+  badge: 'border-nexoraBorder bg-nexoraCanvas text-nexoraText',
+}
+
+function pad(value: number): string {
+  return String(value).padStart(2, '0')
+}
+
+function formatAppointmentParts(iso: string, source: string, language: string) {
+  const { year, month, day, hours, minutes } = resolveBookingWallClockParts(iso, source)
+  const dateKey = `${year}-${pad(month)}-${pad(day)}`
+  const timeKey = `${pad(hours)}:${pad(minutes)}`
+  return {
+    date: formatBookingHubDateDisplay(dateKey, language),
+    time: formatBookingHubTimeDisplay(timeKey, language),
+  }
+}
+
+function formatBookingPhone(phone?: string | null, e164?: string | null): string | null {
+  if (!phone?.trim() && !e164?.trim()) return null
+  const formatted = formatCustomerPhone(phone, e164)
+  return formatted || phone || e164 || null
+}
 
 export default function BookingTable({
   bookings,
@@ -24,70 +88,125 @@ export default function BookingTable({
   const p = 'components.dashboard.views.pos.BookingTab.'
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-nexoraBorder">
-      <table className="w-full min-w-[720px] text-left text-xs">
+    <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
+      <table className="w-full min-w-[980px] table-auto text-left text-xs">
         <thead>
-          <tr className="border-b border-nexoraBorder bg-nexoraCanvas text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-            <th className="text-xs font-black px-3 py-2">{t(p + 'columnCustomer')}</th>
-            <th className="text-xs font-black px-3 py-2">{t(p + 'columnCreated')}</th>
-            <th className="text-xs font-black px-3 py-2">{t(p + 'columnDateTime')}</th>
-            <th className="text-xs font-black px-3 py-2">{t(p + 'columnServices')}</th>
-            <th className="text-xs font-black px-3 py-2">{t(p + 'columnTechnician')}</th>
-            <th className="text-xs font-black px-3 py-2">{t(p + 'columnStatus')}</th>
-            <th className="text-xs font-black px-3 py-2">{t(p + 'columnActions')}</th>
+          <tr className={POS_TABLE_HEADER_ROW_CLASS}>
+            <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnCustomer')}</th>
+            <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnCreated')}</th>
+            <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnDateTime')}</th>
+            <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnServices')}</th>
+            <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnTechnician')}</th>
+            <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnStatus')}</th>
+            <th className={`${POS_TABLE_HEADER_CELL_CLASS} ${POS_TABLE_STICKY_ACTION_HEADER_CLASS} text-right`}>{t(p + 'columnActions')}</th>
           </tr>
         </thead>
         <tbody>
           {bookings.map((booking) => {
             const canAct = booking.status === PosOrderStatus.Pending || booking.status === PosOrderStatus.Confirmed
+            const statusStyle = STATUS_STYLES[booking.status] ?? DEFAULT_STATUS_STYLE
+            const appointment = formatAppointmentParts(booking.scheduledAt, booking.source, currentLanguage)
+            const created = formatBookingHubDateTimeParts(booking.createdAt, currentLanguage)
+            const phone = formatBookingPhone(booking.customerPhone, booking.customerPhoneE164)
             return (
-              <tr key={booking.bookingId} className="border-b border-nexoraBorder last:border-0">
-                <td className="px-3 py-2 font-bold text-nexoraText">{booking.customerName}</td>
-                <td className="px-3 py-2 text-nexoraMuted">{formatPosDateTime(booking.createdAt, currentLanguage)}</td>
-                <td className="px-3 py-2 text-nexoraMuted">{formatBookingWallClock(booking.scheduledAt, booking.source)}</td>
-                <td className="px-3 py-2 text-nexoraMuted">{booking.serviceNames.join(', ')}</td>
-                <td className="px-3 py-2 text-nexoraMuted">
-                  {booking.technicianNames.length > 0 ? booking.technicianNames.join(', ') : t(p + 'unassigned')}
+              <tr
+                key={booking.bookingId}
+                data-status={booking.status}
+                className={`border-b border-nexoraBorder/70 last:border-0 transition-colors ${statusStyle.row}`}
+              >
+                <td className="px-4 py-3 align-middle">
+                  <div className="grid min-w-0 gap-1">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="pos-customer-name truncate font-extrabold text-nexoraText">{booking.customerName}</span>
+                      {booking.orderNumber ? (
+                        <span className="shrink-0 rounded-full border border-nexoraBorder bg-white px-1.5 py-0.5 text-[9px] font-bold text-nexoraMuted">
+                          #{booking.orderNumber}
+                        </span>
+                      ) : null}
+                    </div>
+                    <span className="whitespace-nowrap text-[11px] font-semibold tabular-nums text-nexoraMuted">
+                      {phone ?? '—'}
+                    </span>
+                  </div>
                 </td>
-                <td className="whitespace-nowrap px-3 py-2">
-                  <span className="whitespace-nowrap rounded-full bg-nexoraCanvas px-2 py-0.5 text-[10px] font-bold text-nexoraText">
+                <td className="px-4 py-3 align-middle">
+                  <div className="grid gap-0.5 whitespace-nowrap">
+                    <span className="font-semibold text-nexoraText">{created?.date ?? '—'}</span>
+                    <span className="text-[11px] font-semibold text-nexoraText">{created?.time ?? '—'}</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3 align-middle">
+                  <div className="grid gap-0.5 whitespace-nowrap">
+                    <span className="font-semibold text-nexoraText">{appointment.date}</span>
+                    <span className="text-[11px] font-semibold text-nexoraText">{appointment.time}</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3 align-middle">
+                  <div className="flex flex-wrap gap-1.5">
+                    {booking.serviceNames.length > 0 ? (
+                      booking.serviceNames.map((service, index) => (
+                        <span
+                          key={`${service}-${index}`}
+                          className="inline-flex max-w-full items-center rounded-full border border-nexoraBrand/15 bg-white px-2 py-1 text-[11px] font-bold text-nexoraText"
+                        >
+                          <span className="truncate">{service}</span>
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-[11px] text-nexoraMuted">—</span>
+                    )}
+                  </div>
+                </td>
+                <td className="px-4 py-3 align-middle">
+                  <span className="inline-flex max-w-full items-center rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-[11px] font-bold text-nexoraText">
+                    <span className="truncate">
+                      {booking.technicianNames.length > 0 ? booking.technicianNames.join(', ') : t(p + 'unassigned')}
+                    </span>
+                  </span>
+                </td>
+                <td className="px-4 py-3 align-middle">
+                  <span className={`inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-1 text-[10px] font-extrabold ${statusStyle.badge}`}>
                     {t(p + statusLabelKey(booking.status))}
                   </span>
                 </td>
-                <td className="px-3 py-2">
-                  <div className="flex flex-wrap gap-1.5">
+                <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} px-4 py-3 align-middle`}>
+                  <div className="inline-flex w-max justify-end gap-1.5">
                     {canAct ? (
                       <>
                         <button
                           type="button"
                           onClick={() => onCheckIn(booking.bookingId)}
                           disabled={checkingInId === booking.bookingId}
-                          className="rounded-lg bg-nexoraBrand px-2 py-1 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+                          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 text-[10px] font-extrabold text-emerald-700 transition-colors hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                          {t(p + 'checkInAction')}
+                          {checkingInId === booking.bookingId ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : <Check className="h-3.5 w-3.5" aria-hidden="true" />}
+                          <span>{t(p + 'checkInAction')}</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => onReschedule(booking.bookingId)}
-                          className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand"
+                          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-sky-200 bg-sky-50 px-2.5 text-[10px] font-extrabold text-sky-700 transition-colors hover:border-sky-300 hover:bg-sky-100"
                         >
-                          {t(p + 'rescheduleAction')}
+                          <CalendarClock className="h-3.5 w-3.5" aria-hidden="true" />
+                          <span>{t(p + 'rescheduleAction')}</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => onCancel(booking.bookingId)}
-                          className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-rose-500 hover:text-rose-500"
+                          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 text-[10px] font-extrabold text-rose-600 transition-colors hover:border-rose-300 hover:bg-rose-100"
                         >
-                          {t(p + 'cancelAction')}
+                          <X className="h-3.5 w-3.5" aria-hidden="true" />
+                          <span>{t(p + 'cancelAction')}</span>
                         </button>
                       </>
                     ) : null}
                     <button
                       type="button"
                       onClick={() => onViewDetail(booking.bookingId)}
-                      className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand"
+                      className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-2.5 text-[10px] font-extrabold text-violet-700 transition-colors hover:border-violet-300 hover:bg-violet-100"
                     >
-                      {t(p + 'viewDetailAction')}
+                      <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>{t('common.view')}</span>
                     </button>
                   </div>
                 </td>

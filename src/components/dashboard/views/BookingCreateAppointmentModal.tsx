@@ -23,6 +23,7 @@ import {
   toStartTimeApi,
 } from '../../../data/repositories/publicVoiceBooking'
 import { getApiErrorCode } from '../../../types/domain'
+import { toTwelveHourLangTag } from '../../../constants/timeFormat'
 import CountryCodeSelect, {
   formatNationalNumber,
   getNationalPhonePlaceholder,
@@ -43,6 +44,7 @@ import BookingHubDatePicker from './BookingHubDatePicker'
 import {
   BOOKING_CREATE_NAME_MAX,
   BOOKING_CREATE_NOTE_MAX,
+  BOOKING_CREATE_STATUS_OPTIONS,
   BOOKING_CREATE_STAFF_PAGE_SIZE,
   BOOKING_CREATE_TIME_STEP_SECONDS,
   BOOKING_CREATE_TK,
@@ -64,7 +66,6 @@ import {
 import {
   BOOKING_CALENDAR_DEFAULT_DURATION_MINUTES,
   BOOKING_CALENDAR_UNASSIGNED_TECH,
-  BOOKING_STATUS_FILTER_ORDER,
   BOOKING_STATUS_META,
   BookingAppointmentPanelState,
 } from './bookingTodayConstants'
@@ -147,7 +148,7 @@ export default function BookingCreateAppointmentModal({
   const dialogRef = useRef<HTMLDivElement>(null)
 
   const phoneParsed = useMemo(() => parsePhone(phone), [phone])
-  const localeTag = `${locale}-u-hc-h12`
+  const localeTag = toTwelveHourLangTag(locale)
 
   const clearFieldError = (field: BookingCreateField) => {
     setFieldErrors((prev) => {
@@ -633,7 +634,7 @@ export default function BookingCreateAppointmentModal({
               value={status}
               onChange={(event) => setStatus(event.target.value as BookingUiStatus)}
             >
-              {BOOKING_STATUS_FILTER_ORDER.map((option) => (
+              {BOOKING_CREATE_STATUS_OPTIONS.map((option) => (
                 <option key={option} value={option}>
                   {t(`${TK_TODAY}.${BOOKING_STATUS_META[option].labelKey}`)}
                 </option>

@@ -29,6 +29,7 @@ import {
   resolveTouchpointRedirectUrl,
 } from '../../../utils/customerFlowKind'
 import { WALLET_KEYS } from '../constants'
+import { randomUuid } from '../../../utils/uuid'
 import {
   emptyVlinkpayAddresses,
   getSingleConfiguredVlinkpayCoin,
@@ -214,7 +215,7 @@ export default function useCustomerFlow() {
 
   const sessionId = useMemo(() => {
     const params = new URLSearchParams(window.location.search)
-    return params.get('sessionId') || crypto.randomUUID()
+    return params.get('sessionId') || randomUuid()
   }, [])
 
   const touchSearchParams = useMemo(
@@ -249,12 +250,17 @@ export default function useCustomerFlow() {
 
   useEffect(() => {
     if (!touchPageQuery.isSuccess || !touchPageData) return
-    const redirectPath = resolveTouchpointRedirectUrl(touchPageData)
+    // Carry the touch context so /pay can load this touchpoint's tippable staff.
+    const redirectPath = resolveTouchpointRedirectUrl(touchPageData, undefined, {
+      businessSlug: touchRoute?.businessSlug,
+      touchPointSlug: touchRoute?.touchPointSlug,
+      sessionId,
+    })
     if (!redirectPath) return
     const currentPath = `${window.location.pathname}${window.location.search}`
     if (currentPath === redirectPath) return
     window.location.replace(redirectPath)
-  }, [touchPageQuery.isSuccess, touchPageData])
+  }, [touchPageQuery.isSuccess, touchPageData, touchRoute, sessionId])
 
   // ── API mutations ──
   const createTipMutation = useCreateTip()

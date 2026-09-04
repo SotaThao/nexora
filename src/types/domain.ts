@@ -11,8 +11,13 @@ export interface MerchantBusinessInfo {
   slug?: string
   industry?: string
   address?: string
+  city?: string
+  state?: string
+  zipCode?: string
+  country?: string
   phone?: string
   website?: string
+  timeZone?: string | null
   logo?: string | null
   bookingNotificationPhone?: string
   salesTaxRatePercent?: number
@@ -49,6 +54,7 @@ export interface ReviewLinks {
   googleReview?: string
   yelpReview?: string
   facebookReview?: string
+  instagramReview?: string
   feedbackEmail?: string
 }
 
@@ -116,12 +122,38 @@ export interface PublicDirectPaymentMethod {
   cryptoAddresses?: PaymentMethodCryptoAddressDto[] | null
 }
 
+/** Tippable staff row rendered by the payment/touch tip pickers. */
+export interface PublicDirectPaymentStaff {
+  id: string
+  displayName: string
+  /** Nickname at this business when set, display name otherwise (avatar initial). */
+  nickname: string
+  photoUrl: string | null
+  position: string | null
+}
+
+/** Tip bounds — server tipConstraints when sent, frontend defaults otherwise. */
+export interface TipConstraints {
+  /** Minimum each staff member may receive after the even split. */
+  minItemAmount: number
+  /** Maximum tip total on one payment. */
+  maxTotalAmount: number
+}
+
 export interface PublicDirectPaymentPage {
   businessId: string
   businessName: string
   logoUrl?: string | null
   paymentUrl: string
   paymentMethods: PublicDirectPaymentMethod[]
+  /** Required by POST /api/v1/tips/multi-staff — null until BE exposes it here. */
+  touchPointId: string | null
+  /** Touch slugs, when BE sends them — fallback source for the tippable staff list. */
+  businessSlug: string | null
+  touchPointSlug: string | null
+  /** Tippable staff for the "Who served you today?" picker. */
+  staff: PublicDirectPaymentStaff[]
+  tipConstraints: TipConstraints
 }
 
 /** Public staff direct-payment page — GET /api/v1/public/staff/{staffProfileId}/payment */
@@ -344,6 +376,8 @@ export interface NotificationRecord {
   paymentId?: string
   /** Tip transaction id (referenceId) to auto-open in the Tips list modal. */
   transactionId?: string
+  /** Community chat session id for CommunityNewChatMessage notifications. */
+  chatSessionId?: string
   [key: string]: unknown
 }
 
@@ -402,6 +436,10 @@ export interface StaffBusinessLink {
   qrImageUrl?: string | null
   /** True when BE returned touchPoints: [] and no touchpoint slug/URL is available yet. */
   touchPointsMissing?: boolean
+  /** Business owner userProfileId — peer for staff-initiated community chat. */
+  ownerUserProfileId?: string | null
+  /** IANA timezone of the salon (e.g. America/Chicago). Work Orders "today" uses this. */
+  timeZone?: string | null
 }
 
 export interface StaffBusinessTipQr {

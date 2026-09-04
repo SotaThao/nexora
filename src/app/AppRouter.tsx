@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import {
   Navigate,
   Route,
@@ -9,6 +9,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { scrollToPageTop } from "../utils/scrollToPageTop";
+import { searchHasStaffChatStartHint, isStaffChatStartHintOnlySearchChange } from "../components/staff/constants";
 import { useAuth } from "../auth/useAuth";
 import {
   AnalyticsRoute,
@@ -25,6 +26,7 @@ import {
   SubscriptionsRoute,
   SupportRoute,
   PackageManagementRoute,
+  PackageBillingDetailRoute,
   NewsLibraryRoute,
   TipsRoute,
   TouchpointsRoute,
@@ -34,7 +36,8 @@ import {
   TaxIqExceptionsRoute, TaxIqDataQualityRoute, TaxIqJurisdictionsRoute, TaxIqShareLinksRoute,
   TaxIqForm1099NecRoute, TaxIqTipLedgerRoute, TaxIqFormsReportsRoute, TaxIqTaxEstimateRoute,
   PosGeneralSettingsRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
-  PosStaffProfileRoute, PosFrontDeskRoute
+  PosPromotionsRoute,
+  PosStaffProfileRoute, PosFrontDeskRoute, PosDevicesRoute
 } from "../components/dashboard/routes";
 import { DASHBOARD_MENU_ID, DASHBOARD_SETTINGS_TAB, BOOKING_HUB_PATH, BOOKING_HUB_LEGACY_PATH_SEGMENT, buildDashboardReportsPath, DASHBOARD_REPORTS_TAB } from "../components/dashboard/constants";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
@@ -105,17 +108,27 @@ const StaffTaxIqExportRoute = lazyWithRetry(() => import('../components/staff-da
 const CpaViewerPage = lazyWithRetry(() => import('../components/taxiq/CpaViewer/CpaViewerPage'))
 const ShareLinkViewerPage = lazyWithRetry(() => import('../components/taxiq/ShareLinkViewer/ShareLinkViewerPage'))
 const StaffW4InvitePage = lazyWithRetry(() => import('../components/taxiq/W4Invite/StaffW4InvitePage'))
+// Self Check-In kiosk. Both routes sit outside the auth gate on purpose — a paired tablet
+// authenticates with its own device token and never has a user session.
+const PosDevicePairPage = lazyWithRetry(() => import('../components/posDevice/PosDevicePairPage'))
+const SelfCheckInPage = lazyWithRetry(() => import('../components/posDevice/SelfCheckInPage'))
 const StaffMyEarnings = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffMyEarnings"),
 );
 const StaffMySalons = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffMySalons"),
 );
+const StaffSalonReport = lazyWithRetry(
+  () => import("../components/staff-dashboard/views/StaffSalonReport"),
+);
 const StaffClockScan = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffClockScan"),
 );
 const StaffFrontDesk = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffFrontDesk"),
+);
+const StaffWorkOrders = lazyWithRetry(
+  () => import("../components/staff-dashboard/work-orders/StaffWorkOrders"),
 );
 const ForgotPassword = lazyWithRetry(
   () => import("../components/ForgotPassword"),
@@ -144,6 +157,9 @@ const PublicPosBookingPage = lazyWithRetry(
 );
 const ManageBookingPage = lazyWithRetry(
   () => import("../components/public/ManageBookingPage"),
+);
+const ReceiptPage = lazyWithRetry(
+  () => import("../components/public/ReceiptPage"),
 );
 const PublicBookingPage = lazyWithRetry(
   () => import("../components/public/booking/PublicBookingPage"),
@@ -217,9 +233,27 @@ function StaffTransactionsLegacyRedirect() {
   return <Navigate to="/staff/payments?tab=tips" replace />;
 }
 
+function isTabOnlySearchChange(previousSearch: string, nextSearch: string) {
+  if (previousSearch === nextSearch) return false;
+
+  const previous = new URLSearchParams(previousSearch);
+  const next = new URLSearchParams(nextSearch);
+  const previousTab = previous.get('tab');
+  const nextTab = next.get('tab');
+  previous.delete('tab');
+  next.delete('tab');
+
+  return previousTab !== nextTab && previous.toString() === next.toString();
+}
+
 function ScrollToTop() {
   const { pathname, search, hash } = useLocation();
+  const previousLocationRef = useRef<{ pathname: string; search: string; hash: string } | null>(null);
+
   useEffect(() => {
+    const previousLocation = previousLocationRef.current;
+    previousLocationRef.current = { pathname, search, hash };
+
     if (hash) {
       const targetId = decodeURIComponent(hash.slice(1));
       let observer: MutationObserver | null = null;
@@ -243,6 +277,22 @@ function ScrollToTop() {
       }
 
       return () => observer?.disconnect();
+    }
+
+    if (
+      previousLocation?.pathname === pathname &&
+      previousLocation.hash === hash &&
+      (
+        isTabOnlySearchChange(previousLocation.search, search)
+        || isStaffChatStartHintOnlySearchChange(previousLocation.search, search)
+      )
+    ) {
+      return undefined;
+    }
+
+    if (searchHasStaffChatStartHint(search)) {
+      window.scrollTo(0, 0);
+      return undefined;
     }
 
     scrollToPageTop();
@@ -280,9 +330,12 @@ export default function AppRouter() {
           <Route path={PUBLIC_BOOKING_ROUTE.path} element={<PublicBookingPage />} />
           <Route path="/booking/:businessSlug" element={<PublicPosBookingPage />} />
           <Route path="/booking/manage/:manageToken" element={<ManageBookingPage />} />
+          <Route path="/receipt/:receiptToken" element={<ReceiptPage />} />
           <Route path="/cpa/access" element={<CpaViewerPage />} />
           <Route path="/share/access" element={<ShareLinkViewerPage />} />
           <Route path="/w4-invite" element={<StaffW4InvitePage />} />
+          <Route path="/pos-device/pair" element={<PosDevicePairPage />} />
+          <Route path="/self-checkin" element={<SelfCheckInPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           <Route path="/sms-consent" element={<SmsConsentReferencePage />} />
@@ -368,7 +421,9 @@ export default function AppRouter() {
               <Route path={`${DASHBOARD_MENU_ID.pos}/categories`} element={<PosCategoriesRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/services`} element={<PosServicesRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/products`} element={<PosProductsRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/promotions`} element={<PosPromotionsRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/staff`} element={<PosStaffProfileRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/devices`} element={<PosDevicesRoute />} />
             </Route>
             <Route path={DASHBOARD_MENU_ID.touchpoints} element={<TouchpointsRoute />} />
             <Route path={DASHBOARD_MENU_ID.analytics} element={<AnalyticsRoute />} />
@@ -377,6 +432,7 @@ export default function AppRouter() {
             <Route path={`${DASHBOARD_MENU_ID.settings}/${DASHBOARD_SETTINGS_TAB.staff}/:staffId`} element={<SettingsRoute />} />
             <Route path={DASHBOARD_MENU_ID.subscriptions} element={<SubscriptionsRoute />} />
             <Route path={DASHBOARD_MENU_ID.packageManagement} element={<PackageManagementRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.packageManagement}/billing`} element={<PackageBillingDetailRoute />} />
             <Route path={DASHBOARD_MENU_ID.newsLibrary} element={<NewsLibraryRoute />} />
             <Route path={DASHBOARD_MENU_ID.support} element={<SupportRoute />} />
             <Route path="*" element={<FallbackRoute />} />
@@ -413,7 +469,9 @@ export default function AppRouter() {
             <Route path="taxiq/cpa-access" element={<StaffTaxIqCpaAccessRoute />} />
             <Route path="earnings" element={<StaffMyEarnings />} />
             <Route path="salons" element={<StaffMySalons />} />
+            <Route path="salons/report" element={<StaffSalonReport />} />
             <Route path="salons/:businessId/front-desk" element={<StaffFrontDesk />} />
+            <Route path="work-orders/:salonId?/:ticketId?" element={<StaffWorkOrders />} />
             {/* Landing page for the rotating clock-in QR — salon id and token arrive as ?b=&t= */}
             <Route path="clock-scan" element={<StaffClockScan />} />
             <Route path="profile" element={<StaffProfile />} />

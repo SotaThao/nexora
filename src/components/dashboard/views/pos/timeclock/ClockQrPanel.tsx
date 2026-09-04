@@ -1,9 +1,12 @@
 // Rotating clock-in QR shown on the front desk iPad. The image itself is rendered server-side and
 // arrives as a data URI, so there is no QR library on the client and no raw SVG injection.
 //
-// Two clocks are in play: the query refetches just under the token's 30s window, and this local
-// countdown ticks every second purely for display. If the countdown hits zero before the next
-// token lands (slow network), the panel says so rather than showing a code that no longer works.
+// Two clocks are in play: the query refetches when the token expires (see useClockQrToken), and
+// this local countdown ticks every second purely for display.
+//
+// The countdown is bounded by the token's own window (expiresAt - issuedAt) rather than trusting
+// expiresAt against the browser clock alone: a front-desk iPad running behind the server would
+// otherwise show a code as living longer than the window it belongs to.
 import { useEffect, useState } from 'react'
 import { Clock } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
@@ -11,10 +14,16 @@ import { useClockQrToken } from '../../../../../data/hooks/usePosTimeClock'
 import { Skeleton } from '../../../../ui/skeleton'
 import { tk } from './timeClockI18n'
 
-function secondsUntil(expiresAt?: string | null): number {
-  if (!expiresAt) return 0
-  const remainingMs = new Date(expiresAt).getTime() - Date.now()
-  return Math.max(0, Math.ceil(remainingMs / 1000))
+function windowSeconds(token?: { issuedAt: string; expiresAt: string } | null): number {
+  if (!token) return 1
+  const spanMs = new Date(token.expiresAt).getTime() - new Date(token.issuedAt).getTime()
+  return Math.max(1, Math.round(spanMs / 1000))
+}
+
+function secondsLeftOf(token?: { issuedAt: string; expiresAt: string } | null): number {
+  if (!token) return 0
+  const remainingMs = new Date(token.expiresAt).getTime() - Date.now()
+  return Math.min(windowSeconds(token), Math.max(0, Math.ceil(remainingMs / 1000)))
 }
 
 export default function ClockQrPanel({ businessId }: { businessId: string }) {
@@ -23,15 +32,12 @@ export default function ClockQrPanel({ businessId }: { businessId: string }) {
   const [secondsLeft, setSecondsLeft] = useState(0)
 
   useEffect(() => {
-    setSecondsLeft(secondsUntil(token?.expiresAt))
-    const timer = window.setInterval(() => setSecondsLeft(secondsUntil(token?.expiresAt)), 1000)
+    setSecondsLeft(secondsLeftOf(token))
+    const timer = window.setInterval(() => setSecondsLeft(secondsLeftOf(token)), 1000)
     return () => window.clearInterval(timer)
-  }, [token?.expiresAt])
+  }, [token?.issuedAt, token?.expiresAt])
 
-  const totalWindowSeconds = token
-    ? Math.max(1, Math.round((new Date(token.expiresAt).getTime() - new Date(token.issuedAt).getTime()) / 1000))
-    : 1
-  const progressPercent = Math.min(100, Math.max(0, (secondsLeft / totalWindowSeconds) * 100))
+  const progressPercent = Math.min(100, Math.max(0, (secondsLeft / windowSeconds(token)) * 100))
 
   return (
     <section className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-4">

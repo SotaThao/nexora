@@ -27,6 +27,7 @@ import {
   runDirectPaymentWalletSelect,
   resolveWalletVlinkpayCryptoAddresses,
   toWalletTipPaymentMethodsData,
+  resolveDirectPaymentAmountError,
 } from '../../direct-payment/paymentFlowShared'
 
 const MIN_AMOUNT = DIRECT_PAYMENT_MIN_AMOUNT
@@ -46,6 +47,7 @@ export default function useStaffDirectPaymentFlow() {
   const [selectedWalletObj, setSelectedWalletObj] = useState<any>(null)
   const [selectedWallet, setSelectedWallet] = useState('')
   const [currentPaymentId, setCurrentPaymentId] = useState<string | null>(null)
+  const [confirmedAmount, setConfirmedAmount] = useState<number | null>(null)
   const [activePaymentMethod, setActivePaymentMethod] = useState<any>(null)
   const [selectedCryptoSymbol, setSelectedCryptoSymbol] = useState<string | null>(null)
 
@@ -86,6 +88,22 @@ export default function useStaffDirectPaymentFlow() {
     [activePaymentMethod, selectedWalletObj],
   )
 
+  const amountError = resolveDirectPaymentAmountError(
+    customAmount,
+    activeAmount,
+    MIN_AMOUNT,
+    MAX_AMOUNT,
+  )
+  const amountErrorText = useMemo(() => {
+    if (amountError === 'too_low') {
+      return t('staff_direct_payment.amount_too_low', { min: formatUsdAmount(MIN_AMOUNT) })
+    }
+    if (amountError === 'too_high') {
+      return t('staff_direct_payment.amount_too_high', { max: formatUsdAmount(MAX_AMOUNT) })
+    }
+    return null
+  }, [amountError, t])
+
   const validateAmount = useCallback(() => {
     if (Number.isNaN(activeAmount) || activeAmount < MIN_AMOUNT) {
       showToast(t('staff_direct_payment.amount_too_low', { min: formatUsdAmount(MIN_AMOUNT) }), 'error')
@@ -124,6 +142,7 @@ export default function useStaffDirectPaymentFlow() {
       }
 
       setCurrentPaymentId(result.paymentId)
+      setConfirmedAmount(result.amount)
       setActivePaymentMethod(
         mergeCreatedPaymentMethod(wallet.apiMethod as any, result.paymentMethod),
       )
@@ -138,11 +157,13 @@ export default function useStaffDirectPaymentFlow() {
 
   const handleSelectWallet = useCallback(
     async (wallet: { methodId?: string; name?: string; key?: string; apiMethod?: unknown }) => {
+      if (createPaymentMutation.isPending) return
       if (!wallet.methodId) {
         showToast(t('errors.generic'), 'error')
         return
       }
 
+      setConfirmedAmount(null)
       await runDirectPaymentWalletSelect(wallet, {
         validateAmount,
         setSelectedWalletObj,
@@ -162,7 +183,7 @@ export default function useStaffDirectPaymentFlow() {
         },
       })
     },
-    [createPaymentForWallet, showToast, t, validateAmount],
+    [createPaymentForWallet, createPaymentMutation.isPending, showToast, t, validateAmount],
   )
 
   const handleCreateVlinkpayPayment = useCallback(async (cryptoSymbol: string) => {
@@ -204,6 +225,8 @@ export default function useStaffDirectPaymentFlow() {
   }, [confirmPaymentMutation, currentPaymentId, showToast, t])
 
   return {
+    amountError,
+    amountErrorText,
     staffProfileId,
     currentLanguage,
     setLanguage,
@@ -228,6 +251,7 @@ export default function useStaffDirectPaymentFlow() {
     tipPaymentMethodsData,
     businessVlinkpayCryptoAddresses,
     currentPaymentId,
+    confirmedAmount,
     activePaymentMethod,
     selectedCryptoSymbol,
     handleSelectWallet,

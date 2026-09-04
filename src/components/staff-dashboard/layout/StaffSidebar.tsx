@@ -2,10 +2,12 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { LogOut, ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react'
+import { useStaffPendingAcceptanceCount } from '../../../data/hooks/useStaffPendingAcceptanceCount'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
   STAFF_MENU_ITEMS,
   STAFF_WORKSPACE_MENU_ITEM,
+  STAFF_WORK_ORDERS_SCREEN,
   STAFF_WORKSPACE_SUBMENU,
   STAFF_TAXIQ_MENU_CHILD_MODULE,
   isStaffTopLevelMenuItemActive,
@@ -40,6 +42,7 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
   const displayName = account.defaultDisplayName || staffMember.fullName || 'Staff'
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
   const tabParam = searchParams.get('tab')
+  const pendingAcceptanceCount = useStaffPendingAcceptanceCount().data ?? 0
 
   const isWorkspaceSectionActive = isStaffWorkspaceRouteActive(activeScreen, tabParam)
 
@@ -180,7 +183,12 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
       {isWorkspaceExpanded && (
         <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
           {STAFF_WORKSPACE_SUBMENU.map((item) => {
-            const isSubActive = isStaffWorkspaceSubActive(activeScreen, tabParam, item)
+            const isSubActive = isStaffWorkspaceSubActive(
+              activeScreen,
+              tabParam,
+              item,
+              location.pathname,
+            )
             return (
               <button
                 key={item.id}
@@ -190,6 +198,16 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
               >
                 <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
                 <span>{t(item.labelKey)}</span>
+                {item.screen === STAFF_WORK_ORDERS_SCREEN && pendingAcceptanceCount > 0 ? (
+                  <span
+                    aria-label={t('components.dashboard.views.pos.serviceLineStatus.pendingBadge', {
+                      count: pendingAcceptanceCount,
+                    })}
+                    className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-400 px-1.5 text-[10px] font-black text-slate-900"
+                  >
+                    {pendingAcceptanceCount}
+                  </span>
+                ) : null}
               </button>
             )
           })}

@@ -30,6 +30,7 @@ export const qk = {
   dashboardTipsChart:       () => ['dashboard', 'tipsChart'],
   dashboardAnalytics:       (filters = EMPTY) => ['dashboard', 'analytics', filters],
   dashboardReviews:         (filters = EMPTY) => ['dashboard', 'reviews', filters],
+  dashboardReviewsCollected: (filters = EMPTY) => ['dashboard', 'reviews', 'collected', filters],
   
   // Notifications
   notificationsUnreadCount: () => ['notifications', 'unreadCount'],
@@ -82,6 +83,17 @@ export const qk = {
   // POS Owner Setup — Services (US-017)
   merchantPosServices: ()      => ['merchantSettings', 'posServices'],
   merchantPosTags: ()          => ['merchantSettings', 'posTags'],
+  // POS Owner Setup — Service Add-Ons (owned per service, never shared)
+  merchantPosServiceAddOns: (serviceId?: string) =>
+    ['merchantSettings', 'posServiceAddOns', serviceId ?? ''],
+  merchantPosServiceAddOnCopySources: (serviceId?: string) =>
+    ['merchantSettings', 'posServiceAddOnCopySources', serviceId ?? ''],
+  /**
+   * Prefix — adding or removing an add-on on one service changes every OTHER service's copy-source
+   * list, so the whole set has to be invalidated, not just the edited service's own entry.
+   */
+  merchantPosServiceAddOnCopySourcesRoot: () =>
+    ['merchantSettings', 'posServiceAddOnCopySources'] as const,
   // POS Owner Setup — Products (US-018)
   merchantPosProducts: ()      => ['merchantSettings', 'posProducts'],
   // POS Owner Setup — Staff Profile (US-019)
@@ -110,6 +122,21 @@ export const qk = {
     if (weekStart) key.push(weekStart)
     return key
   },
+  // POS Front Desk -> Report. `selection` encodes mode + the exact periods chosen (sorted), so two
+  // different day sets are two different cache entries; omitting it yields a prefix that matches
+  // every selection for this business, same convention as merchantPosWeeklyPayroll above.
+  merchantPosReport: (businessId?: string, selection?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posReport', businessId ?? '']
+    if (selection) key.push(selection)
+    return key
+  },
+  merchantPosReportDetail: (businessId?: string, posStaffProfileId?: string, selection?: string) => [
+    'merchantSettings',
+    'posReportDetail',
+    businessId ?? '',
+    posStaffProfileId ?? '',
+    selection ?? '',
+  ],
   merchantPosWeeklyPayrollDailyDetail: (businessStaffLinkId?: string, weekStart?: string) => {
     const key: unknown[] = ['merchantSettings', 'posWeeklyPayrollDailyDetail', businessStaffLinkId ?? '']
     if (weekStart) key.push(weekStart)
@@ -155,6 +182,8 @@ export const qk = {
     ['merchantSettings', 'posCustomerLookup', businessId ?? '', phone ?? ''],
   // POS Booking — per-business settings (Ticket 2)
   merchantPosBookingSettings: (businessId?: string) => ['merchantSettings', 'posBookingSettings', businessId ?? ''],
+  merchantPosOrderSettings: (businessId?: string) => ['merchantSettings', 'posOrderSettings', businessId ?? ''],
+  staffPosPendingAcceptanceCount: () => ['staff', 'posPendingAcceptanceCount'],
   // POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filtered.
   // `filters` is only appended when explicitly passed — omitting it (e.g. from an
   // invalidateQueries call after Complete/edit) yields a short prefix that matches every
@@ -171,6 +200,33 @@ export const qk = {
   // `dayKey` is only appended when passed: an invalidateQueries call omitting it must yield a real
   // prefix of the rendered key. Defaulting it to '' instead would build a 4th element that matches
   // no live query, and the invalidation would silently do nothing.
+  merchantPosDevicePairingQr: (businessId?: string, excludeTokens?: string) => {
+    const key = ['merchantSettings', 'posDevicePairingQr', businessId ?? '']
+    return excludeTokens ? [...key, excludeTokens] : key
+  },
+  // Carries the token itself: a new code is a different question, and the answer to the old one
+  // ("used") must never be served for it.
+  merchantPosDevicePairingQrStatus: (businessId?: string, token?: string) =>
+    ['merchantSettings', 'posDevicePairingQrStatus', businessId ?? '', token ?? ''],
+  // `status` only appended when passed, for the same reason as the time-clock keys below: an
+  // invalidateQueries call omitting the filter must stay a real prefix of the rendered key.
+  merchantPosDevices: (businessId?: string, status?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posDevices', businessId ?? '']
+    if (status) key.push(status)
+    return key
+  },
+  // Self Check-In kiosk. No businessId anywhere in these keys on purpose — the tablet only ever
+  // talks to the one salon its token belongs to, so there is nothing to scope by.
+  posSelfCheckInCatalog: () => ['posSelfCheckIn', 'catalog'],
+  posSelfCheckInCustomerName: (phone?: string) => ['posSelfCheckIn', 'customerName', phone ?? ''],
+  posSelfCheckInActiveVisit: (phone?: string) => ['posSelfCheckIn', 'activeVisit', phone ?? ''],
+  posSelfCheckInBooking: (phone?: string) => ['posSelfCheckIn', 'booking', phone ?? ''],
+  posSelfCheckInTechnicians: () => ['posSelfCheckIn', 'technicians'],
+  merchantPosCheckInTechnicians: (businessId?: string) => ['merchantSettings', 'posCheckInTechnicians', businessId ?? ''],
+  merchantPosCheckInActiveVisit: (businessId?: string, phone?: string) => [
+    'merchantSettings', 'posCheckInActiveVisit', businessId ?? '', phone ?? '',
+  ],
+  merchantPosCheckInSettings: (businessId?: string) => ['merchantSettings', 'posCheckInSettings', businessId ?? ''],
   merchantPosTimeClockQr: (businessId?: string) => ['merchantSettings', 'posTimeClockQr', businessId ?? ''],
   merchantPosTimeClockRoster: (businessId?: string, dayKey?: string) => {
     const key: unknown[] = ['merchantSettings', 'posTimeClockRoster', businessId ?? '']
@@ -182,20 +238,49 @@ export const qk = {
     if (dayKey) key.push(dayKey)
     return key
   },
+  // Two-way beep feed. Same optional-dayKey shape as the roster/log keys above so the shared
+  // businessId prefix invalidates whichever local day is on screen.
+  merchantPosBeepFeed: (businessId?: string, dayKey?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posBeepFeed', businessId ?? '']
+    if (dayKey) key.push(dayKey)
+    return key
+  },
+  // Scoped by the caller's token, not by business — a tech linked to two salons polls one list.
+  staffActiveBeeps: () => ['staffBeeps', 'active'],
+  // Staff Work Orders — list/detail plus start/complete. No polling. Prefix
+  // `staffWorkOrdersRoot` invalidates every list/detail combination. `filter` is
+  // only appended when passed so invalidateQueries({ queryKey: qk.staffWorkOrders(businessId) })
+  // still prefixes every date/status combination currently on screen.
+  staffWorkOrdersRoot: () => ['staffWorkOrders'] as const,
+  staffWorkOrders: (businessId?: string, date?: string, filter?: string) => {
+    const key: unknown[] = ['staffWorkOrders', 'list', businessId ?? '']
+    if (date) key.push(date)
+    if (filter) key.push(filter)
+    return key
+  },
+  staffWorkOrderDetail: (orderId?: string) => ['staffWorkOrders', 'detail', orderId ?? ''],
   staffClockScanPreview: (businessId?: string, token?: string) =>
     ['staffClockScanPreview', businessId ?? '', token ?? ''],
   // POS Merchant Ops — Checkout (US-14 / US-025, refactored to Order in US-026)
   merchantPosInServiceOrders: (businessId?: string) => ['merchantSettings', 'posInServiceOrders', businessId ?? ''],
   merchantPosOrderDetail: (businessId?: string, orderId?: string) =>
     ['merchantSettings', 'posOrderDetail', businessId ?? '', orderId ?? ''],
+  // Promotion catalog (Owner settings) and the per-visit eligible list (counter) are separate:
+  // the eligible list depends on the order's check-in time, so it is keyed by orderId.
+  merchantPosPromotions: (businessId?: string) =>
+    ['merchantSettings', 'posPromotions', businessId ?? ''],
+  merchantPosEligiblePromotions: (businessId?: string, orderId?: string) =>
+    ['merchantSettings', 'posEligiblePromotions', businessId ?? '', orderId ?? ''],
   merchantPosCheckoutServiceCatalog: (businessId?: string) =>
     ['merchantSettings', 'posCheckoutServiceCatalog', businessId ?? ''],
   merchantPosCheckoutProductCatalog: (businessId?: string) =>
     ['merchantSettings', 'posCheckoutProductCatalog', businessId ?? ''],
   merchantPosAssignableStaff: (businessId?: string, posServiceId?: string) =>
     ['merchantSettings', 'posAssignableStaff', businessId ?? '', posServiceId ?? ''],
-  merchantPosAssignableServices: (businessId?: string, posStaffProfileId?: string) =>
-    ['merchantSettings', 'posAssignableServices', businessId ?? '', posStaffProfileId ?? ''],
+  // Add-on picker — keyed by the service LINE, not the service: the options are scoped to the
+  // line the picker was opened from.
+  merchantPosServiceLineAddOnOptions: (businessId?: string, orderId?: string, serviceLineId?: string) =>
+    ['merchantSettings', 'posServiceLineAddOnOptions', businessId ?? '', orderId ?? '', serviceLineId ?? ''],
   // POS Booking — Booking Management screen (Ticket 9)
   merchantPosBookingList: (businessId?: string, filters?: object) => {
     const key: unknown[] = ['merchantSettings', 'posBookingList', businessId ?? '']
@@ -265,6 +350,10 @@ export const qk = {
     page
       ? (['merchantSubscriptions', 'purchaseHistory', page] as const)
       : (['merchantSubscriptions', 'purchaseHistory'] as const),
+  merchantSubscriptionPurchaseHistoryItem: (transactionId: string) =>
+    ['merchantSubscriptions', 'purchaseHistoryItem', transactionId] as const,
+  merchantSubscriptionReceiptDetail: (orderId: string) =>
+    ['merchantSubscriptions', 'receiptDetail', orderId] as const,
   merchantSubscriptionMyPackages: () => ['merchantSubscriptions', 'myPackages'],
   publicSubscriptionPackages: (packageType?: import('./repositories/subscriptionPayments').SubscriptionPackageType) =>
     packageType
@@ -306,6 +395,11 @@ export const qk = {
   staffProfile:        ()      => ['staffProfile'],
   staffBusinesses:     ()      => ['staffBusinesses'],
   staffDashboardSummary: ()    => ['staffDashboardSummary'],
+  staffIncomeReport: (sessionId: string, params: unknown) => [
+    'staffIncomeReport',
+    sessionId,
+    params,
+  ],
   staffDashboardStatistics: () => ['staffDashboardStatistics'],
   staffReviews:          (filters = EMPTY) => ['staffReviews', filters],
   staffTips:             (filters = EMPTY) => ['staffTips', filters],
@@ -519,6 +613,15 @@ export const qk = {
   /** Prefix — invalidate all usage-activity filter variants. */
   merchantVoiceUsageActivityRoot: () => ['merchantVoice', 'usage', 'activity'] as const,
 
+  // Community Chat (US-101 → US-107)
+  communityChatSessions: () => ['communityChat', 'sessions'] as const,
+  communityChatSession: (sessionId?: string | null) => ['communityChat', 'session', sessionId ?? ''] as const,
+  communityChatMessagesRoot: (sessionId?: string | null) => ['communityChat', 'messages', sessionId ?? ''] as const,
+  communityChatMessages: (sessionId?: string | null, filters = EMPTY) =>
+    ['communityChat', 'messages', sessionId ?? '', filters] as const,
+  communityChatMessagesInfinite: (sessionId?: string | null, pageSize?: number) =>
+    ['communityChat', 'messages', sessionId ?? '', 'infinite', pageSize ?? 20] as const,
+
   // Nexora Voice trial (merchant)
   voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],
 
@@ -528,6 +631,7 @@ export const qk = {
   publicDirectPaymentPage: (businessId) => ['publicDirectPaymentPage', businessId],
   publicStaffDirectPaymentPage: (staffProfileId: string) => ['publicStaffDirectPaymentPage', staffProfileId],
   // POS Booking — Public Booking Page discovery (Ticket 4)
+  publicReceipt: (receiptToken?: string) => ['publicReceipt', receiptToken ?? ''],
   publicBookingPage: (businessSlug?: string) => ['publicBookingPage', businessSlug ?? ''],
   // Customer entity unification — public contact-step "returning customer" lookup by phone.
   publicBookingCustomerLookup: (businessSlug?: string, phone?: string) =>

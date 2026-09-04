@@ -49,6 +49,8 @@ export interface PurchaseSubscriptionResult {
   referenceId: string
   paymentStatus: SubscriptionPaymentStatus
   packageCode: string
+  /** Unused-value credit from a superseded plan, deducted from this charge. Null for a plain new purchase. */
+  creditApplied: number | null
 }
 
 export interface InitializeCardPaymentResult {
@@ -56,6 +58,8 @@ export interface InitializeCardPaymentResult {
   referenceId: string
   clientSecret: string
   publishableKey: string
+  /** Unused-value credit from a superseded plan, deducted from this charge. Null for a plain new purchase. */
+  creditApplied: number | null
 }
 
 /** PATCH `/api/v1/merchant/subscriptions/{id}/auto-renew` result. */
@@ -70,6 +74,8 @@ export interface PurchasePackageByIdResult {
   referenceId: string
   paymentStatus: SubscriptionPaymentStatus
   packageCode: string
+  /** Unused-value credit from a superseded plan, deducted from this charge. Null for a plain new purchase. */
+  creditApplied: number | null
 }
 
 export interface SubscriptionPackage {
@@ -130,6 +136,8 @@ export interface SubscriptionMyPackage {
   name: string
   /** Tier rank within `packageType` (live API; may be absent on older BE). */
   level: number | null
+  /** Billing-cycle length in months (1 = Monthly, 12 = Yearly). Used to rank upgrades cycle-first. */
+  periodInMonths: number | null
   status: SubscriptionMyPackageStatus
   activatedAt: string | null
   expiresAt: string | null
@@ -152,6 +160,66 @@ export interface SubscriptionPurchaseHistoryItem {
   paidAt: string | null
   validUntil: string | null
   uiStatus: PackageHistoryUiStatus
+}
+
+/** GET `/api/v1/merchant/subscriptions/purchase-history/{orderId}/receipt-detail`. */
+export interface SubscriptionReceiptDetail {
+  orderId: string
+  referenceId: string
+  invoiceNumber: string
+  receiptNumber: string
+  providerTransactionId: string
+  issuedAt: string
+  paidAt: string | null
+  sellerName: string
+  sellerAddress: string
+  sellerEmail: string
+  sellerPhone: string
+  billToName: string
+  billToAddress: string
+  billToEmail: string
+  planName: string
+  periodInMonths: number
+  amount: number
+  currency: string
+  subtotal: number
+  tax: number
+  total: number
+  amountPaid: number
+  paymentMethodLabel: string
+  processorName: string
+  receiptAccessToken: string
+}
+
+function normalizeReceiptDetail(raw: unknown): SubscriptionReceiptDetail {
+  const item = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
+  return {
+    orderId: readString(item.orderId),
+    referenceId: readString(item.referenceId),
+    invoiceNumber: readString(item.invoiceNumber),
+    receiptNumber: readString(item.receiptNumber),
+    providerTransactionId: readString(item.providerTransactionId),
+    issuedAt: readString(item.issuedAt),
+    paidAt: readNullableString(item.paidAt),
+    sellerName: readString(item.sellerName),
+    sellerAddress: readString(item.sellerAddress),
+    sellerEmail: readString(item.sellerEmail),
+    sellerPhone: readString(item.sellerPhone),
+    billToName: readString(item.billToName),
+    billToAddress: readString(item.billToAddress),
+    billToEmail: readString(item.billToEmail),
+    planName: readString(item.planName),
+    periodInMonths: Math.max(0, Math.trunc(readNumber(item.periodInMonths, 0))),
+    amount: readNumber(item.amount, 0),
+    currency: readString(item.currency, 'USD') || 'USD',
+    subtotal: readNumber(item.subtotal, 0),
+    tax: readNumber(item.tax, 0),
+    total: readNumber(item.total, 0),
+    amountPaid: readNumber(item.amountPaid, 0),
+    paymentMethodLabel: readString(item.paymentMethodLabel),
+    processorName: readString(item.processorName),
+    receiptAccessToken: readString(item.receiptAccessToken),
+  }
 }
 
 /** Query for GET purchase-history (1-based page). */
@@ -308,6 +376,7 @@ function normalizeMyPackage(raw: unknown): SubscriptionMyPackage | null {
     packageCode,
     name: readString(item.name).trim() || packageCode,
     level: readNullableNumber(item.level),
+    periodInMonths: readNullableNumber(item.periodInMonths),
     status: normalizeMyPackageStatus(item.status),
     activatedAt: readNullableString(item.activatedAt),
     expiresAt: readNullableString(item.expiresAt),
@@ -435,6 +504,7 @@ function normalizePurchaseResult(raw: unknown): PurchaseSubscriptionResult {
     referenceId: readString(item.referenceId),
     paymentStatus: normalizePaymentStatus(item.paymentStatus),
     packageCode: readString(item.packageCode),
+    creditApplied: readNullableNumber(item.creditApplied),
   }
 }
 
@@ -447,6 +517,7 @@ function normalizeInitializeCardPaymentResult(
     referenceId: readString(item.referenceId),
     clientSecret: readString(item.clientSecret),
     publishableKey: readString(item.publishableKey),
+    creditApplied: readNullableNumber(item.creditApplied),
   }
 }
 
@@ -474,6 +545,12 @@ function normalizeAutoRenewResult(
     autoRenew:
       'autoRenew' in item ? readBoolean(item.autoRenew, fallback.autoRenew) : fallback.autoRenew,
   }
+}
+
+function resolveBrowserTimeZone(): string {
+  return typeof Intl !== 'undefined'
+    ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+    : 'UTC'
 }
 
 function publicPackagesPath(packageType?: SubscriptionPackageType): string {
@@ -524,7 +601,7 @@ export function createSubscriptionPaymentsRepository(client: HttpClient = httpCl
       return normalizePaymentMethods(res)
     },
 
-    /** Tip Platform / wallet: body `{ packageId, symbol, billingCycle? }`. */
+    /** Tip Platform / wallet: body `{ packageId, symbol, billingCycle?, timeZone }`. */
     async purchase(
       packageId: string,
       symbol: string,
@@ -532,12 +609,17 @@ export function createSubscriptionPaymentsRepository(client: HttpClient = httpCl
     ): Promise<PurchaseSubscriptionResult> {
       const res = await client.post<unknown>(
         '/api/v1/merchant/subscriptions/purchase',
-        { packageId, symbol, ...(billingCycle ? { billingCycle } : {}) },
+        {
+          packageId,
+          symbol,
+          ...(billingCycle ? { billingCycle } : {}),
+          timeZone: resolveBrowserTimeZone(),
+        },
       )
       return normalizePurchaseResult(res)
     },
 
-    /** VoiceAI MD: body `{ packageId, symbol, billingCycle? }`. */
+    /** VoiceAI MD: body `{ packageId, symbol, billingCycle?, timeZone }`. */
     async purchaseByPackageId(
       packageId: string,
       symbol: string,
@@ -545,7 +627,12 @@ export function createSubscriptionPaymentsRepository(client: HttpClient = httpCl
     ): Promise<PurchasePackageByIdResult> {
       const res = await client.post<unknown>(
         '/api/v1/merchant/subscriptions/purchase',
-        { packageId, symbol, ...(billingCycle ? { billingCycle } : {}) },
+        {
+          packageId,
+          symbol,
+          ...(billingCycle ? { billingCycle } : {}),
+          timeZone: resolveBrowserTimeZone(),
+        },
       )
       return normalizePurchaseResult(res)
     },
@@ -556,7 +643,11 @@ export function createSubscriptionPaymentsRepository(client: HttpClient = httpCl
     ): Promise<InitializeCardPaymentResult> {
       const res = await client.post<unknown>(
         '/api/v1/merchant/subscriptions/purchase/card/initialize',
-        { packageId, ...(billingCycle ? { billingCycle } : {}) },
+        {
+          packageId,
+          ...(billingCycle ? { billingCycle } : {}),
+          timeZone: resolveBrowserTimeZone(),
+        },
       )
       return normalizeInitializeCardPaymentResult(res)
     },
@@ -577,6 +668,35 @@ export function createSubscriptionPaymentsRepository(client: HttpClient = httpCl
         },
       )
       return normalizePurchaseHistoryPage(res, pageNumber)
+    },
+
+    /** GET `/api/v1/merchant/subscriptions/purchase-history/{orderId}/receipt-detail` */
+    async getReceiptDetail(orderId: string): Promise<SubscriptionReceiptDetail> {
+      const res = await client.get<unknown>(
+        `/api/v1/merchant/subscriptions/purchase-history/${encodeURIComponent(orderId)}/receipt-detail`,
+      )
+      return normalizeReceiptDetail(res)
+    },
+
+    /** POST `/api/v1/merchant/subscriptions/purchase-history/{orderId}/send-receipt-email` */
+    async sendReceiptEmail(orderId: string): Promise<void> {
+      await client.post(
+        `/api/v1/merchant/subscriptions/purchase-history/${encodeURIComponent(orderId)}/send-receipt-email`,
+        {},
+      )
+    },
+
+    /** GET `/api/v1/merchant/subscriptions/purchase-history/{orderId}/receipt-pdf?type=Invoice|Receipt` */
+    async downloadReceiptPdf(
+      orderId: string,
+      type: 'Invoice' | 'Receipt',
+    ): Promise<{ blob: Blob; filename: string }> {
+      const blob = await client.getBlob(
+        `/api/v1/merchant/subscriptions/purchase-history/${encodeURIComponent(orderId)}/receipt-pdf`,
+        { params: { type } },
+      )
+      const fallbackName = `${type}-${orderId}.pdf`
+      return { blob, filename: fallbackName }
     },
   }
 }

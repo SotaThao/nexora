@@ -376,6 +376,7 @@ export default function MobileMenuDrawer({
                         activeMenu,
                         activeSubTab,
                         sub.id,
+                        location.pathname,
                       )
                       return (
                         <button

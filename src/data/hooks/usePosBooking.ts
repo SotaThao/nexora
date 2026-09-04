@@ -10,7 +10,9 @@ import type {
   BookingListFilters,
   BookingListResultApiDto,
   CancelBookingPayload,
+  CheckInOrderItemPayload,
   CreateBookingPayload,
+  PosCheckInResultApiDto,
   RescheduleBookingPayload,
 } from '../../types/repositories'
 
@@ -36,6 +38,18 @@ export function useBookingList(
   })
 }
 
+export function useAllBookingListPages(
+  businessId?: string,
+  filters: Omit<BookingListFilters, 'page' | 'pageSize'> = {},
+  { enabled = true }: { enabled?: boolean } = {},
+) {
+  return useQuery<BookingListResultApiDto>({
+    queryKey: qk.merchantPosBookingList(businessId, { ...filters, collection: 'all' }),
+    queryFn: () => posBookingRepository.getAllBookingListPages(businessId as string, filters),
+    enabled: enabled && Boolean(businessId),
+  })
+}
+
 export function useBookingDetail(
   businessId?: string,
   bookingId?: string,
@@ -52,8 +66,34 @@ export function useBookingDetail(
 // a check-in/cancel/reschedule can change which page/filter a booking belongs in.
 export function useCheckInBookingFromList(businessId?: string) {
   const queryClient = useQueryClient()
-  return useMutation<string, Error, string>({
+  return useMutation<PosCheckInResultApiDto, Error, string>({
     mutationFn: (bookingId) => posBookingRepository.checkInBooking(businessId as string, bookingId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosBookingList(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
+    },
+  })
+}
+
+/**
+ * Check-in tab's version: the operator walked a booked guest through the same steps as a walk-in,
+ * so the resulting draft replaces the appointment's lines.
+ *
+ * Converting the booking rather than opening a new order is the whole point — the two used to
+ * diverge, leaving a walk-in order beside an appointment nobody closed and two slots taken in the
+ * day's sequence.
+ */
+export function useCheckInBookingWithDraft(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<
+    PosCheckInResultApiDto,
+    Error,
+    { bookingId: string; items: CheckInOrderItemPayload[]; customerName?: string; customerEmail?: string }
+  >({
+    mutationFn: ({ bookingId, ...draft }) =>
+      posBookingRepository.checkInBooking(businessId as string, bookingId, draft),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosBookingList(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })

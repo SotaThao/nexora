@@ -12,6 +12,7 @@ import {
   type SubmitVoiceTrialRequest,
 } from "../../../data/voiceTrial/domain";
 import { getApiErrorCode, isApiError } from "../../../types/domain";
+import { toTwelveHourLangTag } from "../../../constants/timeFormat";
 import CountryCodeSelect, {
   formatNationalNumber,
   getNationalPhonePlaceholder,
@@ -28,7 +29,6 @@ import {
 import { ClockIcon } from "./BookingHubIcons";
 
 const TK = "components.dashboard.views.BookingHubView.plans.trial";
-const PLANS_TK = "components.dashboard.views.BookingHubView.plans";
 const TK_HUB = "components.dashboard.views.BookingHubView";
 
 const SERVICE_CHIPS = [
@@ -398,8 +398,6 @@ interface BookingTrialModalProps {
   anonymousSubmit?: boolean;
   /** When set, called after success toast instead of `onClose` (e.g. delayed home redirect). */
   onSubmitSuccess?: () => void;
-  /** Dashboard Plans tab: keep dialog openable but lock submit as Coming soon. */
-  lockSubmitComingSoon?: boolean;
 }
 
 export default function BookingTrialModal({
@@ -407,11 +405,10 @@ export default function BookingTrialModal({
   onClose,
   anonymousSubmit = false,
   onSubmitSuccess,
-  lockSubmitComingSoon = false,
 }: BookingTrialModalProps) {
   const { t, currentLanguage } = useTranslation();
   const locale = currentLanguage === "vi" ? "vi" : "en";
-  const localeTag = `${locale === "vi" ? "vi-VN" : "en-US"}-u-hc-h12`;
+  const localeTag = toTwelveHourLangTag(locale);
   const { showToast } = useNotification();
   const submitTrial = useSubmitVoiceTrialRequest({
     anonymous: anonymousSubmit,
@@ -1420,16 +1417,13 @@ export default function BookingTrialModal({
               <button
                 className="trial-submit"
                 type="button"
-                disabled={lockSubmitComingSoon || submitTrial.isPending}
-                aria-disabled={lockSubmitComingSoon || undefined}
-                onClick={lockSubmitComingSoon ? undefined : handleSubmit}
+                disabled={submitTrial.isPending}
+                onClick={handleSubmit}
               >
                 <RocketIcon />
-                {lockSubmitComingSoon
-                  ? t(`${PLANS_TK}.comingSoon`)
-                  : submitTrial.isPending
-                    ? t(`${TK}.submitting`)
-                    : t(`${TK}.submit`)}
+                {submitTrial.isPending
+                  ? t(`${TK}.submitting`)
+                  : t(`${TK}.submit`)}
               </button>
               <div className="trial-footer">{t(`${TK}.footer`)}</div>
             </div>

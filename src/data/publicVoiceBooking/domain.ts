@@ -7,15 +7,20 @@ export const PUBLIC_VOICE_BOOKING_HEADERS = {
   'x-app-source': 'WebPortal',
 } as const
 
+
 /**
- * Public booking wire phone — strip spaces and leading `+`
- * (API stores/matches without `+`, e.g. `14155552671`).
+ * Public booking wire phone — E.164 with a single leading `+`
+ * (e.g. `+14155552671`). Collapses BE `++…` / spaces; digits-only gets `+` prepended.
  */
 export function toPublicBookingApiPhone(value: string | null | undefined): string {
-  return String(value ?? '')
+  const cleaned = String(value ?? '')
     .replace(/\s+/g, '')
-    .replace(/^\+/, '')
+    .replace(/^\++/, '+')
     .trim()
+  if (!cleaned || cleaned === '+') return ''
+  if (cleaned.startsWith('+')) return cleaned
+  const digits = cleaned.replace(/\D/g, '')
+  return digits ? `+${digits}` : ''
 }
 
 export enum VoiceLeadSource {
@@ -34,6 +39,7 @@ export enum VoiceLeadStatus {
   Done = 'Done',
   Confirmed = 'Confirmed',
   NoShow = 'NoShow',
+  Cancelled = 'Cancelled',
 }
 
 export const BOOKING_DAY_OF_WEEK = [
