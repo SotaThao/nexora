@@ -32,7 +32,7 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
   useRefetchStaffMenuQueries(activeScreen)
   const isVerificationSection =
     activeScreen === 'profile' && new URLSearchParams(location.search).get('section') === 'verification'
-  const { headerScreen, mainWidthClass } = resolveStaffDashboardPresentation(
+  const { headerScreen, mainWidthClass, mainPaddingClass } = resolveStaffDashboardPresentation(
     location.pathname,
     activeScreen,
     isVerificationSection,
@@ -136,7 +136,7 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
             onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
             onLogout={onLogout}
           />
-          <main className={`mx-auto w-full flex-1 ${mainWidthClass} px-4 py-5 sm:px-6`}>
+          <main className={`mx-auto w-full flex-1 ${mainWidthClass} ${mainPaddingClass}`}>
             {activeScreen === 'home' && showOnboardingBanner && (
               <div className="mb-6 relative overflow-hidden rounded-2xl bg-gradient-to-br from-nexoraBrand/10 via-white to-nexoraBrandSoft border border-nexoraBrand/20 p-6 md:p-8 shadow-sm animate-fadeIn">
                 <div className="absolute -right-10 -top-10 opacity-10">

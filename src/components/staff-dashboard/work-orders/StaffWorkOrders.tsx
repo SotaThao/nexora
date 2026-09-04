@@ -1,12 +1,10 @@
-import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Navigate, useParams } from 'react-router-dom'
 import { useStaffBusinesses } from '../../../data/hooks/useStaffSelf'
-import { StaffWorkOrdersViewKind, staffWorkOrdersHref } from './constants'
-import StaffWorkOrderDetail from './StaffWorkOrderDetail'
+import { StaffWorkOrdersViewKind } from './constants'
 import StaffWorkOrderSalonPicker from './StaffWorkOrderSalonPicker'
 import StaffWorkOrderTickets from './StaffWorkOrderTickets'
 import { WorkOrderErrorCard } from './WorkOrderQueryFeedback'
 import {
-  WorkOrderDetailSkeleton,
   WorkOrderSalonPickerSkeleton,
   WorkOrderTicketsSkeleton,
 } from './WorkOrderSkeletons'
@@ -14,12 +12,10 @@ import { resolveStaffWorkOrdersView, toWorkOrderSalons } from './workOrderTicket
 
 export default function StaffWorkOrders() {
   const { salonId, ticketId } = useParams<{ salonId: string; ticketId: string }>()
-  const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
   const businessesQuery = useStaffBusinesses()
 
   if (businessesQuery.isPending) {
-    return <WorkOrdersRouteSkeleton salonId={salonId} ticketId={ticketId} />
+    return <WorkOrdersRouteSkeleton salonId={salonId} />
   }
   if (businessesQuery.isError) {
     return <WorkOrderErrorCard onAction={() => void businessesQuery.refetch()} />
@@ -36,25 +32,11 @@ export default function StaffWorkOrders() {
     case StaffWorkOrdersViewKind.Tickets:
       return <StaffWorkOrderTickets salon={view.salon} />
     case StaffWorkOrdersViewKind.Detail:
-      return (
-        <StaffWorkOrderDetail
-          orderId={view.orderId}
-          onBack={() =>
-            navigate(staffWorkOrdersHref(view.salon.id, undefined, searchParams.toString()))
-          }
-        />
-      )
+      return <StaffWorkOrderTickets salon={view.salon} selectedTicketId={view.orderId} />
   }
 }
 
-function WorkOrdersRouteSkeleton({
-  salonId,
-  ticketId,
-}: {
-  salonId?: string
-  ticketId?: string
-}) {
-  if (ticketId) return <WorkOrderDetailSkeleton />
+function WorkOrdersRouteSkeleton({ salonId }: { salonId?: string }) {
   if (salonId) return <WorkOrderTicketsSkeleton />
   return <WorkOrderSalonPickerSkeleton />
 }

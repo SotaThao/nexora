@@ -28,7 +28,22 @@ export const WORK_ORDERS_I18N = {
   prevMonth: 'staff_dashboard.work_orders.prev_month',
   nextMonth: 'staff_dashboard.work_orders.next_month',
   ticketCount: 'staff_dashboard.work_orders.ticket_count',
+  changeSalon: 'staff_dashboard.work_orders.change_salon',
+  upNext: 'staff_dashboard.work_orders.up_next',
+  newAssignment: 'staff_dashboard.work_orders.new_assignment',
+  viewTicket: 'staff_dashboard.work_orders.view_ticket',
+  viewCalendar: 'staff_dashboard.work_orders.view_calendar',
+  featuredTicket: 'staff_dashboard.work_orders.featured_ticket',
   empty: 'staff_dashboard.work_orders.empty',
+  emptyTitle: 'staff_dashboard.work_orders.empty_title',
+  emptyHint: 'staff_dashboard.work_orders.empty_hint',
+  emptyMoreTitle: 'staff_dashboard.work_orders.empty_more_title',
+  emptyMoreHint: 'staff_dashboard.work_orders.empty_more_hint',
+  selectTicket: 'staff_dashboard.work_orders.select_ticket',
+  selectTicketHint: 'staff_dashboard.work_orders.select_ticket_hint',
+  removeService: 'staff_dashboard.work_orders.remove_service',
+  toastRemoveService: 'staff_dashboard.work_orders.toast_remove_service',
+  durationStation: 'staff_dashboard.work_orders.duration_station',
   emptySalons: 'staff_dashboard.work_orders.empty_salons',
   emptySalonsBody: 'staff_dashboard.work_orders.empty_salons_body',
   loading: 'staff_dashboard.work_orders.loading',
@@ -51,6 +66,7 @@ export const WORK_ORDERS_I18N = {
   addService: 'staff_dashboard.work_orders.add_service',
   addCustomService: 'staff_dashboard.work_orders.add_custom_service',
   changeService: 'staff_dashboard.work_orders.change_service',
+  changeServiceAction: 'staff_dashboard.work_orders.change_service_action',
   addOn: 'staff_dashboard.work_orders.add_on',
   addOnNested: 'staff_dashboard.work_orders.add_on_nested',
   colService: 'staff_dashboard.work_orders.col_service',
@@ -164,7 +180,6 @@ export const WORK_ORDER_FILTER_I18N: Record<WorkOrderTicketFilter, string> = {
 }
 
 export const WORK_ORDER_FILTER_TABS: WorkOrderTicketFilter[] = [
-  WORK_ORDER_TICKET_FILTER.All,
   WORK_ORDER_TICKET_FILTER.Assigned,
   WORK_ORDER_TICKET_FILTER.InService,
   WORK_ORDER_TICKET_FILTER.Completed,
@@ -203,17 +218,40 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   addressRow: 'mt-0.5 flex items-center gap-1 text-xs text-nexoraMuted sm:text-sm',
   pinIcon: 'h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5',
   chevronIcon: 'h-4 w-4 shrink-0 text-nexoraSubtle sm:h-5 sm:w-5',
-  ticketsTitleRow: 'mt-2 flex items-start justify-between gap-3 lg:mt-3',
-  ticketsTitle: 'text-xl font-extrabold tracking-tight text-nexoraText sm:text-2xl lg:text-3xl',
-  ticketsSalon: 'mt-1 text-sm font-extrabold text-nexoraBrand sm:text-base',
-  countBadge: 'grid h-8 w-8 shrink-0 place-items-center rounded-full bg-nexoraBrandSoft text-xs font-extrabold text-nexoraBrand sm:h-9 sm:w-9 sm:text-sm',
-  dateNav: 'relative mt-5 lg:mt-6',
-  dateNavRow: 'flex items-center justify-between rounded-2xl border border-nexoraBorder bg-white px-2 py-2.5 shadow-sm lg:px-3',
-  dateNavButton: 'grid h-9 w-9 place-items-center rounded-xl text-nexoraMuted transition hover:bg-nexoraCanvas hover:text-nexoraText sm:h-10 sm:w-10',
-  dateNavLabel: 'inline-flex min-w-0 items-center gap-2 rounded-xl px-2 py-1 text-sm font-extrabold text-nexoraText transition hover:bg-nexoraCanvas sm:text-base',
-  dateNavIcon: 'h-4 w-4 text-nexoraBrand sm:h-5 sm:w-5',
-  calendarPopover: 'absolute left-1/2 z-30 mt-2 w-[min(18rem,calc(100%-0.5rem))] -translate-x-1/2 rounded-2xl border border-nexoraBorder bg-white p-3 shadow-lg',
+  ticketsTitleRow: 'mb-[18px] flex items-start justify-between gap-4',
+  ticketsTitle: 'truncate text-[24px] font-black leading-[1.15] text-nexoraText',
+  ticketsSalon: 'mt-[3px] text-xs font-semibold text-nexoraSubtle',
+  countBadge: 'inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-[#e9eaff] px-2 text-xs font-black text-nexoraBrand',
+  workspaceKicker: 'mb-1.5 text-[11px] font-bold text-nexoraSubtle',
+  workspaceSalon: 'flex min-w-0 items-center gap-3',
+  workspaceAvatar: 'hidden',
+  workspaceSalonButton:
+    'border-0 bg-transparent p-0 text-left text-xs font-extrabold text-nexoraBrand',
+  workspaceHeadActions: 'flex items-center gap-2.5',
+  changeSalon: 'hidden',
+  summaryRow: 'hidden',
+  summaryCard:
+    'flex items-center gap-2.5 rounded-[13px] border border-nexoraBorder bg-white px-3.5 py-3 shadow-sm',
+  summaryIcon: 'grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[10px]',
+  summaryIconAssigned: 'bg-[#eef0ff] text-nexoraBrand',
+  summaryIconService: 'bg-[#fff6df] text-[#d97706]',
+  summaryIconCompleted: 'bg-[#e8faf2] text-[#009c62]',
+  summaryValue: 'text-[19px] font-black leading-none text-nexoraText',
+  summaryLabel: 'mt-1 text-[11px] font-bold uppercase text-nexoraSubtle',
+  dateNav: 'relative flex w-full min-w-0 items-center gap-2',
+  dateNavRow: 'flex min-w-0 flex-1 items-center gap-2',
+  dateNavButton:
+    'grid h-12 w-12 shrink-0 place-items-center rounded-[14px] border border-[#d6daf5] bg-white text-nexoraBrand shadow-[0_7px_18px_rgba(31,42,86,0.045)] transition hover:bg-[#eef0ff]',
+  dateNavLabel:
+    'inline-flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-[14px] border border-[#d6daf5] bg-white px-3 text-xs font-extrabold text-nexoraText shadow-[0_7px_18px_rgba(31,42,86,0.045)]',
+  dateNavIcon: 'h-4 w-4 text-nexoraBrand',
+  dateNavChevron: 'h-[15px] w-[15px]',
+  dateToday:
+    'inline-flex h-12 shrink-0 items-center justify-center rounded-[14px] border border-[#d6daf5] bg-white px-3.5 text-[11px] font-extrabold text-nexoraBrand shadow-[0_7px_18px_rgba(31,42,86,0.045)] transition hover:border-nexoraBrand hover:bg-[#f6f6ff]',
+  calendarPopover: 'absolute left-0 right-0 z-30 mt-2 w-full rounded-2xl border border-nexoraBorder bg-white p-3 shadow-lg lg:left-1/2 lg:right-auto lg:w-[min(18rem,calc(100%-0.5rem))] lg:-translate-x-1/2',
   calendarNav: 'mb-2 flex items-center justify-between gap-2',
+  calendarNavButton:
+    'grid h-9 w-9 place-items-center rounded-xl text-nexoraMuted transition hover:bg-nexoraCanvas hover:text-nexoraText',
   calendarMonth: 'text-sm font-extrabold text-nexoraText sm:text-base',
   calendarWeekdays: 'grid grid-cols-7 text-center text-[10px] font-bold uppercase tracking-wide text-nexoraSubtle sm:text-xs',
   calendarGrid: 'mt-1 grid grid-cols-7 gap-0.5',
@@ -222,60 +260,110 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   calendarDayToday: 'text-nexoraBrand ring-1 ring-nexoraBrand/40 hover:bg-nexoraBrandSoft',
   calendarDaySelected: 'bg-nexoraBrand text-white',
   calendarDaySpacer: 'h-9 sm:h-10',
-  filterBar: 'mt-3 flex gap-1 overflow-x-auto rounded-full border border-nexoraBorder bg-white p-1 shadow-sm nexora-no-scrollbar lg:mt-4',
-  filterTab: 'min-w-0 flex-1 whitespace-nowrap rounded-full px-2 py-2 text-center text-xs font-bold transition sm:px-3 sm:text-sm',
-  filterTabActive: 'bg-nexoraBrand text-white shadow-sm',
-  filterTabInactive: 'bg-transparent text-nexoraSubtle hover:text-nexoraText',
+  filterBar: 'mb-[14px] flex flex-col gap-3',
+  filterTab:
+    'inline-flex min-h-[38px] shrink-0 items-center gap-[7px] whitespace-nowrap rounded-full border px-3 text-[11px] font-extrabold',
+  filterTabActive: 'shadow-[0_7px_16px_rgba(70,72,216,0.1)]',
+  filterTabInactive: '',
+  statusCount: 'inline-flex h-[21px] min-w-[21px] items-center justify-center rounded-full px-1.5 text-[11px] font-black',
+  statusTabs: 'flex w-full gap-2 overflow-x-auto p-px nexora-no-scrollbar',
+  ordersLayout: 'block',
+  ordersPanel: '',
+  ordersPanelHead: 'mb-[11px] flex items-center justify-between gap-2.5',
+  ordersPanelTitle: 'text-[11px] font-extrabold text-[#62708a]',
+  viewCalendar:
+    'inline-flex min-h-8 items-center justify-center rounded-full border border-nexoraBorder bg-white px-3 text-[11px] font-extrabold text-nexoraText shadow-[0_3px_10px_rgba(15,23,42,0.05)] transition hover:border-nexoraBrand hover:text-nexoraBrand',
+  ordersCount: 'hidden',
+  featuredSlot: 'mb-[18px]',
+  featuredCard:
+    'overflow-hidden rounded-[22px] bg-[linear-gradient(135deg,#3245b8_0%,#6738f2_100%)] p-[18px] text-white shadow-[0_18px_34px_rgba(70,72,216,0.24)]',
+  featuredTop: 'flex items-center justify-between gap-2.5',
+  featuredEyebrow: 'text-[11px] font-extrabold uppercase tracking-[0.04em]',
+  featuredStatus:
+    'inline-flex min-h-6 items-center rounded-full border border-white/[.24] bg-white/[.14] px-[9px] text-[11px] font-extrabold',
+  featuredTitle: 'mt-2.5 text-[19px] font-black tracking-[-0.02em] text-white',
+  featuredService: 'mt-[5px] text-xs font-semibold text-white/[.82]',
+  featuredNote:
+    'mb-[13px] mt-[15px] rounded-xl border border-white/[.18] bg-white/10 px-3 py-[11px] text-[11px] font-semibold leading-[1.45] text-white',
+  featuredButton:
+    'h-10 w-full rounded-xl border-0 bg-white text-xs font-black text-nexoraBrand shadow-[0_8px_18px_rgba(24,27,90,0.16)]',
   listMeta: 'mt-4 flex items-center justify-between text-xs font-medium text-nexoraSubtle lg:mt-5 sm:text-sm',
-  ticketList: 'mt-2.5 space-y-2.5 lg:mt-3 lg:space-y-3',
-  ticketCard: 'flex w-full items-start gap-3 rounded-2xl border border-nexoraBorder bg-white px-3.5 py-3.5 text-left shadow-sm transition hover:border-nexoraBrand/20 hover:shadow-md lg:gap-3.5 lg:px-4 lg:py-4',
-  ticketTime: 'min-w-[4.75rem] shrink-0 whitespace-nowrap pt-0.5 text-left text-sm font-extrabold tabular-nums leading-5 text-nexoraBrand sm:min-w-[5.5rem] sm:text-base sm:leading-6',
+  ticketList: 'flex flex-col gap-[9px]',
+  ticketCard:
+    'min-h-[84px] w-full rounded-2xl border border-nexoraBorder bg-white p-3.5 text-left shadow-[0_8px_20px_rgba(15,23,42,0.055)] transition hover:border-nexoraBrand/45',
+  ticketCardActive: 'border-nexoraBorder bg-white shadow-none',
+  ticketCardTop: 'grid grid-cols-[52px_minmax(0,1fr)_auto] items-center gap-[9px]',
+  ticketTime: 'flex flex-col text-[11px] font-black text-nexoraText',
+  ticketTimeValue: 'text-sm leading-[1.1]',
+  ticketTimePeriod: 'mt-1 text-[11px] font-extrabold text-nexoraSubtle',
   ticketChevron: 'mt-1 h-4 w-4 shrink-0 text-nexoraSubtle sm:h-5 sm:w-5',
   ticketHeadRow: 'flex items-start justify-between gap-2',
-  ticketCustomer: 'block truncate text-sm font-extrabold leading-5 text-nexoraText sm:text-base sm:leading-6',
-  ticketService: 'mt-0.5 block truncate text-xs text-nexoraMuted sm:text-sm',
-  ticketMeta: 'mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-nexoraMuted sm:text-sm',
-  ticketMetaIcon: 'h-3 w-3 shrink-0 text-nexoraBrand sm:h-3.5 sm:w-3.5',
-  ticketBadge: 'inline-flex min-h-6 shrink-0 items-center rounded-full px-2.5 text-[10px] font-extrabold whitespace-nowrap',
-  detailPage:
-    '-mx-4 -mt-5 bg-white pb-8 sm:-mx-6 lg:mx-0 lg:mt-0 lg:overflow-hidden lg:rounded-3xl lg:border lg:border-nexoraBorder lg:shadow-sm',
-  detailHeader: 'flex items-center gap-2 border-b border-nexoraRule px-4 py-3 sm:px-5',
-  detailBack: 'grid h-10 w-10 shrink-0 place-items-center rounded-full text-nexoraText transition hover:bg-nexoraCanvas',
+  ticketCustomer: 'block min-w-0 truncate text-[13px] font-extrabold text-nexoraText',
+  ticketService: 'mt-1.5 block truncate text-[11px] font-semibold text-nexoraMuted',
+  ticketMeta: 'mt-[7px] flex flex-wrap items-center gap-x-[13px] gap-y-1.5 text-[11px] font-bold text-nexoraMuted',
+  ticketMetaIcon: 'h-3 w-3 shrink-0 text-nexoraBrand',
+  ticketBadge: 'inline-flex min-h-6 shrink-0 items-center rounded-full px-[9px] text-[11px] font-extrabold whitespace-nowrap',
+  customerPhone: 'hidden font-semibold text-nexoraSubtle',
+  detailPage: '',
+  detailHeader:
+    'mb-3 flex items-center justify-between gap-3 rounded-[15px] border border-nexoraBorder bg-white px-4 py-[13px] shadow-[0_8px_22px_rgba(15,23,42,0.055)]',
+  detailHeadMain: 'flex min-w-0 items-center gap-2.5',
+  detailBack:
+    'grid h-[30px] w-[30px] shrink-0 place-items-center rounded-lg border-0 bg-transparent text-nexoraMuted transition hover:bg-nexoraCanvas',
+  detailBackIcon: 'h-[18px] w-[18px]',
   detailTitleWrap: 'min-w-0 flex-1',
-  detailTitle: 'text-lg font-extrabold leading-6 text-nexoraText sm:text-xl',
-  detailCode: 'mt-0.5 text-sm text-nexoraSubtle',
-  detailBadge: 'inline-flex min-h-6 shrink-0 items-center rounded-full px-2.5 text-[10px] font-extrabold whitespace-nowrap',
-  customerCard: 'border-b border-nexoraRule px-4 py-4 sm:px-5 sm:py-5',
-  customerRow: 'flex items-center gap-3.5 lg:gap-4',
-  avatar: 'grid h-14 w-14 shrink-0 place-items-center rounded-full bg-nexoraBrandSoft text-sm font-extrabold text-nexoraBrand sm:h-16 sm:w-16 sm:text-base',
-  customerLabel: 'text-xs font-medium text-nexoraMuted sm:text-sm',
-  customerName: 'text-xl font-extrabold tracking-tight text-nexoraText sm:text-2xl',
-  servicesCard: 'px-4 pt-5 sm:px-5',
-  servicesTitleRow: 'flex items-center justify-between gap-3',
-  servicesTitle: 'text-lg font-extrabold text-nexoraText',
+  detailTitle: 'text-[15px] font-black leading-5 text-nexoraText',
+  detailCode: 'mt-[3px] text-[11px] font-bold tracking-[0.03em] text-nexoraSubtle',
+  detailBadge: 'inline-flex min-h-6 shrink-0 items-center rounded-full px-[9px] text-[11px] font-extrabold whitespace-nowrap',
+  detailBody:
+    'rounded-[17px] border border-nexoraBorder bg-white p-[18px] shadow-[0_10px_26px_rgba(15,23,42,0.06)]',
+  detailEmpty:
+    'hidden min-h-[420px] flex-col items-center justify-center px-10 py-10 text-center text-nexoraSubtle lg:flex',
+  detailEmptyIcon: 'mb-3 h-[34px] w-[34px] text-[#b4bdd0]',
+  detailEmptyTitle: 'text-sm font-extrabold text-nexoraMuted',
+  detailEmptyHint: 'mt-1 text-[11px]',
+  customerCard: 'border-b border-nexoraRule pb-[17px]',
+  customerRow: 'flex items-center gap-3',
+  avatar:
+    'grid h-12 w-12 shrink-0 place-items-center rounded-full border border-[#cbd0ff] bg-[#eef0ff] text-xs font-black text-nexoraBrand',
+  customerLabel: 'text-[11px] font-extrabold text-nexoraBrand',
+  customerName: 'mt-1 text-base font-black tracking-tight text-nexoraText',
+  servicesCard: 'pt-[18px]',
+  servicesTitleRow: 'mb-2.5 flex flex-wrap items-center justify-between gap-2',
+  servicesTitle: 'text-[13px] font-black text-nexoraText',
   serviceHeadActions: 'flex flex-wrap justify-end gap-1.5',
   addServiceButton:
-    'inline-flex min-h-8 items-center justify-center rounded-lg border border-nexoraBorder bg-white px-2.5 text-[11px] font-extrabold text-nexoraBrand transition hover:border-nexoraBrand hover:bg-nexoraBrandSoft',
+    'inline-flex min-h-[30px] items-center justify-center gap-1 rounded-lg border border-[#cfd5e3] bg-white px-2.5 text-[11px] font-extrabold text-nexoraBrand transition hover:border-nexoraBrand hover:bg-[#f7f7ff]',
   addServiceLink: 'cursor-not-allowed select-none text-sm font-semibold text-nexoraBrand/40',
   addOnLink: 'block cursor-not-allowed select-none text-right text-sm font-semibold whitespace-nowrap text-nexoraBrand/40',
-  serviceTable: 'mt-4 w-full table-fixed border-collapse',
-  serviceColPrice: 'w-[5.25rem] sm:w-[6rem]',
-  serviceColTime: 'w-[4.75rem] sm:w-[5.5rem]',
-  serviceColAction: 'w-[5.5rem] sm:w-[7rem] lg:w-[7.5rem]',
-  serviceHeadCell: 'pb-2 text-xs font-medium text-nexoraSubtle',
-  serviceHeadCellEnd: 'pb-2 text-right text-xs font-medium text-nexoraSubtle',
-  serviceRow: 'border-t border-nexoraRule',
-  serviceNameCell: 'min-w-0 overflow-hidden py-3.5 pr-2 align-middle',
-  serviceNumCell: 'overflow-hidden py-3.5 align-middle text-right tabular-nums whitespace-nowrap text-ellipsis',
-  serviceActionCell: 'overflow-hidden py-3.5 text-right align-middle',
-  servicePrice: 'text-sm font-extrabold text-nexoraText',
-  serviceDuration: 'text-sm text-nexoraMuted',
+  serviceTable: 'w-full min-w-0 border-t border-nexoraRule',
+  serviceColPrice: '',
+  serviceColTime: '',
+  serviceColAction: '',
+  serviceHeadCell: 'text-[11px] font-extrabold text-nexoraSubtle',
+  serviceHeadCellEnd: 'text-right text-[11px] font-extrabold text-nexoraSubtle',
+  serviceTableHead:
+    'grid grid-cols-[minmax(0,1fr)_60px_52px] gap-x-2 py-2 text-[11px] font-extrabold text-nexoraSubtle md:grid-cols-[minmax(0,1fr)_60px_52px_auto]',
+  serviceTableHeadRead:
+    'grid grid-cols-[minmax(0,1fr)_60px_52px] gap-x-2 py-2 text-[11px] font-extrabold text-nexoraSubtle',
+  serviceRow:
+    'grid grid-cols-[minmax(0,1fr)_60px_52px] items-start gap-x-2 gap-y-2 border-b border-nexoraRule py-3',
+  serviceRowEdit:
+    'grid grid-cols-[minmax(0,1fr)_60px_52px] items-start gap-x-2 gap-y-2 border-b border-nexoraRule py-3 md:grid-cols-[minmax(0,1fr)_60px_52px_auto] md:items-center',
+  serviceNameCell: 'min-w-0',
+  serviceNumCell: 'pt-0.5 text-right tabular-nums whitespace-nowrap',
+  serviceActionCell: 'col-span-3 flex justify-end md:col-span-1 md:pl-2',
+  servicePrice: 'text-[11px] font-extrabold text-nexoraText',
+  serviceDuration: 'text-[11px] font-bold text-nexoraMuted',
   serviceNameRow: 'flex min-w-0 items-center gap-1.5',
-  serviceAddOnName: 'flex min-w-0 items-center gap-1.5 pl-3 text-sm font-medium text-nexoraText',
+  serviceAddOnName: 'flex min-w-0 items-center gap-1.5 pl-3 text-xs font-extrabold text-nexoraText',
   serviceAddOnIcon: 'h-3.5 w-3.5 shrink-0 text-nexoraBrand',
+  serviceActionGroup: 'inline-flex flex-wrap items-center justify-end gap-1',
   serviceChangeButton:
-    'inline-flex min-h-7 max-w-full items-center justify-center truncate rounded-md px-1.5 text-[11px] font-extrabold whitespace-nowrap text-nexoraBrand transition hover:bg-nexoraBrandSoft sm:min-h-8 sm:px-2 sm:text-xs',
-  approvalPill: 'inline-flex h-[19px] shrink-0 items-center rounded-full px-1.5 text-[8px] font-extrabold uppercase',
+    'inline-flex min-h-[30px] items-center justify-center rounded-lg border border-[#c9cafa] bg-[#f6f6ff] px-2.5 text-[11px] font-extrabold whitespace-nowrap text-nexoraBrand transition hover:border-nexoraBrand hover:bg-[#ececff]',
+  serviceRemoveButton:
+    'inline-flex min-h-[30px] items-center justify-center rounded-lg border border-[#f3c9cd] bg-[#fff7f7] px-2.5 text-[11px] font-extrabold whitespace-nowrap text-[#c9434f] transition hover:border-[#e57d86] hover:bg-[#ffeded]',
+  approvalPill: 'ml-[5px] inline-flex h-[19px] shrink-0 items-center rounded-full px-[7px] text-[11px] font-extrabold uppercase',
   approvalPillPending: 'bg-[#FFF3D6] text-[#AD5A00]',
   approvalPillApproved: 'bg-[#E5F9F0] text-[#008655]',
   approvalPillRejected: 'bg-[#FEECEC] text-[#D42D2D]',
@@ -303,7 +391,7 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   customInput:
     'h-11 w-full rounded-[10px] border border-nexoraBorder bg-white px-3 text-sm text-nexoraText outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand',
   fieldError: 'mt-2 text-xs font-bold text-nexoraDanger',
-  approvalCard: 'mx-4 mt-4 rounded-[13px] border border-[#F4B826] bg-[#FFFBEB] px-3.5 py-3.5 text-[#8D380C] sm:mx-5',
+  approvalCard: 'mt-4 rounded-[13px] border border-[#F4B826] bg-[#FFFBEB] px-3.5 py-3.5 text-[#8D380C]',
   approvalHead: 'flex items-center justify-between gap-2.5',
   approvalTitle: 'inline-flex items-center gap-1.5 text-sm font-black',
   approvalCancel:
@@ -320,12 +408,14 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
     'h-11 w-full rounded-[11px] border border-nexoraBorder bg-white px-3 text-center text-base font-extrabold tracking-[0.22em] text-nexoraText outline-none placeholder:text-sm placeholder:tracking-[0.18em] placeholder:text-nexoraSubtle focus:border-nexoraBrand',
   approvalSubmit:
     'inline-flex h-11 items-center justify-center gap-1.5 rounded-[11px] bg-nexoraBrand px-3 text-[11px] font-extrabold text-white',
-  serviceTotalRow: 'flex items-center justify-between border-t border-nexoraRule py-3.5',
-  serviceTotalLabel: 'text-sm text-nexoraMuted sm:text-base',
-  serviceTotalValue: 'text-lg font-extrabold tabular-nums text-nexoraText sm:text-xl',
+  serviceTotalRow: 'flex items-center justify-between border-b border-nexoraRule py-3.5',
+  serviceTotalLabel: 'text-xs font-semibold text-nexoraMuted',
+  serviceTotalValue: 'text-sm font-black tabular-nums text-nexoraText',
+  detailActions: 'mt-4 flex flex-wrap gap-2',
   primaryAction:
-    'mx-4 mt-4 inline-flex h-14 w-[calc(100%-2rem)] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#4F7CFF] to-[#7C5CFF] text-base font-extrabold text-white shadow-[0_10px_24px_rgba(79,124,255,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 sm:mx-5 sm:w-[calc(100%-2.5rem)]',
+    'order-first inline-flex min-h-[46px] flex-1 basis-full items-center justify-center gap-[7px] rounded-[10px] border border-transparent bg-[linear-gradient(100deg,#315cff,#6c32ef)] px-3.5 text-xs font-extrabold text-white shadow-[0_10px_24px_rgba(70,72,216,0.22)] transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60',
   primaryActionIcon: 'grid h-6 w-6 place-items-center rounded-full bg-white/20',
+  primaryActionGlyph: 'h-[14px] w-[14px] fill-current',
   modalOverlay:
     'fixed inset-0 z-[60] flex items-end justify-center bg-nexoraText/55 p-0 backdrop-blur-sm sm:items-center sm:p-4',
   modalCard: 'nexora-modal-card w-full max-w-md rounded-b-none p-0 sm:rounded-2xl',
@@ -356,11 +446,13 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   modalConfirm:
     'inline-flex h-12 flex-[1.4] items-center justify-center gap-2 rounded-xl bg-nexoraBrand px-4 text-sm font-extrabold text-white transition hover:bg-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-50',
   modalConfirmIcon: 'grid h-5 w-5 place-items-center rounded-full bg-white/20',
-  notesCard: 'mx-4 mt-4 rounded-2xl border border-[#F3D7A8] bg-[#FFF6E8] px-4 py-3.5 sm:mx-5',
-  notesKicker: 'text-sm font-bold text-[#C47B2B]',
-  notesTitle: 'mt-0.5 text-base font-extrabold text-nexoraText',
-  notesBody: 'mt-1 text-sm leading-relaxed text-nexoraMuted sm:text-base',
-  completedNote: 'mx-4 mt-4 rounded-[11px] border border-[#CCEBDD] bg-[#F0FBF6] px-3 py-3 sm:mx-5',
+  notesCard:
+    'mt-4 flex items-start gap-[9px] rounded-[11px] border border-[#f3c98e] bg-[#fff8ef] px-3.5 py-[13px] text-[11px] font-semibold leading-normal text-[#596178]',
+  notesIcon: 'mt-0.5 h-3.5 w-3.5 shrink-0 text-[#d58b0a]',
+  notesKicker: 'text-[11px] font-extrabold text-[#b46909]',
+  notesTitle: 'mb-0.5 block text-[11px] font-black text-nexoraText',
+  notesBody: 'text-[11px] font-semibold leading-snug text-[#596178]',
+  completedNote: 'mt-4 rounded-[11px] border border-[#CCEBDD] bg-[#F0FBF6] px-3 py-3',
   completedNoteTitle: 'inline-flex items-center gap-1.5 text-[11px] font-extrabold text-[#00794C]',
   completedNoteIcon: 'h-3.5 w-3.5 shrink-0',
   completedNoteBody: 'mt-1.5 text-[11px] font-semibold leading-relaxed text-[#2D6450]',
@@ -369,12 +461,15 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   metaChip: 'inline-flex items-center gap-1',
   iconSm: 'h-4 w-4',
   iconMd: 'h-5 w-5',
-  ticketEmpty: 'mt-2.5 rounded-2xl border border-dashed border-nexoraBorder bg-white px-4 py-10 text-center text-sm text-nexoraMuted sm:text-base',
-  emptyTitle: 'font-semibold text-nexoraText',
-  emptyBody: 'mt-1',
+  ticketEmpty: 'px-5 py-12 text-center text-nexoraSubtle',
+  emptyTitle: 'block text-[13px] font-extrabold text-nexoraMuted',
+  emptyBody: 'mt-1.5 block text-[11px] leading-snug',
+  emptyIcon: 'mx-auto mb-2 h-[27px] w-[27px]',
+  chrome: '',
+  hideOnDetailMobile: 'hidden',
   emptyInline: 'mt-3 text-sm text-nexoraMuted sm:text-base',
-  serviceName: 'truncate text-sm font-extrabold text-nexoraText sm:text-base',
-  serviceTech: 'mt-0.5 truncate text-xs text-nexoraMuted sm:text-sm',
+  serviceName: 'truncate text-xs font-extrabold text-nexoraText',
+  serviceTech: 'mt-0.5 truncate text-[11px] font-semibold text-nexoraSubtle',
   itemNote: 'mt-1.5 rounded-xl bg-amber-50 px-3 py-2 text-xs leading-relaxed text-nexoraText sm:text-sm',
   errorCard: 'rounded-2xl border border-rose-200 bg-rose-50 px-4 py-10 text-center',
   errorText: 'text-sm font-bold text-nexoraDanger sm:text-base',
@@ -479,9 +574,56 @@ export const WORK_ORDER_APPROVAL_PILL_CLASS = {
   rejected: WORK_ORDERS_LAYOUT_CLASS.approvalPillRejected,
 } as const
 
-export function workOrderFilterTabClass(isActive: boolean) {
-  const state = isActive ? 'active' : 'inactive'
-  return `${WORK_ORDERS_LAYOUT_CLASS.filterTab} ${WORK_ORDER_FILTER_TAB_STATE_CLASS[state]}`
+export const WORK_ORDER_FILTER_TAB_STYLE: Record<
+  Exclude<WorkOrderTicketFilter, typeof WORK_ORDER_TICKET_FILTER.All>,
+  { idle: string; active: string; count: string }
+> = {
+  [WORK_ORDER_TICKET_FILTER.Assigned]: {
+    idle: 'border-[#d8d4ff] bg-[#f2f0ff] text-[#5146c9]',
+    active: 'border-[#8e84ee] bg-[#e9e6ff]',
+    count: 'bg-[#dfdcff] text-[#5146c9]',
+  },
+  [WORK_ORDER_TICKET_FILTER.InService]: {
+    idle: 'border-[#bdebf5] bg-[#edfbfe] text-[#087b96]',
+    active: 'border-[#62cee3] bg-[#dff8fc]',
+    count: 'bg-[#d3f3f9] text-[#087b96]',
+  },
+  [WORK_ORDER_TICKET_FILTER.Completed]: {
+    idle: 'border-[#c8ecd9] bg-[#eefaf4] text-[#087b55]',
+    active: 'border-[#74d2a5] bg-[#e0f7eb]',
+    count: 'bg-[#d8f2e5] text-[#087b55]',
+  },
+}
+
+export function workOrderFilterTabClass(tab: WorkOrderTicketFilter, isActive: boolean) {
+  if (tab === WORK_ORDER_TICKET_FILTER.All) {
+    const state = isActive ? 'active' : 'inactive'
+    return `${WORK_ORDERS_LAYOUT_CLASS.filterTab} ${WORK_ORDER_FILTER_TAB_STATE_CLASS[state]}`
+  }
+  const style = WORK_ORDER_FILTER_TAB_STYLE[tab]
+  const state = isActive
+    ? `${style.idle} ${style.active} ${WORK_ORDERS_LAYOUT_CLASS.filterTabActive}`
+    : style.idle
+  return `${WORK_ORDERS_LAYOUT_CLASS.filterTab} ${state}`
+}
+
+export function workOrderFilterCountClass(tab: WorkOrderTicketFilter) {
+  if (tab === WORK_ORDER_TICKET_FILTER.All) return WORK_ORDERS_LAYOUT_CLASS.statusCount
+  return `${WORK_ORDERS_LAYOUT_CLASS.statusCount} ${WORK_ORDER_FILTER_TAB_STYLE[tab].count}`
+}
+
+export function workOrderServiceRowClass(canEdit: boolean) {
+  return canEdit ? WORK_ORDERS_LAYOUT_CLASS.serviceRowEdit : WORK_ORDERS_LAYOUT_CLASS.serviceRow
+}
+
+export function workOrderServiceTableHeadClass(canEdit: boolean) {
+  return canEdit ? WORK_ORDERS_LAYOUT_CLASS.serviceTableHead : WORK_ORDERS_LAYOUT_CLASS.serviceTableHeadRead
+}
+
+export function workOrderTicketCardClass(isActive: boolean) {
+  return isActive
+    ? `${WORK_ORDERS_LAYOUT_CLASS.ticketCard} ${WORK_ORDERS_LAYOUT_CLASS.ticketCardActive}`
+    : WORK_ORDERS_LAYOUT_CLASS.ticketCard
 }
 
 export function workOrderStatusClass(

@@ -1,7 +1,7 @@
 import { useRef, useState, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { qk } from '../../../data/queryKeys'
-import { BadgeCheck, Check, ChevronLeft, LayoutGrid, Play, Radio } from 'lucide-react'
+import { BadgeCheck, Check, ChevronLeft, LayoutGrid, NotebookPen, Play, Radio } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { getErrorI18nKey } from '../../../data/errorCodes'
@@ -13,6 +13,7 @@ import {
 import { getApiErrorCode } from '../../../types/domain'
 import { PosOrderStatus } from '../../../constants/posOrderStatus'
 import {
+  WORK_ORDER_EMPTY_PLACEHOLDER,
   WORK_ORDER_STATUS_BADGE_VARIANT,
   WORK_ORDER_STATUS_I18N,
   WORK_ORDERS_I18N,
@@ -36,21 +37,25 @@ import {
   addWorkOrderCatalogService,
   addWorkOrderCustomService,
   canEditWorkOrderServices,
+  markWorkOrderLinePending,
   matchWorkOrderCatalogServiceByName,
   replaceWorkOrderCatalogService,
   setWorkOrderPendingApproval,
   toWorkOrderEditableLines,
   workOrderEditableServiceTotal,
+  workOrderHasAssignedService,
+  workOrderHasInServiceService,
   workOrderPendingServiceLines,
   type WorkOrderCatalogService,
   type WorkOrderEditableLine,
   type WorkOrderPickerMode,
 } from './workOrderServiceCatalog'
 import {
-  canStartWorkOrderNow,
   formatWorkOrderNumber,
   formatWorkOrderStationValue,
   isWorkOrderCompletedStatus,
+  isWorkOrderStartDateReached,
+  workOrderBeeperChipText,
   workOrderCompletionNoteText,
   workOrderCustomerInitials,
   workOrderTextOrPlaceholder,
@@ -202,6 +207,10 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
         onAddService={() => setPicker({ mode: WORK_ORDER_PICKER_MODE.add })}
         onAddCustomService={() => setIsCustomOpen(true)}
         onChangeService={(key) => setPicker({ mode: WORK_ORDER_PICKER_MODE.edit, lineKey: key })}
+        onRemoveService={(key) => {
+          setLines((current) => markWorkOrderLinePending(current, key))
+          showToast(t(WORK_ORDERS_I18N.toastRemoveService), 'success')
+        }}
         onApprovePending={() => {
           setLines((current) => setWorkOrderPendingApproval(current, WORK_ORDER_SERVICE_APPROVAL.approved))
         }}
@@ -321,6 +330,7 @@ function WorkOrderDetailBody({
   onAddService,
   onAddCustomService,
   onChangeService,
+  onRemoveService,
   onApprovePending,
   onCancelPending,
   lineActions,
@@ -339,6 +349,7 @@ function WorkOrderDetailBody({
   onAddService: () => void
   onAddCustomService: () => void
   onChangeService: (key: string) => void
+  onRemoveService: (key: string) => void
   onApprovePending: () => void
   onCancelPending: () => void
   lineActions: WorkOrderLineActions
@@ -368,11 +379,15 @@ function WorkOrderDetailBody({
   const isCompleted = isWorkOrderCompletedStatus(status)
   const canEdit = canEditWorkOrderServices(status)
   const pendingServices = workOrderPendingServiceLines(lines)
-  const notesCard = ticket.customerNotes ? (
+  const customerNotes = ticket.customerNotes?.trim() ?? ''
+  const notesCard = customerNotes ? (
     <aside className={WORK_ORDERS_LAYOUT_CLASS.notesCard}>
-      <p className={WORK_ORDERS_LAYOUT_CLASS.notesKicker}>{t(WORK_ORDERS_I18N.notesImportant)}</p>
-      <p className={WORK_ORDERS_LAYOUT_CLASS.notesTitle}>{t(WORK_ORDERS_I18N.customerNotes)}</p>
-      <p className={WORK_ORDERS_LAYOUT_CLASS.notesBody}>{ticket.customerNotes}</p>
+      <NotebookPen className={WORK_ORDERS_LAYOUT_CLASS.notesIcon} aria-hidden="true" />
+      <span>
+        <span className={WORK_ORDERS_LAYOUT_CLASS.notesKicker}>{t(WORK_ORDERS_I18N.notesImportant)}</span>
+        <strong className={WORK_ORDERS_LAYOUT_CLASS.notesTitle}>{t(WORK_ORDERS_I18N.customerNotes)}</strong>
+        {customerNotes}
+      </span>
     </aside>
   ) : null
   const completedNotes = isCompleted ? (
@@ -390,15 +405,15 @@ function WorkOrderDetailBody({
       </p>
     </aside>
   ) : null
-  const showStart = !isCompleted && ticket.canStartService
-  const showComplete = !isCompleted && ticket.status === PosOrderStatus.InService && ticket.canCompleteService
-  const actions = (
-    <>
+  const showStart = !isCompleted && workOrderHasAssignedService(lines)
+  const showComplete = !isCompleted && workOrderHasInServiceService(lines)
+  const actions = showStart || showComplete ? (
+    <div className={WORK_ORDERS_LAYOUT_CLASS.detailActions}>
       {showStart ? (
         <WorkOrderPrimaryAction
-          disabled={isMutating || !canStartWorkOrderNow(ticket, todayIso)}
+          disabled={isMutating || !isWorkOrderStartDateReached(ticket.scheduledAt, todayIso)}
           onClick={onStart}
-          icon={<Play className={`${WORK_ORDERS_LAYOUT_CLASS.iconSm} ${WORK_ORDERS_LAYOUT_CLASS.iconFill}`} aria-hidden="true" />}
+          icon={<Play className={WORK_ORDERS_LAYOUT_CLASS.primaryActionGlyph} aria-hidden="true" />}
           label={t(WORK_ORDERS_I18N.startService)}
         />
       ) : null}
@@ -408,17 +423,18 @@ function WorkOrderDetailBody({
           onClick={onComplete}
           icon={(
             <span className={WORK_ORDERS_LAYOUT_CLASS.primaryActionIcon}>
-              <Check className={WORK_ORDERS_LAYOUT_CLASS.iconSm} aria-hidden="true" />
+              <Check className={WORK_ORDERS_LAYOUT_CLASS.primaryActionGlyph} aria-hidden="true" />
             </span>
           )}
           label={t(WORK_ORDERS_I18N.completeService)}
         />
       ) : null}
-    </>
-  )
+    </div>
+  ) : null
 
   return (
     <>
+      <div className={WORK_ORDERS_LAYOUT_CLASS.detailBody}>
       <div className={WORK_ORDERS_LAYOUT_CLASS.customerCard}>
         <div className={WORK_ORDERS_LAYOUT_CLASS.customerRow}>
           <span className={WORK_ORDERS_LAYOUT_CLASS.avatar}>
@@ -442,7 +458,10 @@ function WorkOrderDetailBody({
               </span>
               <span className={WORK_ORDERS_LAYOUT_CLASS.metaChip}>
                 <Radio className={WORK_ORDERS_LAYOUT_CLASS.ticketMetaIcon} aria-hidden="true" />
-                <span>{t(WORK_ORDERS_I18N.beeper, { code: workOrderTextOrPlaceholder(ticket.beeper) })}</span>
+                <span>{workOrderBeeperChipText(ticket.beeper, t)}</span>
+              </span>
+              <span className={WORK_ORDERS_LAYOUT_CLASS.customerPhone}>
+                {WORK_ORDER_EMPTY_PLACEHOLDER}
               </span>
             </span>
           </div>
@@ -456,6 +475,7 @@ function WorkOrderDetailBody({
         onAddService={onAddService}
         onAddCustomService={onAddCustomService}
         onChangeService={onChangeService}
+        onRemoveService={onRemoveService}
         actions={lineActions}
       />
 
@@ -467,22 +487,9 @@ function WorkOrderDetailBody({
         />
       )}
 
-      {isCompleted ? (
-        <>
-          {completedNotes}
-          {notesCard}
-        </>
-      ) : status === PosOrderStatus.InService ? (
-        <>
-          {notesCard}
-          {actions}
-        </>
-      ) : (
-        <>
-          {actions}
-          {notesCard}
-        </>
-      )}
+      {isCompleted ? completedNotes : actions}
+      {notesCard}
+      </div>
     </>
   )
 }
@@ -524,21 +531,23 @@ function WorkOrderDetailHeader({
 
   return (
     <div className={WORK_ORDERS_LAYOUT_CLASS.detailHeader}>
-      <button
-        type="button"
-        className={WORK_ORDERS_LAYOUT_CLASS.detailBack}
-        aria-label={t(WORK_ORDERS_I18N.back)}
-        onClick={onBack}
-      >
-        <ChevronLeft className={WORK_ORDERS_LAYOUT_CLASS.iconMd} aria-hidden="true" />
-      </button>
-      <div className={WORK_ORDERS_LAYOUT_CLASS.detailTitleWrap}>
-        <h2 className={WORK_ORDERS_LAYOUT_CLASS.detailTitle}>
-          {t(WORK_ORDERS_I18N.detailTitle)}
-        </h2>
-        <p className={WORK_ORDERS_LAYOUT_CLASS.detailCode}>
-          {formatWorkOrderNumber(orderNumber)}
-        </p>
+      <div className={WORK_ORDERS_LAYOUT_CLASS.detailHeadMain}>
+        <button
+          type="button"
+          className={WORK_ORDERS_LAYOUT_CLASS.detailBack}
+          aria-label={t(WORK_ORDERS_I18N.back)}
+          onClick={onBack}
+        >
+          <ChevronLeft className={WORK_ORDERS_LAYOUT_CLASS.detailBackIcon} aria-hidden="true" />
+        </button>
+        <div className={WORK_ORDERS_LAYOUT_CLASS.detailTitleWrap}>
+          <h2 className={WORK_ORDERS_LAYOUT_CLASS.detailTitle}>
+            {t(WORK_ORDERS_I18N.detailTitle)}
+          </h2>
+          <p className={WORK_ORDERS_LAYOUT_CLASS.detailCode}>
+            {formatWorkOrderNumber(orderNumber)}
+          </p>
+        </div>
       </div>
       {status ? (
         <span className={workOrderStatusClass(status, WORK_ORDER_STATUS_BADGE_VARIANT.detail)}>

@@ -34,17 +34,20 @@ export function WorkOrderTicketsSkeleton() {
         <Skeleton circle width={32} height={32} />
       </div>
       <Skeleton width={140} height={16} borderRadius={6} className={WORK_ORDERS_LAYOUT_CLASS.skeletonMt2} />
-      <div className={WORK_ORDERS_LAYOUT_CLASS.dateNav}>
-        <div className={WORK_ORDERS_LAYOUT_CLASS.dateNavRow}>
-          <Skeleton circle width={36} height={36} />
-          <Skeleton width={96} height={18} borderRadius={6} />
-          <Skeleton circle width={36} height={36} />
-        </div>
-      </div>
       <div className={WORK_ORDERS_LAYOUT_CLASS.filterBar}>
-        {Array.from({ length: WORK_ORDER_FILTER_TABS.length }, (_, index) => (
-          <Skeleton key={index} height={32} borderRadius={999} className={WORK_ORDERS_LAYOUT_CLASS.skeletonFlex} />
-        ))}
+        <div className={WORK_ORDERS_LAYOUT_CLASS.dateNav}>
+          <div className={WORK_ORDERS_LAYOUT_CLASS.dateNavRow}>
+            <Skeleton circle width={40} height={40} />
+            <Skeleton width={96} height={18} borderRadius={6} />
+            <Skeleton circle width={40} height={40} />
+          </div>
+          <Skeleton width={64} height={40} borderRadius={10} />
+        </div>
+        <div className={WORK_ORDERS_LAYOUT_CLASS.statusTabs}>
+          {Array.from({ length: WORK_ORDER_FILTER_TABS.length }, (_, index) => (
+            <Skeleton key={index} width={96} height={36} borderRadius={999} />
+          ))}
+        </div>
       </div>
       <WorkOrderTicketListSkeleton />
     </div>

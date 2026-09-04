@@ -1,4 +1,5 @@
 import { PosOrderStatus } from '../../../constants/posOrderStatus'
+import { PosOrderItemStatus } from '../../../constants/posOrderItemStatus'
 import type { WorkOrderItem } from './constants'
 
 export const WORK_ORDER_SERVICE_APPROVAL = {
@@ -120,6 +121,20 @@ export function workOrderPendingServiceLines(lines: WorkOrderEditableLine[]): Wo
   )
 }
 
+function isParentServiceLine(line: WorkOrderEditableLine): boolean {
+  return !line.isAddOn
+}
+
+/** Ticket Start Service shows when any parent service is still Assigned. */
+export function workOrderHasAssignedService(lines: WorkOrderEditableLine[]): boolean {
+  return lines.some((line) => isParentServiceLine(line) && line.lineStatus === PosOrderItemStatus.Assigned)
+}
+
+/** Ticket Complete shows when any parent service is In Service (Started). */
+export function workOrderHasInServiceService(lines: WorkOrderEditableLine[]): boolean {
+  return lines.some((line) => isParentServiceLine(line) && line.lineStatus === PosOrderItemStatus.Started)
+}
+
 export function flattenWorkOrderCatalog(
   categories: WorkOrderCatalogCategory[] = WORK_ORDER_MOCK_SERVICE_CATEGORIES,
 ): WorkOrderCatalogService[] {
@@ -212,6 +227,17 @@ export function addWorkOrderCustomService(
       approval: WORK_ORDER_SERVICE_APPROVAL.pending,
     },
   ]
+}
+
+export function markWorkOrderLinePending(
+  lines: WorkOrderEditableLine[],
+  key: string,
+): WorkOrderEditableLine[] {
+  return lines.map((line) => (
+    line.key === key && !line.isAddOn
+      ? { ...line, approval: WORK_ORDER_SERVICE_APPROVAL.pending }
+      : line
+  ))
 }
 
 export function setWorkOrderPendingApproval(

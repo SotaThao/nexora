@@ -6,6 +6,8 @@ import {
   WORK_ORDER_APPROVAL_PILL_CLASS,
   WORK_ORDERS_I18N,
   WORK_ORDERS_LAYOUT_CLASS,
+  workOrderServiceRowClass,
+  workOrderServiceTableHeadClass,
 } from './constants'
 import type { WorkOrderEditableLine, WorkOrderServiceApproval } from './workOrderServiceCatalog'
 import {
@@ -50,6 +52,7 @@ interface WorkOrderServiceLinesProps {
   onAddService: () => void
   onAddCustomService: () => void
   onChangeService: (key: string) => void
+  onRemoveService?: (key: string) => void
   /** Omitted on read-only views; without it the rows render without line-status buttons. */
   actions?: WorkOrderLineActions
 }
@@ -61,6 +64,7 @@ export default function WorkOrderServiceLines({
   onAddService,
   onAddCustomService,
   onChangeService,
+  onRemoveService,
   actions,
 }: WorkOrderServiceLinesProps) {
   const { t } = useTranslation()
@@ -91,43 +95,24 @@ export default function WorkOrderServiceLines({
         <p className={WORK_ORDERS_LAYOUT_CLASS.emptyInline}>{workOrderTextOrPlaceholder('')}</p>
       ) : (
         <>
-          <table className={WORK_ORDERS_LAYOUT_CLASS.serviceTable}>
-            <colgroup>
-              <col />
-              <col className={WORK_ORDERS_LAYOUT_CLASS.serviceColPrice} />
-              <col className={WORK_ORDERS_LAYOUT_CLASS.serviceColTime} />
-              {canEdit ? <col className={WORK_ORDERS_LAYOUT_CLASS.serviceColAction} /> : null}
-            </colgroup>
-            <thead>
-              <tr>
-                <th scope="col" className={`${WORK_ORDERS_LAYOUT_CLASS.serviceHeadCell} ${WORK_ORDERS_LAYOUT_CLASS.textLeft}`}>
-                  {t(WORK_ORDERS_I18N.colService)}
-                </th>
-                <th scope="col" className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadCellEnd}>
-                  {t(WORK_ORDERS_I18N.colPrice)}
-                </th>
-                <th scope="col" className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadCellEnd}>
-                  {t(WORK_ORDERS_I18N.colTime)}
-                </th>
-                {canEdit ? (
-                  <th scope="col" className={WORK_ORDERS_LAYOUT_CLASS.srOnly}>
-                    {t(WORK_ORDERS_I18N.changeService)}
-                  </th>
-                ) : null}
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((line, index) => (
-                <WorkOrderServiceLineRow
-                  key={line.id || line.key || `${line.serviceName}-${index}`}
-                  line={line}
-                  canEdit={canEdit}
-                  actions={actions}
-                  onChangeService={() => onChangeService(line.key)}
-                />
-              ))}
-            </tbody>
-          </table>
+          <div className={WORK_ORDERS_LAYOUT_CLASS.serviceTable}>
+            <div className={workOrderServiceTableHeadClass(canEdit)}>
+              <span className={WORK_ORDERS_LAYOUT_CLASS.textLeft}>{t(WORK_ORDERS_I18N.colService)}</span>
+              <span className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadCellEnd}>{t(WORK_ORDERS_I18N.colPrice)}</span>
+              <span className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadCellEnd}>{t(WORK_ORDERS_I18N.colTime)}</span>
+              {canEdit ? <span className="hidden md:block" aria-hidden="true" /> : null}
+            </div>
+            {items.map((line, index) => (
+              <WorkOrderServiceLineRow
+                key={line.id || line.key || `${line.serviceName}-${index}`}
+                line={line}
+                canEdit={canEdit}
+                actions={actions}
+                onChangeService={() => onChangeService(line.key)}
+                onRemoveService={onRemoveService ? () => onRemoveService(line.key) : undefined}
+              />
+            ))}
+          </div>
           <div className={WORK_ORDERS_LAYOUT_CLASS.serviceTotalRow}>
             <span className={WORK_ORDERS_LAYOUT_CLASS.serviceTotalLabel}>
               {t(WORK_ORDERS_I18N.serviceTotal)}
@@ -157,11 +142,13 @@ function WorkOrderServiceLineRow({
   canEdit,
   actions,
   onChangeService,
+  onRemoveService,
 }: {
   line: WorkOrderEditableLine
   canEdit: boolean
   actions?: WorkOrderLineActions
   onChangeService: () => void
+  onRemoveService?: () => void
 }) {
   const { t } = useTranslation()
   const canAct = Boolean(actions) && Boolean(line.isMine) && !line.isAddOn
@@ -169,8 +156,8 @@ function WorkOrderServiceLineRow({
     actions?.pendingLineId === line.id && actions.pendingKind === kind
 
   return (
-    <tr className={WORK_ORDERS_LAYOUT_CLASS.serviceRow}>
-      <td className={WORK_ORDERS_LAYOUT_CLASS.serviceNameCell}>
+    <div className={workOrderServiceRowClass(canEdit)}>
+      <div className={WORK_ORDERS_LAYOUT_CLASS.serviceNameCell}>
         {line.isAddOn ? (
           <p className={WORK_ORDERS_LAYOUT_CLASS.serviceAddOnName}>
             <Puzzle className={WORK_ORDERS_LAYOUT_CLASS.serviceAddOnIcon} aria-hidden="true" />
@@ -253,27 +240,39 @@ function WorkOrderServiceLineRow({
             ) : null}
           </div>
         ) : null}
-      </td>
-      <td className={`${WORK_ORDERS_LAYOUT_CLASS.serviceNumCell} ${WORK_ORDERS_LAYOUT_CLASS.servicePrice}`}>
+      </div>
+      <div className={`${WORK_ORDERS_LAYOUT_CLASS.serviceNumCell} ${WORK_ORDERS_LAYOUT_CLASS.servicePrice}`}>
         {formatWorkOrderMoney(line.unitPrice)}
-      </td>
-      <td className={`${WORK_ORDERS_LAYOUT_CLASS.serviceNumCell} ${WORK_ORDERS_LAYOUT_CLASS.serviceDuration}`}>
+      </div>
+      <div className={`${WORK_ORDERS_LAYOUT_CLASS.serviceNumCell} ${WORK_ORDERS_LAYOUT_CLASS.serviceDuration}`}>
         {formatWorkOrderDurationMinutes(line.durationMinutes, t)}
-      </td>
+      </div>
       {canEdit ? (
-        <td className={WORK_ORDERS_LAYOUT_CLASS.serviceActionCell}>
+        <div className={WORK_ORDERS_LAYOUT_CLASS.serviceActionCell}>
           {line.isAddOn ? null : (
-            <button
-              type="button"
-              className={WORK_ORDERS_LAYOUT_CLASS.serviceChangeButton}
-              aria-label={`${t(WORK_ORDERS_I18N.changeService)} ${workOrderTextOrPlaceholder(line.serviceName)}`}
-              onClick={onChangeService}
-            >
-              {t(WORK_ORDERS_I18N.changeService)}
-            </button>
+            <span className={WORK_ORDERS_LAYOUT_CLASS.serviceActionGroup}>
+              <button
+                type="button"
+                className={WORK_ORDERS_LAYOUT_CLASS.serviceChangeButton}
+                aria-label={`${t(WORK_ORDERS_I18N.changeService)} ${workOrderTextOrPlaceholder(line.serviceName)}`}
+                onClick={onChangeService}
+              >
+                {t(WORK_ORDERS_I18N.changeServiceAction)}
+              </button>
+              {onRemoveService ? (
+                <button
+                  type="button"
+                  className={WORK_ORDERS_LAYOUT_CLASS.serviceRemoveButton}
+                  aria-label={`${t(WORK_ORDERS_I18N.removeService)} ${workOrderTextOrPlaceholder(line.serviceName)}`}
+                  onClick={onRemoveService}
+                >
+                  {t(WORK_ORDERS_I18N.removeService)}
+                </button>
+              ) : null}
+            </span>
           )}
-        </td>
+        </div>
       ) : null}
-    </tr>
+    </div>
   )
 }
