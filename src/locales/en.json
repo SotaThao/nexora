@@ -206,6 +206,7 @@
       "my_reviews": "My Reviews",
       "my_salons": "My Salons",
       "work_orders": "Work Orders",
+      "my_calendar": "My Calendar",
       "report": "Report"
     },
     "titles": {
@@ -220,6 +221,7 @@
       "earnings": "My Earnings",
       "salons": "My Salons",
       "work-orders": "Work Orders",
+      "calendar": "My Calendar",
       "report": "Report",
       "profile": "Settings",
       "notifications": "Notifications",
@@ -285,6 +287,22 @@
       "customer_notes": "Customer notes",
       "not_assigned_to_you": "You are no longer assigned to this ticket.",
       "detail_unavailable": "This ticket could not be opened."
+    },
+    "calendar": {
+      "kicker": "My schedule only",
+      "today": "Today",
+      "week_label": "Choose a day",
+      "heading": "{{weekday}} · {{count}} appointments",
+      "heading_one": "{{weekday}} · 1 appointment",
+      "empty_title": "No appointments",
+      "empty_body": "Your schedule is clear for this day.",
+      "loading": "Loading your schedule…",
+      "back": "Back to work orders",
+      "appointment_title": "{{customer}} · {{service}}",
+      "appointment_meta": "{{time}} · {{minutes}} min · {{ticket}}",
+      "duration_hours": "{{hours}}h",
+      "duration_minutes": "{{minutes}}m",
+      "duration_hours_minutes": "{{hours}}h {{minutes}}m"
     },
     "missing_payout_toast": "Please set up your payout method to receive TIPS.",
     "missing_payout_title": "Action Required",

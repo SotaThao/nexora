@@ -216,6 +216,7 @@
       "my_reviews": "Đánh giá của tôi",
       "my_salons": "Salon của tôi",
       "work_orders": "Đơn công việc",
+      "my_calendar": "Lịch của tôi",
       "report": "Báo cáo"
     },
     "titles": {
@@ -230,6 +231,7 @@
       "earnings": "Thu nhập của tôi",
       "salons": "Salon của tôi",
       "work-orders": "Đơn công việc",
+      "calendar": "Lịch của tôi",
       "report": "Báo cáo",
       "profile": "Cài đặt",
       "notifications": "Thông báo",
@@ -295,6 +297,22 @@
       "customer_notes": "Ghi chú khách",
       "not_assigned_to_you": "Bạn không còn được giao việc trên ticket này.",
       "detail_unavailable": "Không mở được ticket này."
+    },
+    "calendar": {
+      "kicker": "Chỉ lịch của tôi",
+      "today": "Hôm nay",
+      "week_label": "Chọn ngày",
+      "heading": "{{weekday}} · {{count}} lịch hẹn",
+      "heading_one": "{{weekday}} · 1 lịch hẹn",
+      "empty_title": "Không có lịch hẹn",
+      "empty_body": "Bạn trống lịch trong ngày này.",
+      "loading": "Đang tải lịch của bạn…",
+      "back": "Quay lại đơn công việc",
+      "appointment_title": "{{customer}} · {{service}}",
+      "appointment_meta": "{{time}} · {{minutes}} phút · {{ticket}}",
+      "duration_hours": "{{hours}} giờ",
+      "duration_minutes": "{{minutes}} phút",
+      "duration_hours_minutes": "{{hours}} giờ {{minutes}} phút"
     },
     "status": {
       "active": "Đang hoạt động",

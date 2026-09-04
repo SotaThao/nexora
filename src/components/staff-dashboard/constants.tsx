@@ -2,6 +2,7 @@
 import {
   LayoutDashboard,
   Calculator,
+  CalendarDays,
   QrCode,
   CircleDollarSign,
   Star,
@@ -17,8 +18,11 @@ import {
 // Bottom-nav / sidebar items. Icons align with merchant dashboard MENU_ITEMS.
 // 'taxiq' carries `children` (Tax IQ sub-nav) — StaffSidebar renders it as an
 // expandable group, mirroring the Owner Dashboard's MENU_ITEMS.taxiq pattern.
+export const STAFF_CALENDAR_SCREEN = 'calendar' as const
+
 const STAFF_ALL_MENU_ITEMS = [
   { id: 'home', icon: LayoutDashboard, labelKey: 'staff_dashboard.nav.home' },
+  { id: STAFF_CALENDAR_SCREEN, icon: CalendarDays, labelKey: 'staff_dashboard.nav.my_calendar' },
   { id: 'tips', icon: CircleDollarSign, labelKey: 'staff_dashboard.nav.tips' },
   { id: 'payments', icon: ReceiptText, labelKey: 'staff_dashboard.nav.payments' },
   { id: 'pay', icon: BarChart3, labelKey: 'staff_dashboard.nav.pay' },
@@ -186,7 +190,7 @@ export function isStaffBottomNavItemActive(
   return true
 }
 
-export const STAFF_SCREENS = ['home', 'qr', 'tips', 'reviews', 'pay', 'payments', 'earnings', 'salons', STAFF_WORK_ORDERS_SCREEN, 'profile', 'notifications', 'taxiq']
+export const STAFF_SCREENS = ['home', 'qr', 'tips', 'reviews', 'pay', 'payments', 'earnings', 'salons', STAFF_WORK_ORDERS_SCREEN, STAFF_CALENDAR_SCREEN, 'profile', 'notifications', 'taxiq']
 
 // Maps a Staff Tax IQ sidebar sub-item id -> the StaffTaxYear.enabledModules entry
 // that must be present for it to show. Sub-items absent from this table (income,
