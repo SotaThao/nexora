@@ -52,6 +52,24 @@ function toLandingStatus(value: unknown): OneQrLandingStatus {
   return 'active'
 }
 
+/**
+ * Opening hours arrive either as an array of lines or as one newline-joined
+ * string, depending on how the backend ends up modelling them — both collapse
+ * to the list of lines the footer renders. Blank entries are dropped so an
+ * empty string never becomes an empty row.
+ */
+function normalizeHours(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map((line) => str(line).trim()).filter(Boolean)
+  }
+  const single = nullableStr(value)
+  if (!single) return []
+  return single
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+}
+
 function normalizeModule(raw: Raw): OneQrLandingModule {
   return {
     moduleKey: toOneQrModuleKey(raw.moduleKey),
@@ -88,6 +106,10 @@ export function normalizeOneQrLanding(raw: unknown): OneQrLanding | null {
       name: str(business.name),
       slug: str(business.slug),
       logoUrl: nullableStr(business.logoUrl),
+      address: nullableStr(business.address ?? business.businessAddress),
+      hours: normalizeHours(
+        business.hours ?? business.businessHours ?? business.operatingHours,
+      ),
     },
     requiresAuth: source.requiresAuth === true,
     audience: toOneQrAudience(source.audience),

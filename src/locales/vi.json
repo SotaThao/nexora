@@ -117,7 +117,9 @@
         "not_found_desc": "Mã này không còn hoạt động. Vui lòng hỏi cửa hàng để lấy mã mới.",
         "sign_in_title": "Đăng nhập để tiếp tục",
         "sign_in_desc": "Cửa hàng này yêu cầu đăng nhập trước khi dùng các chức năng.",
-        "sign_in_cta": "Đăng nhập"
+        "sign_in_cta": "Đăng nhập",
+        "address_label": "Địa chỉ",
+        "hours_label": "Giờ làm việc"
       },
       "toast": {
         "saved": "Đã lưu Mã QR Tổng. Cấu hình có hiệu lực ngay.",

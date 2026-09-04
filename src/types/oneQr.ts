@@ -123,6 +123,14 @@ export interface OneQrLandingBusiness {
   name: string
   slug: string
   logoUrl: string | null
+  /**
+   * Shop footer on the scanned page. Not in `OneQrLandingBusinessDto` yet — see
+   * US-045 "cần hỏi BE" — so both stay optional and the footer hides until the
+   * backend sends them.
+   */
+  address: string | null
+  /** Pre-formatted opening-hours lines, rendered verbatim, one per line. */
+  hours: string[]
 }
 
 /**

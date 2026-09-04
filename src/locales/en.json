@@ -117,7 +117,9 @@
         "not_found_desc": "This code is no longer active. Please ask the shop for an up-to-date one.",
         "sign_in_title": "Sign in to continue",
         "sign_in_desc": "This shop asks everyone to sign in before using these features.",
-        "sign_in_cta": "Sign in"
+        "sign_in_cta": "Sign in",
+        "address_label": "Address",
+        "hours_label": "Opening hours"
       },
       "toast": {
         "saved": "OneQR updated. It is live now.",

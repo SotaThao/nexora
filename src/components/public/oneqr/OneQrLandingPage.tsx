@@ -9,7 +9,7 @@
  */
 import { useCallback, useEffect, useMemo, type ReactNode } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { Loader2, LogIn, PauseCircle, Sparkles } from 'lucide-react'
+import { Clock, Loader2, LogIn, MapPin, PauseCircle, Sparkles } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
   usePublicOneQrLanding,
@@ -215,12 +215,54 @@ export default function OneQrLandingPage() {
         </div>
       ) : null}
 
-      {/*
-        The mockup's address + opening-hours footer is intentionally absent:
-        `OneQrLandingBusinessDto` carries only id/name/slug/logoUrl, so there is
-        no data to render. Re-add it if the backend starts sending them.
-      */}
+      <BusinessFooter business={data.business} />
     </Shell>
+  )
+}
+
+/**
+ * Address + opening hours under the tile grid, per the landing mockup.
+ *
+ * Renders nothing when the backend sends neither, so the page never ends in an
+ * empty rule line — `OneQrLandingBusinessDto` does not carry these fields yet.
+ */
+function BusinessFooter({ business }: { business: OneQrLandingBusiness }) {
+  const { t } = useTranslation()
+  const hasAddress = Boolean(business.address)
+  const hasHours = business.hours.length > 0
+  if (!hasAddress && !hasHours) return null
+
+  return (
+    <footer className="mx-5 mb-6 flex flex-col gap-1.5 border-t border-nexoraBorder pt-3.5">
+      {hasAddress ? (
+        <p className="flex items-start gap-2 text-xs font-semibold leading-snug text-nexoraMuted">
+          <MapPin
+            className="mt-px h-3.5 w-3.5 shrink-0 text-nexoraBrand"
+            aria-hidden
+          />
+          <span>
+            <span className="sr-only">{t('oneqr.landing.address_label')}: </span>
+            {business.address}
+          </span>
+        </p>
+      ) : null}
+      {hasHours ? (
+        <p className="flex items-start gap-2 text-xs font-semibold leading-snug text-nexoraMuted">
+          <Clock
+            className="mt-px h-3.5 w-3.5 shrink-0 text-nexoraBrand"
+            aria-hidden
+          />
+          <span>
+            <span className="sr-only">{t('oneqr.landing.hours_label')}: </span>
+            {business.hours.map((line) => (
+              <span key={line} className="block">
+                {line}
+              </span>
+            ))}
+          </span>
+        </p>
+      ) : null}
+    </footer>
   )
 }
 
