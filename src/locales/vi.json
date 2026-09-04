@@ -216,6 +216,7 @@
       "my_reviews": "Đánh giá của tôi",
       "my_salons": "Salon của tôi",
       "work_orders": "Đơn công việc",
+      "my_calendar": "Lịch của tôi",
       "report": "Báo cáo"
     },
     "titles": {
@@ -230,6 +231,7 @@
       "earnings": "Thu nhập của tôi",
       "salons": "Salon của tôi",
       "work-orders": "Đơn công việc",
+      "calendar": "Lịch của tôi",
       "report": "Báo cáo",
       "profile": "Cài đặt",
       "notifications": "Thông báo",
@@ -350,6 +352,22 @@
       "remove_addon_warning": "Đổi dịch vụ này sẽ bỏ luôn các add-on đang gắn kèm.",
       "completed_notes_title": "Ghi chú hoàn thành dịch vụ",
       "completed_notes_fallback": "Đã hoàn thành dịch vụ."
+    },
+    "calendar": {
+      "kicker": "Chỉ lịch của tôi",
+      "today": "Hôm nay",
+      "week_label": "Chọn ngày",
+      "heading": "{{weekday}} · {{count}} lịch hẹn",
+      "heading_one": "{{weekday}} · 1 lịch hẹn",
+      "empty_title": "Không có lịch hẹn",
+      "empty_body": "Bạn trống lịch trong ngày này.",
+      "loading": "Đang tải lịch của bạn…",
+      "back": "Quay lại đơn công việc",
+      "appointment_title": "{{customer}} · {{service}}",
+      "appointment_meta": "{{time}} · {{minutes}} phút · {{ticket}}",
+      "duration_hours": "{{hours}} giờ",
+      "duration_minutes": "{{minutes}} phút",
+      "duration_hours_minutes": "{{hours}} giờ {{minutes}} phút"
     },
     "status": {
       "active": "Đang hoạt động",

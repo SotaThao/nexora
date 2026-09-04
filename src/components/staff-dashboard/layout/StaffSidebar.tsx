@@ -5,6 +5,11 @@ import { LogOut, ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react'
 import { useStaffPendingAcceptanceCount } from '../../../data/hooks/useStaffPendingAcceptanceCount'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
+  STAFF_CALENDAR_LAYOUT_CLASS,
+  STAFF_CALENDAR_TODAY_COUNT,
+} from '../calendar/constants'
+import {
+  STAFF_CALENDAR_SCREEN,
   STAFF_MENU_ITEMS,
   STAFF_WORKSPACE_MENU_ITEM,
   STAFF_WORK_ORDERS_SCREEN,
@@ -160,6 +165,17 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
       >
         <MenuIcon item={item} active={isActive} />
         <span className="truncate">{t(item.labelKey)}</span>
+        {item.id === STAFF_CALENDAR_SCREEN ? (
+          <span
+            className={`${STAFF_CALENDAR_LAYOUT_CLASS.navCount} ${
+              isActive
+                ? STAFF_CALENDAR_LAYOUT_CLASS.navCountActive
+                : STAFF_CALENDAR_LAYOUT_CLASS.navCountIdle
+            }`}
+          >
+            {STAFF_CALENDAR_TODAY_COUNT}
+          </span>
+        ) : null}
       </button>
     )
   }
