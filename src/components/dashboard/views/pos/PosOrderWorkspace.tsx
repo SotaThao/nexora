@@ -309,7 +309,6 @@ export default function PosOrderWorkspace({
     setServiceLineDiscount.isPending ||
     startOrderService.isPending ||
     setTip.isPending ||
-    setNote.isPending ||
     setStaffTipSplit.isPending ||
     completeOrder.isPending
   const { busySurface, isBusy, startTicketAction, endTicketAction } = useTicketActionLock(isMutationPending)
@@ -327,7 +326,6 @@ export default function PosOrderWorkspace({
     updateProductQuantity.isPending ||
     setServiceLineDiscount.isPending
   const isTipBusy = busySurface === TicketBusySurface.Tip || setTip.isPending || setStaffTipSplit.isPending
-  const isNoteBusy = busySurface === TicketBusySurface.Note || setNote.isPending
   const isCompleteBusy = busySurface === TicketBusySurface.Complete || completeOrder.isPending
 
   const [showPaymentSection, setShowPaymentSection] = useState(false)
@@ -964,12 +962,12 @@ export default function PosOrderWorkspace({
   }
 
   const handleNoteCommit = () => {
+    if (setNote.isPending) return
     const trimmed = noteInput.trim()
     if (trimmed === (order?.note ?? '')) return
-    if (!startTicketAction(TicketBusySurface.Note)) return
     setNote.mutate(
       { orderId, note: trimmed.length > 0 ? trimmed : null },
-      { onError: reportError, onSettled: endTicketAction },
+      { onError: reportError },
     )
   }
 
@@ -1417,14 +1415,15 @@ export default function PosOrderWorkspace({
             </div>
 
             <div className="space-y-2 rounded-xl border border-nexoraBorder/70 bg-nexoraSurface p-3 shadow-sm">
-              <label className="block text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
+              <label htmlFor="pos-ticket-note" className="block text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
                 {t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteTitle')}
               </label>
               <textarea
+                id="pos-ticket-note"
                 value={noteInput}
                 onChange={(e) => setNoteInput(e.target.value)}
                 onBlur={handleNoteCommit}
-                disabled={isNoteBusy}
+                disabled={isBusy}
                 maxLength={500}
                 rows={2}
                 placeholder={t('components.dashboard.views.pos.PosOrderWorkspace.ticketNotePlaceholder')}
