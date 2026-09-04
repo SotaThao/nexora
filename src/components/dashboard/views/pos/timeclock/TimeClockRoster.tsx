@@ -11,9 +11,11 @@ import { storage } from '../../../../../utils/storage'
 import { getApiErrorCode } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import { useBeepStaff, useClockInStaff, useClockOutStaff } from '../../../../../data/hooks/usePosTimeClock'
+import { cannotReceiveBeep } from '../../../../../constants/posStaffBeep'
 import type { PosBeepApiDto, TimeClockRosterRowApiDto } from '../../../../../types/repositories'
 import { formatPosDateTime, formatPosTime } from '../posDateTime'
 import { EMPTY_VALUE, getInitials } from '../posDisplay'
+import { beepCooldownUntil, useCooldownSeconds } from './beepCooldown'
 import BeepInteractions from './BeepInteractions'
 import BeepMessageModal from './BeepMessageModal'
 import { formatHours } from './timeClockDay'
@@ -68,7 +70,6 @@ export default function TimeClockRoster({
   const handleClockIn = async (row: TimeClockRosterRowApiDto) => {
     try {
       await clockIn.mutateAsync(row.businessStaffLinkId)
-      showToast(t(tk('clockInSuccess'), { name: row.displayName }))
     } catch (err: unknown) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
     }
@@ -90,7 +91,6 @@ export default function TimeClockRoster({
 
     try {
       await clockOut.mutateAsync(row.businessStaffLinkId)
-      showToast(t(tk('clockOutSuccess'), { name: row.displayName }))
     } catch (err: unknown) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
     }
@@ -163,35 +163,6 @@ export default function TimeClockRoster({
     </span>
   )
 
-  const renderActions = (row: TimeClockRosterRowApiDto) => (
-    <div className="inline-flex w-max justify-end gap-1.5">
-      <button
-        type="button"
-        onClick={() => (row.isClockedIn ? handleClockOut(row) : handleClockIn(row))}
-        disabled={isBusy}
-        className={`flex h-9 shrink-0 items-center gap-1 rounded-lg border px-2.5 text-[11px] font-extrabold transition-colors disabled:opacity-60 ${
-          row.isClockedIn
-            ? 'border-rose-200 bg-rose-50 text-rose-600 hover:border-rose-300 hover:bg-rose-100'
-            : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-300 hover:bg-emerald-100'
-        }`}
-      >
-        {row.isClockedIn ? <LogOut className="h-3.5 w-3.5" /> : <LogIn className="h-3.5 w-3.5" />}
-        {row.isClockedIn
-          ? t(tk('clockOut'))
-          : t(tk('clockIn'))}
-      </button>
-      <button
-        type="button"
-        onClick={() => openBeepModal(row)}
-        disabled={isBusy}
-        className="flex h-9 shrink-0 items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 text-[11px] font-extrabold text-amber-700 transition-colors hover:border-amber-300 hover:bg-amber-100 disabled:opacity-60"
-      >
-        <Bell className="h-3.5 w-3.5" />
-        {t(tk('beep'))}
-      </button>
-    </div>
-  )
-
   const renderAvatar = (row: TimeClockRosterRowApiDto) => (
     <div className="flex items-center gap-3">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nexoraLavender/20 text-[11px] font-bold text-nexoraBrandDark">
@@ -260,7 +231,7 @@ export default function TimeClockRoster({
               {renderAvatar(row)}
               {renderShiftCell(row)}
               <div className="flex items-center justify-between gap-2 text-xs">
-                <span className="truncate font-semibold text-nexoraText">{row.currentCustomerName ?? EMPTY_VALUE}</span>
+                <span className="pos-customer-name truncate font-semibold text-nexoraText">{row.currentCustomerName ?? EMPTY_VALUE}</span>
                 {renderTurnsCell(row)}
               </div>
               <BeepInteractions
@@ -268,7 +239,13 @@ export default function TimeClockRoster({
                 beep={beepByStaffId?.get(row.posStaffProfileId)}
                 staffName={row.displayName}
               />
-              {renderActions(row)}
+              <RosterRowActions
+                row={row}
+                beep={beepByStaffId?.get(row.posStaffProfileId)}
+                isBusy={isBusy}
+                onClockToggle={(r) => (r.isClockedIn ? handleClockOut(r) : handleClockIn(r))}
+                onOpenBeepModal={openBeepModal}
+              />
             </div>
           ))}
         </div>
@@ -313,7 +290,7 @@ export default function TimeClockRoster({
                   <td className="px-4 py-3">{renderShiftCell(row)}</td>
                   <td className="px-4 py-3 font-semibold text-nexoraText">
                     {row.currentCustomerName ? (
-                      <span className="rounded-full bg-amber-100 px-2.5 py-1 font-bold text-amber-700">{row.currentCustomerName}</span>
+                      <span className="pos-customer-name rounded-full bg-amber-100 px-2.5 py-1 font-bold text-amber-700">{row.currentCustomerName}</span>
                     ) : (
                       EMPTY_VALUE
                     )}
@@ -336,7 +313,15 @@ export default function TimeClockRoster({
                       staffName={row.displayName}
                     />
                   </td>
-                  <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} px-4 py-3`}>{renderActions(row)}</td>
+                  <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} px-4 py-3`}>
+                    <RosterRowActions
+                      row={row}
+                      beep={beepByStaffId?.get(row.posStaffProfileId)}
+                      isBusy={isBusy}
+                      onClockToggle={(r) => (r.isClockedIn ? handleClockOut(r) : handleClockIn(r))}
+                      onOpenBeepModal={openBeepModal}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -354,5 +339,64 @@ export default function TimeClockRoster({
       onClose={closeBeepModal}
     />
     </>
+  )
+}
+
+// Split out from the row/card render so `useCooldownSeconds` (a hook) is called once per actual
+// component instance instead of once per plain-function call inside `rows.map(...)` — calling a
+// hook from a function invoked a variable number of times per render breaks the Rules of Hooks.
+function RosterRowActions({
+  row,
+  beep,
+  isBusy,
+  onClockToggle,
+  onOpenBeepModal,
+}: {
+  row: TimeClockRosterRowApiDto
+  beep: PosBeepApiDto | undefined
+  isBusy: boolean
+  onClockToggle: (row: TimeClockRosterRowApiDto) => void
+  onOpenBeepModal: (row: TimeClockRosterRowApiDto) => void
+}) {
+  const { t } = useTranslation()
+  // A re-beep on a tech who already has an open call is a nudge on that same row server-side, so it
+  // shares the Nudge button's rate limit — same cooldown data, same countdown behaviour.
+  const cooldownUntil = beepCooldownUntil(beep)
+  const secondsLeft = useCooldownSeconds(cooldownUntil)
+  const onCooldown = secondsLeft > 0
+  // Local staff / no email on file — no app to ring, so sending would always be undelivered. The
+  // roster row carries its own isLocalStaff/email (same as the turn-board station).
+  const blockedLocal = cannotReceiveBeep(row)
+  const beepTitle = blockedLocal ? t(tk('beepLocalStaffTooltip')) : undefined
+
+  return (
+    <div className="inline-flex w-max justify-end gap-1.5">
+      <button
+        type="button"
+        onClick={() => onClockToggle(row)}
+        disabled={isBusy}
+        className={`flex h-9 shrink-0 items-center gap-1 rounded-lg border px-2.5 text-[11px] font-extrabold transition-colors disabled:opacity-60 ${
+          row.isClockedIn
+            ? 'border-rose-200 bg-rose-50 text-rose-600 hover:border-rose-300 hover:bg-rose-100'
+            : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-300 hover:bg-emerald-100'
+        }`}
+      >
+        {row.isClockedIn ? <LogOut className="h-3.5 w-3.5" /> : <LogIn className="h-3.5 w-3.5" />}
+        {row.isClockedIn
+          ? t(tk('clockOut'))
+          : t(tk('clockIn'))}
+      </button>
+      <span title={beepTitle} className="inline-flex">
+        <button
+          type="button"
+          onClick={() => onOpenBeepModal(row)}
+          disabled={isBusy || onCooldown || blockedLocal}
+          className="flex h-9 shrink-0 items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 text-[11px] font-extrabold text-amber-700 transition-colors hover:border-amber-300 hover:bg-amber-100 disabled:opacity-60"
+        >
+          <Bell className="h-3.5 w-3.5" />
+          {onCooldown ? t(tk('beepCooldown'), { seconds: secondsLeft }) : t(tk('beep'))}
+        </button>
+      </span>
+    </div>
   )
 }

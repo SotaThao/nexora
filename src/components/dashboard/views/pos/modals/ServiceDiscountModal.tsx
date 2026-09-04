@@ -1,4 +1,4 @@
-// ServiceDiscountModal — discounts one service on a ticket, and records who absorbs the cost.
+// Shared discount modal for one service or all services on a ticket.
 //
 // A popup rather than an in-row control because three decisions travel together (how much, who
 // pays, why) and a wrong bearer moves real money out of a technician's pay.
@@ -6,7 +6,7 @@
 // Nothing is computed here beyond the preview: the resolved dollar amount, the technician's share
 // and any bearer fallback are all decided server-side, so this hands the raw entry back and lets
 // the order detail refetch tell the truth.
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import IconButton from '../../../../ui/IconButton'
@@ -16,9 +16,17 @@ import {
   PosDiscountBearer,
   PosServiceDiscountType,
 } from '../../../../../constants/posDiscount'
-import { sanitizeDecimalInput } from '../../../../../utils/currencyInput'
+import {
+  formatUsdInputAmount,
+  parseDirectPaymentAmountInput,
+  sanitizeDecimalInput,
+  sanitizeDirectPaymentAmountInput,
+} from '../../../../../utils/currencyInput'
 
 const K = 'components.dashboard.views.pos.PosOrderWorkspace'
+const AMOUNT_DISCOUNT_PRESETS = [5, 10, 15, 20, 25] as const
+const ORDER_AMOUNT_DISCOUNT_PRESETS = [5, 10, 15, 20] as const
+const PERCENT_DISCOUNT_PRESETS = [5, 10, 15, 20] as const
 
 const DISCOUNT_VALUE_PLACEHOLDER_KEY = {
   [PosServiceDiscountType.Percent]: `${K}.discountPercentPlaceholder`,
@@ -26,9 +34,11 @@ const DISCOUNT_VALUE_PLACEHOLDER_KEY = {
 } as const
 
 export interface ServiceDiscountTarget {
+  scope?: 'service' | 'order'
   serviceLineId: string
   serviceName: string
   lineTotal: number
+  discountCap?: number
   technicianName?: string
   canAssignDiscountToStaff: boolean
   discountType?: string | null
@@ -44,10 +54,15 @@ export interface ServiceDiscountSubmit {
   discountNote: string | null
 }
 
-function resolvePreviewAmount(type: PosServiceDiscountType, value: number, lineTotal: number): number {
+function resolvePreviewAmount(
+  type: PosServiceDiscountType,
+  value: number,
+  lineTotal: number,
+  discountCap: number,
+): number {
   const raw = type === PosServiceDiscountType.Percent ? (lineTotal * value) / 100 : value
   const rounded = Math.round(raw * 100) / 100
-  return Math.min(Math.max(rounded, 0), lineTotal)
+  return Math.min(Math.max(rounded, 0), discountCap)
 }
 
 export default function ServiceDiscountModal({
@@ -56,12 +71,14 @@ export default function ServiceDiscountModal({
   onSubmit,
   onRemove,
   onClose,
+  supplementalContent,
 }: {
   target: ServiceDiscountTarget | null
   isSaving: boolean
   onSubmit: (payload: ServiceDiscountSubmit) => void
   onRemove: () => void
   onClose: () => void
+  supplementalContent?: ReactNode
 }) {
   const { t } = useTranslation()
   const [discountType, setDiscountType] = useState<PosServiceDiscountType>(PosServiceDiscountType.Amount)
@@ -78,7 +95,13 @@ export default function ServiceDiscountModal({
         ? PosServiceDiscountType.Percent
         : PosServiceDiscountType.Amount,
     )
-    setValueInput(target.discountValue != null ? String(target.discountValue) : '')
+    setValueInput(
+      target.discountValue == null
+        ? ''
+        : target.discountType === PosServiceDiscountType.Percent
+          ? String(target.discountValue)
+          : formatUsdInputAmount(target.discountValue),
+    )
     // A bearer the line can no longer carry (technician swapped for an hourly one) reads back as
     // Salon, which is also what the backend would have forced.
     const existingBearer = POS_DISCOUNT_BEARER_OPTIONS.find((b) => b === target.discountBearer)
@@ -92,12 +115,14 @@ export default function ServiceDiscountModal({
 
   if (!target) return null
 
-  const parsedValue = Number(valueInput)
-  const hasNumber = valueInput.trim() !== '' && Number.isFinite(parsedValue)
+  const isOrderDiscount = target.scope === 'order'
+  const discountCap = target.discountCap ?? target.lineTotal
+  const parsedValue = parseDirectPaymentAmountInput(valueInput)
+  const hasNumber = valueInput.trim() !== '' && valueInput.trim() !== '.' && Number.isFinite(parsedValue)
   const isOverPercentLimit = discountType === PosServiceDiscountType.Percent && parsedValue > MAX_DISCOUNT_PERCENT
   // A discount larger than the line itself is a typo, not a giveaway — the backend clamps it to the
   // price, which would silently save a different number than the one that was typed.
-  const isOverLineTotal = discountType === PosServiceDiscountType.Amount && parsedValue > target.lineTotal
+  const isOverLineTotal = discountType === PosServiceDiscountType.Amount && parsedValue > discountCap
   const hasValidValue = hasNumber && parsedValue > 0 && !isOverPercentLimit && !isOverLineTotal
 
   // Only once something has actually been typed — an empty field is "not filled in yet", not wrong.
@@ -106,12 +131,19 @@ export default function ServiceDiscountModal({
     : isOverPercentLimit
       ? t(`${K}.discountPercentTooHigh`, { max: MAX_DISCOUNT_PERCENT })
       : isOverLineTotal
-        ? t(`${K}.discountAmountTooHigh`, { max: target.lineTotal.toFixed(2) })
+        ? t(
+            isOrderDiscount
+              ? 'components.dashboard.views.pos.OrderDiscountSection.discountAmountTooHigh'
+              : `${K}.discountAmountTooHigh`,
+            { max: discountCap.toFixed(2) },
+          )
         : parsedValue <= 0
           ? t(`${K}.discountValueMustBePositive`)
           : null
 
-  const previewAmount = hasValidValue ? resolvePreviewAmount(discountType, parsedValue, target.lineTotal) : 0
+  const previewAmount = hasValidValue
+    ? resolvePreviewAmount(discountType, parsedValue, target.lineTotal, discountCap)
+    : 0
   // Halved in whole cents, not in dollars: (1.16 / 2) * 100 is 57.99999999999999 in binary
   // floating point, so flooring dollars showed $0.57 for a split the backend stores as $0.58.
   // PosServiceDiscountResolver.ResolveStaffShare runs on decimal and rounds toward zero — matched
@@ -125,10 +157,20 @@ export default function ServiceDiscountModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
-      <div className="nexora-modal-card max-w-md">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="discount-modal-title"
+        className="nexora-modal-card max-w-md"
+      >
         <div className="mb-4 flex shrink-0 items-center justify-between gap-3">
-          <h2 className="min-w-0 truncate text-sm font-extrabold text-nexoraText">
-            {t(`${K}.discountModalTitle`, { serviceName: target.serviceName })}
+          <h2
+            id="discount-modal-title"
+            className="min-w-0 truncate text-sm font-extrabold text-nexoraText"
+          >
+            {isOrderDiscount
+              ? t('components.dashboard.views.pos.OrderDiscountSection.modalTitle')
+              : t(`${K}.discountModalTitle`, { serviceName: target.serviceName })}
           </h2>
           <IconButton label={t(`${K}.discountModalClose`)} onClick={onClose} disabled={isSaving}>
             <X className="h-4 w-4" />
@@ -137,8 +179,18 @@ export default function ServiceDiscountModal({
 
         <div className="relative flex-1 space-y-4 overflow-y-auto">
           <p className="text-[11px] text-nexoraMuted">
-            {t(`${K}.discountOriginalPrice`, { amount: target.lineTotal.toFixed(2) })}
+            {isOrderDiscount
+              ? t('components.dashboard.views.pos.OrderDiscountSection.servicesSubtotal', {
+                  amount: target.lineTotal.toFixed(2),
+                })
+              : t(`${K}.discountOriginalPrice`, { amount: target.lineTotal.toFixed(2) })}
           </p>
+
+          {isOrderDiscount ? (
+            <p className="text-[11px] text-nexoraMuted">
+              {t('components.dashboard.views.pos.OrderDiscountSection.formulaTooltip')}
+            </p>
+          ) : null}
 
           <div className="space-y-1.5">
             <span className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
@@ -149,8 +201,16 @@ export default function ServiceDiscountModal({
                 <button
                   key={option}
                   type="button"
-                  onClick={() => setDiscountType(option)}
+                  onClick={() => {
+                    setDiscountType(option)
+                    setValueInput((current) => (
+                      option === PosServiceDiscountType.Amount
+                        ? sanitizeDirectPaymentAmountInput(current, Number.MAX_SAFE_INTEGER)
+                        : sanitizeDecimalInput(current)
+                    ))
+                  }}
                   disabled={isSaving}
+                  aria-pressed={discountType === option}
                   className={`h-9 flex-1 rounded-lg border text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                     discountType === option
                       ? 'border-nexoraBrand bg-nexoraBrandSoft/60 text-nexoraBrandDark'
@@ -170,26 +230,63 @@ export default function ServiceDiscountModal({
             >
               {t(`${K}.discountValueLabel`)}
             </label>
-            {/* Deliberately a text input: type="number" accepts "e"/"E"/"+"/"-" as valid
-                keystrokes, so those characters reach the field regardless of min/max. inputMode
-                still brings up the numeric keypad on the iPad. */}
-            <input
-              id="service-discount-value"
-              type="text"
-              inputMode="decimal"
-              autoComplete="off"
-              value={valueInput}
-              onChange={(event) => setValueInput(sanitizeDecimalInput(event.target.value))}
-              disabled={isSaving}
-              placeholder={t(DISCOUNT_VALUE_PLACEHOLDER_KEY[discountType])}
-              aria-invalid={validationMessage !== null}
-              aria-describedby={validationMessage ? 'service-discount-value-error' : undefined}
-              className={`h-10 w-full rounded-lg border px-3 text-sm font-semibold text-nexoraText focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 ${
-                validationMessage
-                  ? 'border-nexoraDanger focus:border-nexoraDanger'
-                  : 'border-nexoraBorder focus:border-nexoraBrand'
-              }`}
-            />
+            <div className="flex flex-wrap items-center gap-2">
+              {(discountType === PosServiceDiscountType.Amount
+                ? isOrderDiscount
+                  ? ORDER_AMOUNT_DISCOUNT_PRESETS
+                  : AMOUNT_DISCOUNT_PRESETS
+                : PERCENT_DISCOUNT_PRESETS
+              ).map((preset) => {
+                const selected = hasNumber && parsedValue === preset
+                return (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setValueInput(String(preset))}
+                    disabled={isSaving}
+                    aria-pressed={selected}
+                    className={`inline-flex h-9 min-w-[48px] flex-[1_1_auto] items-center justify-center whitespace-nowrap rounded-lg border px-3 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                      selected
+                        ? 'border-nexoraBrand bg-nexoraBrandSoft/60 text-nexoraBrandDark'
+                        : 'border-nexoraBorder bg-white text-nexoraText hover:border-nexoraBrand/50'
+                    }`}
+                  >
+                    {discountType === PosServiceDiscountType.Amount ? `$${preset}` : `${preset}%`}
+                  </button>
+                )
+              })}
+              {/* Deliberately a text input: type="number" accepts "e"/"E"/"+"/"-" as valid
+                  keystrokes, so those characters reach the field regardless of min/max. inputMode
+                  still brings up the numeric keypad on the iPad. */}
+              <div
+                className={`flex h-9 min-w-[120px] flex-[2_1_120px] overflow-hidden rounded-lg border bg-white focus-within:border-nexoraBrand ${
+                  validationMessage ? 'border-nexoraDanger' : 'border-nexoraBorder'
+                }`}
+              >
+                <span className="flex w-9 shrink-0 items-center justify-center border-r border-nexoraBorder bg-nexoraCanvas text-sm font-bold text-nexoraMuted">
+                  {discountType === PosServiceDiscountType.Amount ? '$' : '%'}
+                </span>
+                <input
+                  id="service-discount-value"
+                  type="text"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  value={valueInput}
+                  onChange={(event) =>
+                    setValueInput(
+                      discountType === PosServiceDiscountType.Amount
+                        ? sanitizeDirectPaymentAmountInput(event.target.value, Number.MAX_SAFE_INTEGER)
+                        : sanitizeDecimalInput(event.target.value),
+                    )
+                  }
+                  disabled={isSaving}
+                  placeholder={t(DISCOUNT_VALUE_PLACEHOLDER_KEY[discountType])}
+                  aria-invalid={validationMessage !== null}
+                  aria-describedby={validationMessage ? 'service-discount-value-error' : undefined}
+                  className="min-w-0 flex-1 border-0 px-3 text-sm font-semibold text-nexoraText outline-none disabled:cursor-not-allowed disabled:opacity-60"
+                />
+              </div>
+            </div>
             {validationMessage ? (
               <p id="service-discount-value-error" role="alert" className="text-[11px] font-bold text-nexoraDanger">
                 {validationMessage}
@@ -197,35 +294,37 @@ export default function ServiceDiscountModal({
             ) : null}
           </div>
 
-          <div className="space-y-1.5">
-            <span className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-              {t(`${K}.discountBearerLabel`)}
-            </span>
-            <div className="grid grid-cols-3 gap-2">
-              {POS_DISCOUNT_BEARER_OPTIONS.map((option) => {
-                const isLocked = option !== PosDiscountBearer.Salon && !target.canAssignDiscountToStaff
-                return (
-                  <button
-                    key={option}
-                    type="button"
-                    disabled={isLocked || isSaving}
-                    title={isLocked ? t(`${K}.discountBearerLockedHint`) : undefined}
-                    onClick={() => setBearer(option)}
-                    className={`h-9 rounded-lg border text-[11px] font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                      bearer === option
-                        ? 'border-nexoraBrand bg-nexoraBrandSoft/60 text-nexoraBrandDark'
-                        : 'border-nexoraBorder bg-white text-nexoraText hover:border-nexoraBrand/50'
-                    }`}
-                  >
-                    {t(`${K}.discountBearer${option}`)}
-                  </button>
-                )
-              })}
+          {!isOrderDiscount ? (
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+                {t(`${K}.discountBearerLabel`)}
+              </span>
+              <div className="grid grid-cols-3 gap-2">
+                {POS_DISCOUNT_BEARER_OPTIONS.map((option) => {
+                  const isLocked = option !== PosDiscountBearer.Salon && !target.canAssignDiscountToStaff
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      disabled={isLocked || isSaving}
+                      title={isLocked ? t(`${K}.discountBearerLockedHint`) : undefined}
+                      onClick={() => setBearer(option)}
+                      className={`h-9 rounded-lg border text-[11px] font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                        bearer === option
+                          ? 'border-nexoraBrand bg-nexoraBrandSoft/60 text-nexoraBrandDark'
+                          : 'border-nexoraBorder bg-white text-nexoraText hover:border-nexoraBrand/50'
+                      }`}
+                    >
+                      {t(`${K}.discountBearer${option}`)}
+                    </button>
+                  )
+                })}
+              </div>
+              {!target.canAssignDiscountToStaff ? (
+                <p className="text-[11px] text-amber-600">{t(`${K}.discountBearerLockedHint`)}</p>
+              ) : null}
             </div>
-            {!target.canAssignDiscountToStaff ? (
-              <p className="text-[11px] text-amber-600">{t(`${K}.discountBearerLockedHint`)}</p>
-            ) : null}
-          </div>
+          ) : null}
 
           <div className="space-y-1.5">
             <label
@@ -241,23 +340,38 @@ export default function ServiceDiscountModal({
               value={note}
               onChange={(event) => setNote(event.target.value)}
               disabled={isSaving}
-              placeholder={t(`${K}.discountNotePlaceholder`)}
+              placeholder={t(
+                isOrderDiscount
+                  ? 'components.dashboard.views.pos.OrderDiscountSection.discountNotePlaceholder'
+                  : `${K}.discountNotePlaceholder`,
+              )}
               className="h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm text-nexoraText focus:border-nexoraBrand focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
             />
           </div>
 
           {hasValidValue ? (
             <div className="space-y-0.5 rounded-xl bg-nexoraCanvas p-3 text-[11px] text-nexoraText">
-              <p>{t(`${K}.discountPreviewCustomer`, { amount: (target.lineTotal - previewAmount).toFixed(2) })}</p>
-              <p>{t(`${K}.discountPreviewDiscount`, { amount: previewAmount.toFixed(2) })}</p>
               <p>
-                {t(`${K}.discountPreviewSplit`, {
-                  staff: previewStaffShare.toFixed(2),
-                  salon: (previewAmount - previewStaffShare).toFixed(2),
-                })}
+                {t(
+                  isOrderDiscount
+                    ? 'components.dashboard.views.pos.OrderDiscountSection.previewCustomer'
+                    : `${K}.discountPreviewCustomer`,
+                  { amount: (discountCap - previewAmount).toFixed(2) },
+                )}
               </p>
+              <p>{t(`${K}.discountPreviewDiscount`, { amount: previewAmount.toFixed(2) })}</p>
+              {!isOrderDiscount ? (
+                <p>
+                  {t(`${K}.discountPreviewSplit`, {
+                    staff: previewStaffShare.toFixed(2),
+                    salon: (previewAmount - previewStaffShare).toFixed(2),
+                  })}
+                </p>
+              ) : null}
             </div>
           ) : null}
+
+          {supplementalContent}
         </div>
 
         <div className="mt-4 flex shrink-0 gap-2">

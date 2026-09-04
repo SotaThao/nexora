@@ -417,9 +417,11 @@ export function PosFrontDeskRoute() {
   const { data: merchantSetupData } = useMerchantSetup()
   const businessId = merchantSetupData?.businessInfo?.businessId
   const businessName = merchantSetupData?.businessInfo?.name
+  const businessLogoUrl = merchantSetupData?.businessInfo?.logo
   const businessAddress = formatBusinessAddress(merchantSetupData?.businessInfo ?? {})
   const businessPhone = merchantSetupData?.businessInfo?.phone
   const businessSlug = merchantSetupData?.businessInfo?.slug
+  const businessTimeZone = merchantSetupData?.businessInfo?.timeZone
   if (!businessId) {
     return (
       <div className="nexora-card p-6">
@@ -431,9 +433,11 @@ export function PosFrontDeskRoute() {
     <PosFrontDeskView
       businessId={businessId}
       businessName={businessName}
+      businessLogoUrl={businessLogoUrl}
       businessAddress={businessAddress}
       businessPhone={businessPhone}
       businessSlug={businessSlug}
+      businessTimeZone={businessTimeZone ?? null}
     />
   )
 }

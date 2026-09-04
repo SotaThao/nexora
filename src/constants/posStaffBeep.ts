@@ -62,3 +62,18 @@ export function isDelayLapsed(
   if (!respondedAt || !delayMinutes) return false
   return respondedAt.getTime() + delayMinutes * 60_000 <= now.getTime()
 }
+
+/**
+ * A local staff member (added manually, no linked user account) or one with no email on file has
+ * no app to ring — sending a beep would always land as undelivered. Checked from the check-in
+ * technician list (`CheckInTechnicianApiDto`) since neither `isLocalStaff` nor `email` is on the
+ * roster/turn-board/beep-feed responses yet; both fields are optional there pending a BE contract
+ * update, so a technician absent from that list (or fetched before BE ships the fields) reads as
+ * "not local" rather than blocking every Beep button.
+ */
+export function cannotReceiveBeep(
+  technician: { isLocalStaff?: boolean; email?: string | null } | undefined,
+): boolean {
+  if (!technician) return false
+  return technician.isLocalStaff === true || technician.email === null
+}

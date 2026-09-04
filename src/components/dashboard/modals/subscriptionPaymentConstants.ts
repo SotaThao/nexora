@@ -102,6 +102,7 @@ export const SUBSCRIPTION_MODAL_I18N = {
   priceNoteMonth: 'subscription_price_note_month',
   priceNoteYear: 'subscription_price_note_year',
   forfeitWarning: 'subscription_forfeit_warning',
+  downgradeBlocked: 'subscription_downgrade_blocked',
   upgradeCreditEstimate: 'subscription_upgrade_credit_estimate',
   upgradeCreditApplied: 'subscription_upgrade_credit_applied',
   cardMethodLabel: 'subscription_card_method_label',

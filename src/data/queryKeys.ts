@@ -30,6 +30,7 @@ export const qk = {
   dashboardTipsChart:       () => ['dashboard', 'tipsChart'],
   dashboardAnalytics:       (filters = EMPTY) => ['dashboard', 'analytics', filters],
   dashboardReviews:         (filters = EMPTY) => ['dashboard', 'reviews', filters],
+  dashboardReviewsCollected: (filters = EMPTY) => ['dashboard', 'reviews', 'collected', filters],
   
   // Notifications
   notificationsUnreadCount: () => ['notifications', 'unreadCount'],
@@ -129,6 +130,13 @@ export const qk = {
     if (selection) key.push(selection)
     return key
   },
+  merchantPosReportDetail: (businessId?: string, posStaffProfileId?: string, selection?: string) => [
+    'merchantSettings',
+    'posReportDetail',
+    businessId ?? '',
+    posStaffProfileId ?? '',
+    selection ?? '',
+  ],
   merchantPosWeeklyPayrollDailyDetail: (businessStaffLinkId?: string, weekStart?: string) => {
     const key: unknown[] = ['merchantSettings', 'posWeeklyPayrollDailyDetail', businessStaffLinkId ?? '']
     if (weekStart) key.push(weekStart)
@@ -174,6 +182,8 @@ export const qk = {
     ['merchantSettings', 'posCustomerLookup', businessId ?? '', phone ?? ''],
   // POS Booking — per-business settings (Ticket 2)
   merchantPosBookingSettings: (businessId?: string) => ['merchantSettings', 'posBookingSettings', businessId ?? ''],
+  merchantPosOrderSettings: (businessId?: string) => ['merchantSettings', 'posOrderSettings', businessId ?? ''],
+  staffPosPendingAcceptanceCount: () => ['staff', 'posPendingAcceptanceCount'],
   // POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filtered.
   // `filters` is only appended when explicitly passed — omitting it (e.g. from an
   // invalidateQueries call after Complete/edit) yields a short prefix that matches every

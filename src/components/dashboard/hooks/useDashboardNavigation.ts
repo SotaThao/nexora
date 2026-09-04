@@ -78,14 +78,6 @@ export function useDashboardNavigation() {
   const [settingsTab, setSettingsTab] = useState('profile')
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
 
-  // Front Desk is an iPad-first workspace and always needs the full content width on entry.
-  // A manual reopen remains available while the operator stays on this route.
-  useEffect(() => {
-    if (location.pathname === '/dashboard/pos') {
-      setIsDesktopSidebarOpen(false)
-    }
-  }, [location.pathname, setIsDesktopSidebarOpen])
-
   // Keep sidebar KYB/profile highlight in sync with /dashboard/settings/:tab
   useEffect(() => {
     if (activeMenu !== DASHBOARD_MENU_ID.settings) return

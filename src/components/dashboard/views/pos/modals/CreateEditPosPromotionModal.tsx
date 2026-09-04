@@ -18,6 +18,26 @@ const K = 'components.dashboard.views.pos.PosPromotionsView'
 const DEFAULT_START = '10:00'
 const DEFAULT_END = '14:00'
 
+// Per-field validation mirroring PosPromotionInputValidator on the backend. Save stays clickable so
+// an incomplete form answers with the field that is actually wrong instead of a dead button.
+enum PromotionField {
+  Name = 'name',
+  Value = 'value',
+  Days = 'days',
+  Window = 'window',
+}
+
+type PromotionErrors = Partial<Record<PromotionField, string>>
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null
+  return (
+    <p role="alert" aria-live="polite" className="mt-1 text-[11px] font-bold text-rose-600">
+      {message}
+    </p>
+  )
+}
+
 /** 'HH:mm' from the time input; the API takes 'HH:mm:ss'. */
 function toApiTime(value: string): string {
   return value.length === 5 ? `${value}:00` : value
@@ -49,6 +69,7 @@ export default function CreateEditPosPromotionModal({
   const [startTime, setStartTime] = useState(DEFAULT_START)
   const [endTime, setEndTime] = useState(DEFAULT_END)
   const [isActive, setIsActive] = useState(true)
+  const [fieldErrors, setFieldErrors] = useState<PromotionErrors>({})
 
   useEffect(() => {
     setName(promotion?.name ?? '')
@@ -63,24 +84,56 @@ export default function CreateEditPosPromotionModal({
     setStartTime(promotion ? toInputTime(promotion.startTime) : DEFAULT_START)
     setEndTime(promotion ? toInputTime(promotion.endTime) : DEFAULT_END)
     setIsActive(promotion?.isActive ?? true)
+    setFieldErrors({})
   }, [promotion])
 
   const parsedValue = Number(valueInput)
   const isPercent = discountType === PosServiceDiscountType.Percent
-  const isValueValid =
-    Boolean(valueInput) &&
-    Number.isFinite(parsedValue) &&
-    parsedValue > 0 &&
-    (!isPercent || parsedValue <= MAX_DISCOUNT_PERCENT)
-  const isWindowValid = Boolean(startTime) && Boolean(endTime) && endTime > startTime
-  const canSubmit = Boolean(name.trim()) && isValueValid && days.length > 0 && isWindowValid && !isSaving
+
+  const clearFieldError = (field: PromotionField) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev
+      const next = { ...prev }
+      delete next[field]
+      return next
+    })
+  }
+
+  const validateFields = (): PromotionErrors => {
+    const errors: PromotionErrors = {}
+
+    if (!name.trim()) errors[PromotionField.Name] = t(`${K}.errorNameRequired`)
+
+    if (!valueInput.trim()) {
+      errors[PromotionField.Value] = t(`${K}.errorValueRequired`)
+    } else if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
+      errors[PromotionField.Value] = t(`${K}.errorValueInvalid`)
+    } else if (isPercent && parsedValue > MAX_DISCOUNT_PERCENT) {
+      errors[PromotionField.Value] = t(`${K}.errorValuePercentMax`, { max: MAX_DISCOUNT_PERCENT })
+    }
+
+    if (days.length === 0) errors[PromotionField.Days] = t(`${K}.errorDaysRequired`)
+
+    if (!startTime || !endTime) {
+      errors[PromotionField.Window] = t(`${K}.errorWindowRequired`)
+    } else if (endTime <= startTime) {
+      errors[PromotionField.Window] = t(`${K}.windowInvalid`)
+    }
+
+    return errors
+  }
 
   const toggleDay = (day: string) => {
     setDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]))
+    clearFieldError(PromotionField.Days)
   }
 
   const handleSubmit = () => {
-    if (!canSubmit) return
+    if (isSaving) return
+    const errors = validateFields()
+    setFieldErrors(errors)
+    if (Object.keys(errors).length > 0) return
+
     onSubmit({
       name: name.trim(),
       badgeLabel: badgeLabel.trim() || null,
@@ -94,7 +147,10 @@ export default function CreateEditPosPromotionModal({
   }
 
   const inputClass =
-    'h-10 w-full rounded-lg border border-nexoraBorder bg-white px-3 text-xs text-nexoraText outline-none focus:border-nexoraBrand'
+    'h-10 w-full rounded-lg border bg-white px-3 text-xs text-nexoraText outline-none border-nexoraBorder focus:border-nexoraBrand'
+  const invalidInputClass =
+    'h-10 w-full rounded-lg border bg-white px-3 text-xs text-nexoraText outline-none border-rose-400 focus:border-rose-400'
+  const fieldClass = (field: PromotionField) => (fieldErrors[field] ? invalidInputClass : inputClass)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -115,10 +171,15 @@ export default function CreateEditPosPromotionModal({
               type="text"
               value={name}
               maxLength={100}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value)
+                clearFieldError(PromotionField.Name)
+              }}
               placeholder={t(`${K}.namePlaceholder`)}
-              className={inputClass}
+              aria-invalid={Boolean(fieldErrors.name)}
+              className={fieldClass(PromotionField.Name)}
             />
+            <FieldError message={fieldErrors.name} />
           </div>
 
           <div>
@@ -141,7 +202,10 @@ export default function CreateEditPosPromotionModal({
                   <button
                     key={type}
                     type="button"
-                    onClick={() => setDiscountType(type)}
+                    onClick={() => {
+                      setDiscountType(type)
+                      clearFieldError(PromotionField.Value)
+                    }}
                     className={`h-10 flex-1 rounded-lg border text-[11px] font-semibold transition-colors ${
                       discountType === type
                         ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
@@ -163,11 +227,16 @@ export default function CreateEditPosPromotionModal({
                   type="text"
                   inputMode="decimal"
                   value={valueInput}
-                  onChange={(e) => setValueInput(sanitizeDecimalInput(e.target.value))}
+                  onChange={(e) => {
+                    setValueInput(sanitizeDecimalInput(e.target.value))
+                    clearFieldError(PromotionField.Value)
+                  }}
                   placeholder={isPercent ? '15' : '10'}
-                  className={`${inputClass} pl-7`}
+                  aria-invalid={Boolean(fieldErrors.value)}
+                  className={`${fieldClass(PromotionField.Value)} pl-7`}
                 />
               </div>
+              <FieldError message={fieldErrors.value} />
             </div>
           </div>
 
@@ -182,13 +251,16 @@ export default function CreateEditPosPromotionModal({
                   className={`h-9 min-w-[44px] rounded-full border px-3 text-[11px] font-semibold transition-colors ${
                     days.includes(day)
                       ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
-                      : 'border-nexoraBorder bg-white text-nexoraText hover:border-nexoraBrand/50'
+                      : fieldErrors.days
+                        ? 'border-rose-400 bg-white text-nexoraText'
+                        : 'border-nexoraBorder bg-white text-nexoraText hover:border-nexoraBrand/50'
                   }`}
                 >
                   {t(`components.dashboard.views.pos.OrderDiscountSection.dayShort.${day}`)}
                 </button>
               ))}
             </div>
+            <FieldError message={fieldErrors.days} />
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -198,8 +270,12 @@ export default function CreateEditPosPromotionModal({
                 type="time"
                 lang={TWELVE_HOUR_INPUT_LANG}
                 value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className={inputClass}
+                onChange={(e) => {
+                  setStartTime(e.target.value)
+                  clearFieldError(PromotionField.Window)
+                }}
+                aria-invalid={Boolean(fieldErrors.window)}
+                className={fieldClass(PromotionField.Window)}
               />
             </div>
             <div>
@@ -208,15 +284,17 @@ export default function CreateEditPosPromotionModal({
                 type="time"
                 lang={TWELVE_HOUR_INPUT_LANG}
                 value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className={inputClass}
+                onChange={(e) => {
+                  setEndTime(e.target.value)
+                  clearFieldError(PromotionField.Window)
+                }}
+                aria-invalid={Boolean(fieldErrors.window)}
+                className={fieldClass(PromotionField.Window)}
               />
             </div>
           </div>
 
-          {!isWindowValid && startTime && endTime ? (
-            <p className="text-[11px] font-bold text-rose-600">{t(`${K}.windowInvalid`)}</p>
-          ) : null}
+          <FieldError message={fieldErrors.window} />
 
           <label className="flex items-center gap-2 text-xs font-semibold text-nexoraText">
             <input
@@ -240,7 +318,7 @@ export default function CreateEditPosPromotionModal({
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={!canSubmit}
+            disabled={isSaving}
             className="h-10 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
           >
             {t(`${K}.save`)}

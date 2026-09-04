@@ -8,7 +8,6 @@
 // Nudge has no modal: one tap re-rings with the message the original beep already carried. It calls
 // the same send endpoint, which the server treats as a nudge when the tech still has an open call,
 // so there is one rate limit and no second code path.
-import { useEffect, useState } from 'react'
 import { BellRing, Check, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
@@ -16,44 +15,12 @@ import { getApiErrorCode } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import { useNudgeBeep, useResolveBeep } from '../../../../../data/hooks/usePosBeep'
 import type { PosBeepApiDto } from '../../../../../types/repositories'
-import { parseApiDateTime } from '../../../utils'
+import { beepCooldownUntil, useCooldownSeconds } from './beepCooldown'
 import PosBeepStatusPill from './PosBeepStatusPill'
 import { tk } from './timeClockI18n'
 
 const ACTION_BUTTON =
   'flex h-8 shrink-0 items-center gap-1 rounded-lg border px-2 text-[11px] font-bold transition-colors disabled:opacity-60'
-
-// Epoch ms at which the re-ring cooldown ends, or 0 when there is none. The server is still the
-// real gate — this only feeds the label and the local re-enable below.
-function nudgeCooldownUntil(beep: PosBeepApiDto | undefined): number {
-  if (!beep || beep.canNudge) return 0
-  const allowedAt = parseApiDateTime(beep.nextNudgeAllowedAt)
-  return allowedAt ? allowedAt.getTime() : 0
-}
-
-// Ticks once a second while a cooldown is running, then stops. Without this the label only moved
-// when the 15s feed poll happened to re-render the row, so "Nudge 6s" sat frozen and then jumped.
-// Only rows actually counting down hold an interval, so an idle roster costs nothing.
-function useCooldownSeconds(cooldownUntil: number): number {
-  const [now, setNow] = useState(() => Date.now())
-
-  useEffect(() => {
-    if (!cooldownUntil) return
-    setNow(Date.now())
-    if (cooldownUntil <= Date.now()) return
-
-    const id = window.setInterval(() => {
-      const current = Date.now()
-      setNow(current)
-      if (current >= cooldownUntil) window.clearInterval(id)
-    }, 1000)
-
-    return () => window.clearInterval(id)
-  }, [cooldownUntil])
-
-  if (!cooldownUntil) return 0
-  return Math.max(0, Math.ceil((cooldownUntil - now) / 1000))
-}
 
 export default function BeepInteractions({
   businessId,
@@ -70,7 +37,7 @@ export default function BeepInteractions({
   const resolve = useResolveBeep(businessId)
 
   // The ticker hook has to sit above the early return; it takes 0 and idles when there is no beep.
-  const cooldownUntil = nudgeCooldownUntil(beep)
+  const cooldownUntil = beepCooldownUntil(beep)
   const secondsLeft = useCooldownSeconds(cooldownUntil)
 
   // No beep for this tech today — the Beeper cell keeps whatever it showed before.

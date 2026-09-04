@@ -1,18 +1,18 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useTranslation } from "../../../contexts/LanguageContext";
 import { useNotification } from "../../../contexts/NotificationContext";
 import { getErrorI18nKey } from "../../../data/errorCodes";
 import {
   useCreateMerchantVoiceService,
-  useCreateMerchantVoiceServiceCategory,
   useDeleteMerchantVoiceService,
   useDeleteMerchantVoiceServiceCategory,
   useMerchantVoiceConfig,
   useMerchantVoiceServiceCategories,
   useMerchantVoiceServices,
+  useSaveCategoriesBatch,
+  useSaveServicesBatch,
   useUpdateMerchantVoiceConfig,
   useUpdateMerchantVoiceService,
-  useUpdateMerchantVoiceServiceCategory,
 } from "../../../data/hooks/useMerchantVoiceBookings";
 import { useMerchantSetup } from "../../../data/hooks/useMerchantSetup";
 import {
@@ -29,6 +29,8 @@ import {
   normalizeMerchantVoiceDayOfWeek,
   OTHER_SERVICES_CATEGORY_ID,
   type MerchantVoiceServiceCategoryDto,
+  type SaveCategoryBatchItem,
+  type SaveServiceBatchItem,
 } from "../../../data/repositories/merchantVoice";
 import { merchantsRepository } from "../../../data/repositories/merchants";
 import { qk } from "../../../data/queryKeys";
@@ -81,7 +83,6 @@ import {
   ShopIcon,
   SpinnerIcon,
   StarsIcon,
-  Trash2Icon,
   XLgIcon,
 } from "./BookingHubIcons";
 import { BookingSettingsSkeleton } from "./BookingHubSkeletons";
@@ -89,6 +90,12 @@ import HolidayClosuresCard from "./HolidayClosuresCard";
 import BookingTeamPanel from "./BookingTeamPanel";
 import { useBookingHubVoiceEnabled } from "./BookingHubVoiceContext";
 import { applyAiHubProgressiveValidation } from "./bookingHubDialogValidation";
+import {
+  newServiceDraftReducer,
+  validateNewServiceDrafts,
+  type NewServiceDraftError,
+} from "./bookingSettingsNewServiceDrafts";
+import { planCategoryDraftChanges } from "./bookingSettingsCategoryDrafts";
 
 const TK = "components.dashboard.views.BookingHubView.settings";
 const TK_HUB = "components.dashboard.views.BookingHubView";
@@ -131,76 +138,74 @@ interface HourRow {
 }
 
 interface SettingsCategory {
-  id: string
-  name: string
-  isSystem: boolean
+  id: string;
+  name: string;
+  isSystem: boolean;
 }
 
 interface ServiceRow {
-  id: string
-  icon: string
-  tone: Tone
-  name: string
-  price: number
-  duration: number
+  id: string;
+  icon: string;
+  tone: Tone;
+  name: string;
+  price: number;
+  duration: number;
   /** Display name for primary accordion grouping. */
-  category: string
+  category: string;
   /** Primary category id (first selected / preferred). */
-  categoryId: string
+  categoryId: string;
   /** All linked category ids (multi-category). */
-  categoryIds: string[]
+  categoryIds: string[];
 }
 
-type ServiceModalMode = "create" | "edit"
+type ServiceModalMode = "create" | "edit";
 
 type ServiceModalDraft = {
-  mode: ServiceModalMode
-  serviceId: string | null
-  categoryIds: string[]
-  name: string
-  price: string
-  duration: string
-}
+  mode: ServiceModalMode;
+  serviceId: string | null;
+  categoryIds: string[];
+  name: string;
+  price: string;
+  duration: string;
+};
 
 type InlineServiceDraft = {
-  name: string
-  price: string
-  duration: string
-}
+  name: string;
+  price: string;
+  duration: string;
+};
 
 function buildInlineServiceDraft(service: ServiceRow): InlineServiceDraft {
   return {
     name: service.name,
     price: formatWholeNumberInputValue(service.price),
     duration: formatWholeNumberInputValue(service.duration),
-  }
+  };
 }
 
 function parseInlineServicePrice(raw: string): string {
-  const cleaned = raw.replace(/[^\d.]/g, "")
-  const parts = cleaned.split(".")
+  const cleaned = raw.replace(/[^\d.]/g, "");
+  const parts = cleaned.split(".");
   return parts.length <= 1
     ? cleaned
-    : `${parts[0]}.${parts.slice(1).join("").slice(0, 2)}`
+    : `${parts[0]}.${parts.slice(1).join("").slice(0, 2)}`;
 }
 
 interface CategoryDraft {
-  id: string | null
-  name: string
-  isSystem: boolean
+  id: string | null;
+  name: string;
+  isSystem: boolean;
   /** Unsaved row created via Add category. */
-  isNew?: boolean
-  /** Existing row currently in rename mode. */
-  isEditing?: boolean
+  isNew?: boolean;
 }
 
-const DEFAULT_SERVICE_CATEGORY = "Other services"
+const DEFAULT_SERVICE_CATEGORY = "Other services";
 
 const GUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function isPersistedServiceId(id: string) {
-  return GUID_RE.test(id)
+  return GUID_RE.test(id);
 }
 
 function normalizeServiceCategoryIds(
@@ -214,12 +219,12 @@ function normalizeServiceCategoryIds(
         .map((id) => id.trim())
         .filter(Boolean),
     ),
-  ]
-  return cleaned.length > 0 ? cleaned : [fallbackId]
+  ];
+  return cleaned.length > 0 ? cleaned : [fallbackId];
 }
 
 function primaryCategoryId(categoryIds: string[], fallbackId: string): string {
-  return categoryIds[0] || fallbackId
+  return categoryIds[0] || fallbackId;
 }
 
 function isOtherServicesCategory(category: {
@@ -240,7 +245,7 @@ function categoryIdsForApi(categoryIds: string[]): string[] {
         .map((id) => id.trim())
         .filter((id) => id && id !== OTHER_SERVICES_CATEGORY_ID),
     ),
-  ]
+  ];
 }
 
 /**
@@ -248,45 +253,52 @@ function categoryIdsForApi(categoryIds: string[]): string[] {
  * Built-in Other is never sent as an id — Other-only → `null`.
  */
 function categoryIdsPayloadForApi(categoryIds: string[]): string[] | null {
-  const ids = categoryIdsForApi(categoryIds)
-  return ids.length > 0 ? ids : null
+  const ids = categoryIdsForApi(categoryIds);
+  return ids.length > 0 ? ids : null;
 }
 
 function sameCategoryIds(left: string[], right: string[]): boolean {
-  if (left.length !== right.length) return false
-  const a = [...left].sort()
-  const b = [...right].sort()
-  return a.every((id, index) => id === b[index])
+  if (left.length !== right.length) return false;
+  const a = [...left].sort();
+  const b = [...right].sort();
+  return a.every((id, index) => id === b[index]);
 }
 
-/** Keep full category catalog across refreshes (API may omit empty groups). */
+/** Keep the API category order across refreshes while retaining local-only fallback groups. */
 function unionSettingsCategories(
   previous: SettingsCategory[],
   next: SettingsCategory[],
   removedIds: string[] = [],
 ): SettingsCategory[] {
-  const removed = new Set(removedIds)
-  const byId = new Map<string, SettingsCategory>()
-  previous.forEach((category) => {
-    if (removed.has(category.id)) return
-    byId.set(category.id, category)
-  })
+  const removed = new Set(removedIds);
+  const previousById = new Map(
+    previous.map((category) => [category.id, category]),
+  );
+  const seen = new Set<string>();
+  const ordered: SettingsCategory[] = [];
+
   next.forEach((category) => {
-    if (!category.id || removed.has(category.id)) return
-    const existing = byId.get(category.id)
-    byId.set(category.id, {
+    if (!category.id || removed.has(category.id) || seen.has(category.id))
+      return;
+    const existing = previousById.get(category.id);
+    ordered.push({
       id: category.id,
       name: category.name || existing?.name || DEFAULT_SERVICE_CATEGORY,
       isSystem:
         category.isSystem ||
         existing?.isSystem ||
         category.id === OTHER_SERVICES_CATEGORY_ID,
-    })
-  })
-  return [...byId.values()].sort((left, right) => {
-    if (left.isSystem !== right.isSystem) return left.isSystem ? -1 : 1
-    return left.name.localeCompare(right.name)
-  })
+    });
+    seen.add(category.id);
+  });
+
+  previous.forEach((category) => {
+    if (removed.has(category.id) || seen.has(category.id)) return;
+    ordered.push(category);
+    seen.add(category.id);
+  });
+
+  return ordered;
 }
 
 const INITIAL_HOURS: Record<DayKey, HourRow> = {
@@ -412,9 +424,11 @@ const INITIAL_SERVICES: ServiceRow[] = [
   },
 ];
 
-function flattenCategoriesToUi(categoriesData: MerchantVoiceServiceCategoryDto[]): {
-  categories: SettingsCategory[]
-  services: ServiceRow[]
+function flattenCategoriesToUi(
+  categoriesData: MerchantVoiceServiceCategoryDto[],
+): {
+  categories: SettingsCategory[];
+  services: ServiceRow[];
 } {
   const categories = [...categoriesData]
     .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -422,48 +436,50 @@ function flattenCategoriesToUi(categoriesData: MerchantVoiceServiceCategoryDto[]
       id: category.id,
       name: category.name,
       isSystem: category.isSystem || category.id === OTHER_SERVICES_CATEGORY_ID,
-    }))
+    }));
 
-  const byId = new Map<string, ServiceRow>()
-  let index = 0
+  const byId = new Map<string, ServiceRow>();
+  let index = 0;
   const otherId =
     categories.find((category) => category.isSystem)?.id ||
-    OTHER_SERVICES_CATEGORY_ID
+    OTHER_SERVICES_CATEGORY_ID;
   // Match HTML: place each service under the category accordion it was nested in.
-  ;[...categoriesData]
+  [...categoriesData]
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .forEach((category) => {
       category.services.forEach((service) => {
-        if (!service.id) return
-        const existing = byId.get(service.id)
+        if (!service.id) return;
+        const existing = byId.get(service.id);
         if (existing) {
           const mergedIds = normalizeServiceCategoryIds(
-            [...existing.categoryIds, category.id, ...(service.categoryIds || [])],
+            [
+              ...existing.categoryIds,
+              category.id,
+              ...(service.categoryIds || []),
+            ],
             otherId,
-          )
-          const preferredId = primaryCategoryId(mergedIds, otherId)
+          );
+          const preferredId = primaryCategoryId(mergedIds, otherId);
           const linked =
             categories.find((item) => item.id === preferredId) ||
-            categories.find((item) => item.isSystem)
+            categories.find((item) => item.isSystem);
           byId.set(service.id, {
             ...existing,
             categoryIds: mergedIds,
             categoryId: preferredId,
             category: linked?.name || existing.category,
-          })
-          return
+          });
+          return;
         }
-        const toneSeed = INITIAL_SERVICES[index % INITIAL_SERVICES.length]
+        const toneSeed = INITIAL_SERVICES[index % INITIAL_SERVICES.length];
         const categoryIds = normalizeServiceCategoryIds(
-          service.categoryIds?.length
-            ? service.categoryIds
-            : [category.id],
+          service.categoryIds?.length ? service.categoryIds : [category.id],
           otherId,
-        )
-        const preferredId = primaryCategoryId(categoryIds, otherId)
+        );
+        const preferredId = primaryCategoryId(categoryIds, otherId);
         const linked =
           categories.find((item) => item.id === preferredId) ||
-          categories.find((item) => item.id === category.id)
+          categories.find((item) => item.id === category.id);
         byId.set(service.id, {
           id: service.id,
           icon: service.icon || toneSeed?.icon || "✨",
@@ -476,42 +492,44 @@ function flattenCategoriesToUi(categoriesData: MerchantVoiceServiceCategoryDto[]
           category: linked?.name || category.name || DEFAULT_SERVICE_CATEGORY,
           categoryId: preferredId,
           categoryIds,
-        })
-        index += 1
-      })
-    })
+        });
+        index += 1;
+      });
+    });
 
-  return { categories, services: Array.from(byId.values()) }
+  return { categories, services: Array.from(byId.values()) };
 }
 
 function mergeFlatServicesIntoCategories(
   categories: SettingsCategory[],
   flatServices: Array<{
-    id: string
-    name: string
-    price: number | null
-    durationMinutes: number | null
-    icon: string | null
-    isActive: boolean
-    categoryIds: string[]
+    id: string;
+    name: string;
+    price: number | null;
+    durationMinutes: number | null;
+    icon: string | null;
+    isActive: boolean;
+    categoryIds: string[];
   }>,
 ): ServiceRow[] {
-  const categoryById = new Map(categories.map((category) => [category.id, category]))
+  const categoryById = new Map(
+    categories.map((category) => [category.id, category]),
+  );
   const other =
     categories.find((category) => category.isSystem) ||
-    categories.find((category) => category.id === OTHER_SERVICES_CATEGORY_ID)
+    categories.find((category) => category.id === OTHER_SERVICES_CATEGORY_ID);
 
   return flatServices
     .filter((service) => service.isActive !== false && service.id)
     .map((service, index) => {
-      const otherId = other?.id || OTHER_SERVICES_CATEGORY_ID
+      const otherId = other?.id || OTHER_SERVICES_CATEGORY_ID;
       const categoryIds = normalizeServiceCategoryIds(
         service.categoryIds,
         otherId,
-      )
-      const preferredId = primaryCategoryId(categoryIds, otherId)
-      const linked = categoryById.get(preferredId) || other
-      const toneSeed = INITIAL_SERVICES[index % INITIAL_SERVICES.length]
+      );
+      const preferredId = primaryCategoryId(categoryIds, otherId);
+      const linked = categoryById.get(preferredId) || other;
+      const toneSeed = INITIAL_SERVICES[index % INITIAL_SERVICES.length];
       return {
         id: service.id,
         icon: service.icon || toneSeed?.icon || "✨",
@@ -524,8 +542,8 @@ function mergeFlatServicesIntoCategories(
         category: linked?.name || DEFAULT_SERVICE_CATEGORY,
         categoryId: linked?.id || OTHER_SERVICES_CATEGORY_ID,
         categoryIds,
-      } satisfies ServiceRow
-    })
+      } satisfies ServiceRow;
+    });
 }
 
 const AI_LANGUAGE_OPTIONS = [
@@ -581,11 +599,11 @@ function bookingSmsEnabledFromSettings(
 ): Record<BookingSmsRecipientId, boolean> {
   return BOOKING_SMS_RECIPIENTS.reduce(
     (acc, item) => {
-      acc[item.id] = settings[item.configKey]
-      return acc
+      acc[item.id] = settings[item.configKey];
+      return acc;
     },
     { ...BOOKING_SMS_DEFAULT_ENABLED },
-  )
+  );
 }
 
 function bookingSmsSettingsPayloadFromEnabled(
@@ -593,11 +611,11 @@ function bookingSmsSettingsPayloadFromEnabled(
 ): Record<BookingSmsConfigKey, boolean> {
   return BOOKING_SMS_RECIPIENTS.reduce(
     (acc, item) => {
-      acc[item.configKey] = enabled[item.id]
-      return acc
+      acc[item.configKey] = enabled[item.id];
+      return acc;
     },
     {} as Record<BookingSmsConfigKey, boolean>,
-  )
+  );
 }
 
 const SALON_NAME_TEMPLATE_TOKEN = "Bitcoin Nail Bar";
@@ -665,36 +683,48 @@ const PROMO_TEMPLATES = {
 const GREETING_TEMPLATES = {
   "warm-welcome": {
     labelKey: "greetingTemplateWarmLabel",
-    enText: "Hi! Thanks for calling Bitcoin Nail Bar. I'm your AI assistant — I can help you book an appointment, check pricing, or answer questions. How can I help today?",
-    viText: "Xin chào! Cảm ơn bạn đã gọi Bitcoin Nail Bar. Tôi là trợ lý AI của tiệm — tôi có thể giúp bạn đặt lịch, xem giá, hoặc trả lời các câu hỏi. Hôm nay bạn cần hỗ trợ gì ạ?",
+    enText:
+      "Hi! Thanks for calling Bitcoin Nail Bar. I'm your AI assistant — I can help you book an appointment, check pricing, or answer questions. How can I help today?",
+    viText:
+      "Xin chào! Cảm ơn bạn đã gọi Bitcoin Nail Bar. Tôi là trợ lý AI của tiệm — tôi có thể giúp bạn đặt lịch, xem giá, hoặc trả lời các câu hỏi. Hôm nay bạn cần hỗ trợ gì ạ?",
   },
   "quick-booking": {
     labelKey: "greetingTemplateQuickLabel",
-    enText: "Hello! You've reached Bitcoin Nail Bar. I can book your appointment right now, check today's availability, or answer a quick pricing question — what would you like to do?",
-    viText: "Chào bạn! Bạn đã gọi đến Bitcoin Nail Bar. Tôi có thể giúp bạn đặt lịch ngay bây giờ, kiểm tra tình trạng trống hôm nay, hoặc trả lời nhanh về giá — bạn muốn làm gì ạ?",
+    enText:
+      "Hello! You've reached Bitcoin Nail Bar. I can book your appointment right now, check today's availability, or answer a quick pricing question — what would you like to do?",
+    viText:
+      "Chào bạn! Bạn đã gọi đến Bitcoin Nail Bar. Tôi có thể giúp bạn đặt lịch ngay bây giờ, kiểm tra tình trạng trống hôm nay, hoặc trả lời nhanh về giá — bạn muốn làm gì ạ?",
   },
   bilingual: {
     labelKey: "greetingTemplateBilingualLabel",
-    enText: "Xin chào! Bạn đã gọi đến Bitcoin Nail Bar. / Hi! You've reached Bitcoin Nail Bar. Tôi có thể giúp đặt lịch, kiểm tra giá, hoặc trả lời câu hỏi. How can I help you today?",
-    viText: "Xin chào! Bạn đã gọi đến Bitcoin Nail Bar. / Hi! You've reached Bitcoin Nail Bar. Tôi có thể giúp đặt lịch, kiểm tra giá, hoặc trả lời câu hỏi. How can I help you today?",
+    enText:
+      "Xin chào! Bạn đã gọi đến Bitcoin Nail Bar. / Hi! You've reached Bitcoin Nail Bar. Tôi có thể giúp đặt lịch, kiểm tra giá, hoặc trả lời câu hỏi. How can I help you today?",
+    viText:
+      "Xin chào! Bạn đã gọi đến Bitcoin Nail Bar. / Hi! You've reached Bitcoin Nail Bar. Tôi có thể giúp đặt lịch, kiểm tra giá, hoặc trả lời câu hỏi. How can I help you today?",
   },
 } as const;
 
 const FIRST_CALL_SMS_TEMPLATES = {
   "thanks-booking": {
     labelKey: "firstCallSmsTemplateThanksLabel",
-    enText: "Thanks for booking with Bitcoin Nail Bar! We're excited to see you. Reply to this text with any questions or to learn about our current promotions.",
-    viText: "Cảm ơn bạn đã đặt lịch tại Bitcoin Nail Bar! Chúng tôi rất mong được gặp bạn. Bạn có thể trả lời tin nhắn này nếu có câu hỏi, hoặc để biết thêm về các ưu đãi hiện tại của tiệm.",
+    enText:
+      "Thanks for booking with Bitcoin Nail Bar! We're excited to see you. Reply to this text with any questions or to learn about our current promotions.",
+    viText:
+      "Cảm ơn bạn đã đặt lịch tại Bitcoin Nail Bar! Chúng tôi rất mong được gặp bạn. Bạn có thể trả lời tin nhắn này nếu có câu hỏi, hoặc để biết thêm về các ưu đãi hiện tại của tiệm.",
   },
   "first-time-welcome": {
     labelKey: "firstCallSmsTemplateWelcomeLabel",
-    enText: "Thanks for calling Bitcoin Nail Bar! We're glad to have you. Reply here anytime with questions, or ask about booking your next visit.",
-    viText: "Cảm ơn bạn đã gọi đến Bitcoin Nail Bar! Chúng tôi rất vui khi được phục vụ bạn. Bạn cứ trả lời tin nhắn này bất cứ lúc nào nếu có câu hỏi, hoặc nhờ chúng tôi hỗ trợ đặt lịch cho lần ghé tiếp theo nhé.",
+    enText:
+      "Thanks for calling Bitcoin Nail Bar! We're glad to have you. Reply here anytime with questions, or ask about booking your next visit.",
+    viText:
+      "Cảm ơn bạn đã gọi đến Bitcoin Nail Bar! Chúng tôi rất vui khi được phục vụ bạn. Bạn cứ trả lời tin nhắn này bất cứ lúc nào nếu có câu hỏi, hoặc nhờ chúng tôi hỗ trợ đặt lịch cho lần ghé tiếp theo nhé.",
   },
   "promo-teaser": {
     labelKey: "firstCallSmsTemplatePromoLabel",
-    enText: "Thanks for calling Bitcoin Nail Bar! Ask us about this month's promotions on your next visit — reply to this text with any questions.",
-    viText: "Cảm ơn bạn đã gọi đến Bitcoin Nail Bar! Lần ghé tới bạn hỏi giúp chúng tôi về các ưu đãi trong tháng này nhé — bạn cứ trả lời tin nhắn này nếu có câu hỏi.",
+    enText:
+      "Thanks for calling Bitcoin Nail Bar! Ask us about this month's promotions on your next visit — reply to this text with any questions.",
+    viText:
+      "Cảm ơn bạn đã gọi đến Bitcoin Nail Bar! Lần ghé tới bạn hỏi giúp chúng tôi về các ưu đãi trong tháng này nhé — bạn cứ trả lời tin nhắn này nếu có câu hỏi.",
   },
 } as const;
 
@@ -717,20 +747,20 @@ const GREETING_I18N_KEY_BY_LANGUAGE: Record<Language, string> = {
   [MerchantVoiceUiLanguage.Auto]: "greetingAuto",
   [MerchantVoiceUiLanguage.Vi]: "greetingVi",
   [MerchantVoiceUiLanguage.En]: "greetingEn",
-}
+};
 
 const LANGUAGE_BUTTON_LABEL_KEY_BY_LANGUAGE: Record<Language, string> = {
   [MerchantVoiceUiLanguage.Auto]: "languageLabels.autoShort",
   [MerchantVoiceUiLanguage.Vi]: "languageLabels.vi",
   [MerchantVoiceUiLanguage.En]: "languageLabels.en",
-}
+};
 
 function greetingI18nKey(language: Language) {
-  return GREETING_I18N_KEY_BY_LANGUAGE[language]
+  return GREETING_I18N_KEY_BY_LANGUAGE[language];
 }
 
 function defaultGreetingI18nKey(language: Language) {
-  return greetingI18nKey(language)
+  return greetingI18nKey(language);
 }
 
 function translateKnownGreeting(text: string, language: Language) {
@@ -775,7 +805,7 @@ function shouldSyncGreetingForLanguageChange(
 }
 
 function languageButtonLabelKey(language: Language) {
-  return LANGUAGE_BUTTON_LABEL_KEY_BY_LANGUAGE[language]
+  return LANGUAGE_BUTTON_LABEL_KEY_BY_LANGUAGE[language];
 }
 
 function openTimePicker(input: HTMLInputElement | null) {
@@ -1014,12 +1044,12 @@ export default function BookingSettingsPanel() {
   const businessId = merchantSetupData?.businessInfo?.businessId;
   const { data: posBookingSettingsData } = useBookingSettings(businessId);
   const updateBookingSettingsMutation = useUpdateBookingSettings(businessId);
-  const createCategoryMutation = useCreateMerchantVoiceServiceCategory();
-  const updateCategoryMutation = useUpdateMerchantVoiceServiceCategory();
+  const saveCategoriesBatchMutation = useSaveCategoriesBatch();
   const deleteCategoryMutation = useDeleteMerchantVoiceServiceCategory();
   const createServiceMutation = useCreateMerchantVoiceService();
   const updateServiceMutation = useUpdateMerchantVoiceService();
   const deleteServiceMutation = useDeleteMerchantVoiceService();
+  const saveServicesBatchMutation = useSaveServicesBatch();
   const [collapsedCards, setCollapsedCards] = useState<Record<string, boolean>>(
     {},
   );
@@ -1046,12 +1076,16 @@ export default function BookingSettingsPanel() {
     },
   );
   const [serviceModalError, setServiceModalError] = useState("");
-  const [serviceModalCategoriesError, setServiceModalCategoriesError] = useState("");
+  const [serviceModalCategoriesError, setServiceModalCategoriesError] =
+    useState("");
   const [categoryDrafts, setCategoryDrafts] = useState<CategoryDraft[]>([]);
   const [categoryModalError, setCategoryModalError] = useState("");
+  const [categoryModalErrorIndex, setCategoryModalErrorIndex] = useState<
+    number | null
+  >(null);
   const [isSavingCategories, setIsSavingCategories] = useState(false);
   const [pendingCategoryFocus, setPendingCategoryFocus] = useState<
-    "new" | "edit" | null
+    "new" | null
   >(null);
   const categoryInputRef = useRef<HTMLInputElement | null>(null);
   const [highlightServiceId, setHighlightServiceId] = useState<string | null>(
@@ -1063,6 +1097,14 @@ export default function BookingSettingsPanel() {
   const [inlineServiceErrors, setInlineServiceErrors] = useState<
     Record<string, string>
   >({});
+  const [newServiceDrafts, dispatchNewServiceDraft] = useReducer(
+    newServiceDraftReducer,
+    [],
+  );
+  const [newServiceDraftErrors, setNewServiceDraftErrors] = useState<
+    Record<string, NewServiceDraftError>
+  >({});
+  const newServiceDraftIdRef = useRef(0);
   const inlineServiceDraftsRef = useRef(inlineServiceDrafts);
   const [openServiceCategoryIds, setOpenServiceCategoryIds] = useState(
     () => new Set<string>(),
@@ -1084,7 +1126,9 @@ export default function BookingSettingsPanel() {
   const [salonPhone, setSalonPhone] = useState("");
   const [aiPhone, setAiPhone] = useState("");
   const [bookingNotifyPhone, setBookingNotifyPhone] = useState("");
-  const [location, setLocation] = useState<LocationParts>({ ...EMPTY_LOCATION });
+  const [location, setLocation] = useState<LocationParts>({
+    ...EMPTY_LOCATION,
+  });
   const [extraCountries, setExtraCountries] = useState<SettingsCountryOption[]>(
     [],
   );
@@ -1153,7 +1197,9 @@ export default function BookingSettingsPanel() {
   );
 
   const countryOptions = useMemo(() => {
-    const seen = new Set(SETTINGS_COUNTRY_OPTIONS.map((option) => option.value));
+    const seen = new Set(
+      SETTINGS_COUNTRY_OPTIONS.map((option) => option.value),
+    );
     const extras = extraCountries.filter((option) => {
       if (seen.has(option.value)) return false;
       seen.add(option.value);
@@ -1404,9 +1450,9 @@ export default function BookingSettingsPanel() {
     );
     const hasStructuredLocation = Boolean(
       configData.city?.trim() ||
-        configData.state?.trim() ||
-        configData.zipCode?.trim() ||
-        configData.country?.trim(),
+      configData.state?.trim() ||
+      configData.zipCode?.trim() ||
+      configData.country?.trim(),
     );
     const locationParts = hasStructuredLocation
       ? {
@@ -1419,7 +1465,10 @@ export default function BookingSettingsPanel() {
       : splitSettingsAddress(configData.address || "");
     setLocation(locationParts);
     if (locationParts.country) {
-      ensureCountryOption(locationParts.country, configData.country || undefined);
+      ensureCountryOption(
+        locationParts.country,
+        configData.country || undefined,
+      );
     }
     const loadedTimeZone = String(configData.timeZone || "").trim();
     const detectedTimeZone = detectTimeZoneFromAddressText(
@@ -1444,7 +1493,9 @@ export default function BookingSettingsPanel() {
     setInstagramUrl(configData.instagramUrl || "");
     setWebsite(configData.website || "");
     setDescription(configData.description || "");
-    setPromoSms((configData.promoSms || "").slice(0, FIRST_CALL_SMS_MAX_LENGTH));
+    setPromoSms(
+      (configData.promoSms || "").slice(0, FIRST_CALL_SMS_MAX_LENGTH),
+    );
     setSendSmsPromoEnabled(configData.sendSmsPromoEnabled !== false);
     setPromotion((configData.promotion || "").slice(0, PROMO_MAX_LENGTH));
     const resolvedLang = mapConfigLanguageToUiLanguage(configData.language);
@@ -1483,7 +1534,10 @@ export default function BookingSettingsPanel() {
     const mergedServices =
       next.services.length > 0
         ? next.services
-        : mergeFlatServicesIntoCategories(next.categories, flatServicesData || []);
+        : mergeFlatServicesIntoCategories(
+            next.categories,
+            flatServicesData || [],
+          );
     setCategories((prev) => unionSettingsCategories(prev, next.categories));
     if (!servicesDirtyRef.current) {
       setServices(mergedServices);
@@ -1495,8 +1549,10 @@ export default function BookingSettingsPanel() {
       prev.map((service) => {
         const other =
           next.categories.find((item) => item.isSystem) ||
-          next.categories.find((item) => item.id === OTHER_SERVICES_CATEGORY_ID);
-        const otherId = other?.id || OTHER_SERVICES_CATEGORY_ID
+          next.categories.find(
+            (item) => item.id === OTHER_SERVICES_CATEGORY_ID,
+          );
+        const otherId = other?.id || OTHER_SERVICES_CATEGORY_ID;
         const categoryIds = normalizeServiceCategoryIds(
           service.categoryIds,
           otherId,
@@ -1504,18 +1560,18 @@ export default function BookingSettingsPanel() {
           (id) =>
             next.categories.some((item) => item.id === id) ||
             id === OTHER_SERVICES_CATEGORY_ID,
-        )
-        const resolvedIds = normalizeServiceCategoryIds(categoryIds, otherId)
-        const preferredId = primaryCategoryId(resolvedIds, otherId)
+        );
+        const resolvedIds = normalizeServiceCategoryIds(categoryIds, otherId);
+        const preferredId = primaryCategoryId(resolvedIds, otherId);
         const linked =
-          next.categories.find((item) => item.id === preferredId) || other
-        if (!linked) return { ...service, categoryIds: resolvedIds }
+          next.categories.find((item) => item.id === preferredId) || other;
+        if (!linked) return { ...service, categoryIds: resolvedIds };
         return {
           ...service,
           category: linked.name,
           categoryId: linked.id,
           categoryIds: resolvedIds,
-        }
+        };
       }),
     );
   }, [categoriesData, flatServicesData]);
@@ -1528,30 +1584,45 @@ export default function BookingSettingsPanel() {
   );
 
   const rememberServiceSnapshot = (rows: ServiceRow[]) => {
-    serviceSnapshotRef.current = new Map(rows.map((row) => [row.id, { ...row }]));
+    serviceSnapshotRef.current = new Map(
+      rows.map((row) => [row.id, { ...row }]),
+    );
   };
 
   const refreshServicesCatalog = async () => {
     const refreshed = await merchantVoiceRepository.getServiceCategories();
     const next = flattenCategoriesToUi(refreshed);
-    const mergedServices =
-      next.services.length > 0
-        ? next.services
-        : mergeFlatServicesIntoCategories(
-            next.categories,
-            await merchantVoiceRepository.getServices(),
-          );
+    // Flat DTO list matching what GET .../services returns — either read straight off
+    // the (already-fetched) nested categories response, or fetched separately below
+    // when this merchant's categories response doesn't nest services.
+    let flatServiceDtos;
+    let mergedServices;
+    if (next.services.length > 0) {
+      const byId = new Map(
+        refreshed
+          .flatMap((category) => category.services)
+          .filter((service) => service.id)
+          .map((service) => [service.id, service] as const),
+      );
+      flatServiceDtos = Array.from(byId.values());
+      mergedServices = next.services;
+    } else {
+      flatServiceDtos = await merchantVoiceRepository.getServices();
+      mergedServices = mergeFlatServicesIntoCategories(
+        next.categories,
+        flatServiceDtos,
+      );
+    }
     setCategories((prev) => unionSettingsCategories(prev, next.categories));
     setServices(mergedServices);
     servicesRef.current = mergedServices;
     rememberServiceSnapshot(mergedServices);
     servicesDirtyRef.current = false;
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServices() }),
-      queryClient.invalidateQueries({
-        queryKey: qk.merchantVoiceServiceCategories(),
-      }),
-    ]);
+    // Seed the query cache with the data already fetched above instead of invalidating —
+    // invalidating would trigger a second, redundant GET for the same categories/services,
+    // since these hooks' queryFn calls the exact same repository functions as above.
+    queryClient.setQueryData(qk.merchantVoiceServiceCategories(), refreshed);
+    queryClient.setQueryData(qk.merchantVoiceServices(), flatServiceDtos);
     return mergedServices;
   };
 
@@ -1560,7 +1631,6 @@ export default function BookingSettingsPanel() {
     price: Number.isFinite(service.price) ? service.price : 0,
     durationMinutes: clampMerchantVoiceServiceDurationMinutes(service.duration),
     note: null as string | null,
-    icon: service.icon?.trim() || null,
     isActive: true,
     categoryIds: categoryIdsPayloadForApi(service.categoryIds),
   });
@@ -1624,7 +1694,11 @@ export default function BookingSettingsPanel() {
     );
     const onlyOther =
       realCategories.length === 0 && serviceModalCategoryOptions.length > 0;
-    return { realCategories, onlyOther, hasRealCategories: realCategories.length > 0 };
+    return {
+      realCategories,
+      onlyOther,
+      hasRealCategories: realCategories.length > 0,
+    };
   }, [serviceModalCategoryOptions]);
 
   useEffect(() => {
@@ -1636,8 +1710,7 @@ export default function BookingSettingsPanel() {
   }, [serviceModalOpen, serviceModalCategorySelection.onlyOther]);
 
   const openServiceModal = (categoryId?: string) => {
-    const preferredId =
-      typeof categoryId === "string" ? categoryId.trim() : "";
+    const preferredId = typeof categoryId === "string" ? categoryId.trim() : "";
     const { onlyOther } = serviceModalCategorySelection;
     // Only Other in catalog → auto-check. Else global Add → none; from group → that category.
     const initialCategoryIds = onlyOther
@@ -1857,7 +1930,9 @@ export default function BookingSettingsPanel() {
     try {
       if (serviceModalDraft.mode === "edit" && serviceModalDraft.serviceId) {
         const serviceId = serviceModalDraft.serviceId;
-        const existing = servicesRef.current.find((row) => row.id === serviceId);
+        const existing = servicesRef.current.find(
+          (row) => row.id === serviceId,
+        );
         const snapshot = serviceSnapshotRef.current.get(serviceId);
         const nextRow: ServiceRow = {
           id: serviceId,
@@ -1924,7 +1999,6 @@ export default function BookingSettingsPanel() {
         price,
         durationMinutes: clampMerchantVoiceServiceDurationMinutes(duration),
         note: null,
-        icon: null,
         isActive: true,
         categoryIds,
       });
@@ -1949,11 +2023,6 @@ export default function BookingSettingsPanel() {
     } finally {
       setIsSavingService(false);
     }
-  };
-
-  const openServiceModalFromCategory = (categoryId: string) => {
-    setCategoryModalOpen(false);
-    openServiceModal(categoryId);
   };
 
   const resolveInlineServiceDraft = (service: ServiceRow): InlineServiceDraft =>
@@ -1998,9 +2067,6 @@ export default function BookingSettingsPanel() {
     return false;
   };
 
-  const isInlineServiceDirty = (service: ServiceRow): boolean =>
-    isInlineServiceDraftDirty(service, resolveInlineServiceDraft(service));
-
   const clearInlineServiceDraft = (serviceId: string) => {
     setInlineServiceDrafts((prev) => {
       if (!prev[serviceId]) return prev;
@@ -2008,84 +2074,6 @@ export default function BookingSettingsPanel() {
       delete next[serviceId];
       return next;
     });
-  };
-
-  const saveInlineService = async (serviceId: string) => {
-    const service = servicesRef.current.find((row) => row.id === serviceId);
-    if (!service || pendingServiceActionId === serviceId) return;
-
-    if (!isInlineServiceDirty(service)) {
-      clearInlineServiceDraft(serviceId);
-      return;
-    }
-
-    const draft = resolveInlineServiceDraft(service);
-    const name = draft.name.trim();
-    const price = Number(draft.price);
-    const duration = Number(draft.duration);
-
-    if (!name) {
-      setInlineServiceErrors((prev) => ({
-        ...prev,
-        [serviceId]: t(`${TK}.serviceModalNameRequired`),
-      }));
-      return;
-    }
-    if (!Number.isFinite(price) || price < 0) {
-      setInlineServiceErrors((prev) => ({
-        ...prev,
-        [serviceId]: t(`${TK}.serviceModalPriceInvalid`),
-      }));
-      return;
-    }
-    if (!Number.isFinite(duration) || duration <= 0) {
-      setInlineServiceErrors((prev) => ({
-        ...prev,
-        [serviceId]: t(`${TK}.serviceModalDurationInvalid`),
-      }));
-      return;
-    }
-
-    const nextRow: ServiceRow = {
-      ...service,
-      name,
-      price,
-      duration: clampMerchantVoiceServiceDurationMinutes(duration),
-    };
-
-    setPendingServiceActionId(serviceId);
-    setInlineServiceErrors((prev) => {
-      if (!prev[serviceId]) return prev;
-      const next = { ...prev };
-      delete next[serviceId];
-      return next;
-    });
-
-    try {
-      if (!isPersistedServiceId(serviceId)) {
-        setServices((prev) =>
-          prev.map((row) => (row.id === serviceId ? nextRow : row)),
-        );
-        servicesRef.current = servicesRef.current.map((row) =>
-          row.id === serviceId ? nextRow : row,
-        );
-        serviceSnapshotRef.current.set(serviceId, { ...nextRow });
-      } else {
-        await updateServiceMutation.mutateAsync({
-          id: serviceId,
-          body: buildServiceApiPayload(nextRow),
-        });
-        await refreshServicesCatalog();
-      }
-      clearInlineServiceDraft(serviceId);
-      showToast(t(`${TK}.serviceUpdated`, { name }), "success");
-    } catch (error) {
-      const message = t(getErrorI18nKey(getApiErrorCode(error)));
-      setInlineServiceErrors((prev) => ({ ...prev, [serviceId]: message }));
-      showToast(message, "error");
-    } finally {
-      setPendingServiceActionId(null);
-    }
   };
 
   const openCategoryModal = () => {
@@ -2096,7 +2084,6 @@ export default function BookingSettingsPanel() {
             name: category.name,
             isSystem: category.isSystem,
             isNew: false,
-            isEditing: false,
           }))
         : [
             {
@@ -2104,11 +2091,11 @@ export default function BookingSettingsPanel() {
               name: DEFAULT_SERVICE_CATEGORY,
               isSystem: true,
               isNew: false,
-              isEditing: false,
             },
           ],
     );
     setCategoryModalError("");
+    setCategoryModalErrorIndex(null);
     setPendingCategoryFocus(null);
     setCategoryModalOpen(true);
   };
@@ -2120,15 +2107,14 @@ export default function BookingSettingsPanel() {
         name: category.name,
         isSystem: category.isSystem,
         isNew: false,
-        isEditing: false,
       })),
     );
   };
 
   const countServicesForCategory = (draft: CategoryDraft) =>
     services.filter((service) => {
-      if (draft.id) return service.categoryIds.includes(draft.id)
-      return service.category === draft.name
+      if (draft.id) return service.categoryIds.includes(draft.id);
+      return service.category === draft.name;
     }).length;
 
   const formatCategoryServiceCount = (count: number) =>
@@ -2136,37 +2122,35 @@ export default function BookingSettingsPanel() {
       ? t(`${TK}.categoryServiceCountOne`)
       : t(`${TK}.categoryServiceCount`, { count });
 
-  const isDuplicateCategoryName = (name: string, ignoreIndex: number) => {
-    const normalized = name.trim().toLowerCase();
-    return categoryDrafts.some(
-      (draft, index) =>
-        index !== ignoreIndex &&
-        draft.name.trim().toLowerCase() === normalized,
-    );
-  };
+  const saveCategoryModal = async () => {
+    const plan = planCategoryDraftChanges(categoryDrafts, categories, {
+      nameRequired: t(`${TK}.categoryModalNameRequired`),
+      duplicateName: t(`${TK}.categoryModalDuplicate`),
+    });
 
-  const confirmCreateCategory = async (index: number) => {
-    const draft = categoryDrafts[index];
-    if (!draft?.isNew) return;
-    const name = draft.name.trim();
-    if (!name) {
-      setCategoryModalError(t(`${TK}.categoryModalNameRequired`));
-      categoryInputRef.current?.focus();
+    if (plan.error) {
+      setCategoryModalError(plan.error.message);
+      setCategoryModalErrorIndex(plan.error.draftIndex);
       return;
     }
-    if (isDuplicateCategoryName(name, index)) {
-      setCategoryModalError(t(`${TK}.categoryModalDuplicate`));
-      categoryInputRef.current?.focus();
+
+    if (plan.creates.length === 0 && plan.updates.length === 0) {
       return;
     }
 
     setIsSavingCategories(true);
     setCategoryModalError("");
+    setCategoryModalErrorIndex(null);
     try {
-      await createCategoryMutation.mutateAsync({ name });
-      setPendingCategoryFocus(null);
-      showToast(t(`${TK}.categoryCreated`), "success");
-      // Query invalidation refreshes categories; keep modal open with latest rows.
+      const batchItems: SaveCategoryBatchItem[] = [
+        ...plan.creates.map((category) => ({ name: category.name })),
+        ...plan.updates.map((category) => ({
+          id: category.id,
+          name: category.name,
+        })),
+      ];
+      await saveCategoriesBatchMutation.mutateAsync(batchItems);
+
       const refreshed = await merchantVoiceRepository.getServiceCategories();
       const next = flattenCategoriesToUi(refreshed);
       const mergedCategories = unionSettingsCategories(
@@ -2185,6 +2169,7 @@ export default function BookingSettingsPanel() {
         );
       }
       syncCategoryDraftsFromApi(mergedCategories);
+      showToast(t(`${TK}.saveSuccess`), "success");
     } catch (error) {
       const message = t(getErrorI18nKey(getApiErrorCode(error)));
       setCategoryModalError(message);
@@ -2192,115 +2177,17 @@ export default function BookingSettingsPanel() {
     } finally {
       setIsSavingCategories(false);
     }
-  };
-
-  const confirmRenameCategory = async (index: number) => {
-    const draft = categoryDrafts[index];
-    if (!draft?.id || draft.isSystem || !draft.isEditing) return;
-    const name = draft.name.trim();
-    if (!name) {
-      setCategoryModalError(t(`${TK}.categoryModalNameRequired`));
-      categoryInputRef.current?.focus();
-      return;
-    }
-    if (isDuplicateCategoryName(name, index)) {
-      setCategoryModalError(t(`${TK}.categoryModalDuplicate`));
-      categoryInputRef.current?.focus();
-      return;
-    }
-    const previous = categories.find((item) => item.id === draft.id);
-    if (previous && previous.name === name) {
-      setCategoryDrafts((prev) =>
-        prev.map((row, rowIndex) =>
-          rowIndex === index
-            ? { ...row, name, isEditing: false }
-            : row,
-        ),
-      );
-      setPendingCategoryFocus(null);
-      return;
-    }
-
-    setIsSavingCategories(true);
-    setCategoryModalError("");
-    try {
-      await updateCategoryMutation.mutateAsync({
-        id: draft.id,
-        body: { name },
-      });
-      showToast(t(`${TK}.categoryUpdated`), "success");
-      const refreshed = await merchantVoiceRepository.getServiceCategories();
-      const next = flattenCategoriesToUi(refreshed);
-      const mergedCategories = unionSettingsCategories(
-        categories,
-        next.categories,
-      );
-      setCategories(mergedCategories);
-      if (!servicesDirtyRef.current) {
-        setServices(
-          next.services.length > 0
-            ? next.services
-            : mergeFlatServicesIntoCategories(
-                mergedCategories,
-                await merchantVoiceRepository.getServices(),
-              ),
-        );
-      }
-      syncCategoryDraftsFromApi(mergedCategories);
-      setPendingCategoryFocus(null);
-    } catch (error) {
-      const message = t(getErrorI18nKey(getApiErrorCode(error)));
-      setCategoryModalError(message);
-      showToast(message, "error");
-    } finally {
-      setIsSavingCategories(false);
-    }
-  };
-
-  const startEditCategory = (index: number) => {
-    const draft = categoryDrafts[index];
-    if (!draft || draft.isSystem || draft.isNew) return;
-    setCategoryModalError("");
-    setCategoryDrafts((prev) =>
-      prev.map((row, rowIndex) => ({
-        ...row,
-        isEditing: rowIndex === index,
-        // Drop unfinished new draft when starting edit.
-        ...(row.isNew ? { name: row.name } : null),
-      })).filter((row) => !(row.isNew && !row.name.trim())),
-    );
-    setPendingCategoryFocus("edit");
-  };
-
-  const cancelCategoryRow = (index: number) => {
-    const draft = categoryDrafts[index];
-    if (!draft) return;
-    setCategoryModalError("");
-    if (draft.isNew) {
-      setCategoryDrafts((prev) => prev.filter((_, rowIndex) => rowIndex !== index));
-      setPendingCategoryFocus(null);
-      return;
-    }
-    const original = categories.find((item) => item.id === draft.id);
-    setCategoryDrafts((prev) =>
-      prev.map((row, rowIndex) =>
-        rowIndex === index
-          ? {
-              ...row,
-              name: original?.name || row.name,
-              isEditing: false,
-            }
-          : row,
-      ),
-    );
-    setPendingCategoryFocus(null);
   };
 
   const deleteCategoryRow = async (index: number) => {
     const draft = categoryDrafts[index];
     if (!draft || draft.isSystem) return;
     if (draft.isNew) {
-      cancelCategoryRow(index);
+      setCategoryDrafts((prev) =>
+        prev.filter((_, rowIndex) => rowIndex !== index),
+      );
+      setCategoryModalError("");
+      setCategoryModalErrorIndex(null);
       return;
     }
     if (!draft.id) return;
@@ -2337,29 +2224,38 @@ export default function BookingSettingsPanel() {
         // Remap dirty services that lived under deleted category → Other.
         const other =
           mergedCategories.find((item) => item.isSystem) ||
-          mergedCategories.find((item) => item.id === OTHER_SERVICES_CATEGORY_ID);
+          mergedCategories.find(
+            (item) => item.id === OTHER_SERVICES_CATEGORY_ID,
+          );
         setServices((prev) =>
           prev.map((service) => {
-            if (!draft.id || !service.categoryIds.includes(draft.id) || !other) {
-              return service
+            if (
+              !draft.id ||
+              !service.categoryIds.includes(draft.id) ||
+              !other
+            ) {
+              return service;
             }
             const categoryIds = normalizeServiceCategoryIds(
               service.categoryIds.filter((id) => id !== draft.id),
               other.id,
-            )
-            const preferredId = primaryCategoryId(categoryIds, other.id)
+            );
+            const preferredId = primaryCategoryId(categoryIds, other.id);
             const linked =
-              mergedCategories.find((item) => item.id === preferredId) || other
+              mergedCategories.find((item) => item.id === preferredId) || other;
             return {
               ...service,
               categoryIds,
               categoryId: preferredId,
               category: linked.name,
-            }
+            };
           }),
         );
       }
-      syncCategoryDraftsFromApi(mergedCategories);
+      setCategoryDrafts((prev) =>
+        prev.filter((category) => category.id !== draft.id),
+      );
+      setCategoryModalErrorIndex(null);
     } catch (error) {
       const message = t(getErrorI18nKey(getApiErrorCode(error)));
       setCategoryModalError(message);
@@ -2375,18 +2271,17 @@ export default function BookingSettingsPanel() {
         draftIndex === index ? { ...draft, name: value } : draft,
       ),
     );
+    if (categoryModalErrorIndex === index) {
+      setCategoryModalError("");
+      setCategoryModalErrorIndex(null);
+    }
   };
 
   const addCategoryDraft = () => {
-    const existingNewIndex = categoryDrafts.findIndex((draft) => draft.isNew);
-    if (existingNewIndex >= 0) {
-      setPendingCategoryFocus("new");
-      return;
-    }
     setCategoryModalError("");
     setCategoryDrafts((prev) => [
-      ...prev.map((row) => ({ ...row, isEditing: false })),
-      { id: null, name: "", isSystem: false, isNew: true, isEditing: false },
+      ...prev,
+      { id: null, name: "", isSystem: false, isNew: true },
     ]);
     setPendingCategoryFocus("new");
   };
@@ -2416,41 +2311,41 @@ export default function BookingSettingsPanel() {
       const ids = normalizeServiceCategoryIds(
         service.categoryIds,
         service.categoryId || OTHER_SERVICES_CATEGORY_ID,
-      )
-      let placed = false
+      );
+      let placed = false;
       ids.forEach((categoryId) => {
-        const target = sectionById.get(categoryId)
-        if (!target) return
+        const target = sectionById.get(categoryId);
+        if (!target) return;
         if (!target.services.some((row) => row.id === service.id)) {
-          target.services.push(service)
+          target.services.push(service);
         }
-        placed = true
-      })
-      if (placed) return
+        placed = true;
+      });
+      if (placed) return;
 
-      const target = otherSection
+      const target = otherSection;
       if (target) {
         if (!target.services.some((row) => row.id === service.id)) {
-          target.services.push(service)
+          target.services.push(service);
         }
-        return
+        return;
       }
 
       // Synthesize a group when categories have not loaded yet.
-      const fallbackId = service.categoryId || OTHER_SERVICES_CATEGORY_ID
-      let fallback = sectionById.get(fallbackId)
+      const fallbackId = service.categoryId || OTHER_SERVICES_CATEGORY_ID;
+      let fallback = sectionById.get(fallbackId);
       if (!fallback) {
         fallback = {
           id: fallbackId,
           name: service.category || DEFAULT_SERVICE_CATEGORY,
           isSystem: fallbackId === OTHER_SERVICES_CATEGORY_ID,
           services: [],
-        }
-        sections.push(fallback)
-        sectionById.set(fallbackId, fallback)
+        };
+        sections.push(fallback);
+        sectionById.set(fallbackId, fallback);
       }
       if (!fallback.services.some((row) => row.id === service.id)) {
-        fallback.services.push(service)
+        fallback.services.push(service);
       }
     });
 
@@ -2489,6 +2384,50 @@ export default function BookingSettingsPanel() {
     });
   };
 
+  const addNewServiceDraft = (categoryId: string) => {
+    newServiceDraftIdRef.current += 1;
+    dispatchNewServiceDraft({
+      type: "add",
+      draft: {
+        id: `new-service-${newServiceDraftIdRef.current}`,
+        categoryId,
+        name: "",
+        price: "",
+        duration: "",
+      },
+    });
+    setOpenServiceCategoryIds((prev) => new Set(prev).add(categoryId));
+  };
+
+  const addNewServiceDraftFromCategoryModal = (categoryId: string) => {
+    setCategoryModalOpen(false);
+    addNewServiceDraft(categoryId);
+  };
+
+  const updateNewServiceDraft = (
+    id: string,
+    field: "name" | "price" | "duration",
+    value: string,
+  ) => {
+    dispatchNewServiceDraft({ type: "update", id, field, value });
+    setNewServiceDraftErrors((prev) => {
+      if (!prev[id]) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
+  const cancelNewServiceDraft = (id: string) => {
+    dispatchNewServiceDraft({ type: "remove", id });
+    setNewServiceDraftErrors((prev) => {
+      if (!prev[id]) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
   const handleLanguageSelect = (next: Language) => {
     const resolved = next;
     setLanguage(resolved);
@@ -2497,7 +2436,9 @@ export default function BookingSettingsPanel() {
     if (selectedGreetingSuggestKey) {
       const template = AI_HUB_SUGGESTIONS.greeting[selectedGreetingSuggestKey];
       const nextText =
-        resolved === MerchantVoiceUiLanguage.Vi ? template.viText : template.enText;
+        resolved === MerchantVoiceUiLanguage.Vi
+          ? template.viText
+          : template.enText;
       setGreeting(applySalonNameToTemplate(nextText, salonName));
     } else {
       const translatedKnownGreeting =
@@ -2506,19 +2447,21 @@ export default function BookingSettingsPanel() {
       if (translatedKnownGreeting) {
         setGreeting(translatedKnownGreeting);
       } else {
-      const shouldSyncGreeting = shouldSyncGreetingForLanguageChange(
-        greeting,
-        loadedGreetingRef.current,
-        [
-          t(`${TK}.greetingEn`),
-          t(`${TK}.greetingVi`),
-          t(`${TK}.greetingAuto`),
-        ],
-      );
-      if (shouldSyncGreeting) {
-        const translatedGreeting = t(`${TK}.${defaultGreetingI18nKey(resolved)}`);
-        setGreeting(translatedGreeting);
-      }
+        const shouldSyncGreeting = shouldSyncGreetingForLanguageChange(
+          greeting,
+          loadedGreetingRef.current,
+          [
+            t(`${TK}.greetingEn`),
+            t(`${TK}.greetingVi`),
+            t(`${TK}.greetingAuto`),
+          ],
+        );
+        if (shouldSyncGreeting) {
+          const translatedGreeting = t(
+            `${TK}.${defaultGreetingI18nKey(resolved)}`,
+          );
+          setGreeting(translatedGreeting);
+        }
       }
     }
 
@@ -2526,7 +2469,9 @@ export default function BookingSettingsPanel() {
     if (selectedPromoSuggestKey) {
       const template = AI_HUB_SUGGESTIONS.promo[selectedPromoSuggestKey];
       const nextText =
-        resolved === MerchantVoiceUiLanguage.Vi ? template.viText : template.enText;
+        resolved === MerchantVoiceUiLanguage.Vi
+          ? template.viText
+          : template.enText;
       setPromotion(nextText.slice(0, PROMO_MAX_LENGTH));
     }
 
@@ -2535,7 +2480,9 @@ export default function BookingSettingsPanel() {
       const template =
         AI_HUB_SUGGESTIONS.firstCallSms[selectedFirstCallSmsSuggestKey];
       const nextText =
-        resolved === MerchantVoiceUiLanguage.Vi ? template.viText : template.enText;
+        resolved === MerchantVoiceUiLanguage.Vi
+          ? template.viText
+          : template.enText;
       setPromoSms(
         applySalonNameToTemplate(nextText, salonName).slice(
           0,
@@ -2560,7 +2507,9 @@ export default function BookingSettingsPanel() {
     const template = AI_HUB_SUGGESTIONS.promo[key];
     if (!template) return;
     const nextText =
-      language === MerchantVoiceUiLanguage.Vi ? template.viText : template.enText;
+      language === MerchantVoiceUiLanguage.Vi
+        ? template.viText
+        : template.enText;
     setPromotion(nextText.slice(0, PROMO_MAX_LENGTH));
     setSelectedPromoSuggestKey(key);
     setStatus(
@@ -2572,7 +2521,9 @@ export default function BookingSettingsPanel() {
     const template = AI_HUB_SUGGESTIONS.greeting[key];
     if (!template) return;
     const nextText =
-      language === MerchantVoiceUiLanguage.Vi ? template.viText : template.enText;
+      language === MerchantVoiceUiLanguage.Vi
+        ? template.viText
+        : template.enText;
     setGreeting(applySalonNameToTemplate(nextText, salonName));
     setSelectedGreetingSuggestKey(key);
     if (formErrors.greeting)
@@ -2582,14 +2533,14 @@ export default function BookingSettingsPanel() {
     );
   };
 
-  const handleFirstCallSmsSuggest = (
-    key: FirstCallSmsSuggestKey,
-  ) => {
+  const handleFirstCallSmsSuggest = (key: FirstCallSmsSuggestKey) => {
     const template = AI_HUB_SUGGESTIONS.firstCallSms[key];
     if (!template) return;
     setPromoSms(
       applySalonNameToTemplate(
-        language === MerchantVoiceUiLanguage.Vi ? template.viText : template.enText,
+        language === MerchantVoiceUiLanguage.Vi
+          ? template.viText
+          : template.enText,
         salonName,
       ).slice(0, FIRST_CALL_SMS_MAX_LENGTH),
     );
@@ -2639,6 +2590,14 @@ export default function BookingSettingsPanel() {
     const requiredMessage = t(
       "components.dashboard.views.BookingHubView.team.requiredField",
     );
+    const nextNewServiceDraftErrors = validateNewServiceDrafts(
+      newServiceDrafts,
+      {
+        nameRequired: t(`${TK}.serviceModalNameRequired`),
+        priceInvalid: t(`${TK}.serviceModalPriceInvalid`),
+        durationInvalid: t(`${TK}.serviceModalDurationInvalid`),
+      },
+    );
     const nextErrors: typeof formErrors = {};
     if (!salonName.trim()) nextErrors.salonName = requiredMessage;
     // Salon phone + booking notify phone are optional; validate format only when entered.
@@ -2671,7 +2630,8 @@ export default function BookingSettingsPanel() {
         return false;
       }
     };
-    if (!isValidUrl(googleReviewUrl)) nextErrors.googleReviewUrl = invalidUrlMsg;
+    if (!isValidUrl(googleReviewUrl))
+      nextErrors.googleReviewUrl = invalidUrlMsg;
     if (!isValidUrl(yelpReviewUrl)) nextErrors.yelpReviewUrl = invalidUrlMsg;
     if (!isValidUrl(website)) nextErrors.website = invalidUrlMsg;
     if (!isValidUrl(facebookUrl)) nextErrors.facebookUrl = invalidUrlMsg;
@@ -2710,6 +2670,94 @@ export default function BookingSettingsPanel() {
     if (!validHours) {
       showToast(t(`${TK}.hourValidationSummary`), "error");
       return;
+    }
+
+    // Past this point the save is definitely going through — only now do we surface
+    // draft-row errors. Doing this any earlier would flag draft rows even when an
+    // unrelated field above blocks the save. Invalid/unfinished rows stay visible with
+    // their error instead of being removed — only rows that pass are sent below.
+    setNewServiceDraftErrors(nextNewServiceDraftErrors);
+    if (Object.keys(nextNewServiceDraftErrors).length > 0) {
+      const invalidCategoryIds = new Set(
+        newServiceDrafts
+          .filter((draft) => nextNewServiceDraftErrors[draft.id])
+          .map((draft) => draft.categoryId),
+      );
+      setOpenServiceCategoryIds(
+        (prev) => new Set([...prev, ...invalidCategoryIds]),
+      );
+    }
+
+    // Existing services edited inline (no longer auto-saved on blur) are validated the
+    // same way — dirty rows that pass are saved in "Save settings"; invalid ones are
+    // skipped and keep showing their inline error.
+    const dirtyInlineServices = services
+      .map((service) => ({
+        service,
+        draft: resolveInlineServiceDraft(service),
+      }))
+      .filter(({ service, draft }) =>
+        isInlineServiceDraftDirty(service, draft),
+      );
+    const nextInlineServiceErrors: Record<string, string> = {};
+    const validDirtyInlineServices: Array<{
+      service: ServiceRow;
+      draft: InlineServiceDraft;
+    }> = [];
+    for (const entry of dirtyInlineServices) {
+      const name = entry.draft.name.trim();
+      const price = Number(entry.draft.price);
+      const duration = Number(entry.draft.duration);
+      if (!name) {
+        nextInlineServiceErrors[entry.service.id] = t(
+          `${TK}.serviceModalNameRequired`,
+        );
+        continue;
+      }
+      if (!Number.isFinite(price) || price < 0) {
+        nextInlineServiceErrors[entry.service.id] = t(
+          `${TK}.serviceModalPriceInvalid`,
+        );
+        continue;
+      }
+      if (!Number.isFinite(duration) || duration <= 0) {
+        nextInlineServiceErrors[entry.service.id] = t(
+          `${TK}.serviceModalDurationInvalid`,
+        );
+        continue;
+      }
+      validDirtyInlineServices.push(entry);
+    }
+    setInlineServiceErrors(nextInlineServiceErrors);
+
+    // If ANY service row — new draft or inline-edited — is invalid, no service save API
+    // call goes out at all (not even for the rows that do pass). The form just shows the
+    // red errors; the user must fix every row before "Save settings" saves any of them.
+    const hasInvalidServiceRows =
+      Object.keys(nextNewServiceDraftErrors).length > 0 ||
+      Object.keys(nextInlineServiceErrors).length > 0;
+
+    const persistedDirtyServices = hasInvalidServiceRows
+      ? []
+      : validDirtyInlineServices.filter(({ service }) =>
+          isPersistedServiceId(service.id),
+        );
+    const localOnlyDirtyServices = hasInvalidServiceRows
+      ? []
+      : validDirtyInlineServices.filter(
+          ({ service }) => !isPersistedServiceId(service.id),
+        );
+    const newServiceDraftsToSave = hasInvalidServiceRows
+      ? []
+      : newServiceDrafts;
+    const createdNewServiceDraftIds: string[] = [];
+    const updatedServiceIds: string[] = [];
+    if (
+      newServiceDraftsToSave.length > 0 ||
+      persistedDirtyServices.length > 0 ||
+      localOnlyDirtyServices.length > 0
+    ) {
+      setIsSavingService(true);
     }
 
     try {
@@ -2777,11 +2825,15 @@ export default function BookingSettingsPanel() {
       if (businessId) {
         savePromises.push(
           updateBookingSettingsMutation.mutateAsync({
-            autoConfirmEnabled: posBookingSettingsData?.autoConfirmEnabled ?? true,
-            minLeadTimeMinutes: posBookingSettingsData?.minLeadTimeMinutes ?? 15,
+            autoConfirmEnabled:
+              posBookingSettingsData?.autoConfirmEnabled ?? true,
+            minLeadTimeMinutes:
+              posBookingSettingsData?.minLeadTimeMinutes ?? 15,
             maxAdvanceDays: posBookingSettingsData?.maxAdvanceDays ?? 7,
-            reminderHoursBefore: posBookingSettingsData?.reminderHoursBefore ?? 12,
-            holidayAutoNotifyEnabled: posBookingSettingsData?.holidayAutoNotifyEnabled ?? true,
+            reminderHoursBefore:
+              posBookingSettingsData?.reminderHoursBefore ?? 12,
+            holidayAutoNotifyEnabled:
+              posBookingSettingsData?.holidayAutoNotifyEnabled ?? true,
             ...bookingSmsSettingsPayloadFromEnabled(bookingSmsEnabled),
           }),
         );
@@ -2789,15 +2841,146 @@ export default function BookingSettingsPanel() {
 
       await Promise.all(savePromises);
 
+      // Local-only rows (not yet persisted) never went through the API — just commit
+      // their edits to local state, same as the old per-row inline save did.
+      for (const { service, draft } of localOnlyDirtyServices) {
+        const nextRow: ServiceRow = {
+          ...service,
+          name: draft.name.trim(),
+          price: Number(draft.price),
+          duration: clampMerchantVoiceServiceDurationMinutes(
+            Number(draft.duration),
+          ),
+        };
+        setServices((prev) =>
+          prev.map((row) => (row.id === service.id ? nextRow : row)),
+        );
+        servicesRef.current = servicesRef.current.map((row) =>
+          row.id === service.id ? nextRow : row,
+        );
+        serviceSnapshotRef.current.set(service.id, { ...nextRow });
+        clearInlineServiceDraft(service.id);
+      }
+
+      // description/tags/status are intentionally omitted below (not sent as null/[]/"Active")
+      // — this endpoint is the shared catalog POS also writes to, and Booking Hub's UI has no
+      // fields for them, so explicit blank values would wipe POS-managed data on every save.
+      // icon is sent as null only on create (nothing to protect yet); on update it's omitted
+      // too — ServiceRow.icon is always backfilled with a display fallback (e.g. "✨"), so
+      // sending it back would silently overwrite a real POS-managed icon on every save.
+      const createBatchItems: SaveServiceBatchItem[] =
+        newServiceDraftsToSave.map((draft) => ({
+          name: draft.name.trim(),
+          price: Number(draft.price),
+          durationMinutes: clampMerchantVoiceServiceDurationMinutes(
+            Number(draft.duration),
+          ),
+          categoryIds: categoryIdsPayloadForApi([draft.categoryId]),
+        }));
+      const updateBatchItems: SaveServiceBatchItem[] =
+        persistedDirtyServices.map(({ service, draft }) => ({
+          id: service.id,
+          name: draft.name.trim(),
+          price: Number(draft.price),
+          durationMinutes: clampMerchantVoiceServiceDurationMinutes(
+            Number(draft.duration),
+          ),
+          categoryIds: categoryIdsPayloadForApi(service.categoryIds),
+        }));
+      const batchItems = [...createBatchItems, ...updateBatchItems];
+
+      if (batchItems.length > 0) {
+        await saveServicesBatchMutation.mutateAsync(batchItems);
+
+        for (const draft of newServiceDraftsToSave) {
+          createdNewServiceDraftIds.push(draft.id);
+          dispatchNewServiceDraft({ type: "remove", id: draft.id });
+        }
+        for (const { service } of persistedDirtyServices) {
+          updatedServiceIds.push(service.id);
+        }
+      }
+
+      if (
+        createdNewServiceDraftIds.length > 0 ||
+        updatedServiceIds.length > 0
+      ) {
+        // Don't reset draft/inline errors to {} here — rows that were skipped for
+        // being invalid (not part of the ids above) must keep showing their error.
+        await refreshServicesCatalog();
+      }
+
+      // Clear updated services' drafts only after fresh server data has replaced the
+      // old snapshot — clearing before refetch would flash the pre-edit values for a
+      // render (the row falls back to the now-stale `service` while still refetching).
+      for (const serviceId of updatedServiceIds) {
+        clearInlineServiceDraft(serviceId);
+      }
+
       await queryClient.invalidateQueries({ queryKey: qk.merchantSetup() });
 
-      setStatus(t(`${TK}.saveSuccess`));
+      // Settings above always save when we get here — but a row skipped for failing
+      // validation (still shown in red) means the save was only partial. Surface that
+      // as a warning instead of a plain "saved" toast, so a skipped row can't look like
+      // a successful save.
+      const hasSkippedServiceRows =
+        Object.keys(nextNewServiceDraftErrors).length > 0 ||
+        Object.keys(nextInlineServiceErrors).length > 0;
+      const saveResultMessage = hasSkippedServiceRows
+        ? t(`${TK}.savePartialSuccess`)
+        : t(`${TK}.saveSuccess`);
+      setStatus(saveResultMessage);
       setFormErrors({});
-      showToast(t(`${TK}.saveSuccess`), "success");
+      showToast(
+        saveResultMessage,
+        hasSkippedServiceRows ? "warning" : "success",
+      );
     } catch (error) {
       const message = t(getErrorI18nKey(getApiErrorCode(error)));
+      // createdNewServiceDraftIds/updatedServiceIds are only non-empty once the batch
+      // call itself has succeeded — a failure after that point (e.g. refreshServicesCatalog
+      // throwing) must retry the refresh and must NOT be reported as a save failure.
+      if (
+        createdNewServiceDraftIds.length > 0 ||
+        updatedServiceIds.length > 0
+      ) {
+        void refreshServicesCatalog().catch(() => undefined);
+      }
+      if (
+        createdNewServiceDraftIds.length === 0 &&
+        newServiceDraftsToSave.length > 0
+      ) {
+        // Merge, don't replace — invalid rows already have their own error showing.
+        // Empty `fields` here — this is an API-level rejection, not a single bad input, so
+        // every field on the row is marked invalid.
+        setNewServiceDraftErrors((prev) => ({
+          ...prev,
+          ...Object.fromEntries(
+            newServiceDraftsToSave.map((draft) => [
+              draft.id,
+              { fields: [], message },
+            ]),
+          ),
+        }));
+      }
+      if (updatedServiceIds.length === 0 && persistedDirtyServices.length > 0) {
+        setInlineServiceErrors((prev) => ({
+          ...prev,
+          ...Object.fromEntries(
+            persistedDirtyServices.map(({ service }) => [service.id, message]),
+          ),
+        }));
+      }
       setStatus(message);
       showToast(message, "error");
+    } finally {
+      if (
+        newServiceDraftsToSave.length > 0 ||
+        persistedDirtyServices.length > 0 ||
+        localOnlyDirtyServices.length > 0
+      ) {
+        setIsSavingService(false);
+      }
     }
   };
 
@@ -2851,7 +3034,10 @@ export default function BookingSettingsPanel() {
           subtitle={t(`${TK}.salonInfoSub`)}
         >
           <div className="settings-field-grid settings-business-grid">
-            <label className="settings-field settings-salon-name-field" data-ai-hub-field="salonName">
+            <label
+              className="settings-field settings-salon-name-field"
+              data-ai-hub-field="salonName"
+            >
               <span className="settings-label">{t(`${TK}.salonName`)}</span>
               <input
                 className="settings-input"
@@ -3209,7 +3395,10 @@ export default function BookingSettingsPanel() {
                 </span>
               </label>
             </div>
-            <label className="settings-field settings-span-full" data-ai-hub-field="website">
+            <label
+              className="settings-field settings-span-full"
+              data-ai-hub-field="website"
+            >
               <span className="settings-label">{t(`${TK}.website`)}</span>
               <input
                 className="settings-input"
@@ -3227,11 +3416,16 @@ export default function BookingSettingsPanel() {
               />
               <span className="settings-field-error-slot">
                 {formErrors.website ? (
-                  <span className="settings-field-error">{formErrors.website}</span>
+                  <span className="settings-field-error">
+                    {formErrors.website}
+                  </span>
                 ) : null}
               </span>
             </label>
-            <label className="settings-field" data-ai-hub-field="googleReviewUrl">
+            <label
+              className="settings-field"
+              data-ai-hub-field="googleReviewUrl"
+            >
               <span className="settings-label">
                 {t(`${TK}.googleReviewLink`)}
               </span>
@@ -3246,12 +3440,17 @@ export default function BookingSettingsPanel() {
                 onChange={(event) => {
                   setGoogleReviewUrl(event.target.value);
                   if (formErrors.googleReviewUrl)
-                    setFormErrors((prev) => ({ ...prev, googleReviewUrl: undefined }));
+                    setFormErrors((prev) => ({
+                      ...prev,
+                      googleReviewUrl: undefined,
+                    }));
                 }}
               />
               <span className="settings-field-error-slot">
                 {formErrors.googleReviewUrl ? (
-                  <span className="settings-field-error">{formErrors.googleReviewUrl}</span>
+                  <span className="settings-field-error">
+                    {formErrors.googleReviewUrl}
+                  </span>
                 ) : null}
               </span>
             </label>
@@ -3270,12 +3469,17 @@ export default function BookingSettingsPanel() {
                 onChange={(event) => {
                   setYelpReviewUrl(event.target.value);
                   if (formErrors.yelpReviewUrl)
-                    setFormErrors((prev) => ({ ...prev, yelpReviewUrl: undefined }));
+                    setFormErrors((prev) => ({
+                      ...prev,
+                      yelpReviewUrl: undefined,
+                    }));
                 }}
               />
               <span className="settings-field-error-slot">
                 {formErrors.yelpReviewUrl ? (
-                  <span className="settings-field-error">{formErrors.yelpReviewUrl}</span>
+                  <span className="settings-field-error">
+                    {formErrors.yelpReviewUrl}
+                  </span>
                 ) : null}
               </span>
             </label>
@@ -3284,7 +3488,10 @@ export default function BookingSettingsPanel() {
                 {t(`${TK}.socialLinksTitle`)}
               </div>
               <div className="settings-social-grid">
-                <label className="settings-field" data-ai-hub-field="facebookUrl">
+                <label
+                  className="settings-field"
+                  data-ai-hub-field="facebookUrl"
+                >
                   <span className="settings-label">{t(`${TK}.facebook`)}</span>
                   <input
                     className="settings-input"
@@ -3297,16 +3504,24 @@ export default function BookingSettingsPanel() {
                     onChange={(event) => {
                       setFacebookUrl(event.target.value);
                       if (formErrors.facebookUrl)
-                        setFormErrors((prev) => ({ ...prev, facebookUrl: undefined }));
+                        setFormErrors((prev) => ({
+                          ...prev,
+                          facebookUrl: undefined,
+                        }));
                     }}
                   />
                   <span className="settings-field-error-slot">
                     {formErrors.facebookUrl ? (
-                      <span className="settings-field-error">{formErrors.facebookUrl}</span>
+                      <span className="settings-field-error">
+                        {formErrors.facebookUrl}
+                      </span>
                     ) : null}
                   </span>
                 </label>
-                <label className="settings-field" data-ai-hub-field="instagramUrl">
+                <label
+                  className="settings-field"
+                  data-ai-hub-field="instagramUrl"
+                >
                   <span className="settings-label">{t(`${TK}.instagram`)}</span>
                   <input
                     className="settings-input"
@@ -3319,12 +3534,17 @@ export default function BookingSettingsPanel() {
                     onChange={(event) => {
                       setInstagramUrl(event.target.value);
                       if (formErrors.instagramUrl)
-                        setFormErrors((prev) => ({ ...prev, instagramUrl: undefined }));
+                        setFormErrors((prev) => ({
+                          ...prev,
+                          instagramUrl: undefined,
+                        }));
                     }}
                   />
                   <span className="settings-field-error-slot">
                     {formErrors.instagramUrl ? (
-                      <span className="settings-field-error">{formErrors.instagramUrl}</span>
+                      <span className="settings-field-error">
+                        {formErrors.instagramUrl}
+                      </span>
                     ) : null}
                   </span>
                 </label>
@@ -3472,9 +3692,7 @@ export default function BookingSettingsPanel() {
                     const next = event.target.value;
                     setTimeZone(next);
                     setTimeZoneManual(true);
-                    setStatus(
-                      t(`${TK}.timeZoneManualSet`, { timeZone: next }),
-                    );
+                    setStatus(t(`${TK}.timeZoneManualSet`, { timeZone: next }));
                   }}
                 >
                   {SETTINGS_TIMEZONE_OPTIONS.map((zone) => (
@@ -3511,82 +3729,82 @@ export default function BookingSettingsPanel() {
         </SettingsCard>
 
         <div className="settings-holiday-stack">
-        <HolidayClosuresCard />
+          <HolidayClosuresCard />
 
-        <SettingsCard
-          cardId="bookingSms"
-          collapsed={isCollapsed("bookingSms")}
-          onToggle={toggleCard}
-          title={
-            <>
-              <span className="settings-card-title-icon">
-                <MessageSquareIcon />
-              </span>
-              {t(`${TK}.bookingSmsTitle`)}
-            </>
-          }
-          subtitle={t(`${TK}.bookingSmsSub`)}
-        >
-          <div className="settings-config-stack">
-            {BOOKING_SMS_RECIPIENTS.map((item) => {
-              const enabled = bookingSmsEnabled[item.id];
-              return (
-                <div className="settings-booking-sms-row" key={item.id}>
-                  <div className="settings-booking-sms-copy">
-                    <div className="settings-config-title">
-                      {t(`${TK}.${item.titleKey}`)}
+          <SettingsCard
+            cardId="bookingSms"
+            collapsed={isCollapsed("bookingSms")}
+            onToggle={toggleCard}
+            title={
+              <>
+                <span className="settings-card-title-icon">
+                  <MessageSquareIcon />
+                </span>
+                {t(`${TK}.bookingSmsTitle`)}
+              </>
+            }
+            subtitle={t(`${TK}.bookingSmsSub`)}
+          >
+            <div className="settings-config-stack">
+              {BOOKING_SMS_RECIPIENTS.map((item) => {
+                const enabled = bookingSmsEnabled[item.id];
+                return (
+                  <div className="settings-booking-sms-row" key={item.id}>
+                    <div className="settings-booking-sms-copy">
+                      <div className="settings-config-title">
+                        {t(`${TK}.${item.titleKey}`)}
+                      </div>
+                      <div className="settings-config-desc">
+                        {t(`${TK}.${item.descKey}`)}
+                      </div>
                     </div>
-                    <div className="settings-config-desc">
-                      {t(`${TK}.${item.descKey}`)}
+                    <div className="settings-booking-sms-control">
+                      <span
+                        className={`settings-booking-sms-status${enabled ? "" : " is-off"}`}
+                        aria-live="polite"
+                      >
+                        {enabled
+                          ? t(`${TK}.bookingSmsStatusOn`)
+                          : t(`${TK}.bookingSmsStatusOff`)}
+                      </span>
+                      <button
+                        className={`toggle-pill${enabled ? " is-on" : ""}`}
+                        type="button"
+                        role="switch"
+                        aria-checked={enabled}
+                        disabled={
+                          !voiceEnabled ||
+                          isConfigLoading ||
+                          updateConfigMutation.isPending ||
+                          updateBookingSettingsMutation.isPending
+                        }
+                        aria-label={
+                          enabled
+                            ? t(`${TK}.${item.disableAriaKey}`)
+                            : t(`${TK}.${item.enableAriaKey}`)
+                        }
+                        onClick={() => {
+                          setBookingSmsEnabled((prev) => {
+                            const next = !prev[item.id];
+                            setStatus(
+                              next
+                                ? t(`${TK}.bookingSmsRecipientEnabled`, {
+                                    recipient: t(`${TK}.${item.titleKey}`),
+                                  })
+                                : t(`${TK}.bookingSmsRecipientDisabled`, {
+                                    recipient: t(`${TK}.${item.titleKey}`),
+                                  }),
+                            );
+                            return { ...prev, [item.id]: next };
+                          });
+                        }}
+                      />
                     </div>
                   </div>
-                  <div className="settings-booking-sms-control">
-                    <span
-                      className={`settings-booking-sms-status${enabled ? "" : " is-off"}`}
-                      aria-live="polite"
-                    >
-                      {enabled
-                        ? t(`${TK}.bookingSmsStatusOn`)
-                        : t(`${TK}.bookingSmsStatusOff`)}
-                    </span>
-                    <button
-                      className={`toggle-pill${enabled ? " is-on" : ""}`}
-                      type="button"
-                      role="switch"
-                      aria-checked={enabled}
-                      disabled={
-                        !voiceEnabled ||
-                        isConfigLoading ||
-                        updateConfigMutation.isPending ||
-                        updateBookingSettingsMutation.isPending
-                      }
-                      aria-label={
-                        enabled
-                          ? t(`${TK}.${item.disableAriaKey}`)
-                          : t(`${TK}.${item.enableAriaKey}`)
-                      }
-                      onClick={() => {
-                        setBookingSmsEnabled((prev) => {
-                          const next = !prev[item.id];
-                          setStatus(
-                            next
-                              ? t(`${TK}.bookingSmsRecipientEnabled`, {
-                                  recipient: t(`${TK}.${item.titleKey}`),
-                                })
-                              : t(`${TK}.bookingSmsRecipientDisabled`, {
-                                  recipient: t(`${TK}.${item.titleKey}`),
-                                }),
-                          );
-                          return { ...prev, [item.id]: next };
-                        });
-                      }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </SettingsCard>
+                );
+              })}
+            </div>
+          </SettingsCard>
         </div>
 
         <SettingsCard
@@ -3659,7 +3877,9 @@ export default function BookingSettingsPanel() {
                 <SettingsSuggestLabel />
                 <button
                   className={`settings-promo-suggest${
-                    selectedGreetingSuggestKey === "warm-welcome" ? " is-active" : ""
+                    selectedGreetingSuggestKey === "warm-welcome"
+                      ? " is-active"
+                      : ""
                   }`}
                   type="button"
                   onClick={() => handleGreetingSuggest("warm-welcome")}
@@ -3668,7 +3888,9 @@ export default function BookingSettingsPanel() {
                 </button>
                 <button
                   className={`settings-promo-suggest${
-                    selectedGreetingSuggestKey === "quick-booking" ? " is-active" : ""
+                    selectedGreetingSuggestKey === "quick-booking"
+                      ? " is-active"
+                      : ""
                   }`}
                   type="button"
                   onClick={() => handleGreetingSuggest("quick-booking")}
@@ -3677,7 +3899,9 @@ export default function BookingSettingsPanel() {
                 </button>
                 <button
                   className={`settings-promo-suggest${
-                    selectedGreetingSuggestKey === "bilingual" ? " is-active" : ""
+                    selectedGreetingSuggestKey === "bilingual"
+                      ? " is-active"
+                      : ""
                   }`}
                   type="button"
                   onClick={() => handleGreetingSuggest("bilingual")}
@@ -3720,7 +3944,9 @@ export default function BookingSettingsPanel() {
                   <SettingsSuggestLabel />
                   <button
                     className={`settings-promo-suggest${
-                      selectedPromoSuggestKey === "reward-yourself" ? " is-active" : ""
+                      selectedPromoSuggestKey === "reward-yourself"
+                        ? " is-active"
+                        : ""
                     }`}
                     type="button"
                     onClick={() => handlePromoSuggest("reward-yourself")}
@@ -3729,7 +3955,9 @@ export default function BookingSettingsPanel() {
                   </button>
                   <button
                     className={`settings-promo-suggest${
-                      selectedPromoSuggestKey === "first-visit" ? " is-active" : ""
+                      selectedPromoSuggestKey === "first-visit"
+                        ? " is-active"
+                        : ""
                     }`}
                     type="button"
                     onClick={() => handlePromoSuggest("first-visit")}
@@ -3738,7 +3966,9 @@ export default function BookingSettingsPanel() {
                   </button>
                   <button
                     className={`settings-promo-suggest${
-                      selectedPromoSuggestKey === "refer-a-friend" ? " is-active" : ""
+                      selectedPromoSuggestKey === "refer-a-friend"
+                        ? " is-active"
+                        : ""
                     }`}
                     type="button"
                     onClick={() => handlePromoSuggest("refer-a-friend")}
@@ -3907,14 +4137,6 @@ export default function BookingSettingsPanel() {
               <FolderTreeIcon />
               {t(`${TK}.manageCategories`)}
             </button>
-            <button
-              className="booking-primary-button"
-              type="button"
-              onClick={() => openServiceModal()}
-            >
-              <PlusLgIcon />
-              {t(`${TK}.enterManually`)}
-            </button>
           </div>
 
           <div className="settings-service-list settings-service-body">
@@ -3933,6 +4155,9 @@ export default function BookingSettingsPanel() {
             ) : (
               catalogSections.map((section) => {
                 const categoryServices = section.services;
+                const categoryNewServiceDrafts = newServiceDrafts.filter(
+                  (draft) => draft.categoryId === section.id,
+                );
                 const isOpen = openServiceCategoryIds.has(section.id);
                 const panelId = `settings-service-category-panel-${section.id}`;
                 return (
@@ -3958,7 +4183,8 @@ export default function BookingSettingsPanel() {
                       <button
                         type="button"
                         className="settings-service-category-add"
-                        onClick={() => openServiceModal(section.id)}
+                        disabled={isSavingService}
+                        onClick={() => addNewServiceDraft(section.id)}
                       >
                         <PlusLgIcon />
                         {t(`${TK}.addService`)}
@@ -3996,192 +4222,320 @@ export default function BookingSettingsPanel() {
                       aria-hidden={!isOpen}
                     >
                       <div className="settings-service-category-panel-inner">
-                    <div className="settings-service-category-body">
-                      <div
-                        className="settings-service-header"
-                        aria-hidden="true"
-                      >
-                        <span />
-                        <span>{t(`${TK}.serviceColumn`)}</span>
-                        <span>{t(`${TK}.priceColumn`)}</span>
-                        <span>{t(`${TK}.durationColumn`)}</span>
-                        <span />
-                      </div>
-                      {categoryServices.length === 0 ? (
-                        <div className="settings-category-empty">
-                          {t(`${TK}.categoryEmpty`)}
-                        </div>
-                      ) : (
-                        categoryServices.map((service) => {
-                          const isPending =
-                            pendingServiceActionId === service.id;
-                          const draft =
-                            inlineServiceDrafts[service.id] ??
-                            buildInlineServiceDraft(service);
-                          const isDirty = isInlineServiceDraftDirty(
-                            service,
-                            draft,
-                          );
-                          const inlineError = inlineServiceErrors[service.id];
-                          return (
-                            <div
-                              className={`settings-service-row is-compact${isDirty ? " is-editing" : ""}${highlightServiceId === service.id ? " is-highlight" : ""}`}
-                              data-service-row-id={service.id}
-                              key={`${section.id}-${service.id}`}
-                            >
-                              <div
-                                className="settings-service-edit-grid"
-                                onBlur={(event) => {
-                                  const nextTarget =
-                                    event.relatedTarget as Node | null;
-                                  if (
-                                    nextTarget &&
-                                    event.currentTarget.contains(nextTarget)
-                                  ) {
-                                    return;
-                                  }
-                                  void saveInlineService(service.id);
-                                }}
-                              >
-                                <span
-                                  className={`settings-service-visual ${service.tone}`}
-                                  aria-hidden="true"
-                                >
-                                  {service.icon}
-                                </span>
-                                <input
-                                  className="settings-service-input"
-                                  type="text"
-                                  value={draft.name}
-                                  placeholder={t(
-                                    `${TK}.placeholderServiceName`,
-                                  )}
-                                  aria-label={t(`${TK}.serviceNameAria`)}
-                                  disabled={isPending}
-                                  onChange={(event) => {
-                                    updateInlineServiceDraft(
-                                      service,
-                                      "name",
-                                      event.target.value,
-                                    );
-                                  }}
-                                />
-                                <div className="settings-service-input-wrap">
-                                  <span className="settings-service-prefix">
-                                    $
-                                  </span>
-                                  <input
-                                    className="settings-service-input price"
-                                    type="text"
-                                    inputMode="decimal"
-                                    value={draft.price}
-                                    placeholder={t(
-                                      `${TK}.placeholderServicePrice`,
-                                    )}
-                                    aria-label={t(`${TK}.servicePriceAria`)}
-                                    disabled={isPending}
-                                    onChange={(event) => {
-                                      updateInlineServiceDraft(
-                                        service,
-                                        "price",
-                                        parseInlineServicePrice(
-                                          event.target.value,
-                                        ),
-                                      );
-                                    }}
-                                  />
-                                </div>
-                                <div className="settings-service-input-wrap">
-                                  <input
-                                    className="settings-service-input duration"
-                                    type="text"
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                    value={draft.duration}
-                                    placeholder={t(
-                                      `${TK}.placeholderServiceDuration`,
-                                    )}
-                                    aria-label={t(
-                                      `${TK}.serviceDurationAria`,
-                                    )}
-                                    disabled={isPending}
-                                    onChange={(event) => {
-                                      updateInlineServiceDraft(
-                                        service,
-                                        "duration",
-                                        event.target.value.replace(/\D/g, ""),
-                                      );
-                                    }}
-                                  />
-                                  <span className="settings-service-suffix">
-                                    {t(`${TK}.durationUnit`)}
-                                  </span>
-                                </div>
-                                <div className="settings-service-row-actions">
-                                  {isDirty ? (
-                                    <button
-                                      className="settings-service-confirm"
-                                      type="button"
-                                      aria-label={t(
-                                        `${TK}.serviceConfirmUpdateAria`,
-                                      )}
-                                      disabled={isPending || isSavingService}
-                                      onMouseDown={(event) => {
-                                        event.preventDefault();
-                                      }}
-                                      onClick={() => {
-                                        void saveInlineService(service.id);
-                                      }}
-                                    >
-                                      {isPending ? (
-                                        <SpinnerIcon className="booking-inline-spinner" />
-                                      ) : (
-                                        <CheckCircleFillIcon className="settings-service-confirm-icon" />
-                                      )}
-                                    </button>
-                                  ) : null}
-                                  <button
-                                    className="settings-service-edit"
-                                    type="button"
-                                    aria-label={t(`${TK}.serviceEditAria`)}
-                                    disabled={isPending || isSavingService}
-                                    onClick={() => openEditServiceModal(service)}
-                                  >
-                                    <PencilIcon className="settings-service-edit-icon" />
-                                  </button>
-                                  <button
-                                    className="settings-service-remove"
-                                    type="button"
-                                    aria-label={t(`${TK}.removeService`)}
-                                    disabled={isPending || isSavingService}
-                                    onClick={() => {
-                                      void removeService(
-                                        service.id,
-                                        section.id,
-                                      );
-                                    }}
-                                  >
-                                    {isPending ? (
-                                      <SpinnerIcon className="booking-inline-spinner" />
-                                    ) : (
-                                      "×"
-                                    )}
-                                  </button>
-                                </div>
-                              </div>
-                              {inlineError ? (
-                                <p
-                                  className="settings-service-row-error"
-                                  role="alert"
-                                >
-                                  {inlineError}
-                                </p>
-                              ) : null}
+                        <div className="settings-service-category-body">
+                          <div
+                            className="settings-service-header"
+                            aria-hidden="true"
+                          >
+                            <span />
+                            <span>{t(`${TK}.serviceColumn`)}</span>
+                            <span>{t(`${TK}.priceColumn`)}</span>
+                            <span>{t(`${TK}.durationColumn`)}</span>
+                            <span />
+                          </div>
+                          {categoryServices.length === 0 &&
+                          categoryNewServiceDrafts.length === 0 ? (
+                            <div className="settings-category-empty">
+                              {t(`${TK}.categoryEmpty`)}
                             </div>
-                          );
-                        })
-                      )}
-                    </div>
+                          ) : (
+                            <>
+                              {categoryServices.map((service) => {
+                                const isPending =
+                                  pendingServiceActionId === service.id;
+                                const draft =
+                                  inlineServiceDrafts[service.id] ??
+                                  buildInlineServiceDraft(service);
+                                const isDirty = isInlineServiceDraftDirty(
+                                  service,
+                                  draft,
+                                );
+                                const inlineError =
+                                  inlineServiceErrors[service.id];
+                                return (
+                                  <div
+                                    className={`settings-service-row is-compact${isDirty ? " is-editing" : ""}${highlightServiceId === service.id ? " is-highlight" : ""}`}
+                                    data-service-row-id={service.id}
+                                    key={`${section.id}-${service.id}`}
+                                  >
+                                    <div className="settings-service-edit-grid">
+                                      <span
+                                        className={`settings-service-visual ${service.tone}`}
+                                        aria-hidden="true"
+                                      >
+                                        ✨
+                                      </span>
+                                      <input
+                                        className="settings-service-input"
+                                        type="text"
+                                        value={draft.name}
+                                        placeholder={t(
+                                          `${TK}.placeholderServiceName`,
+                                        )}
+                                        aria-label={t(`${TK}.serviceNameAria`)}
+                                        disabled={isPending || isSavingService}
+                                        onChange={(event) => {
+                                          updateInlineServiceDraft(
+                                            service,
+                                            "name",
+                                            event.target.value,
+                                          );
+                                        }}
+                                      />
+                                      <div className="settings-service-input-wrap settings-service-price-wrap">
+                                        <span className="settings-service-prefix">
+                                          $
+                                        </span>
+                                        <input
+                                          className="settings-service-input price"
+                                          type="text"
+                                          inputMode="decimal"
+                                          value={draft.price}
+                                          placeholder={t(
+                                            `${TK}.placeholderServicePrice`,
+                                          )}
+                                          aria-label={t(
+                                            `${TK}.servicePriceAria`,
+                                          )}
+                                          disabled={
+                                            isPending || isSavingService
+                                          }
+                                          onChange={(event) => {
+                                            updateInlineServiceDraft(
+                                              service,
+                                              "price",
+                                              parseInlineServicePrice(
+                                                event.target.value,
+                                              ),
+                                            );
+                                          }}
+                                        />
+                                      </div>
+                                      <div className="settings-service-input-wrap settings-service-duration-wrap">
+                                        <input
+                                          className="settings-service-input duration"
+                                          type="text"
+                                          inputMode="numeric"
+                                          pattern="[0-9]*"
+                                          value={draft.duration}
+                                          placeholder={t(
+                                            `${TK}.placeholderServiceDuration`,
+                                          )}
+                                          aria-label={t(
+                                            `${TK}.serviceDurationAria`,
+                                          )}
+                                          disabled={
+                                            isPending || isSavingService
+                                          }
+                                          onChange={(event) => {
+                                            updateInlineServiceDraft(
+                                              service,
+                                              "duration",
+                                              event.target.value.replace(
+                                                /\D/g,
+                                                "",
+                                              ),
+                                            );
+                                          }}
+                                        />
+                                        <span className="settings-service-suffix">
+                                          {t(`${TK}.durationUnit`)}
+                                        </span>
+                                      </div>
+                                      <div className="settings-service-row-actions">
+                                        <button
+                                          className="settings-service-edit"
+                                          type="button"
+                                          aria-label={t(
+                                            `${TK}.serviceEditAria`,
+                                          )}
+                                          disabled={
+                                            isPending || isSavingService
+                                          }
+                                          onClick={() =>
+                                            openEditServiceModal(service)
+                                          }
+                                        >
+                                          <PencilIcon className="settings-service-edit-icon" />
+                                        </button>
+                                        <button
+                                          className="settings-service-remove"
+                                          type="button"
+                                          aria-label={t(`${TK}.removeService`)}
+                                          disabled={
+                                            isPending || isSavingService
+                                          }
+                                          onClick={() => {
+                                            void removeService(
+                                              service.id,
+                                              section.id,
+                                            );
+                                          }}
+                                        >
+                                          {isPending ? (
+                                            <SpinnerIcon className="booking-inline-spinner" />
+                                          ) : (
+                                            <XLgIcon className="settings-row-remove-icon" />
+                                          )}
+                                        </button>
+                                      </div>
+                                    </div>
+                                    {inlineError ? (
+                                      <p
+                                        className="settings-service-row-error"
+                                        role="alert"
+                                      >
+                                        {inlineError}
+                                      </p>
+                                    ) : null}
+                                  </div>
+                                );
+                              })}
+                              {categoryNewServiceDrafts.map((draft) => {
+                                const draftError =
+                                  newServiceDraftErrors[draft.id];
+                                return (
+                                  <div
+                                    className="settings-service-row is-compact is-editing is-new"
+                                    data-new-service-draft-id={draft.id}
+                                    key={draft.id}
+                                  >
+                                    <div className="settings-service-edit-grid">
+                                      <span
+                                        className="settings-service-visual tone-violet"
+                                        aria-hidden="true"
+                                      >
+                                        ✨
+                                      </span>
+                                      <input
+                                        autoFocus
+                                        className="settings-service-input"
+                                        type="text"
+                                        value={draft.name}
+                                        placeholder={t(
+                                          `${TK}.placeholderServiceName`,
+                                        )}
+                                        aria-label={t(`${TK}.serviceNameAria`)}
+                                        aria-invalid={
+                                          draftError &&
+                                          (draftError.fields.length === 0 ||
+                                            draftError.fields.includes("name"))
+                                            ? "true"
+                                            : undefined
+                                        }
+                                        disabled={isSavingService}
+                                        onChange={(event) => {
+                                          updateNewServiceDraft(
+                                            draft.id,
+                                            "name",
+                                            event.target.value,
+                                          );
+                                        }}
+                                      />
+                                      <div className="settings-service-input-wrap settings-service-price-wrap">
+                                        <span className="settings-service-prefix">
+                                          $
+                                        </span>
+                                        <input
+                                          className="settings-service-input price"
+                                          type="text"
+                                          inputMode="decimal"
+                                          value={draft.price}
+                                          placeholder={t(
+                                            `${TK}.placeholderServicePrice`,
+                                          )}
+                                          aria-label={t(
+                                            `${TK}.servicePriceAria`,
+                                          )}
+                                          aria-invalid={
+                                            draftError &&
+                                            (draftError.fields.length === 0 ||
+                                              draftError.fields.includes(
+                                                "price",
+                                              ))
+                                              ? "true"
+                                              : undefined
+                                          }
+                                          disabled={isSavingService}
+                                          onChange={(event) => {
+                                            updateNewServiceDraft(
+                                              draft.id,
+                                              "price",
+                                              parseInlineServicePrice(
+                                                event.target.value,
+                                              ),
+                                            );
+                                          }}
+                                        />
+                                      </div>
+                                      <div className="settings-service-input-wrap settings-service-duration-wrap">
+                                        <input
+                                          className="settings-service-input duration"
+                                          type="text"
+                                          inputMode="numeric"
+                                          pattern="[0-9]*"
+                                          value={draft.duration}
+                                          placeholder={t(
+                                            `${TK}.placeholderServiceDuration`,
+                                          )}
+                                          aria-label={t(
+                                            `${TK}.serviceDurationAria`,
+                                          )}
+                                          aria-invalid={
+                                            draftError &&
+                                            (draftError.fields.length === 0 ||
+                                              draftError.fields.includes(
+                                                "duration",
+                                              ))
+                                              ? "true"
+                                              : undefined
+                                          }
+                                          disabled={isSavingService}
+                                          onChange={(event) => {
+                                            updateNewServiceDraft(
+                                              draft.id,
+                                              "duration",
+                                              event.target.value.replace(
+                                                /\D/g,
+                                                "",
+                                              ),
+                                            );
+                                          }}
+                                        />
+                                        <span className="settings-service-suffix">
+                                          {t(`${TK}.durationUnit`)}
+                                        </span>
+                                      </div>
+                                      <div className="settings-service-row-actions">
+                                        <button
+                                          className="settings-service-remove"
+                                          type="button"
+                                          aria-label={t(
+                                            `${TK}.serviceModalCancel`,
+                                          )}
+                                          disabled={isSavingService}
+                                          onClick={() =>
+                                            cancelNewServiceDraft(draft.id)
+                                          }
+                                        >
+                                          <XLgIcon className="settings-row-remove-icon" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                    {draftError ? (
+                                      <p
+                                        className="settings-service-row-error"
+                                        role="alert"
+                                      >
+                                        {draftError.message}
+                                      </p>
+                                    ) : null}
+                                  </div>
+                                );
+                              })}
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -4190,7 +4544,6 @@ export default function BookingSettingsPanel() {
             )}
           </div>
         </SettingsCard>
-
       </div>
 
       <div className="settings-save-bar">
@@ -4210,7 +4563,7 @@ export default function BookingSettingsPanel() {
           }
           onClick={handleSave}
         >
-          {updateConfigMutation.isPending ? (
+          {updateConfigMutation.isPending || isSavingService ? (
             <SpinnerIcon className="booking-inline-spinner" />
           ) : null}
           {t(`${TK}.saveButton`)}
@@ -4276,7 +4629,9 @@ export default function BookingSettingsPanel() {
                       serviceModalCategoriesError ? " has-error" : ""
                     }`}
                     role="group"
-                    aria-invalid={serviceModalCategoriesError ? "true" : undefined}
+                    aria-invalid={
+                      serviceModalCategoriesError ? "true" : undefined
+                    }
                     aria-describedby={
                       serviceModalCategoriesError
                         ? "settings-service-modal-categories-error"
@@ -4355,7 +4710,10 @@ export default function BookingSettingsPanel() {
                     {t(`${TK}.serviceModalPrice`)}
                   </span>
                   <div className="settings-service-input-wrap settings-service-modal-input-wrap">
-                    <span className="settings-service-prefix" aria-hidden="true">
+                    <span
+                      className="settings-service-prefix"
+                      aria-hidden="true"
+                    >
                       $
                     </span>
                     <input
@@ -4400,7 +4758,10 @@ export default function BookingSettingsPanel() {
                         }))
                       }
                     />
-                    <span className="settings-service-suffix" aria-hidden="true">
+                    <span
+                      className="settings-service-suffix"
+                      aria-hidden="true"
+                    >
                       min
                     </span>
                   </div>
@@ -4451,7 +4812,7 @@ export default function BookingSettingsPanel() {
       {categoryModalOpen ? (
         <div className="settings-service-modal" role="presentation">
           <div
-            className="settings-service-dialog"
+            className="settings-service-dialog settings-category-dialog"
             role="dialog"
             aria-modal="true"
             aria-labelledby="settings-category-modal-title"
@@ -4477,7 +4838,7 @@ export default function BookingSettingsPanel() {
                 <XLgIcon />
               </button>
             </div>
-            <div className="settings-service-modal-body">
+            <div className="settings-service-modal-body settings-category-modal-body">
               <div className="settings-category-manager">
                 <div className="settings-category-manager-head">
                   <div>
@@ -4507,141 +4868,75 @@ export default function BookingSettingsPanel() {
                   ) : (
                     categoryDrafts.map((draft, index) => {
                       const serviceCount = countServicesForCategory(draft);
-                      const isActiveRow = Boolean(draft.isNew || draft.isEditing);
-                      const canEdit = !draft.isSystem && !draft.isNew;
                       return (
                         <div
-                          className={`settings-category-row${draft.isNew ? " is-new" : ""}${draft.isEditing ? " is-editing" : ""}`}
+                          className={`settings-category-row${draft.isNew ? " is-new" : ""}`}
                           key={`${draft.id || "new"}-${index}`}
                         >
                           <div className="settings-category-row-main">
                             <FolderTreeIcon className="settings-category-row-icon" />
                             <div className="settings-category-row-label">
                               <input
-                                ref={isActiveRow ? categoryInputRef : undefined}
+                                ref={draft.isNew ? categoryInputRef : undefined}
                                 className="settings-category-name-input"
                                 type="text"
                                 value={draft.name}
-                                size={
-                                  draft.isNew || draft.isEditing
-                                    ? undefined
-                                    : Math.max(draft.name.length, 1)
-                                }
-                                disabled={
-                                  draft.isSystem ||
-                                  (!draft.isNew && !draft.isEditing) ||
-                                  isSavingCategories
-                                }
+                                disabled={draft.isSystem || isSavingCategories}
                                 placeholder={
                                   draft.isNew
                                     ? t(`${TK}.categoryNamePlaceholder`)
                                     : undefined
                                 }
                                 aria-label={t(`${TK}.categoryModalCategories`)}
+                                aria-invalid={
+                                  categoryModalErrorIndex === index
+                                    ? "true"
+                                    : undefined
+                                }
                                 onChange={(event) =>
                                   updateCategoryDraft(index, event.target.value)
                                 }
-                                onKeyDown={(event) => {
-                                  if (event.key === "Enter") {
-                                    event.preventDefault();
-                                    if (draft.isNew) {
-                                      void confirmCreateCategory(index);
-                                    } else if (draft.isEditing) {
-                                      void confirmRenameCategory(index);
-                                    }
-                                  }
-                                  if (event.key === "Escape" && isActiveRow) {
-                                    event.preventDefault();
-                                    cancelCategoryRow(index);
-                                  }
-                                }}
                               />
-                              <span
-                                className="settings-category-count"
-                                title={formatCategoryServiceCount(serviceCount)}
-                              >
-                                {formatCategoryServiceCount(serviceCount)}
-                              </span>
+                              {!draft.isNew ? (
+                                <span
+                                  className="settings-category-count"
+                                  title={formatCategoryServiceCount(
+                                    serviceCount,
+                                  )}
+                                >
+                                  {formatCategoryServiceCount(serviceCount)}
+                                </span>
+                              ) : null}
                             </div>
                           </div>
                           <div className="settings-category-row-actions">
-                            {draft.isNew || draft.isEditing ? (
-                              <>
-                                <button
-                                  className="settings-category-row-action is-confirm"
-                                  type="button"
-                                  aria-label={
-                                    draft.isNew
-                                      ? t(`${TK}.categoryConfirmAddAria`)
-                                      : t(`${TK}.categoryConfirmEditAria`)
-                                  }
-                                  disabled={isSavingCategories}
-                                  onClick={() => {
-                                    if (draft.isNew) {
-                                      void confirmCreateCategory(index);
-                                    } else {
-                                      void confirmRenameCategory(index);
-                                    }
-                                  }}
-                                >
-                                  {isSavingCategories ? (
-                                    <SpinnerIcon className="settings-category-row-action-icon" />
-                                  ) : (
-                                    <CheckCircleFillIcon className="settings-category-row-action-icon is-confirm-icon" />
-                                  )}
-                                </button>
-                                <button
-                                  className="settings-category-row-action"
-                                  type="button"
-                                  aria-label={t(`${TK}.categoryCancelAria`)}
-                                  disabled={isSavingCategories}
-                                  onClick={() => cancelCategoryRow(index)}
-                                >
-                                  <XLgIcon className="settings-category-row-action-icon" />
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                {draft.id ? (
-                                  <button
-                                    className="settings-category-row-add-service"
-                                    type="button"
-                                    disabled={isSavingCategories}
-                                    aria-label={t(`${TK}.addService`)}
-                                    onClick={() => {
-                                      openServiceModalFromCategory(draft.id);
-                                    }}
-                                  >
-                                    <PlusLgIcon />
-                                    {t(`${TK}.addService`)}
-                                  </button>
-                                ) : null}
-                                {canEdit ? (
-                                  <button
-                                    className="settings-category-row-action"
-                                    type="button"
-                                    aria-label={t(`${TK}.categoryEditAria`)}
-                                    disabled={isSavingCategories}
-                                    onClick={() => startEditCategory(index)}
-                                  >
-                                    <PencilIcon className="settings-category-row-action-icon" />
-                                  </button>
-                                ) : null}
-                                {!draft.isSystem ? (
-                                  <button
-                                    className="settings-category-row-action is-danger"
-                                    type="button"
-                                    aria-label={t(`${TK}.categoryModalRemoveAria`)}
-                                    disabled={isSavingCategories}
-                                    onClick={() => {
-                                      void deleteCategoryRow(index);
-                                    }}
-                                  >
-                                    <Trash2Icon className="settings-category-row-action-icon" />
-                                  </button>
-                                ) : null}
-                              </>
-                            )}
+                            {draft.id ? (
+                              <button
+                                className="settings-category-row-add-service"
+                                type="button"
+                                disabled={isSavingCategories}
+                                aria-label={t(`${TK}.addService`)}
+                                onClick={() => {
+                                  addNewServiceDraftFromCategoryModal(draft.id);
+                                }}
+                              >
+                                <PlusLgIcon />
+                                {t(`${TK}.addService`)}
+                              </button>
+                            ) : null}
+                            {!draft.isSystem ? (
+                              <button
+                                className="settings-category-row-action is-danger"
+                                type="button"
+                                aria-label={t(`${TK}.categoryModalRemoveAria`)}
+                                disabled={isSavingCategories}
+                                onClick={() => {
+                                  void deleteCategoryRow(index);
+                                }}
+                              >
+                                <XLgIcon className="settings-row-remove-icon" />
+                              </button>
+                            ) : null}
                           </div>
                         </div>
                       );
@@ -4657,12 +4952,27 @@ export default function BookingSettingsPanel() {
             </div>
             <div className="settings-service-modal-actions">
               <button
-                className="booking-primary-button"
+                className="booking-secondary-button"
                 type="button"
                 disabled={isSavingCategories}
                 onClick={() => setCategoryModalOpen(false)}
               >
-                {t(`${TK}.categoryModalClose`)}
+                {t(`${TK}.categoryCancelAria`)}
+              </button>
+              <button
+                className="booking-primary-button"
+                type="button"
+                disabled={isSavingCategories}
+                onClick={() => {
+                  void saveCategoryModal();
+                }}
+              >
+                {isSavingCategories ? (
+                  <SpinnerIcon className="booking-inline-spinner" />
+                ) : (
+                  <CheckCircleFillIcon className="settings-action-icon" />
+                )}{" "}
+                {t(`${TK}.categoryModalSave`)}
               </button>
             </div>
           </div>

@@ -10,6 +10,7 @@ import IconButton from '../../../../ui/IconButton'
 import type { PosCategoryApiDto, PosServiceApiDto, PosServiceStatus, PosTagApiDto } from '../../../../../types/repositories'
 import type { PosServiceInput } from '../../../../../data/repositories/posServices'
 import ServiceAddOnsSection from '../ServiceAddOnsSection'
+import { SHOW_SERVICE_ADD_ONS } from '../../../../../constants/posFeatureVisibility'
 
 export default function CreateEditPosServiceModal({
   open,
@@ -292,7 +293,7 @@ export default function CreateEditPosServiceModal({
 
           {/* Edit mode only: an add-on needs a saved service to hang off, and each row here persists
               on its own endpoint rather than through this form's Save. */}
-          {isEditMode && service ? (
+          {SHOW_SERVICE_ADD_ONS && isEditMode && service ? (
             <ServiceAddOnsSection serviceId={service.id} />
           ) : null}
 

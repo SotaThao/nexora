@@ -3,7 +3,12 @@ import { DayPilotCalendar } from '@daypilot/daypilot-lite-react'
 import type { DayPilot } from '@daypilot/daypilot-lite-react'
 import {
   BOOKING_CALENDAR_DAYPILOT_OPTIONS,
+  BOOKING_CALENDAR_BUSINESS_BEGINS_HOUR,
+  BOOKING_CALENDAR_BUSINESS_ENDS_HOUR,
+  BOOKING_CALENDAR_CELL_DURATION_MINUTES,
+  BOOKING_CALENDAR_CELL_HEIGHT_PX,
   BOOKING_CALENDAR_DEFAULT_SCROLL_HOUR,
+  BOOKING_CALENDAR_HEADER_HEIGHT_PX,
   BOOKING_CALENDAR_UNASSIGNED_TECH,
 } from './bookingTodayConstants'
 import {
@@ -16,6 +21,7 @@ import {
   buildBookingCalendarEvents,
   formatBookingCalendarNavLabel,
   shiftLocalDateIso,
+  type BookingCalendarColumn,
   type BookingCalendarSource,
 } from './bookingCalendarUtils'
 import { pad2 } from './bookingHubFormatters'
@@ -48,6 +54,9 @@ type BookingTeamCalendarProps = {
   prevAriaLabel: string
   nextAriaLabel: string
   unassignedLabel: string
+  columnsOverride?: ReadonlyArray<BookingCalendarColumn>
+  hideBuiltInHeader?: boolean
+  showHalfHourLabels?: boolean
 }
 
 /** DayPilot cell times are wall-clock in ticks — use sortable string like the HTML mock. */
@@ -82,12 +91,17 @@ export default function BookingTeamCalendar({
   prevAriaLabel,
   nextAriaLabel,
   unassignedLabel,
+  columnsOverride,
+  hideBuiltInHeader = false,
+  showHalfHourLabels = false,
 }: BookingTeamCalendarProps) {
   const calendarRef = useRef<DayPilot.Calendar | null>(null)
 
   const columns = useMemo(
-    () => buildBookingCalendarColumns(bookings, unassignedLabel, staffNames),
-    [bookings, unassignedLabel, staffNames],
+    () => columnsOverride
+      ? [...columnsOverride]
+      : buildBookingCalendarColumns(bookings, unassignedLabel, staffNames),
+    [bookings, columnsOverride, unassignedLabel, staffNames],
   )
 
   const events = useMemo(
@@ -105,48 +119,72 @@ export default function BookingTeamCalendar({
   return (
     <div className="booking-calendar-panel">
       <div className="booking-team-calendar">
-        <div className="booking-calendar-head">
-          <div>
-            <div className="booking-calendar-title">{title}</div>
-            <div className="booking-calendar-subtitle">{subtitle}</div>
-          </div>
-          <div className="booking-calendar-head-actions">
-            <div className="booking-calendar-nav" aria-label={title}>
-              <button
-                className="booking-mini-button"
-                type="button"
-                aria-label={prevAriaLabel}
-                onClick={() => onCalendarDateChange(shiftLocalDateIso(calendarDate, -1))}
-              >
-                <ChevronLeftIcon />
-              </button>
-              <span className="booking-calendar-nav-label">{dateLabel}</span>
-              <button
-                className="booking-mini-button"
-                type="button"
-                onClick={() => onCalendarDateChange(todayIso)}
-              >
-                {todayLabel}
-              </button>
-              <button
-                className="booking-mini-button"
-                type="button"
-                aria-label={nextAriaLabel}
-                onClick={() => onCalendarDateChange(shiftLocalDateIso(calendarDate, 1))}
-              >
-                <ChevronRightIcon />
-              </button>
+        {!hideBuiltInHeader ? (
+          <div className="booking-calendar-head">
+            <div>
+              <div className="booking-calendar-title">{title}</div>
+              <div className="booking-calendar-subtitle">{subtitle}</div>
             </div>
-            {onAddClick && addLabel ? (
-              <button className="booking-primary-button" type="button" onClick={onAddClick}>
-                <PlusIcon />
-                {addLabel}
-              </button>
-            ) : null}
+            <div className="booking-calendar-head-actions">
+              <div className="booking-calendar-nav" aria-label={title}>
+                <button
+                  className="booking-mini-button"
+                  type="button"
+                  aria-label={prevAriaLabel}
+                  onClick={() => onCalendarDateChange(shiftLocalDateIso(calendarDate, -1))}
+                >
+                  <ChevronLeftIcon />
+                </button>
+                <span className="booking-calendar-nav-label">{dateLabel}</span>
+                <button
+                  className="booking-mini-button"
+                  type="button"
+                  onClick={() => onCalendarDateChange(todayIso)}
+                >
+                  {todayLabel}
+                </button>
+                <button
+                  className="booking-mini-button"
+                  type="button"
+                  aria-label={nextAriaLabel}
+                  onClick={() => onCalendarDateChange(shiftLocalDateIso(calendarDate, 1))}
+                >
+                  <ChevronRightIcon />
+                </button>
+              </div>
+              {onAddClick && addLabel ? (
+                <button className="booking-primary-button" type="button" onClick={onAddClick}>
+                  <PlusIcon />
+                  {addLabel}
+                </button>
+              ) : null}
+            </div>
           </div>
-        </div>
+        ) : null}
         <div className="booking-calendar-scroll">
           <div className="booking-team-calendar-host" aria-label={title}>
+            {showHalfHourLabels ? (
+              <div className="booking-calendar-half-hour-labels" aria-hidden="true">
+                {Array.from(
+                  { length: BOOKING_CALENDAR_BUSINESS_ENDS_HOUR - BOOKING_CALENDAR_BUSINESS_BEGINS_HOUR },
+                  (_, index) => {
+                    const cellsPerHour = 60 / BOOKING_CALENDAR_CELL_DURATION_MINUTES
+                    const top = BOOKING_CALENDAR_HEADER_HEIGHT_PX
+                      + index * cellsPerHour * BOOKING_CALENDAR_CELL_HEIGHT_PX
+                      + (cellsPerHour / 2) * BOOKING_CALENDAR_CELL_HEIGHT_PX
+                    return (
+                      <span
+                        key={BOOKING_CALENDAR_BUSINESS_BEGINS_HOUR + index}
+                        className="booking-calendar-half-hour-label"
+                        style={{ top }}
+                      >
+                        :30
+                      </span>
+                    )
+                  },
+                )}
+              </div>
+            ) : null}
             <DayPilotCalendar
               {...BOOKING_CALENDAR_DAYPILOT_OPTIONS}
               timeRangeSelectedHandling={onSlotSelect ? 'Enabled' : 'Disabled'}

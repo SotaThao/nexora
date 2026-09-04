@@ -5,6 +5,10 @@
 import httpClient from '../../lib/httpClient'
 import { isApiError } from '../../types/domain'
 import { formatJoinedDate } from '../../utils/localDate'
+import {
+  REVIEWS_COLLECT_MAX_PAGES,
+  REVIEWS_COLLECT_PAGE_SIZE,
+} from '../../constants/pagination'
 import type { ReviewRecord } from '../../types/domain'
 import type {
   DashboardReviewApiDto,
@@ -141,6 +145,42 @@ export function createReviewsRepository(client: HttpClient = httpClient) {
     async list(query: DashboardReviewsQuery = {}): Promise<ReviewRecord[]> {
       const page = await this.listPaged(query)
       return page.items
+    },
+
+    /**
+     * Walk review pages until exhausted (or max pages).
+     * Used when UI source/star/staff filters need a full list to paginate
+     * client-side (GET /reviews has no those query params in Swagger).
+     */
+    async listCollected(
+      query: Omit<DashboardReviewsQuery, 'pageNumber' | 'pageSize'> = {},
+    ): Promise<DashboardReviewsPage> {
+      const items: ReviewRecord[] = []
+      let pageNumber = 1
+
+      const toCollectedPage = (): DashboardReviewsPage => ({
+        items,
+        pageNumber: 1,
+        totalPages: 1,
+        totalCount: items.length,
+        hasPreviousPage: false,
+        hasNextPage: false,
+      })
+
+      while (pageNumber <= REVIEWS_COLLECT_MAX_PAGES) {
+        const page = await this.listPaged({
+          ...query,
+          pageNumber,
+          pageSize: REVIEWS_COLLECT_PAGE_SIZE,
+        })
+        items.push(...page.items)
+        if (!page.hasNextPage || page.items.length === 0) {
+          return toCollectedPage()
+        }
+        pageNumber += 1
+      }
+
+      return toCollectedPage()
     },
 
     async resolve(id: string, dto: LooseObject = {}): Promise<LooseObject> {

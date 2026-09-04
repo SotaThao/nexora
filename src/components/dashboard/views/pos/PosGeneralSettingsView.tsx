@@ -15,6 +15,7 @@ import ToggleSwitch from '../../../ui/ToggleSwitch'
 import useBusinessHoursForm from './hooks/useBusinessHoursForm'
 import PosBookingSettingsPanel from './PosBookingSettingsPanel'
 import PosCheckInSettingsPanel from './PosCheckInSettingsPanel'
+import PosOrderSettingsPanel from './PosOrderSettingsPanel'
 import HolidayClosuresCard from '../HolidayClosuresCard'
 import { formatPosClockTime } from './posDateTime'
 import { TWELVE_HOUR_INPUT_LANG } from '../../../../constants/timeFormat'
@@ -209,6 +210,8 @@ export default function PosGeneralSettingsView({
         <HolidayClosuresCard />
 
         <PosCheckInSettingsPanel businessId={businessId} />
+
+        <PosOrderSettingsPanel businessId={businessId} />
 
         <PosBookingSettingsPanel businessId={businessId} businessSlug={businessSlug} />
       </div>
