@@ -1,5 +1,28 @@
-// The one piece of public-check-in logic that is not the shared module's: reading the salon's
-// wall clock out of a booking instant.
+// The pieces of public-check-in logic that are not the shared module's: wall-clock labels,
+// and the path back to the keypad from the status page (which is addressed by receipt token
+// alone, so it does not know the salon slug on its own).
+const LAST_SLUG_STORAGE_KEY = 'nexora.publicCheckIn.businessSlug'
+
+export function rememberPublicCheckInSlug(businessSlug: string): void {
+  try {
+    sessionStorage.setItem(LAST_SLUG_STORAGE_KEY, businessSlug)
+  } catch {
+    // Private mode can throw; the return path then relies on location.state only.
+  }
+}
+
+export function readPublicCheckInSlug(): string | null {
+  try {
+    return sessionStorage.getItem(LAST_SLUG_STORAGE_KEY)
+  } catch {
+    return null
+  }
+}
+
+export function publicCheckInPagePath(businessSlug: string): string {
+  return `/checkin/${businessSlug}`
+}
+
 function pad(value: number): string {
   return String(value).padStart(2, '0')
 }
