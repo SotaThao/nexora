@@ -2,7 +2,7 @@
 // No slug in the route: the token identifies the order on its own (§6). Polls on the same
 // 15s cadence the front desk already uses — there is no realtime channel in this pass (§8.4).
 import { useParams } from 'react-router-dom'
-import { CheckCircle2, Loader2, RefreshCw, Scissors, Users, XCircle } from 'lucide-react'
+import { CheckCircle2, Loader2, RefreshCw, Sparkles, Users, XCircle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { PosOrderStatus } from '../../../constants/posOrderStatus'
 import { usePublicCheckInStatus } from '../../../data/hooks/usePublicCheckIn'
@@ -64,7 +64,7 @@ export default function PublicCheckInStatusPage() {
         {isInService ? (
           <div className="space-y-2">
             <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-brandCyan">
-              <Scissors className="h-6 w-6" />
+              <Sparkles className="h-6 w-6" />
             </span>
             <p className="text-xl font-black text-white">{t('public.checkIn.statusInServiceTitle')}</p>
             <p className="text-sm text-white/60">{t('public.checkIn.statusInServiceDesc')}</p>

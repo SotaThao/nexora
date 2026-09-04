@@ -7,6 +7,8 @@ interface ImageFileInputProps extends React.HTMLAttributes<HTMLElement> {
   disabled?: boolean
   source?: string
   capture?: 'environment' | 'user' | boolean
+  accept?: string
+  inputAriaLabel?: string
   className?: string
   inputClassName?: string
   children?: React.ReactNode
@@ -20,6 +22,8 @@ export default function ImageFileInput({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   source = 'photos',
   capture,
+  accept = 'image/*',
+  inputAriaLabel,
   className = '',
   inputClassName = 'sr-only',
   children = null,
@@ -28,18 +32,15 @@ export default function ImageFileInput({
 }: ImageFileInputProps) {
   const inputRef = useRef(null)
 
-  const emitSelection = (selection) => {
-    if (!selection) return
-    onPick?.(selection.dataUrl)
-    onPickFile?.(selection.file)
-  }
-
   const handleWebChange = async (event) => {
     const file = event.target.files?.[0]
     if (!file) return
 
-    const dataUrl = await readImageFileAsDataUrl(file)
-    emitSelection({ dataUrl, file })
+    onPickFile?.(file)
+    if (onPick) {
+      const dataUrl = await readImageFileAsDataUrl(file)
+      onPick(dataUrl)
+    }
     event.target.value = ''
   }
 
@@ -77,7 +78,8 @@ export default function ImageFileInput({
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept={accept}
+        aria-label={inputAriaLabel}
         capture={capture as any}
         className={inputClassName}
         onChange={handleWebChange}
