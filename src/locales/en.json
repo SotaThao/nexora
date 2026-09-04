@@ -718,6 +718,7 @@
       "pos_devices": "Check-In Devices",
       "pos_public_checkin": "Public Check-In",
       "pos_board": "Front Desk",
+      "pos_report": "Report",
       "settings": "Settings",
       "business_setting": "Setting",
       "scan": "Scan",
@@ -3357,6 +3358,7 @@
               "Staff": "Staff",
               "RolesPermissions": "Roles & Permissions",
               "Devices": "Check-In Devices",
+              "Reports": "Reports",
               "Operations": "Operations"
             }
           },
@@ -4302,6 +4304,93 @@
               "dailyHint": "Pick one date or use the arrows for the previous/next day.",
               "weeklyHint": "Pick any date; the report automatically uses its Monday-Sunday week.",
               "monthlyHint": "Pick one month or use the arrows for the previous/next month."
+            }
+          },
+          "reports": {
+            "title": "Report",
+            "description": "Review technician performance and store income.",
+            "tabs": {
+              "ariaLabel": "POS reports",
+              "technician": "Technician report",
+              "storeIncome": "Store income report"
+            },
+            "storeIncome": {
+              "title": "Store Income",
+              "actionsLabel": "Report actions",
+              "print": "Print / PDF",
+              "day": "Day",
+              "week": "Week",
+              "year": "Year",
+              "range": "Range",
+              "dateRangeSeparator": "to",
+              "today": "Today",
+              "thisWeek": "This Week",
+              "thisYear": "This Year",
+              "dayReport": "Day report",
+              "reportDate": "Report date",
+              "reportWeek": "Report week",
+              "reportYear": "Report year",
+              "previousPeriod": "Previous period",
+              "nextPeriod": "Next period",
+              "fromDate": "From date",
+              "toDate": "To date",
+              "applyRange": "Apply range",
+              "rangeError": "The From date must be on or before the To date.",
+              "rangeTooLong": "The selected range cannot exceed 366 days.",
+              "loadError": "Store income could not be loaded.",
+              "retry": "Try again",
+              "exportError": "The PDF could not be downloaded. Please try again.",
+              "periods": {
+                "ariaLabel": "Choose reporting period"
+              },
+              "paymentBreakdown": "Payment breakdown",
+              "payment": {
+                "card": "Card",
+                "cash": "Cash",
+                "giftCard": "Gift Card",
+                "zelle": "Zelle",
+                "cashApp": "Cash App",
+                "venmo": "Venmo",
+                "vlinkPay": "VLINKPAY Wallet",
+                "appleCash": "Apple Cash",
+                "payPal": "PayPal",
+                "splitPay": "Split Pay"
+              },
+              "details": "Details",
+              "servicesSubtotal": "Services subtotal",
+              "serviceDiscounts": "Service discounts",
+              "productsSubtotal": "Products subtotal",
+              "salesTax": "Sales tax",
+              "tips": "Tips",
+              "supplyFee": "Supply Fee",
+              "merchantFee": "Merchant Fee",
+              "returnTransactions": "Return Transactions",
+              "totalCollected": "Total collected",
+              "dailyCollection": "Daily collection",
+              "monthlyCollection": "Monthly collection",
+              "table": {
+                "ariaLabel": "Income report table",
+                "date": "Date",
+                "month": "Month",
+                "tipsIncluded": "Tips (included)",
+                "totalCollected": "Total Collected",
+                "futureMonth": "Future month",
+                "transactions": "{{count}} transactions",
+                "periodTotal": "Period total"
+              },
+              "email": {
+                "action": "Email",
+                "title": "Email report",
+                "description": "Send a PDF snapshot of the report currently shown.",
+                "close": "Close email dialog",
+                "recipient": "Recipient email",
+                "invalid": "Enter a valid email address.",
+                "attachment": "PDF attachment",
+                "cancel": "Cancel",
+                "send": "Send report",
+                "sent": "Report snapshot sent to {{email}}.",
+                "error": "The report could not be emailed. Please try again."
+              }
             }
           },
           "OrderDiscountSection": {

@@ -331,6 +331,7 @@ export default function PosFrontDeskView({
   businessPhone,
   businessSlug,
   businessTimeZone,
+  includeTechnicianReportTab = false,
 }: {
   businessId: string
   // Shown on Check-in Step 1's welcome message — optional since the Staff dashboard route
@@ -341,6 +342,7 @@ export default function PosFrontDeskView({
   businessPhone?: string
   businessSlug?: string
   businessTimeZone?: string | null
+  includeTechnicianReportTab?: boolean
 }) {
   const { t, currentLanguage } = useTranslation()
   const { showToast, showConfirm } = useNotification()
@@ -366,6 +368,9 @@ export default function PosFrontDeskView({
     : businessTimeZone?.trim()
       || detectTimeZoneFromAddressText(receiptBusinessAddress ?? '')
       || DEFAULT_SETTINGS_TIMEZONE
+  const availableTabs = includeTechnicianReportTab
+    ? [...POS_FRONT_DESK_TABS, PosFrontDeskTab.Report]
+    : POS_FRONT_DESK_TABS
 
   // Deep-link support for the Owner Dashboard's "Total Bookings" KPI card (Ticket 10),
   // which navigates here with ?tab=booking to land straight on the Bookings tab. Also
@@ -374,7 +379,7 @@ export default function PosFrontDeskView({
   const [searchParams, setSearchParams] = useSearchParams()
   const tabFromUrl = searchParams.get(POS_FRONT_DESK_TAB_PARAM) as PosFrontDeskTab | null
   const initialTab: PosFrontDeskTab =
-    tabFromUrl && POS_FRONT_DESK_TABS.includes(tabFromUrl) ? tabFromUrl : DEFAULT_POS_FRONT_DESK_TAB
+    tabFromUrl && availableTabs.includes(tabFromUrl) ? tabFromUrl : DEFAULT_POS_FRONT_DESK_TAB
   const [activeTab, setActiveTabState] = useState<PosFrontDeskTab>(initialTab)
   const previousActiveTabRef = useRef<PosFrontDeskTab | null>(null)
   // Each Front Desk data set is loaded only while its tab is open. Leaving a tab disables its
@@ -693,7 +698,7 @@ export default function PosFrontDeskView({
   }
 
   // Tab id doubles as its own i18n suffix (tabs.<id>) and as the ?tab= value, so the bar is
-  // derived from POS_FRONT_DESK_TABS rather than re-listing all seven by hand.
+  // derived from the route-specific tab list rather than duplicating it by hand.
   // All counts every guest on the books today, tickets plus the appointments that have not
   // arrived yet, so the number reads as the floor's whole workload — and its list shows them all
   // too (see notArrivedRows below).
@@ -707,7 +712,7 @@ export default function PosFrontDeskView({
   // Report exposes every technician's earnings and is gated on its own permission, so a front-desk
   // account without it never sees the tab. access is undefined while loading — keep the tab hidden
   // until the answer arrives rather than flashing it and then removing it.
-  const visibleTabs = POS_FRONT_DESK_TABS.filter(
+  const visibleTabs = availableTabs.filter(
     (tab) => tab !== PosFrontDeskTab.Report || access?.canViewReport === true,
   )
 
@@ -1342,7 +1347,7 @@ export default function PosFrontDeskView({
 
       {/* Tab bar uses the shared nexora* color tokens — see tailwind.config.js. */}
       <ScrollableTabStrip>
-        {POS_FRONT_DESK_TABS.map((tab) => (
+        {visibleTabs.map((tab) => (
           <button
             key={tab}
             type="button"
@@ -1788,7 +1793,7 @@ export default function PosFrontDeskView({
 
       {activeTab === PosFrontDeskTab.Customer && <CustomerTab businessId={businessId} />}
 
-      {activeTab === PosFrontDeskTab.Report && (
+      {activeTab === PosFrontDeskTab.Report && access?.canViewReport === true && (
         <PosReportPanel
           businessId={businessId}
           businessTimeZone={reportBusinessTimeZone}
