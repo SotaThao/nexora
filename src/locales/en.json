@@ -140,8 +140,7 @@
       "complete_service": "Complete",
       "complete_service_title": "Complete service",
       "complete_ready_title": "Ready to wrap up?",
-      "complete_ready_body": "Add a note, then confirm to close this ticket like checkout (Cash).",
-      "complete_closes_ticket": "This closes the whole visit for every technician on it.",
+      "complete_ready_body": "Add any notes the salon should remember after this visit.",
       "suggested_notes": "Suggested notes",
       "additional_note": "Additional note",
       "optional": "Optional",
@@ -153,7 +152,7 @@
       "suggestion_follow_up": "Follow-up recommended",
       "suggestion_sensitive_skin": "Used sensitive-skin products",
       "start_service_success": "Service started.",
-      "complete_service_success": "Ticket completed.",
+      "complete_service_success": "Service marked complete.",
       "notes_important": "Important",
       "customer_notes": "Customer notes"
     },

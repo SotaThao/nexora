@@ -22,14 +22,16 @@ import {
   WORK_ORDER_NUMBER_PREFIX,
   WORK_ORDER_PAD_CHAR,
   WORK_ORDER_SERVICE_NAME_SEPARATOR,
+  WORK_ORDER_STARTABLE_STATUSES,
   WORK_ORDER_STATION_DIGITS,
   WORK_ORDER_VIETNAMESE_PREFIX,
   WORK_ORDER_WEEKDAY_COUNT,
   WORK_ORDER_WEEKDAY_SUNDAY,
-  WORK_ORDER_TICKET_FILTER,
+  staffWorkOrdersPath,
+  type WorkOrderDetail,
   type WorkOrderSalon,
-  type WorkOrderTicketFilter,
 } from './constants'
+import type { PosOrderStatus } from '../../../constants/posOrderStatus'
 
 export function isWorkOrderVietnamese(language: string): boolean {
   return language.toLowerCase().startsWith(WORK_ORDER_VIETNAMESE_PREFIX)
@@ -68,6 +70,7 @@ export function toWorkOrderSalons(links: StaffBusinessLink[] | undefined): WorkO
       id,
       name: link.businessName?.trim() ?? '',
       address: formatSalonAddress(link),
+      timeZone: link.timeZone,
     }]
   })
 }
@@ -125,6 +128,12 @@ export function formatWorkOrderStationNumber(stationNumber: number): string {
   return String(stationNumber).padStart(WORK_ORDER_STATION_DIGITS, WORK_ORDER_PAD_CHAR)
 }
 
+export function formatWorkOrderStationValue(stationNumber: number | null | undefined): string {
+  return stationNumber != null
+    ? formatWorkOrderStationNumber(stationNumber)
+    : WORK_ORDER_EMPTY_PLACEHOLDER
+}
+
 export function workOrderStationLabel(stationNumber: number | null | undefined): string | null {
   if (typeof stationNumber !== 'number' || !Number.isFinite(stationNumber) || stationNumber <= 0) {
     return null
@@ -171,6 +180,23 @@ export function workOrderTextOrPlaceholder(value: string | null | undefined): st
   return text || WORK_ORDER_EMPTY_PLACEHOLDER
 }
 
+const WORK_ORDER_DATE_ISO = /^(\d{4}-\d{2}-\d{2})/
+
+export function workOrderScheduledDateIso(scheduledAt: string | null | undefined): string | null {
+  const match = WORK_ORDER_DATE_ISO.exec(scheduledAt?.trim() ?? '')
+  return match?.[1] ?? null
+}
+
+/** Walk-ins (no scheduledAt) can start anytime; bookings wait until the salon appointment day. */
+export function isWorkOrderStartDateReached(
+  scheduledAt: string | null | undefined,
+  todayIso: string,
+): boolean {
+  const scheduledDate = workOrderScheduledDateIso(scheduledAt)
+  if (!scheduledDate) return true
+  return scheduledDate <= todayIso
+}
+
 const WORK_ORDER_MONEY_FORMATTER = new Intl.NumberFormat(WORK_ORDER_MONEY.locale, {
   style: 'currency',
   currency: WORK_ORDER_MONEY.currency,
@@ -186,14 +212,15 @@ export function formatWorkOrderDurationMinutes(minutes: number, translate: TFunc
   return translate(WORK_ORDERS_I18N.durationMinutes, { minutes })
 }
 
-export function workOrderViewportOverlayStyle(
-  viewport: { height: number; offsetTop: number } | null,
-): { height: string; transform: string } | undefined {
-  if (!viewport) return undefined
-  return {
-    height: `${viewport.height}px`,
-    transform: `translateY(${viewport.offsetTop}px)`,
-  }
+export function isWorkOrderStartActionVisible(status: PosOrderStatus): boolean {
+  return WORK_ORDER_STARTABLE_STATUSES.includes(status)
+}
+
+export function canStartWorkOrderNow(
+  ticket: Pick<WorkOrderDetail, 'canStartService' | 'scheduledAt'>,
+  todayIso: string,
+): boolean {
+  return ticket.canStartService && isWorkOrderStartDateReached(ticket.scheduledAt, todayIso)
 }
 
 export function toggleWorkOrderSuggestion(selected: string[], suggestion: string): string[] {
@@ -287,29 +314,17 @@ export function joinWorkOrderServiceNames(names: string[]): string {
   return joinWorkOrderLabels(names, WORK_ORDER_SERVICE_NAME_SEPARATOR)
 }
 
+export function joinWorkOrderTechnicianNames(names: string[]): string {
+  return joinWorkOrderLabels(names, WORK_ORDER_INLINE_LIST_SEPARATOR)
+}
+
 export function workOrderAssignedTechnicianLabel(
   technicianName: string | null | undefined,
   translate: TFunction,
 ): string {
   const name = technicianName?.trim()
-  return name
-    ? translate(WORK_ORDERS_I18N.technicianNamed, { name })
-    : translate(WORK_ORDERS_I18N.unassigned)
-}
-
-export function parseWorkOrderListDate(value: string | null | undefined, fallbackIso: string): string {
-  const iso = value?.trim() ?? ''
-  return /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso : fallbackIso
-}
-
-export function listFilterAfterWorkOrderStart(current: WorkOrderTicketFilter): WorkOrderTicketFilter {
-  if (current === WORK_ORDER_TICKET_FILTER.All) return current
-  return WORK_ORDER_TICKET_FILTER.InService
-}
-
-export function listFilterAfterWorkOrderComplete(current: WorkOrderTicketFilter): WorkOrderTicketFilter {
-  if (current === WORK_ORDER_TICKET_FILTER.All) return current
-  return WORK_ORDER_TICKET_FILTER.Completed
+  if (!name) return translate(WORK_ORDERS_I18N.unassigned)
+  return translate(WORK_ORDERS_I18N.technicianNamed, { name })
 }
 
 export type StaffWorkOrdersView =

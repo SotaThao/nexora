@@ -4,7 +4,6 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import useBodyScrollLock from '../../../hooks/useBodyScrollLock'
 import useVisualViewportRect from '../../../hooks/useVisualViewportRect'
 import {
-  WORK_ORDER_COMPLETE_MODAL,
   WORK_ORDER_COMPLETION_NOTE_MAX_LENGTH,
   WORK_ORDER_COMPLETION_SUGGESTION_I18N,
   WORK_ORDER_KEYBOARD,
@@ -12,11 +11,7 @@ import {
   WORK_ORDERS_LAYOUT_CLASS,
   workOrderCompletionChipClass,
 } from './constants'
-import {
-  composeWorkOrderCompletionNote,
-  toggleWorkOrderSuggestion,
-  workOrderViewportOverlayStyle,
-} from './workOrderTickets'
+import { composeWorkOrderCompletionNote, toggleWorkOrderSuggestion } from './workOrderTickets'
 
 interface WorkOrderCompleteServiceModalProps {
   customerName: string
@@ -47,15 +42,14 @@ export default function WorkOrderCompleteServiceModal({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [isPending, onClose])
 
-  const overlayStyle = workOrderViewportOverlayStyle(viewport)
-  const cardStyle = viewport ? { maxHeight: WORK_ORDER_COMPLETE_MODAL.cardMaxHeight } : undefined
-
-  const completionNote = composeWorkOrderCompletionNote(selectedSuggestions, additionalNote)
-  const canConfirm = !isPending && completionNote != null
+  const overlayStyle = viewport
+    ? { height: `${viewport.height}px`, transform: `translateY(${viewport.offsetTop}px)` }
+    : undefined
+  const cardStyle = viewport ? { maxHeight: '100%' } : undefined
 
   const handleConfirm = () => {
-    if (!canConfirm || !completionNote) return
-    onConfirm(completionNote)
+    if (isPending) return
+    onConfirm(composeWorkOrderCompletionNote(selectedSuggestions, additionalNote))
   }
 
   return (
@@ -64,13 +58,13 @@ export default function WorkOrderCompleteServiceModal({
         style={cardStyle}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={WORK_ORDER_COMPLETE_MODAL.titleId}
+        aria-labelledby="work-order-complete-title"
         className={WORK_ORDERS_LAYOUT_CLASS.modalCard}
       >
         <div className={WORK_ORDERS_LAYOUT_CLASS.modalHeader}>
           <div className={WORK_ORDERS_LAYOUT_CLASS.grow}>
             <p className={WORK_ORDERS_LAYOUT_CLASS.modalKicker}>{customerName}</p>
-            <h2 id={WORK_ORDER_COMPLETE_MODAL.titleId} className={WORK_ORDERS_LAYOUT_CLASS.modalTitle}>
+            <h2 id="work-order-complete-title" className={WORK_ORDERS_LAYOUT_CLASS.modalTitle}>
               {t(WORK_ORDERS_I18N.completeServiceTitle)}
             </h2>
           </div>
@@ -95,9 +89,6 @@ export default function WorkOrderCompleteServiceModal({
             </p>
             <p className={WORK_ORDERS_LAYOUT_CLASS.modalHeroBody}>
               {t(WORK_ORDERS_I18N.completeReadyBody)}
-            </p>
-            <p className={WORK_ORDERS_LAYOUT_CLASS.modalHeroBody}>
-              {t(WORK_ORDERS_I18N.completeClosesTicket)}
             </p>
           </div>
 
@@ -136,7 +127,7 @@ export default function WorkOrderCompleteServiceModal({
             </div>
             <textarea
               value={additionalNote}
-              rows={WORK_ORDER_COMPLETE_MODAL.textareaRows}
+              rows={4}
               maxLength={WORK_ORDER_COMPLETION_NOTE_MAX_LENGTH}
               disabled={isPending}
               placeholder={t(WORK_ORDERS_I18N.additionalNotePlaceholder)}
@@ -158,7 +149,7 @@ export default function WorkOrderCompleteServiceModal({
           <button
             type="button"
             className={WORK_ORDERS_LAYOUT_CLASS.modalConfirm}
-            disabled={!canConfirm}
+            disabled={isPending}
             onClick={handleConfirm}
           >
             <span className={WORK_ORDERS_LAYOUT_CLASS.modalConfirmIcon}>

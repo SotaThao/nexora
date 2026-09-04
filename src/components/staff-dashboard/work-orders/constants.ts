@@ -10,6 +10,7 @@ export type WorkOrderSalon = {
   id: string
   name: string
   address: string
+  timeZone?: string | null
 }
 export type WorkOrderListItem = StaffWorkOrderListItem
 export type WorkOrderDetail = StaffWorkOrderDetail
@@ -60,7 +61,6 @@ export const WORK_ORDERS_I18N = {
   completeServiceTitle: 'staff_dashboard.work_orders.complete_service_title',
   completeReadyTitle: 'staff_dashboard.work_orders.complete_ready_title',
   completeReadyBody: 'staff_dashboard.work_orders.complete_ready_body',
-  completeClosesTicket: 'staff_dashboard.work_orders.complete_closes_ticket',
   suggestedNotes: 'staff_dashboard.work_orders.suggested_notes',
   additionalNote: 'staff_dashboard.work_orders.additional_note',
   optional: 'staff_dashboard.work_orders.optional',
@@ -137,6 +137,13 @@ export const WORK_ORDER_STATUS_BADGE_CLASS: Record<PosOrderStatus, string> = {
   [PosOrderStatus.Confirmed]: 'bg-nexoraBrandSoft text-nexoraBrand',
 }
 
+/** Start Service is shown for assigned tickets; enabled only once the appointment day has arrived. */
+export const WORK_ORDER_STARTABLE_STATUSES: PosOrderStatus[] = [
+  PosOrderStatus.Waiting,
+  PosOrderStatus.Pending,
+  PosOrderStatus.Confirmed,
+]
+
 /** Mobile-first type; `sm` tablets, `lg` staff desktop shell (1024px). */
 export const WORK_ORDERS_LAYOUT_CLASS = {
   breadcrumbRow: 'flex min-h-9 items-center gap-1 sm:min-h-10',
@@ -174,7 +181,7 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   calendarDaySelected: 'bg-nexoraBrand text-white',
   calendarDaySpacer: 'h-9 sm:h-10',
   filterBar: 'mt-3 flex gap-1 overflow-x-auto rounded-full border border-nexoraBorder bg-white p-1 shadow-sm nexora-no-scrollbar lg:mt-4',
-  filterTab: 'shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-center text-xs font-bold transition sm:min-w-0 sm:flex-1 sm:px-3 sm:text-sm',
+  filterTab: 'min-w-0 flex-1 whitespace-nowrap rounded-full px-2 py-2 text-center text-xs font-bold transition sm:px-3 sm:text-sm',
   filterTabActive: 'bg-nexoraBrand text-white shadow-sm',
   filterTabInactive: 'bg-transparent text-nexoraSubtle hover:text-nexoraText',
   listMeta: 'mt-4 flex items-center justify-between text-xs font-medium text-nexoraSubtle lg:mt-5 sm:text-sm',
@@ -184,7 +191,7 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   ticketChevron: 'mt-1 h-4 w-4 shrink-0 text-nexoraSubtle sm:h-5 sm:w-5',
   ticketHeadRow: 'flex items-start justify-between gap-2',
   ticketCustomer: 'block truncate text-sm font-extrabold leading-5 text-nexoraText sm:text-base sm:leading-6',
-  ticketService: 'mt-0.5 block truncate text-xs font-semibold text-nexoraText sm:text-sm',
+  ticketService: 'mt-0.5 block truncate text-xs text-nexoraMuted sm:text-sm',
   ticketMeta: 'mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-nexoraMuted sm:text-sm',
   ticketMetaIcon: 'h-3 w-3 shrink-0 text-nexoraBrand sm:h-3.5 sm:w-3.5',
   ticketBadge: 'inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-bold sm:text-xs',
@@ -204,9 +211,12 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   servicesCard: 'px-4 pt-5 sm:px-5',
   servicesTitleRow: 'flex items-center justify-between gap-3',
   servicesTitle: 'text-lg font-extrabold text-nexoraText',
+  addServiceLink: 'cursor-not-allowed select-none text-sm font-semibold text-nexoraBrand/40',
+  addOnLink: 'block cursor-not-allowed select-none text-right text-sm font-semibold whitespace-nowrap text-nexoraBrand/40',
   serviceTable: 'mt-4 w-full table-fixed border-collapse',
   serviceColPrice: 'w-[5.75rem] sm:w-[6.25rem]',
   serviceColTime: 'w-[4.75rem] sm:w-[5.25rem]',
+  serviceColAction: 'w-[5.25rem] sm:w-[5.75rem]',
   serviceHeadCell: 'pb-2 text-xs font-medium text-nexoraSubtle',
   serviceHeadCellEnd: 'pb-2 text-right text-xs font-medium text-nexoraSubtle',
   serviceRow: 'border-t border-nexoraRule',
@@ -224,7 +234,7 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   primaryActionIcon: 'grid h-6 w-6 place-items-center rounded-full bg-white/20',
   modalOverlay:
     'fixed inset-0 z-[60] flex items-end justify-center bg-nexoraText/55 p-0 backdrop-blur-sm sm:items-center sm:p-4',
-  modalCard: 'nexora-modal-card w-full max-w-xl rounded-b-none p-0 sm:rounded-2xl',
+  modalCard: 'nexora-modal-card w-full max-w-md rounded-b-none p-0 sm:rounded-2xl',
   modalHeader: 'flex shrink-0 items-start justify-between gap-3 border-b border-nexoraRule px-5 py-4',
   modalKicker: 'text-xs font-semibold text-nexoraBrand',
   modalTitle: 'mt-0.5 text-lg font-extrabold text-nexoraText sm:text-xl',
@@ -236,9 +246,9 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   modalHeroTitle: 'mt-3 text-base font-extrabold text-nexoraText sm:text-lg',
   modalHeroBody: 'mt-1 text-sm leading-relaxed text-nexoraMuted',
   modalSectionTitle: 'text-sm font-extrabold text-nexoraText',
-  modalChipRow: 'mt-2 grid grid-cols-2 gap-2',
+  modalChipRow: 'mt-2 flex flex-wrap gap-2',
   modalChip:
-    'w-full min-w-0 rounded-2xl border px-3 py-2.5 text-left text-xs font-semibold leading-snug transition sm:px-3.5 sm:text-sm',
+    'rounded-full border px-3.5 py-2 text-left text-xs font-semibold transition sm:text-sm',
   modalChipIdle: 'border-nexoraBorder bg-white text-nexoraText hover:border-nexoraBrand/40',
   modalChipActive: 'border-nexoraBrand bg-nexoraBrandSoft text-nexoraBrand',
   modalNoteHead: 'flex items-center justify-between gap-2',
@@ -267,6 +277,7 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   emptyInline: 'mt-3 text-sm text-nexoraMuted sm:text-base',
   serviceName: 'truncate text-sm font-extrabold text-nexoraText sm:text-base',
   serviceTech: 'mt-0.5 truncate text-xs text-nexoraMuted sm:text-sm',
+  itemNote: 'mt-1.5 rounded-xl bg-amber-50 px-3 py-2 text-xs leading-relaxed text-nexoraText sm:text-sm',
   errorCard: 'rounded-2xl border border-rose-200 bg-rose-50 px-4 py-10 text-center',
   errorText: 'text-sm font-bold text-nexoraDanger sm:text-base',
   retryButton: 'mt-3 inline-flex h-10 items-center justify-center rounded-lg bg-nexoraBrand px-4 text-sm font-bold text-white sm:h-11',
@@ -298,12 +309,6 @@ export const WORK_ORDER_NUMBER_DIGITS = 4
 export const WORK_ORDER_EMPTY_PLACEHOLDER = '_'
 export const WORK_ORDER_COMPLETION_NOTE_MAX_LENGTH = 500
 export const WORK_ORDER_COMPLETION_NOTE_SEPARATOR = '. '
-export const WORK_ORDER_TOAST_DURATION_MS = 3200
-export const WORK_ORDER_COMPLETE_MODAL = {
-  titleId: 'work-order-complete-title',
-  textareaRows: 4,
-  cardMaxHeight: '100%',
-} as const
 export const WORK_ORDER_SKELETON_COUNT = {
   salons: 2,
   tickets: 3,
@@ -367,35 +372,18 @@ export function workOrderStatusClass(
   return `${sizeClass} ${WORK_ORDER_STATUS_BADGE_CLASS[status]}`
 }
 
-export const WORK_ORDER_LIST_QUERY = {
-  date: 'date',
-  filter: 'filter',
-} as const
-
-export function parseWorkOrderTicketFilter(value: string | null | undefined): WorkOrderTicketFilter {
-  return WORK_ORDER_FILTER_TABS.find((tab) => tab === value) ?? WORK_ORDER_TICKET_FILTER.Assigned
-}
-
 export function staffWorkOrdersPath(salonId?: string, ticketId?: string) {
   return [STAFF_HOME_PATH, STAFF_WORK_ORDERS_SCREEN, salonId, ticketId]
     .filter((segment): segment is string => Boolean(segment))
     .join('/')
 }
 
-export function staffWorkOrdersListSearch(date: string, filter: WorkOrderTicketFilter): string {
-  const params = new URLSearchParams({
-    [WORK_ORDER_LIST_QUERY.date]: date,
-    [WORK_ORDER_LIST_QUERY.filter]: filter,
-  })
-  return `?${params.toString()}`
-}
-
 export function staffWorkOrdersHref(
   salonId?: string,
   ticketId?: string,
   search?: string,
-) {
+): string {
   const path = staffWorkOrdersPath(salonId, ticketId)
-  if (!search) return path
-  return `${path}${search.startsWith('?') ? search : `?${search}`}`
+  const query = search?.replace(/^\?/, '').trim()
+  return query ? `${path}?${query}` : path
 }
