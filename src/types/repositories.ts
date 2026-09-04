@@ -674,11 +674,15 @@ export interface PosPromotionApiDto extends EligiblePromotionApiDto {
   isActive: boolean
   /** False once a visit has used the promotion — it can only be deactivated from then on. */
   canDelete: boolean
+  description?: string | null
+  photoUrl?: string | null
 }
 
 export interface PosPromotionPayload {
   name: string
   badgeLabel: string | null
+  description?: string | null
+  photo?: File | null
   discountType: string
   discountValue: number
   daysOfWeek: string[]
