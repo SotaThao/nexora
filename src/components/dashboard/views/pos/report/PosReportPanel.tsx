@@ -149,11 +149,15 @@ export default function PosReportPanel({
 
   return (
     <section className="space-y-3" aria-label={t(`${TK}.title`)} data-testid="report-panel">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-bold text-nexoraText">{t(`${TK}.title`)}</h2>
-          <p className="mt-0.5 text-xs text-nexoraMuted">{t(`${TK}.subtitle`)}</p>
-        </div>
+      <div
+        className="flex flex-wrap items-start justify-between gap-3"
+        data-testid="technician-report-toolbar"
+      >
+        <PosReportPeriodPicker
+          selection={selection}
+          businessTimeZone={businessTimeZone}
+          onChange={onSelectionChange}
+        />
         <div className="flex flex-wrap items-center gap-2">
           {data?.generatedAtUtc ? (
             <span className="text-[11px] font-semibold text-nexoraMuted">
@@ -178,12 +182,6 @@ export default function PosReportPanel({
           </button>
         </div>
       </div>
-
-      <PosReportPeriodPicker
-        selection={selection}
-        businessTimeZone={businessTimeZone}
-        onChange={onSelectionChange}
-      />
 
       {exportError ? (
         <p className="text-xs font-semibold text-nexoraDanger" role="alert">{t(`${TK}.exportError`)}</p>
