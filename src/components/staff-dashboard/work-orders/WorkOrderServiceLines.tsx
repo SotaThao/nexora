@@ -1,6 +1,12 @@
 import { Puzzle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { WORK_ORDERS_I18N, WORK_ORDERS_LAYOUT_CLASS, type WorkOrderItem } from './constants'
+import {
+  WORK_ORDER_APPROVAL_I18N,
+  WORK_ORDER_APPROVAL_PILL_CLASS,
+  WORK_ORDERS_I18N,
+  WORK_ORDERS_LAYOUT_CLASS,
+} from './constants'
+import type { WorkOrderEditableLine, WorkOrderServiceApproval } from './workOrderServiceCatalog'
 import {
   formatWorkOrderDurationMinutes,
   formatWorkOrderMoney,
@@ -9,11 +15,22 @@ import {
 } from './workOrderTickets'
 
 interface WorkOrderServiceLinesProps {
-  items: WorkOrderItem[]
+  items: WorkOrderEditableLine[]
   serviceTotal: number
+  canEdit: boolean
+  onAddService: () => void
+  onAddCustomService: () => void
+  onChangeService: (key: string) => void
 }
 
-export default function WorkOrderServiceLines({ items, serviceTotal }: WorkOrderServiceLinesProps) {
+export default function WorkOrderServiceLines({
+  items,
+  serviceTotal,
+  canEdit,
+  onAddService,
+  onAddCustomService,
+  onChangeService,
+}: WorkOrderServiceLinesProps) {
   const { t } = useTranslation()
 
   return (
@@ -22,6 +39,20 @@ export default function WorkOrderServiceLines({ items, serviceTotal }: WorkOrder
         <h3 className={WORK_ORDERS_LAYOUT_CLASS.servicesTitle}>
           {t(WORK_ORDERS_I18N.services)}
         </h3>
+        {canEdit ? (
+          <div className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadActions}>
+            <button type="button" className={WORK_ORDERS_LAYOUT_CLASS.addServiceButton} onClick={onAddService}>
+              {t(WORK_ORDERS_I18N.addService)}
+            </button>
+            <button
+              type="button"
+              className={WORK_ORDERS_LAYOUT_CLASS.addServiceButton}
+              onClick={onAddCustomService}
+            >
+              {t(WORK_ORDERS_I18N.addCustomService)}
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {items.length === 0 ? (
@@ -33,6 +64,7 @@ export default function WorkOrderServiceLines({ items, serviceTotal }: WorkOrder
               <col />
               <col className={WORK_ORDERS_LAYOUT_CLASS.serviceColPrice} />
               <col className={WORK_ORDERS_LAYOUT_CLASS.serviceColTime} />
+              {canEdit ? <col className={WORK_ORDERS_LAYOUT_CLASS.serviceColAction} /> : null}
             </colgroup>
             <thead>
               <tr>
@@ -45,11 +77,17 @@ export default function WorkOrderServiceLines({ items, serviceTotal }: WorkOrder
                 <th scope="col" className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadCellEnd}>
                   {t(WORK_ORDERS_I18N.colTime)}
                 </th>
+                {canEdit ? <th scope="col" className={WORK_ORDERS_LAYOUT_CLASS.srOnly}>{t(WORK_ORDERS_I18N.changeService)}</th> : null}
               </tr>
             </thead>
             <tbody>
-              {items.map((line, index) => (
-                <WorkOrderServiceLineRow key={line.id || `${line.serviceName}-${index}`} line={line} />
+              {items.map((line) => (
+                <WorkOrderServiceLineRow
+                  key={line.key}
+                  line={line}
+                  canEdit={canEdit}
+                  onChangeService={() => onChangeService(line.key)}
+                />
               ))}
             </tbody>
           </table>
@@ -67,7 +105,24 @@ export default function WorkOrderServiceLines({ items, serviceTotal }: WorkOrder
   )
 }
 
-function WorkOrderServiceLineRow({ line }: { line: WorkOrderItem }) {
+function WorkOrderApprovalPill({ approval }: { approval: WorkOrderServiceApproval }) {
+  const { t } = useTranslation()
+  return (
+    <span className={`${WORK_ORDERS_LAYOUT_CLASS.approvalPill} ${WORK_ORDER_APPROVAL_PILL_CLASS[approval]}`}>
+      {t(WORK_ORDER_APPROVAL_I18N[approval])}
+    </span>
+  )
+}
+
+function WorkOrderServiceLineRow({
+  line,
+  canEdit,
+  onChangeService,
+}: {
+  line: WorkOrderEditableLine
+  canEdit: boolean
+  onChangeService: () => void
+}) {
   const { t } = useTranslation()
 
   return (
@@ -79,22 +134,42 @@ function WorkOrderServiceLineRow({ line }: { line: WorkOrderItem }) {
             <span className={WORK_ORDERS_LAYOUT_CLASS.truncate}>
               {workOrderTextOrPlaceholder(line.serviceName)}
             </span>
+            {line.approval ? <WorkOrderApprovalPill approval={line.approval} /> : null}
           </p>
         ) : (
-          <p className={WORK_ORDERS_LAYOUT_CLASS.serviceName}>
-            {workOrderTextOrPlaceholder(line.serviceName)}
-          </p>
+          <div className={WORK_ORDERS_LAYOUT_CLASS.serviceNameRow}>
+            <p className={WORK_ORDERS_LAYOUT_CLASS.serviceName}>
+              {workOrderTextOrPlaceholder(line.serviceName)}
+            </p>
+            {line.approval ? <WorkOrderApprovalPill approval={line.approval} /> : null}
+          </div>
         )}
-        <p className={WORK_ORDERS_LAYOUT_CLASS.serviceTech}>
-          {workOrderAssignedTechnicianLabel(line.technicianName, t)}
-        </p>
+        {line.technicianName ? (
+          <p className={WORK_ORDERS_LAYOUT_CLASS.serviceTech}>
+            {workOrderAssignedTechnicianLabel(line.technicianName, t)}
+          </p>
+        ) : null}
       </td>
       <td className={`${WORK_ORDERS_LAYOUT_CLASS.serviceNumCell} ${WORK_ORDERS_LAYOUT_CLASS.servicePrice}`}>
-        {formatWorkOrderMoney(line.lineTotal || line.unitPrice)}
+        {formatWorkOrderMoney(line.unitPrice)}
       </td>
       <td className={`${WORK_ORDERS_LAYOUT_CLASS.serviceNumCell} ${WORK_ORDERS_LAYOUT_CLASS.serviceDuration}`}>
         {formatWorkOrderDurationMinutes(line.durationMinutes, t)}
       </td>
+      {canEdit ? (
+        <td className={WORK_ORDERS_LAYOUT_CLASS.serviceActionCell}>
+          {line.isAddOn ? null : (
+            <button
+              type="button"
+              className={WORK_ORDERS_LAYOUT_CLASS.serviceChangeButton}
+              aria-label={`${t(WORK_ORDERS_I18N.changeService)} ${workOrderTextOrPlaceholder(line.serviceName)}`}
+              onClick={onChangeService}
+            >
+              {t(WORK_ORDERS_I18N.changeService)}
+            </button>
+          )}
+        </td>
+      ) : null}
     </tr>
   )
 }
