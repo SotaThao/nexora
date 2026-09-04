@@ -1,13 +1,14 @@
 // PosStaffProfileView — POS > Staff Profiles (US-019). Searchable, paginated staff
 // table; "View" opens PosStaffProfileDetailModal for the actual POS profile form.
 import { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { Loader2, Search, UserPlus, Users } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useMerchantStaff } from '../../../../data/hooks/useMerchantStaff'
 import { usePagination } from '../../../../hooks/usePagination'
 import { SkeletonList } from '../../../ui/skeleton'
 import Pagination from '../../../ui/Pagination'
+import TechnicianInfoModal from '../TechnicianInfoModal'
 import PosStaffProfileDetailModal from './modals/PosStaffProfileDetailModal'
 import {
   POS_TABLE_HEADER_CELL_CLASS,
@@ -31,12 +32,12 @@ interface StaffTableItem {
 
 export default function PosStaffProfileView() {
   const { t } = useTranslation()
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const selectedLinkId = searchParams.get('staff') ?? undefined
 
   const [searchInput, setSearchInput] = useState('')
   const [keyword, setKeyword] = useState('')
+  const [technicianInfoOpen, setTechnicianInfoOpen] = useState(false)
   const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({
     pageSize: STAFF_TABLE_PAGE_SIZE,
   })
@@ -94,7 +95,7 @@ export default function PosStaffProfileView() {
           </div>
           <button
             type="button"
-            onClick={() => navigate('/dashboard/staff')}
+            onClick={() => setTechnicianInfoOpen(true)}
             className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-nexoraBrand px-3.5 py-2 text-xs font-bold text-white hover:bg-nexoraBrandDark"
           >
             <UserPlus className="h-3.5 w-3.5" />
@@ -223,6 +224,13 @@ export default function PosStaffProfileView() {
           onClose={handleCloseModal}
         />
       )}
+
+      {technicianInfoOpen ? (
+        <TechnicianInfoModal
+          posPayEnabled
+          onClose={() => setTechnicianInfoOpen(false)}
+        />
+      ) : null}
     </div>
   )
 }

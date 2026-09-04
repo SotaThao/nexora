@@ -13,7 +13,11 @@ import {
   toVlinkpayCryptoAddressesPayload,
 } from '../../components/payout/vlinkpayWallet'
 import type { ManualStaffFormPayload } from '../../components/dashboard/modals/AddManualStaffTab'
-import type { LocalStaffActiveWorkItem, LocalStaffUpdateParams } from '../../types/repositories'
+import type {
+  LocalStaffActiveWorkItem,
+  LocalStaffCreateParams,
+  LocalStaffUpdateParams,
+} from '../../types/repositories'
 import type { PaymentMethodDto } from '../../types/domain'
 
 export async function resolveStaffAvatarUrl(avatar: string, avatarFile?: File | null): Promise<string | null> {
@@ -103,6 +107,18 @@ export function useCreateLocalStaff() {
 
       return created
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+    },
+  })
+}
+
+/** Create only the shared staff profile/link, without configuring payout methods. */
+export function useCreateLocalStaffProfile() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (params: LocalStaffCreateParams) => localStaffRepository.create(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
     },

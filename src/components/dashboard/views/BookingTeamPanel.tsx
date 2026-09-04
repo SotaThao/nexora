@@ -17,6 +17,20 @@ import {
   useUpdateMerchantVoiceStaff,
 } from "../../../data/hooks/useMerchantVoiceBookings";
 import {
+  useMerchantStaff,
+  useResolveMerchantStaffLink,
+} from "../../../data/hooks/useMerchantStaff";
+import {
+  useCreateLocalStaffProfile,
+  useUpdateLocalStaff,
+} from "../../../data/hooks/useLocalStaff";
+import { usePosRoles } from "../../../data/hooks/usePosRoles";
+import {
+  useSaveStaffPosProfile,
+  useSaveStaffServiceAssignments,
+  useUpdateStaffWeeklySchedule,
+} from "../../../data/hooks/usePosStaffProfile";
+import {
   buildMerchantVoiceServiceSections,
   flattenMerchantVoiceServiceSections,
 } from "../../../data/merchantVoice/serviceCatalog";
@@ -29,9 +43,9 @@ import {
   normalizeMerchantVoiceDayOfWeek,
   type MerchantVoiceStaffDto,
 } from "../../../data/repositories/merchantVoice";
-import { formatServicePrice } from "../../../data/repositories/publicVoiceBooking";
 import { usePagination } from "../../../hooks/usePagination";
 import { getApiErrorCode } from "../../../types/domain";
+import { splitFullName } from "../../../utils/staffName";
 import CountryCodeSelect, {
   formatNationalNumber,
   getNationalPhonePlaceholder,
@@ -53,15 +67,11 @@ import {
   BookingTechStaffListSkeleton,
 } from "./BookingHubSkeletons";
 import { useBookingHubVoiceEnabled } from "./BookingHubVoiceContext";
-import { BOOKING_CREATE_DISPLAY_SEPARATOR } from "./bookingCreateConstants";
 import { openNativeDateTimePicker } from "./bookingHubFormatters";
 
 const TK = "components.dashboard.views.BookingHubView.team";
 const TK_HUB = "components.dashboard.views.BookingHubView";
-/** Same category accordion copy as Settings / New Appointment. */
-const TK_SETTINGS = "components.dashboard.views.BookingHubView.settings";
-const TK_CREATE =
-  "components.dashboard.views.BookingHubView.today.create";
+const POS_TK = "components.dashboard.views.pos.PosStaffProfileView";
 
 const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
@@ -70,6 +80,7 @@ const DEFAULT_SCHEDULE_END = "19:00";
 
 type DayKey = (typeof DAY_KEYS)[number];
 type ModalMode = "create" | "edit" | "detail";
+type PosPayStructureType = "Commission" | "WeeklySalary" | "AgreedAmount";
 
 interface DaySchedule {
   dayOff: boolean;
@@ -81,6 +92,7 @@ type WeeklySchedule = Record<DayKey, DaySchedule>;
 
 interface TeamMember {
   id: string;
+  staffProfileId: string | null;
   name: string;
   phone: string;
   email: string;
@@ -94,6 +106,7 @@ interface TeamMember {
 
 interface BusinessStaffOption {
   id: string;
+  linkId?: string | null;
   name: string;
   phone: string;
   email: string;
@@ -215,14 +228,6 @@ function parseSchedule(raw?: string): WeeklySchedule {
   return schedule;
 }
 
-function serializeSchedule(schedule: WeeklySchedule) {
-  return DAY_KEYS.filter(
-    (key) => !schedule[key].dayOff && schedule[key].start && schedule[key].end,
-  )
-    .map((key) => `${key}=${schedule[key].start}-${schedule[key].end}`)
-    .join(";");
-}
-
 function formatSkills(skills: string | null | undefined): string[] {
   if (!skills) return [];
   const parsed = skills
@@ -251,6 +256,7 @@ function toTeamMember(staff: MerchantVoiceStaffDto, unnamedLabel: string): TeamM
   const first = staff.fullName?.trim()?.charAt(0)?.toUpperCase() || "T";
   return {
     id: staff.id,
+    staffProfileId: staff.staffProfileId ?? null,
     name: staff.fullName || unnamedLabel,
     phone: staff.phoneNumber || "",
     email: staff.email || "",
@@ -448,6 +454,62 @@ function PersonCardIcon() {
   );
 }
 
+function ServicesListIcon() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden="true"
+      width="13"
+      height="13"
+    >
+      <rect
+        x="2"
+        y="3"
+        width="12"
+        height="10"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.3"
+      />
+      <path
+        d="M5 6h.01M7 6h4M5 8h.01M7 8h4M5 10h.01M7 10h4"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function RolePayIcon() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden="true"
+      width="13"
+      height="13"
+    >
+      <rect
+        x="3"
+        y="2"
+        width="10"
+        height="12"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.3"
+      />
+      <path
+        d="M6 5.5h4M6 8h4M6 10.5h2"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 function CalendarWeekIcon() {
   return (
     <svg
@@ -579,14 +641,26 @@ function CheckIcon() {
 interface Props {
   /** When true, render without Booking Book sub-panel / overview-card chrome (Settings embed). */
   embedded?: boolean
+  /** Reuse only the create-technician dialog without rendering the AI Hub team roster. */
+  createModalOnly?: boolean
+  onCreateModalClose?: () => void
+  /** Add POS role/pay fields and persist them after the shared staff record. */
+  posPayEnabled?: boolean
 }
 
-export default function BookingTeamPanel({ embedded = false }: Props) {
+export default function BookingTeamPanel({
+  embedded = false,
+  createModalOnly = false,
+  onCreateModalClose,
+  posPayEnabled = false,
+}: Props) {
   const { t } = useTranslation();
   const { showToast } = useNotification();
   const voiceEnabled = useBookingHubVoiceEnabled();
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<ModalMode>("edit");
+  const [modalOpen, setModalOpen] = useState(createModalOnly);
+  const [modalMode, setModalMode] = useState<ModalMode>(
+    createModalOnly ? "create" : "edit",
+  );
   const [selectedId, setSelectedId] = useState("");
   const [comboboxOpen, setComboboxOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -595,12 +669,25 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
   const [draftPhone, setDraftPhone] = useState("");
   const [draftEmail, setDraftEmail] = useState("");
   const [draftServices, setDraftServices] = useState<string[]>([]);
+  const [servicesExpanded, setServicesExpanded] = useState(true);
   const [openServiceCategoryIds, setOpenServiceCategoryIds] = useState(
     () => new Set<string>(),
   );
   const [draftStaffProfileId, setDraftStaffProfileId] = useState<string | null>(
     null,
   );
+  const [draftBusinessStaffLinkId, setDraftBusinessStaffLinkId] = useState<
+    string | null
+  >(null);
+  const [draftCreatedLocalStaffProfileId, setDraftCreatedLocalStaffProfileId] =
+    useState<string | null>(null);
+  const [draftPosRoleId, setDraftPosRoleId] = useState("");
+  const [draftPayStructureType, setDraftPayStructureType] =
+    useState<PosPayStructureType>("Commission");
+  const [draftCommissionPercent, setDraftCommissionPercent] = useState("60");
+  const [draftWeeklySalaryAmount, setDraftWeeklySalaryAmount] = useState("");
+  const [draftAgreedAmount, setDraftAgreedAmount] = useState("");
+  const [draftTipsEnabled, setDraftTipsEnabled] = useState(true);
   const [draftSchedule, setDraftSchedule] =
     useState<WeeklySchedule>(emptySchedule());
   const [formErrors, setFormErrors] = useState<{
@@ -608,11 +695,18 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
     phone?: string;
     email?: string;
     services?: string;
+    posPay?: string;
   }>({});
   const [showScheduleValidation, setShowScheduleValidation] = useState(false);
   const comboboxRef = useRef<HTMLDivElement>(null);
   const checkAllServicesRef = useRef<HTMLInputElement>(null);
+  const technicianNameInputRef = useRef<HTMLInputElement>(null);
   const techDialogRef = useRef<HTMLDivElement>(null);
+  const techModalBodyRef = useRef<
+    HTMLDivElement & { inert: boolean }
+  >(null);
+  const saveInFlightRef = useRef(false);
+  const [saveInFlight, setSaveInFlight] = useState(false);
   const { pageNumber, pageSize, setPage } = usePagination({
     pageSize: BOOKING_HUB_PAGE_SIZE,
   });
@@ -632,18 +726,37 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
       { searchTerm: debouncedSearchQuery },
       { enabled: voiceEnabled && modalOpen },
     );
+  const {
+    data: posBusinessStaffResponse,
+    isLoading: isPosBusinessStaffLoading,
+  } = useMerchantStaff({
+    statusFilter: "Active",
+    pageNumber: 1,
+    pageSize: 100,
+    keyword: debouncedSearchQuery,
+    enabled: posPayEnabled && modalOpen,
+  });
   const { data: categoriesResponse, isLoading: isCategoriesLoading } =
     useMerchantVoiceServiceCategories({
-      enabled: voiceEnabled && modalOpen,
+      enabled: (voiceEnabled || posPayEnabled) && modalOpen,
     });
   const { data: servicesResponse, isLoading: isServicesLoading } =
     useMerchantVoiceServices({
-      enabled: voiceEnabled && modalOpen,
+      enabled: (voiceEnabled || posPayEnabled) && modalOpen,
     });
   const [members, setMembers] = useState<TeamMember[]>(INITIAL_TEAM_MEMBERS);
   const createStaffMutation = useCreateMerchantVoiceStaff();
   const updateStaffMutation = useUpdateMerchantVoiceStaff();
+  const createLocalStaffMutation = useCreateLocalStaffProfile();
+  const updateLocalStaffMutation = useUpdateLocalStaff();
+  const resolveStaffLinkMutation = useResolveMerchantStaffLink();
+  const savePosProfileMutation = useSaveStaffPosProfile();
+  const saveServiceAssignmentsMutation = useSaveStaffServiceAssignments();
+  const saveWeeklyScheduleMutation = useUpdateStaffWeeklySchedule();
   const toggleStaffStatusMutation = useToggleMerchantVoiceStaffStatus();
+  const { data: posRoles = [] } = usePosRoles({
+    enabled: posPayEnabled && modalOpen,
+  });
   const [pendingToggleIds, setPendingToggleIds] = useState<
     Record<string, boolean>
   >({});
@@ -653,19 +766,43 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
         voiceEnabled && modalOpen && !!selectedId && modalMode !== "create",
     });
 
-  const businessStaffOptions = useMemo<BusinessStaffOption[]>(
-    () =>
-      (businessStaffResponse ?? []).map((staff) => ({
-        id: staff.id,
-        name: staff.fullName || "",
-        phone: staff.phoneNumber || "",
-        email: staff.email || "",
-        position: staff.position || "",
-        isAlreadyAdded: staff.isAlreadyAdded,
-        avatar: staff.fullName?.trim()?.charAt(0)?.toUpperCase() || "T",
-      })),
-    [businessStaffResponse],
-  );
+  const businessStaffOptions = useMemo<BusinessStaffOption[]>(() => {
+    if (posPayEnabled) {
+      return (posBusinessStaffResponse?.items ?? [])
+        .map((staff) => {
+          const id =
+            typeof staff.staffProfileId === "string"
+              ? staff.staffProfileId
+              : "";
+          const name = String(
+            staff.displayName || staff.nickname || staff.fullName || "",
+          );
+          return {
+            id,
+            linkId: typeof staff.linkId === "string" ? staff.linkId : null,
+            name,
+            phone: typeof staff.phone === "string" ? staff.phone : "",
+            email: typeof staff.email === "string" ? staff.email : "",
+            position:
+              typeof staff.position === "string" ? staff.position : "",
+            isAlreadyAdded: false,
+            avatar: name.trim().charAt(0).toUpperCase() || "T",
+          };
+        })
+        .filter((staff) => Boolean(staff.id));
+    }
+
+    return (businessStaffResponse ?? []).map((staff) => ({
+      id: staff.id,
+      linkId: null,
+      name: staff.fullName || "",
+      phone: staff.phoneNumber || "",
+      email: staff.email || "",
+      position: staff.position || "",
+      isAlreadyAdded: staff.isAlreadyAdded,
+      avatar: staff.fullName?.trim()?.charAt(0)?.toUpperCase() || "T",
+    }));
+  }, [businessStaffResponse, posBusinessStaffResponse?.items, posPayEnabled]);
 
   const filteredBusinessStaff = businessStaffOptions;
 
@@ -682,12 +819,65 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
     return Array.from(new Set(names));
   }, [serviceSections]);
 
+  const selectedPosServiceIds = useMemo(() => {
+    const selectedNames = new Set(draftServices);
+    return Array.from(
+      new Set(
+        flattenMerchantVoiceServiceSections(serviceSections)
+          .filter((service) => selectedNames.has(service.name.trim()))
+          .map((service) => service.id)
+          .filter(Boolean),
+      ),
+    );
+  }, [draftServices, serviceSections]);
+
   const isServiceCatalogLoading = isCategoriesLoading || isServicesLoading;
+  const isStaffPickerLoading = posPayEnabled
+    ? isPosBusinessStaffLoading
+    : isBusinessStaffLoading;
+  const isSaving =
+    saveInFlight ||
+    createStaffMutation.isPending ||
+    updateStaffMutation.isPending ||
+    createLocalStaffMutation.isPending ||
+    updateLocalStaffMutation.isPending ||
+    resolveStaffLinkMutation.isPending ||
+    savePosProfileMutation.isPending ||
+    saveServiceAssignmentsMutation.isPending ||
+    saveWeeklyScheduleMutation.isPending;
+
+  const defaultPosRoleId = useMemo(() => {
+    const technicianRole = posRoles.find(
+      (role) =>
+        !role.isOwnerRole &&
+        role.isSystemDefault &&
+        role.name.trim().toLowerCase() === "technician",
+    );
+    return (
+      technicianRole ??
+      posRoles.find((role) => !role.isOwnerRole) ??
+      posRoles[0]
+    )?.id ?? "";
+  }, [posRoles]);
+  const selectedPosRoleId = draftPosRoleId || defaultPosRoleId;
+  const posRoleHasError = Boolean(formErrors.posPay && !selectedPosRoleId);
+  const posPayValueHasError = Boolean(
+    formErrors.posPay && selectedPosRoleId,
+  );
 
   const draftPhoneParsed = useMemo(() => parsePhone(draftPhone), [draftPhone]);
 
   const scheduleRequiredMessage = t(`${TK}.scheduleRequiredTime`);
   const scheduleInvalidMessage = t(`${TK}.scheduleInvalidTime`);
+
+  const resetPosPayDraft = () => {
+    setDraftPosRoleId("");
+    setDraftPayStructureType("Commission");
+    setDraftCommissionPercent("60");
+    setDraftWeeklySalaryAmount("");
+    setDraftAgreedAmount("");
+    setDraftTipsEnabled(true);
+  };
 
   const fillDraftFromMember = (
     member: TeamMember | undefined,
@@ -699,8 +889,13 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
       setDraftPhone("");
       setDraftEmail("");
       setDraftServices([]);
-      setOpenServiceCategoryIds(new Set());
+      setOpenServiceCategoryIds(
+        new Set(serviceSections[0]?.id ? [serviceSections[0].id] : []),
+      );
       setDraftStaffProfileId(null);
+      setDraftBusinessStaffLinkId(null);
+      setDraftCreatedLocalStaffProfileId(null);
+      resetPosPayDraft();
       setDraftSchedule(emptySchedule());
       setFormErrors({});
       setShowScheduleValidation(false);
@@ -710,8 +905,12 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
     setDraftPhone(member.phone);
     setDraftEmail(member.email);
     setDraftServices([...member.services]);
-    setOpenServiceCategoryIds(new Set());
-    setDraftStaffProfileId(null);
+    setOpenServiceCategoryIds(
+      new Set(serviceSections[0]?.id ? [serviceSections[0].id] : []),
+    );
+    setDraftStaffProfileId(member.staffProfileId);
+    setDraftBusinessStaffLinkId(null);
+    setDraftCreatedLocalStaffProfileId(null);
     setDraftSchedule(scheduleOverride ?? parseSchedule(member.schedule));
     setFormErrors({});
     setShowScheduleValidation(false);
@@ -738,10 +937,12 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
   };
 
   const closeModal = () => {
+    if (saveInFlightRef.current) return;
     setModalOpen(false);
     setComboboxOpen(false);
     setSearchQuery("");
     setShowScheduleValidation(false);
+    onCreateModalClose?.();
   };
 
   const selectBusinessStaff = (staff: BusinessStaffOption) => {
@@ -768,8 +969,12 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
     setDraftPhone(staff.phone);
     setDraftEmail(staff.email);
     setDraftServices([]);
-    setOpenServiceCategoryIds(new Set());
+    setOpenServiceCategoryIds(
+      new Set(serviceSections[0]?.id ? [serviceSections[0].id] : []),
+    );
     setDraftStaffProfileId(staff.id);
+    setDraftBusinessStaffLinkId(staff.linkId ?? null);
+    setDraftCreatedLocalStaffProfileId(null);
     setDraftSchedule(emptySchedule());
     setFormErrors({});
     setShowScheduleValidation(false);
@@ -783,6 +988,7 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
     fillDraftFromMember(undefined, "create");
     setComboboxOpen(false);
     setSearchQuery("");
+    technicianNameInputRef.current?.focus();
   };
 
   const toggleService = (service: string) => {
@@ -796,6 +1002,23 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
     setFormErrors((prev) => ({ ...prev, services: "" }));
   };
 
+  const toggleServiceGroup = (services: string[]) => {
+    const names = Array.from(
+      new Set(services.map((service) => service.trim()).filter(Boolean)),
+    );
+    if (names.length === 0) return;
+
+    setDraftServices((prev) => {
+      const allSelected = names.every((name) => prev.includes(name));
+      if (allSelected) {
+        const groupNames = new Set(names);
+        return prev.filter((name) => !groupNames.has(name));
+      }
+      return Array.from(new Set([...prev, ...names]));
+    });
+    setFormErrors((prev) => ({ ...prev, services: "" }));
+  };
+
   const toggleServiceCategory = (categoryId: string) => {
     setOpenServiceCategoryIds((prev) => {
       const next = new Set(prev);
@@ -805,14 +1028,16 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
     });
   };
 
-  const allServicesSelected = useMemo(
+  const selectedServiceCount = useMemo(
     () =>
-      serviceOptions.length > 0 &&
-      serviceOptions.every((service) => draftServices.includes(service)),
+      serviceOptions.filter((service) => draftServices.includes(service))
+        .length,
     [draftServices, serviceOptions],
   );
-
-  const someServicesSelected = draftServices.length > 0 && !allServicesSelected;
+  const allServicesSelected =
+    serviceOptions.length > 0 && selectedServiceCount === serviceOptions.length;
+  const someServicesSelected =
+    selectedServiceCount > 0 && !allServicesSelected;
 
   const toggleAllServices = () => {
     setDraftServices(allServicesSelected ? [] : [...serviceOptions]);
@@ -893,12 +1118,58 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
     showToast(t(getErrorI18nKey(getApiErrorCode(error))), "error");
   };
 
-  const saveModal = () => {
+  const savePosConfiguration = async (
+    businessStaffLinkId: string,
+    schedules: Array<{
+      dayOfWeek: string;
+      isDayOff: boolean;
+      startTime: string | null;
+      endTime: string | null;
+    }>,
+  ) => {
+    await savePosProfileMutation.mutateAsync({
+      businessStaffLinkId,
+      posRoleId: selectedPosRoleId,
+      payStructureType: draftPayStructureType,
+      commissionPercent:
+        draftPayStructureType === "Commission"
+          ? Number(draftCommissionPercent)
+          : null,
+      weeklySalaryAmount:
+        draftPayStructureType === "WeeklySalary"
+          ? Number(draftWeeklySalaryAmount)
+          : null,
+      agreedAmount:
+        draftPayStructureType === "AgreedAmount"
+          ? Number(draftAgreedAmount)
+          : null,
+      tipsEnabled: draftTipsEnabled,
+    });
+    const configurationResults = await Promise.allSettled([
+      saveServiceAssignmentsMutation.mutateAsync({
+        businessStaffLinkId,
+        posServiceIds: selectedPosServiceIds,
+      }),
+      saveWeeklyScheduleMutation.mutateAsync({
+        businessStaffLinkId,
+        days: schedules,
+      }),
+    ]);
+    const failedConfiguration = configurationResults.find(
+      (result): result is PromiseRejectedResult => result.status === "rejected",
+    );
+    if (failedConfiguration) throw failedConfiguration.reason;
+  };
+
+  const saveModal = async () => {
+    if (saveInFlightRef.current) return;
+
     const nextErrors: {
       name?: string;
       phone?: string;
       email?: string;
       services?: string;
+      posPay?: string;
       schedule?: string;
     } = {};
     const trimmedName = draftName.trim();
@@ -910,11 +1181,37 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
       ? normalizePhoneE164(draftPhone, draftPhoneParsed.countryCode)
       : null;
 
-    if (!trimmedName) nextErrors.name = t(`${TK}.requiredField`);
+    if (!trimmedName) nextErrors.name = t(`${TK}.technicianNameRequired`);
     if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
       nextErrors.email = t(`${TK}.invalidEmail`);
     }
-    if (!draftServices.length) nextErrors.services = t(`${TK}.requiredField`);
+    if (!draftServices.length) {
+      nextErrors.services = t(`${TK}.serviceSelectionRequired`);
+    }
+    if (posPayEnabled) {
+      if (!selectedPosRoleId) {
+        nextErrors.posPay = t(`${TK}.requiredField`);
+      } else if (draftPayStructureType === "Commission") {
+        const commission = Number(draftCommissionPercent);
+        if (
+          !draftCommissionPercent.trim() ||
+          !Number.isFinite(commission) ||
+          commission < 0 ||
+          commission > 100
+        ) {
+          nextErrors.posPay = t("errors.pos_staff_commission_percent_invalid");
+        }
+      } else {
+        const amountInput =
+          draftPayStructureType === "WeeklySalary"
+            ? draftWeeklySalaryAmount
+            : draftAgreedAmount;
+        const amount = Number(amountInput);
+        if (!amountInput.trim() || !Number.isFinite(amount) || amount < 0) {
+          nextErrors.posPay = t("errors.pos_staff_pay_amount_invalid");
+        }
+      }
+    }
 
     const scheduleInvalid = hasScheduleValidationError(
       draftSchedule,
@@ -938,6 +1235,7 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
         name: t(`${TK}.techName`),
         email: t(`${TK}.email`),
         services: t(`${TK}.services`),
+        posPay: t(`${POS_TK}.rolePayTipsTitle`),
         schedule: t(`${TK}.weeklySchedule`),
       },
       hubTk: TK_HUB,
@@ -950,53 +1248,9 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
       phone: phoneForApi,
       email: trimmedEmail || null,
       services: draftServices,
-      schedule: serializeSchedule(draftSchedule),
     };
 
-    if (modalMode === "create") {
-      const schedules = DAY_KEYS.map((day) => {
-        const row = draftSchedule[day];
-        if (row.dayOff) {
-          return {
-            dayOfWeek: DAY_KEY_TO_API_DAY[day],
-            isDayOff: true,
-            startTime: null,
-            endTime: null,
-          };
-        }
-        return {
-          dayOfWeek: DAY_KEY_TO_API_DAY[day],
-          isDayOff: false,
-          startTime: row.start ? `${row.start}:00` : null,
-          endTime: row.end ? `${row.end}:00` : null,
-        };
-      });
-
-      createStaffMutation.mutate(
-        {
-          fullName: payload.name,
-          phoneNumber: payload.phone,
-          email: payload.email,
-          skills: payload.services.join(", "),
-          staffProfileId: draftStaffProfileId,
-          schedules,
-        },
-        {
-          onSuccess: (created) => {
-            setSelectedId(created.id);
-            showToast(t(`${TK}.saveSuccess`), "success");
-            closeModal();
-          },
-          onError: handleStaffSaveError,
-        },
-      );
-      return;
-    }
-
-    if (!selectedId) return;
-
-    const editingMember = members.find((member) => member.id === selectedId);
-    const schedules = DAY_KEYS.map((day) => {
+    const schedulesWithApiDayNames = DAY_KEYS.map((day) => {
       const row = draftSchedule[day];
       if (row.dayOff) {
         return {
@@ -1014,28 +1268,117 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
       };
     });
 
-    updateStaffMutation.mutate(
-      {
-        id: selectedId,
-        fullName: payload.name,
-        phoneNumber: payload.phone,
-        email: payload.email,
-        skills: payload.services.join(", "),
-        status: mapStaffStatusToActivityApi(
-          editingMember?.smsEnabled
-            ? MerchantVoiceStaffStatus.Active
-            : MerchantVoiceStaffStatus.Inactive,
-        ),
-        schedules,
-      },
-      {
-        onSuccess: () => {
-          showToast(t(`${TK}.saveSuccess`), "success");
-          closeModal();
-        },
-        onError: handleStaffSaveError,
-      },
-    );
+    saveInFlightRef.current = true;
+    setSaveInFlight(true);
+    let saved = false;
+
+    try {
+      if (posPayEnabled) {
+        const nameParts = splitFullName(payload.name);
+        const localStaffParams = {
+          displayName: payload.name,
+          position: null,
+          bio: null,
+          photoUrl: null,
+          phoneNumber: payload.phone,
+          email: payload.email,
+          firstName: nameParts.firstName,
+          lastName: nameParts.lastName,
+        };
+        let staffProfileId = draftStaffProfileId;
+        let businessStaffLinkId = draftBusinessStaffLinkId;
+
+        if (!staffProfileId) {
+          const created = await createLocalStaffMutation.mutateAsync(
+            localStaffParams,
+          );
+          staffProfileId = created.id?.trim() || null;
+          if (staffProfileId) {
+            setDraftStaffProfileId(staffProfileId);
+            setDraftCreatedLocalStaffProfileId(staffProfileId);
+          }
+        } else if (draftCreatedLocalStaffProfileId === staffProfileId) {
+          await updateLocalStaffMutation.mutateAsync({
+            staffProfileId,
+            params: localStaffParams,
+          });
+        }
+
+        if (!staffProfileId) {
+          throw new Error("The created technician has no staff profile id.");
+        }
+        if (!businessStaffLinkId) {
+          businessStaffLinkId = await resolveStaffLinkMutation.mutateAsync({
+            staffProfileId,
+            keyword: payload.name,
+          });
+          setDraftBusinessStaffLinkId(businessStaffLinkId);
+        }
+
+        await savePosConfiguration(
+          businessStaffLinkId,
+          schedulesWithApiDayNames,
+        );
+        saved = true;
+      } else if (modalMode === "create") {
+        const voiceSchedules = DAY_KEYS.map((day) => {
+          const row = draftSchedule[day];
+          if (row.dayOff) {
+            return {
+              dayOfWeek: DAY_KEY_TO_API_DAY[day],
+              isDayOff: true,
+              startTime: null,
+              endTime: null,
+            };
+          }
+          return {
+            dayOfWeek: DAY_KEY_TO_API_DAY[day],
+            isDayOff: false,
+            startTime: row.start ? `${row.start}:00` : null,
+            endTime: row.end ? `${row.end}:00` : null,
+          };
+        });
+        const created: MerchantVoiceStaffDto =
+          await createStaffMutation.mutateAsync({
+            fullName: payload.name,
+            phoneNumber: payload.phone,
+            email: payload.email,
+            skills: payload.services.join(", "),
+            staffProfileId: draftStaffProfileId,
+            schedules: voiceSchedules,
+          });
+        setSelectedId(created.id);
+        saved = true;
+      } else if (selectedId) {
+        const editingMember = members.find(
+          (member) => member.id === selectedId,
+        );
+        await updateStaffMutation.mutateAsync({
+          id: selectedId,
+          fullName: payload.name,
+          phoneNumber: payload.phone,
+          email: payload.email,
+          skills: payload.services.join(", "),
+          status: mapStaffStatusToActivityApi(
+            editingMember?.smsEnabled
+              ? MerchantVoiceStaffStatus.Active
+              : MerchantVoiceStaffStatus.Inactive,
+          ),
+          schedules: schedulesWithApiDayNames,
+        });
+        saved = true;
+      }
+    } catch (error) {
+      handleStaffSaveError(error);
+    } finally {
+      saveInFlightRef.current = false;
+      setSaveInFlight(false);
+    }
+
+    if (saved) {
+      showToast(t(`${TK}.saveSuccess`), "success");
+      closeModal();
+    }
   };
 
   const modalTitle =
@@ -1087,7 +1430,13 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
     };
   }, [modalOpen]);
 
-  // Keep open ids in sync with the catalog; do not auto-expand any category.
+  useEffect(() => {
+    if (techModalBodyRef.current) {
+      techModalBodyRef.current.inert = isSaving;
+    }
+  }, [isSaving]);
+
+  // Keep open ids in sync with the catalog and reveal the first group initially.
   useEffect(() => {
     if (!modalOpen || serviceSections.length === 0) return;
     setOpenServiceCategoryIds((prev) => {
@@ -1096,6 +1445,7 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
           serviceSections.some((section) => section.id === id),
         ),
       );
+      if (valid.size === 0) valid.add(serviceSections[0].id);
       return valid;
     });
   }, [modalOpen, serviceSections]);
@@ -1122,10 +1472,17 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
 
   return (
     <div
-      className={embedded ? "settings-team-panel" : "booking-sub-panel is-active"}
+      className={
+        createModalOnly
+          ? "technician-info-modal-host"
+          : embedded
+            ? "settings-team-panel"
+            : "booking-sub-panel is-active"
+      }
       aria-busy={isStaffLoading}
     >
-      <article className={embedded ? "settings-team-body" : "overview-card overview-card-pad"}>
+      {!createModalOnly ? (
+        <article className={embedded ? "settings-team-body" : "overview-card overview-card-pad"}>
         <div className="tech-intro">
           <div className="tech-intro-text">{t(`${TK}.intro`)}</div>
           <button
@@ -1234,7 +1591,8 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
             className={BOOKING_HUB_PAGINATION_CLASSNAME}
           />
         ) : null}
-      </article>
+        </article>
+      ) : null}
 
       {modalOpen ? (
         <div
@@ -1249,6 +1607,7 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="tech-modal-title"
+            aria-busy={isSaving}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="tech-modal-head">
@@ -1268,12 +1627,16 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
                 type="button"
                 aria-label={t(`${TK}.close`)}
                 onClick={closeModal}
+                disabled={isSaving}
               >
                 <CloseIcon />
               </button>
             </div>
 
-            <div className="tech-modal-body">
+            <div
+              ref={techModalBodyRef}
+              className="tech-modal-body"
+            >
               <div className="tech-modal-section" data-tech-picker-section>
                 <div className="tech-modal-section-title">
                   <PeopleIcon />
@@ -1322,7 +1685,7 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
                     </label>
                     {comboboxOpen ? (
                       <div className="tech-select-menu" id="tech-select-menu">
-                        {isBusinessStaffLoading ? (
+                        {isStaffPickerLoading ? (
                           <BookingTechStaffListSkeleton count={3} />
                         ) : (
                           <div
@@ -1365,7 +1728,7 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
                             ))}
                           </div>
                         )}
-                        {!isBusinessStaffLoading &&
+                        {!isStaffPickerLoading &&
                         filteredBusinessStaff.length === 0 ? (
                           <div className="tech-empty is-visible">
                             {t(`${TK}.noMatch`)}
@@ -1397,8 +1760,12 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
                     <div className="settings-field" data-ai-hub-field="name">
                       <span className="settings-label">
                         {t(`${TK}.techName`)}
+                        <small className="tech-required-hint">
+                          {t(`${TK}.requiredHint`)}
+                        </small>
                       </span>
                       <input
+                        ref={technicianNameInputRef}
                         className="settings-input"
                         type="text"
                         value={draftName}
@@ -1484,128 +1851,378 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
                         ) : null}
                       </span>
                     </div>
-                    <div className="settings-field" data-ai-hub-field="services">
-                      <div className="tech-services-field-head">
-                        <span className="settings-label">
-                          {t(`${TK}.services`)}
-                        </span>
-                        {!isServiceCatalogLoading &&
-                        serviceOptions.length > 0 ? (
-                          <label className="tech-service-check-all-toggle">
-                            <input
-                              ref={checkAllServicesRef}
-                              type="checkbox"
-                              checked={allServicesSelected}
-                              onChange={toggleAllServices}
-                            />
-                            <span>{t(`${TK}.checkAllServices`)}</span>
-                          </label>
+                  </div>
+                )}
+              </div>
+
+              {posPayEnabled ? (
+                <div
+                  className="tech-modal-section tech-pos-pay-section"
+                  role="region"
+                  aria-labelledby="tech-pos-pay-title"
+                  data-ai-hub-field="posPay"
+                >
+                  <div
+                    className="tech-modal-section-title"
+                    id="tech-pos-pay-title"
+                  >
+                    <RolePayIcon />
+                    <span>{t(`${POS_TK}.rolePayTipsTitle`)}</span>
+                  </div>
+
+                  <div
+                    className="tech-pos-pay-grid"
+                    style={{ alignItems: "start" }}
+                  >
+                    <label className="settings-field">
+                      <span className="settings-label">
+                        {t(`${POS_TK}.roleLabel`)}
+                      </span>
+                      <select
+                        className="settings-input"
+                        aria-label={t(`${POS_TK}.roleLabel`)}
+                        aria-invalid={posRoleHasError}
+                        aria-describedby={
+                          posRoleHasError ? "tech-pos-pay-error" : undefined
+                        }
+                        value={selectedPosRoleId}
+                        onChange={(event) => {
+                          setDraftPosRoleId(event.target.value);
+                          setFormErrors((prev) => ({ ...prev, posPay: "" }));
+                        }}
+                      >
+                        {!selectedPosRoleId ? (
+                          <option value="" disabled>
+                            —
+                          </option>
                         ) : null}
-                      </div>
-                      {isServiceCatalogLoading ? (
-                        <BookingTechServicesSkeleton count={4} />
-                      ) : serviceSections.length > 0 ? (
-                        <div
-                          className={`booking-create-service-groups${formErrors.services ? " has-error" : ""}`}
-                          role="group"
-                          aria-label={t(`${TK}.services`)}
-                          aria-invalid={Boolean(formErrors.services)}
+                        {posRoles.map((role) => (
+                          <option key={role.id} value={role.id}>
+                            {role.name}
+                          </option>
+                        ))}
+                      </select>
+                      {posRoleHasError ? (
+                        <span
+                          className="tech-pos-pay-field-error"
+                          id="tech-pos-pay-error"
+                          role="alert"
                         >
+                          {formErrors.posPay}
+                        </span>
+                      ) : null}
+                    </label>
+
+                    <label className="settings-field">
+                      <span className="settings-label">
+                        {t(`${POS_TK}.payStructureLabel`)}
+                      </span>
+                      <select
+                        className="settings-input"
+                        aria-label={t(`${POS_TK}.payStructureLabel`)}
+                        value={draftPayStructureType}
+                        onChange={(event) => {
+                          setDraftPayStructureType(
+                            event.target.value as PosPayStructureType,
+                          );
+                          setFormErrors((prev) => ({ ...prev, posPay: "" }));
+                        }}
+                      >
+                        {(
+                          [
+                            "Commission",
+                            "WeeklySalary",
+                            "AgreedAmount",
+                          ] as const
+                        ).map((type) => (
+                          <option key={type} value={type}>
+                            {t(`${POS_TK}.payStructureTypes.${type}`)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    {draftPayStructureType === "Commission" ? (
+                      <label className="settings-field">
+                        <span className="settings-label">
+                          {t(`${POS_TK}.commissionPercentLabel`)}
+                        </span>
+                        <input
+                          className="settings-input"
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                          aria-label={t(`${POS_TK}.commissionPercentLabel`)}
+                          aria-invalid={posPayValueHasError}
+                          aria-describedby={
+                            posPayValueHasError
+                              ? "tech-pos-pay-error"
+                              : undefined
+                          }
+                          value={draftCommissionPercent}
+                          onChange={(event) => {
+                            setDraftCommissionPercent(event.target.value);
+                            setFormErrors((prev) => ({ ...prev, posPay: "" }));
+                          }}
+                        />
+                        {posPayValueHasError ? (
+                          <span
+                            className="tech-pos-pay-field-error"
+                            id="tech-pos-pay-error"
+                            role="alert"
+                          >
+                            {formErrors.posPay}
+                          </span>
+                        ) : null}
+                      </label>
+                    ) : null}
+
+                    {draftPayStructureType === "WeeklySalary" ? (
+                      <label className="settings-field">
+                        <span className="settings-label">
+                          {t(`${POS_TK}.weeklySalaryAmountLabel`)}
+                        </span>
+                        <input
+                          className="settings-input"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          aria-label={t(`${POS_TK}.weeklySalaryAmountLabel`)}
+                          aria-invalid={posPayValueHasError}
+                          aria-describedby={
+                            posPayValueHasError
+                              ? "tech-pos-pay-error"
+                              : undefined
+                          }
+                          value={draftWeeklySalaryAmount}
+                          onChange={(event) => {
+                            setDraftWeeklySalaryAmount(event.target.value);
+                            setFormErrors((prev) => ({ ...prev, posPay: "" }));
+                          }}
+                        />
+                        {posPayValueHasError ? (
+                          <span
+                            className="tech-pos-pay-field-error"
+                            id="tech-pos-pay-error"
+                            role="alert"
+                          >
+                            {formErrors.posPay}
+                          </span>
+                        ) : null}
+                      </label>
+                    ) : null}
+
+                    {draftPayStructureType === "AgreedAmount" ? (
+                      <label className="settings-field">
+                        <span className="settings-label">
+                          {t(`${POS_TK}.agreedAmountLabel`)}
+                        </span>
+                        <input
+                          className="settings-input"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          aria-label={t(`${POS_TK}.agreedAmountLabel`)}
+                          aria-invalid={posPayValueHasError}
+                          aria-describedby={
+                            posPayValueHasError
+                              ? "tech-pos-pay-error"
+                              : undefined
+                          }
+                          value={draftAgreedAmount}
+                          onChange={(event) => {
+                            setDraftAgreedAmount(event.target.value);
+                            setFormErrors((prev) => ({ ...prev, posPay: "" }));
+                          }}
+                        />
+                        {posPayValueHasError ? (
+                          <span
+                            className="tech-pos-pay-field-error"
+                            id="tech-pos-pay-error"
+                            role="alert"
+                          >
+                            {formErrors.posPay}
+                          </span>
+                        ) : null}
+                      </label>
+                    ) : null}
+                  </div>
+
+                  <label className="tech-pos-tips-row">
+                    <input
+                      className="tech-pos-tips-input"
+                      type="checkbox"
+                      aria-label={t(`${POS_TK}.tipsEnabledLabel`)}
+                      checked={draftTipsEnabled}
+                      onChange={(event) =>
+                        setDraftTipsEnabled(event.target.checked)
+                      }
+                    />
+                    <span className="tech-pos-tips-switch" aria-hidden="true">
+                      <span />
+                    </span>
+                    <span>{t(`${POS_TK}.tipsEnabledLabel`)}</span>
+                  </label>
+
+                </div>
+              ) : null}
+
+              <div
+                className="tech-modal-section tech-services-section"
+                role="region"
+                aria-labelledby="tech-services-title"
+                data-ai-hub-field="services"
+              >
+                <div className="tech-modal-section-title">
+                  <ServicesListIcon />
+                  <span id="tech-services-title">{t(`${TK}.services`)}</span>
+                  {formErrors.services ? (
+                    <span
+                      className="tech-services-title-error"
+                      id="tech-services-error"
+                      role="alert"
+                    >
+                      {formErrors.services}
+                    </span>
+                  ) : null}
+                </div>
+                {(modalMode !== "create" && isStaffDetailLoading) ||
+                isServiceCatalogLoading ? (
+                  <BookingTechServicesSkeleton count={4} />
+                ) : serviceSections.length > 0 ? (
+                  <div
+                    className="tech-services-control"
+                    aria-invalid={Boolean(formErrors.services)}
+                  >
+                    <div
+                      className={`tech-services-all-row${servicesExpanded ? " is-open" : ""}${selectedServiceCount > 0 ? " has-selection" : ""}`}
+                    >
+                      <label className="tech-services-check-label">
+                        <input
+                          ref={checkAllServicesRef}
+                          type="checkbox"
+                          checked={allServicesSelected}
+                          onChange={toggleAllServices}
+                        />
+                        <span>{t(`${TK}.checkAllServices`)}</span>
+                      </label>
+                      <button
+                        className="tech-services-expand-button"
+                        type="button"
+                        aria-label={t(`${TK}.services`)}
+                        aria-expanded={servicesExpanded}
+                        aria-controls="tech-services-catalog-panel"
+                        onClick={() => setServicesExpanded((open) => !open)}
+                      >
+                        <span className="tech-services-count">
+                          {serviceOptions.length}
+                        </span>
+                        <ChevronDownIcon />
+                      </button>
+                    </div>
+
+                    <div
+                      className={`tech-services-catalog-panel${servicesExpanded ? " is-open" : ""}`}
+                      id="tech-services-catalog-panel"
+                      aria-hidden={!servicesExpanded}
+                    >
+                      <div className="tech-services-catalog-panel-inner">
+                        <div className="tech-service-categories">
                           {serviceSections.map((section) => {
                             const isOpen = openServiceCategoryIds.has(
                               section.id,
                             );
-                            const count = section.services.length;
+                            const serviceNames = section.services
+                              .map((service) => service.name.trim())
+                              .filter(Boolean);
+                            const selectedCount = serviceNames.filter((name) =>
+                              draftServices.includes(name),
+                            ).length;
+                            const allCategorySelected =
+                              serviceNames.length > 0 &&
+                              selectedCount === serviceNames.length;
+                            const someCategorySelected =
+                              selectedCount > 0 && !allCategorySelected;
                             const panelId = `tech-service-panel-${section.id}`;
+
                             return (
                               <div
-                                className={`settings-service-category booking-create-service-accordion${isOpen ? " is-open" : ""}`}
+                                className={`tech-service-category${isOpen ? " is-open" : ""}${selectedCount > 0 ? " has-selection" : ""}`}
                                 key={section.id}
                               >
-                                <button
-                                  className="settings-service-category-head booking-create-service-accordion-head"
-                                  type="button"
-                                  aria-expanded={isOpen}
-                                  aria-controls={panelId}
-                                  onClick={() =>
-                                    toggleServiceCategory(section.id)
-                                  }
-                                >
-                                  <span className="settings-service-category-name">
-                                    {section.name}
-                                  </span>
-                                  <span className="settings-service-category-count">
-                                    {count === 1
-                                      ? t(
-                                          `${TK_SETTINGS}.categoryServiceCountOne`,
-                                        )
-                                      : t(
-                                          `${TK_SETTINGS}.categoryServiceCount`,
-                                          { count },
-                                        )}
-                                  </span>
-                                  <svg
-                                    className="settings-service-category-chevron"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    aria-hidden="true"
-                                    width="16"
-                                    height="16"
-                                  >
-                                    <path
-                                      d="m6 9 6 6 6-6"
-                                      stroke="currentColor"
-                                      strokeWidth="2"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
+                                <div className="tech-service-category-head">
+                                  <label className="tech-services-check-label">
+                                    <input
+                                      ref={(input) => {
+                                        if (input) {
+                                          input.indeterminate =
+                                            someCategorySelected;
+                                        }
+                                      }}
+                                      type="checkbox"
+                                      checked={allCategorySelected}
+                                      tabIndex={servicesExpanded ? 0 : -1}
+                                      aria-label={t(`${TK}.checkAllCategory`, {
+                                        category: section.name,
+                                      })}
+                                      onChange={() =>
+                                        toggleServiceGroup(serviceNames)
+                                      }
                                     />
-                                  </svg>
-                                </button>
+                                    <span>{t(`${TK}.checkAll`)}</span>
+                                    <strong>{section.name}</strong>
+                                  </label>
+                                  <button
+                                    className="tech-services-expand-button"
+                                    type="button"
+                                    aria-label={section.name}
+                                    aria-expanded={isOpen}
+                                    aria-controls={panelId}
+                                    tabIndex={servicesExpanded ? 0 : -1}
+                                    onClick={() =>
+                                      toggleServiceCategory(section.id)
+                                    }
+                                  >
+                                    <span className="tech-services-count">
+                                      {section.services.length}
+                                    </span>
+                                    <ChevronDownIcon />
+                                  </button>
+                                </div>
                                 <div
-                                  className="booking-create-service-accordion-panel"
+                                  className={`tech-service-category-panel${isOpen ? " is-open" : ""}`}
                                   id={panelId}
-                                  role="region"
                                   aria-hidden={!isOpen}
                                 >
-                                  <div className="booking-create-service-accordion-panel-inner">
-                                    <div className="settings-service-category-body">
-                                      <div className="booking-service-chips">
-                                        {section.services.map((service) => {
-                                          const name = service.name.trim();
-                                          const selected =
-                                            Boolean(name) &&
-                                            draftServices.includes(name);
-                                          const duration =
-                                            service.durationMinutes ?? 0;
-                                          return (
-                                            <button
-                                              key={`${section.id}-${service.id}`}
-                                              className={`booking-service-chip-button${selected ? " is-selected" : ""}`}
-                                              type="button"
-                                              aria-pressed={selected}
-                                              tabIndex={isOpen ? 0 : -1}
-                                              onClick={() =>
+                                  <div className="tech-service-category-panel-inner">
+                                    <div className="tech-service-option-grid">
+                                      {section.services.map((service) => {
+                                        const name = service.name.trim();
+                                        return (
+                                          <label
+                                            className="tech-service-option"
+                                            key={`${section.id}-${service.id}`}
+                                          >
+                                            <input
+                                              type="checkbox"
+                                              checked={
+                                                Boolean(name) &&
+                                                draftServices.includes(name)
+                                              }
+                                              tabIndex={
+                                                servicesExpanded && isOpen
+                                                  ? 0
+                                                  : -1
+                                              }
+                                              onChange={() =>
                                                 toggleService(name)
                                               }
-                                            >
-                                              {name}
-                                              {BOOKING_CREATE_DISPLAY_SEPARATOR}
-                                              {formatServicePrice(
-                                                service.price,
-                                              )}
-                                              {
-                                                BOOKING_CREATE_DISPLAY_SEPARATOR
-                                              }
-                                              <span className="booking-service-duration">
-                                                {t(
-                                                  `${TK_CREATE}.durationMin`,
-                                                  { count: duration },
-                                                )}
-                                              </span>
-                                            </button>
-                                          );
-                                        })}
-                                      </div>
+                                            />
+                                            <span>{name}</span>
+                                          </label>
+                                        );
+                                      })}
                                     </div>
                                   </div>
                                 </div>
@@ -1613,19 +2230,12 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
                             );
                           })}
                         </div>
-                      ) : (
-                        <div className="tech-service-empty">
-                          {t(`${TK}.servicesEmpty`)}
-                        </div>
-                      )}
-                      <span className="field-error-slot" aria-live="polite">
-                        {formErrors.services ? (
-                          <span className="field-error">
-                            {formErrors.services}
-                          </span>
-                        ) : null}
-                      </span>
+                      </div>
                     </div>
+                  </div>
+                ) : (
+                  <div className="tech-service-empty">
+                    {t(`${TK}.servicesEmpty`)}
                   </div>
                 )}
               </div>
@@ -1737,19 +2347,17 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
                 className="booking-secondary-button"
                 type="button"
                 onClick={closeModal}
+                disabled={isSaving}
               >
                 {t(`${TK}.close`)}
               </button>
               <button
                 className="booking-primary-button"
                 type="button"
-                disabled={
-                  createStaffMutation.isPending || updateStaffMutation.isPending
-                }
-                onClick={saveModal}
+                disabled={isSaving}
+                onClick={() => void saveModal()}
               >
-                {createStaffMutation.isPending ||
-                updateStaffMutation.isPending ? (
+                {isSaving ? (
                   <SpinnerIcon className="booking-inline-spinner" />
                 ) : (
                   <CheckIcon />
