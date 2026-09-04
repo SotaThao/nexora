@@ -50,6 +50,7 @@ interface WorkOrderServiceLinesProps {
   onAddService: () => void
   onAddCustomService: () => void
   onChangeService: (key: string) => void
+  onRemoveService: (key: string) => void
   /** Omitted on read-only views; without it the rows render without line-status buttons. */
   actions?: WorkOrderLineActions
 }
@@ -61,6 +62,7 @@ export default function WorkOrderServiceLines({
   onAddService,
   onAddCustomService,
   onChangeService,
+  onRemoveService,
   actions,
 }: WorkOrderServiceLinesProps) {
   const { t } = useTranslation()
@@ -124,6 +126,7 @@ export default function WorkOrderServiceLines({
                   canEdit={canEdit}
                   actions={actions}
                   onChangeService={() => onChangeService(line.key)}
+                  onRemoveService={() => onRemoveService(line.key)}
                 />
               ))}
             </tbody>
@@ -157,11 +160,13 @@ function WorkOrderServiceLineRow({
   canEdit,
   actions,
   onChangeService,
+  onRemoveService,
 }: {
   line: WorkOrderEditableLine
   canEdit: boolean
   actions?: WorkOrderLineActions
   onChangeService: () => void
+  onRemoveService: () => void
 }) {
   const { t } = useTranslation()
   const canAct = Boolean(actions) && Boolean(line.isMine) && !line.isAddOn
@@ -262,15 +267,29 @@ function WorkOrderServiceLineRow({
       </td>
       {canEdit ? (
         <td className={WORK_ORDERS_LAYOUT_CLASS.serviceActionCell}>
-          {line.isAddOn ? null : (
-            <button
-              type="button"
-              className={WORK_ORDERS_LAYOUT_CLASS.serviceChangeButton}
-              aria-label={`${t(WORK_ORDERS_I18N.changeService)} ${workOrderTextOrPlaceholder(line.serviceName)}`}
-              onClick={onChangeService}
-            >
-              {t(WORK_ORDERS_I18N.changeService)}
-            </button>
+          {line.isAddOn || !canAct ? null : (
+            <span className={WORK_ORDERS_LAYOUT_CLASS.serviceActionGroup}>
+              {/* Work already done is a manager's correction, so only removing it stays open here
+                  — the same split the save endpoint enforces. */}
+              {line.lineStatus === PosOrderItemStatus.Completed ? null : (
+                <button
+                  type="button"
+                  className={WORK_ORDERS_LAYOUT_CLASS.serviceChangeButton}
+                  aria-label={`${t(WORK_ORDERS_I18N.changeService)} ${workOrderTextOrPlaceholder(line.serviceName)}`}
+                  onClick={onChangeService}
+                >
+                  {t(WORK_ORDERS_I18N.changeService)}
+                </button>
+              )}
+              <button
+                type="button"
+                className={WORK_ORDERS_LAYOUT_CLASS.serviceRemoveButton}
+                aria-label={`${t(WORK_ORDERS_I18N.removeService)} ${workOrderTextOrPlaceholder(line.serviceName)}`}
+                onClick={onRemoveService}
+              >
+                {t(WORK_ORDERS_I18N.removeService)}
+              </button>
+            </span>
           )}
         </td>
       ) : null}

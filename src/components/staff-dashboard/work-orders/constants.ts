@@ -83,6 +83,9 @@ export const WORK_ORDERS_I18N = {
   pickerSearchPlaceholder: 'staff_dashboard.work_orders.picker_search_placeholder',
   pickerSearchAria: 'staff_dashboard.work_orders.picker_search_aria',
   pickerEmpty: 'staff_dashboard.work_orders.picker_empty',
+  pickerUncategorized: 'staff_dashboard.work_orders.picker_uncategorized',
+  pickerLoading: 'staff_dashboard.work_orders.picker_loading',
+  pickerNoneAssignable: 'staff_dashboard.work_orders.picker_none_assignable',
   pickerConfirmAdd: 'staff_dashboard.work_orders.picker_confirm_add',
   pickerConfirmEdit: 'staff_dashboard.work_orders.picker_confirm_edit',
   pickerClose: 'staff_dashboard.work_orders.picker_close',
@@ -92,8 +95,6 @@ export const WORK_ORDERS_I18N = {
   customNamePlaceholder: 'staff_dashboard.work_orders.custom_name_placeholder',
   customPriceLabel: 'staff_dashboard.work_orders.custom_price_label',
   customPricePlaceholder: 'staff_dashboard.work_orders.custom_price_placeholder',
-  customDurationLabel: 'staff_dashboard.work_orders.custom_duration_label',
-  customDurationPlaceholder: 'staff_dashboard.work_orders.custom_duration_placeholder',
   customError: 'staff_dashboard.work_orders.custom_error',
   customConfirm: 'staff_dashboard.work_orders.custom_confirm',
   customClose: 'staff_dashboard.work_orders.custom_close',
@@ -103,7 +104,8 @@ export const WORK_ORDERS_I18N = {
   approvalTitle: 'staff_dashboard.work_orders.approval_title',
   approvalCancel: 'staff_dashboard.work_orders.approval_cancel',
   approvalCopy: 'staff_dashboard.work_orders.approval_copy',
-  approvalDemo: 'staff_dashboard.work_orders.approval_demo',
+  approvalRemovedLabel: 'staff_dashboard.work_orders.approval_removed_label',
+  approvalSaving: 'staff_dashboard.work_orders.approval_saving',
   approvalHelp: 'staff_dashboard.work_orders.approval_help',
   approvalCodePlaceholder: 'staff_dashboard.work_orders.approval_code_placeholder',
   approvalCodeAria: 'staff_dashboard.work_orders.approval_code_aria',
@@ -112,6 +114,9 @@ export const WORK_ORDERS_I18N = {
   toastAddService: 'staff_dashboard.work_orders.toast_add_service',
   toastChangeService: 'staff_dashboard.work_orders.toast_change_service',
   toastCustomService: 'staff_dashboard.work_orders.toast_custom_service',
+  toastRemoveService: 'staff_dashboard.work_orders.toast_remove_service',
+  removeService: 'staff_dashboard.work_orders.remove_service',
+  removeAddOnWarning: 'staff_dashboard.work_orders.remove_addon_warning',
   toastApproved: 'staff_dashboard.work_orders.toast_approved',
   toastCancelled: 'staff_dashboard.work_orders.toast_cancelled',
   completedNotesTitle: 'staff_dashboard.work_orders.completed_notes_title',
@@ -277,6 +282,9 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   serviceAddOnIcon: 'h-3.5 w-3.5 shrink-0 text-nexoraBrand',
   serviceChangeButton:
     'inline-flex min-h-7 max-w-full items-center justify-center truncate rounded-md px-1.5 text-[11px] font-extrabold whitespace-nowrap text-nexoraBrand transition hover:bg-nexoraBrandSoft sm:min-h-8 sm:px-2 sm:text-xs',
+  serviceRemoveButton:
+    'inline-flex min-h-7 max-w-full items-center justify-center truncate rounded-md px-1.5 text-[11px] font-extrabold whitespace-nowrap text-rose-500 transition hover:bg-rose-50 sm:min-h-8 sm:px-2 sm:text-xs',
+  serviceActionGroup: 'flex items-center justify-end gap-1',
   approvalPill: 'inline-flex h-[19px] shrink-0 items-center rounded-full px-1.5 text-[8px] font-extrabold uppercase',
   approvalPillPending: 'bg-[#FFF3D6] text-[#AD5A00]',
   approvalPillApproved: 'bg-[#E5F9F0] text-[#008655]',
@@ -314,8 +322,6 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   approvalServices: 'mt-2 flex flex-col gap-1.5',
   approvalChip:
     'flex min-h-7 items-center justify-between gap-2 rounded-[9px] bg-white px-2.5 text-[11px] font-extrabold text-[#8D380C]',
-  approvalDemo:
-    'mt-2 flex min-h-9 items-center justify-center rounded-lg border border-nexoraBrand bg-white text-[11px] font-extrabold text-nexoraBrand',
   approvalHelp: 'mt-1.5 text-[11px] font-bold leading-snug text-nexoraMuted',
   approvalForm: 'mt-2 grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_7.5rem]',
   approvalInput:

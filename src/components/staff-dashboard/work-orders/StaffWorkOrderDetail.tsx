@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from 'react'
+import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { qk } from '../../../data/queryKeys'
 import { BadgeCheck, Check, ChevronLeft, LayoutGrid, Play, Radio } from 'lucide-react'
@@ -7,7 +7,9 @@ import { useNotification } from '../../../contexts/NotificationContext'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import {
   useCompleteStaffWorkOrderService,
+  useSaveMyWorkOrderServiceLines,
   useStaffWorkOrderDetail,
+  useStaffWorkOrderServiceCatalog,
   useStartStaffWorkOrderService,
 } from '../../../data/hooks/useStaffWorkOrders'
 import { getApiErrorCode } from '../../../types/domain'
@@ -32,13 +34,13 @@ import { WorkOrderErrorCard } from './WorkOrderQueryFeedback'
 import { WorkOrderDetailSkeleton } from './WorkOrderSkeletons'
 import {
   WORK_ORDER_PICKER_MODE,
-  WORK_ORDER_SERVICE_APPROVAL,
   addWorkOrderCatalogService,
   addWorkOrderCustomService,
+  buildWorkOrderCatalogCategories,
   canEditWorkOrderServices,
-  matchWorkOrderCatalogServiceByName,
+  removeWorkOrderServiceLine,
   replaceWorkOrderCatalogService,
-  setWorkOrderPendingApproval,
+  toSaveWorkOrderServiceLinesPayload,
   toWorkOrderEditableLines,
   workOrderEditableServiceTotal,
   workOrderPendingServiceLines,
@@ -81,8 +83,21 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
   const [seededOrderId, setSeededOrderId] = useState('')
   const [picker, setPicker] = useState<{ mode: WorkOrderPickerMode; lineKey?: string } | null>(null)
   const [isCustomOpen, setIsCustomOpen] = useState(false)
+  // Removed lines are kept aside rather than dropped: the customer approves the whole basket at
+  // once, and until they do, the row still has to be shown as a pending change.
+  const [removedLines, setRemovedLines] = useState<WorkOrderEditableLine[]>([])
+  const [approvalError, setApprovalError] = useState<string | null>(null)
   const [completedSession, setCompletedSession] = useState<{ orderId: string; note: string | null } | null>(null)
   const ticket = detailQuery.data ?? null
+  const saveServiceLines = useSaveMyWorkOrderServiceLines(orderId)
+  const catalogQuery = useStaffWorkOrderServiceCatalog(picker ? orderId : undefined)
+  const catalogCategories = useMemo(
+    () => buildWorkOrderCatalogCategories(
+      catalogQuery.data ?? [],
+      t(WORK_ORDERS_I18N.pickerUncategorized),
+    ),
+    [catalogQuery.data, t],
+  )
 
   // Line-level actions live on the merchant endpoints: the same handler serves the front desk and
   // the technician, and decides which of the two is calling. Hence businessId from the ticket.
@@ -101,7 +116,8 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
   const lineActionLockRef = useRef(false)
 
   const isMutating =
-    startService.isPending
+    saveServiceLines.isPending
+    || startService.isPending
     || completeService.isPending
     || acceptLine.isPending
     || rejectLine.isPending
@@ -113,6 +129,8 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
   if (ticket && seededOrderId !== ticket.id) {
     setSeededOrderId(ticket.id)
     setLines(toWorkOrderEditableLines(ticket.items))
+    setRemovedLines([])
+    setApprovalError(null)
   }
 
   const displayStatus = completedSession?.orderId === orderId
@@ -169,6 +187,30 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
       })
   }
 
+  // One request for the whole basket, with the customer's digits attached: the server decides
+  // whether they match, and answers with the ticket as it now stands.
+  const handleApproveChanges = (customerPhoneLast4: string) => {
+    setApprovalError(null)
+    saveServiceLines.mutate(
+      { customerPhoneLast4, lines: toSaveWorkOrderServiceLinesPayload(lines) },
+      {
+        onSuccess: (saved) => {
+          if (saved) setLines(toWorkOrderEditableLines(saved.items))
+          setRemovedLines([])
+          showToast(t(WORK_ORDERS_I18N.toastApproved), 'success')
+        },
+        onError: (err) => setApprovalError(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR')))),
+      },
+    )
+  }
+
+  const handleDiscardChanges = () => {
+    setLines(ticket ? toWorkOrderEditableLines(ticket.items) : [])
+    setRemovedLines([])
+    setApprovalError(null)
+    showToast(t(WORK_ORDERS_I18N.toastCancelled), 'success')
+  }
+
   const handleConfirmCompletion = async (note: string | null) => {
     const succeeded = await runAction(
       () => completeService.mutateAsync(note),
@@ -202,12 +244,20 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
         onAddService={() => setPicker({ mode: WORK_ORDER_PICKER_MODE.add })}
         onAddCustomService={() => setIsCustomOpen(true)}
         onChangeService={(key) => setPicker({ mode: WORK_ORDER_PICKER_MODE.edit, lineKey: key })}
-        onApprovePending={() => {
-          setLines((current) => setWorkOrderPendingApproval(current, WORK_ORDER_SERVICE_APPROVAL.approved))
+        onRemoveService={(key) => {
+          const target = lines.find((line) => line.key === key)
+          setLines((current) => removeWorkOrderServiceLine(current, key))
+          // A line that was never saved leaves nothing to approve — only rows the ticket already
+          // has count as a pending removal.
+          if (target?.id) setRemovedLines((current) => [...current, target])
+          setApprovalError(null)
+          showToast(t(WORK_ORDERS_I18N.toastRemoveService), 'success')
         }}
-        onCancelPending={() => {
-          setLines((current) => setWorkOrderPendingApproval(current, WORK_ORDER_SERVICE_APPROVAL.rejected))
-        }}
+        removedLines={removedLines}
+        isSaving={saveServiceLines.isPending}
+        approvalError={approvalError}
+        onApprovePending={handleApproveChanges}
+        onCancelPending={handleDiscardChanges}
         lineActions={{
           onAccept: (line) => runLineAction(acceptLine, line, 'accept'),
           onDecline: (line) => setDeclineTarget(line),
@@ -268,14 +318,15 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
       {picker ? (
         <WorkOrderServicePickerModal
           mode={picker.mode}
+          categories={catalogCategories}
+          isLoading={catalogQuery.isPending}
           initialServiceId={
             picker.lineKey
-              ? matchWorkOrderCatalogServiceByName(
-                  lines.find((line) => line.key === picker.lineKey)?.serviceName ?? '',
-                )?.id
+              ? lines.find((line) => line.key === picker.lineKey)?.posServiceId ?? ''
               : ''
           }
           onConfirm={(service: WorkOrderCatalogService) => {
+            setApprovalError(null)
             setLines((current) => (
               picker.mode === WORK_ORDER_PICKER_MODE.edit && picker.lineKey
                 ? replaceWorkOrderCatalogService(current, picker.lineKey, service)
@@ -295,6 +346,7 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
       {isCustomOpen ? (
         <WorkOrderCustomServiceModal
           onConfirm={(input) => {
+            setApprovalError(null)
             setLines((current) => addWorkOrderCustomService(current, input))
             showToast(t(WORK_ORDERS_I18N.toastCustomService), 'success')
             setIsCustomOpen(false)
@@ -321,6 +373,10 @@ function WorkOrderDetailBody({
   onAddService,
   onAddCustomService,
   onChangeService,
+  onRemoveService,
+  removedLines,
+  isSaving,
+  approvalError,
   onApprovePending,
   onCancelPending,
   lineActions,
@@ -339,7 +395,11 @@ function WorkOrderDetailBody({
   onAddService: () => void
   onAddCustomService: () => void
   onChangeService: (key: string) => void
-  onApprovePending: () => void
+  onRemoveService: (key: string) => void
+  removedLines: WorkOrderEditableLine[]
+  isSaving: boolean
+  approvalError: string | null
+  onApprovePending: (customerPhoneLast4: string) => void
   onCancelPending: () => void
   lineActions: WorkOrderLineActions
 }) {
@@ -471,12 +531,16 @@ function WorkOrderDetailBody({
         onAddService={onAddService}
         onAddCustomService={onAddCustomService}
         onChangeService={onChangeService}
+        onRemoveService={onRemoveService}
         actions={lineActions}
       />
 
       {isCompleted ? null : (
         <WorkOrderCustomerApproval
           services={pendingServices}
+          removedServices={removedLines}
+          isSaving={isSaving}
+          errorMessage={approvalError}
           onApprove={onApprovePending}
           onCancel={onCancelPending}
         />

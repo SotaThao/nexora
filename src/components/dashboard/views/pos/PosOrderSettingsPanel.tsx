@@ -15,6 +15,7 @@ const K = 'components.dashboard.views.pos.PosOrderSettingsPanel'
 const DEFAULT_SETTINGS: PosOrderSettingsApiDto = {
   requireStaffAcceptance: false,
   warnOnServiceLineStatusMismatch: true,
+  allowStaffManageOwnServiceLines: true,
 }
 
 export default function PosOrderSettingsPanel({ businessId }: { businessId?: string }) {
@@ -101,6 +102,7 @@ export default function PosOrderSettingsPanel({ businessId }: { businessId?: str
       <form onSubmit={save} noValidate>
         {renderToggle('requireStaffAcceptance')}
         {renderToggle('warnOnServiceLineStatusMismatch')}
+        {renderToggle('allowStaffManageOwnServiceLines')}
 
         {isEditing ? (
           <div className="flex gap-2 pt-3 justify-end">

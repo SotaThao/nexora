@@ -259,6 +259,10 @@ export const qk = {
     return key
   },
   staffWorkOrderDetail: (orderId?: string) => ['staffWorkOrders', 'detail', orderId ?? ''],
+  // Under the same root so one invalidation after a save refreshes the picker too — a service the
+  // owner just retired must stop being offered.
+  staffWorkOrderServiceCatalog: (orderId?: string) =>
+    ['staffWorkOrders', 'serviceCatalog', orderId ?? ''],
   staffClockScanPreview: (businessId?: string, token?: string) =>
     ['staffClockScanPreview', businessId ?? '', token ?? ''],
   // POS Merchant Ops — Checkout (US-14 / US-025, refactored to Order in US-026)
