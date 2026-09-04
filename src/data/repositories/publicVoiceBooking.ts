@@ -4,6 +4,7 @@
  */
 import httpClient from '../../lib/httpClient'
 import { HOLIDAY_TYPE } from '../../constants/holiday'
+import { PosServiceDiscountType } from '../../constants/posDiscount'
 import {
   BOOKING_DAY_OF_WEEK,
   OTHER_SERVICES_CATEGORY_ID,
@@ -19,6 +20,7 @@ import {
   type PublicBookingHoliday,
   type PublicBookingOperatingHour,
   type PublicBookingPageData,
+  type PublicBookingPromotion,
   type PublicBookingService,
   type PublicBookingServiceCategory,
   type PublicBookingStaff,
@@ -162,6 +164,48 @@ function normalizeHoliday(raw: unknown): PublicBookingHoliday | null {
   }
 }
 
+const DISCOUNT_TYPES: readonly PosServiceDiscountType[] = [
+  PosServiceDiscountType.Percent,
+  PosServiceDiscountType.Amount,
+]
+
+/**
+ * An offer whose `discountType` we don't recognise is dropped rather than defaulted: rendering
+ * a percentage as "$15 off" (or the reverse) misquotes the price to the customer, which is worse
+ * than not advertising the offer at all.
+ */
+function normalizePromotion(raw: unknown): PublicBookingPromotion | null {
+  const dto = asRecord(raw)
+  const id = String(readField(dto, 'id', 'Id') ?? '').trim()
+  const name = String(readField(dto, 'name', 'Name') ?? '').trim()
+  if (!id || !name) return null
+
+  const rawType = String(readField(dto, 'discountType', 'DiscountType') ?? '').trim()
+  const discountType = DISCOUNT_TYPES.find((value) => value === rawType)
+  if (!discountType) return null
+
+  const discountValue = toNumberOrNull(readField(dto, 'discountValue', 'DiscountValue'))
+  if (discountValue == null || discountValue <= 0) return null
+
+  const daysRaw = readField<unknown[]>(dto, 'daysOfWeek', 'DaysOfWeek')
+  const days = Array.isArray(daysRaw)
+    ? daysRaw.map((day) => String(day ?? '').trim())
+    : []
+  // Sorted into week order here so every caller renders the same run of days.
+  const daysOfWeek = BOOKING_DAY_OF_WEEK.filter((day) => days.includes(day))
+
+  return {
+    id,
+    name,
+    badgeLabel: String(readField(dto, 'badgeLabel', 'BadgeLabel') ?? '').trim(),
+    discountType,
+    discountValue,
+    daysOfWeek: [...daysOfWeek],
+    startTime: String(readField(dto, 'startTime', 'StartTime') ?? '').trim(),
+    endTime: String(readField(dto, 'endTime', 'EndTime') ?? '').trim(),
+  }
+}
+
 function normalizeCustomer(raw: unknown): PublicBookingCustomer | null {
   if (raw == null) return null
   const dto = asRecord(raw)
@@ -209,6 +253,7 @@ export function normalizeBookingPageData(
   const staffRaw = readField<unknown[]>(raw, 'staff', 'Staff')
   const hoursRaw = readField<unknown[]>(raw, 'operatingHours', 'OperatingHours')
   const holidaysRaw = readField<unknown[]>(raw, 'holidays', 'Holidays')
+  const promotionsRaw = readField<unknown[]>(raw, 'promotions', 'Promotions')
 
   const categories = Array.isArray(categoriesRaw)
     ? (categoriesRaw.map(normalizeCategory).filter(Boolean) as PublicBookingServiceCategory[])
@@ -280,6 +325,9 @@ export function normalizeBookingPageData(
       : [],
     holidays: Array.isArray(holidaysRaw)
       ? (holidaysRaw.map(normalizeHoliday).filter(Boolean) as PublicBookingHoliday[])
+      : [],
+    promotions: Array.isArray(promotionsRaw)
+      ? (promotionsRaw.map(normalizePromotion).filter(Boolean) as PublicBookingPromotion[])
       : [],
     customer: normalizeCustomer(readField(raw, 'customer', 'Customer')),
   }

@@ -3806,6 +3806,9 @@
             "startServiceButton": "Gán dịch vụ",
             "startServiceSuccess": "Đã bắt đầu phục vụ.",
             "completeSuccess": "Đã ghi nhận thanh toán — thợ đã được giải phóng.",
+            "ticketNoteTitle": "Ghi chú",
+            "ticketNoteLabel": "Ghi chú ticket",
+            "ticketNotePlaceholder": "Ghế ngồi, dặn dò khách, màu/bột đã dùng…",
             "tipTitle": "Tip",
             "noTipButton": "Không tip",
             "customTipPlaceholder": "Tự nhập",
@@ -7198,6 +7201,7 @@
       "statusCancelledTitle": "Lượt này đã bị huỷ",
       "statusCancelledDesc": "Vui lòng check-in lại hoặc hỏi quầy lễ tân.",
       "refreshButton": "Làm mới",
+      "checkInAgainButton": "Check-in lại",
       "autoRefreshHint": "Trang này tự cập nhật mỗi 15 giây."
     }
   },

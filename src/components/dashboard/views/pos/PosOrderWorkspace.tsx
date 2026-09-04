@@ -29,6 +29,7 @@ import {
   useUpdateOrderServiceLine,
   useEligiblePromotions,
   useSetOrderDiscount,
+  useSetOrderNote,
   useSetOrderStaffTipSplit,
   useSetOrderTip,
   useUpdateOrderProductLineQuantity,
@@ -290,6 +291,7 @@ export default function PosOrderWorkspace({
   const startOrderService = useStartOrderService(businessId)
   const setOrderDiscount = useSetOrderDiscount(businessId)
   const setTip = useSetOrderTip(businessId)
+  const setNote = useSetOrderNote(businessId)
   const setStaffTipSplit = useSetOrderStaffTipSplit(businessId)
   const completeOrder = useCompleteOrder(businessId)
 
@@ -384,6 +386,7 @@ export default function PosOrderWorkspace({
   const [discountTarget, setDiscountTarget] = useState<ServiceDiscountTarget | null>(null)
   const [tipMode, setTipMode] = useState<TipMode>('noTip')
   const [customTipInput, setCustomTipInput] = useState('')
+  const [noteInput, setNoteInput] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<PosCheckoutPaymentMethodType>('Cash')
   const [cashReceived, setCashReceived] = useState('')
   const cashReceivedWasEditedRef = useRef(false)
@@ -503,6 +506,7 @@ export default function PosOrderWorkspace({
     // Status never reveals checkout information by itself. An InService order reached through
     // Edit still opens as an operational ticket; only an explicit Checkout entry reveals payment.
     setShowPaymentSection(mode === 'checkout' && !isPaid)
+    setNoteInput(order.note ?? '')
     if (mode !== 'success') {
       setReceiptChoice('none')
       setPaymentMethod('Cash')
@@ -957,6 +961,16 @@ export default function PosOrderWorkspace({
     applyTip('custom', round2(parsed))
   }
 
+  const handleNoteCommit = () => {
+    if (setNote.isPending) return
+    const trimmed = noteInput.trim()
+    if (trimmed === (order?.note ?? '')) return
+    setNote.mutate(
+      { orderId, note: trimmed.length > 0 ? trimmed : null },
+      { onError: reportError },
+    )
+  }
+
   // A percentage tip mode (pct10/pct20) is a live % of servicesSubtotal, not a one-time
   // dollar snapshot — without this, adding/removing a service after picking e.g. 10%
   // leaves the old dollar amount on the order, so Payment Summary's Tip/Total silently
@@ -1398,6 +1412,24 @@ export default function PosOrderWorkspace({
                   )}
                 </div>
               ) : null}
+            </div>
+
+            <div className="space-y-2 rounded-xl border border-nexoraBorder/70 bg-nexoraSurface p-3 shadow-sm">
+              <label htmlFor="pos-ticket-note" className="block text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
+                {t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteTitle')}
+              </label>
+              <textarea
+                id="pos-ticket-note"
+                value={noteInput}
+                onChange={(e) => setNoteInput(e.target.value)}
+                onBlur={handleNoteCommit}
+                disabled={isBusy}
+                maxLength={500}
+                rows={2}
+                placeholder={t('components.dashboard.views.pos.PosOrderWorkspace.ticketNotePlaceholder')}
+                aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteLabel')}
+                className="w-full rounded-lg border border-nexoraBorder bg-white px-2.5 py-2 text-xs text-nexoraText outline-none focus:border-nexoraBrand disabled:cursor-not-allowed disabled:opacity-60"
+              />
             </div>
 
             {!showPaymentSection ? (
