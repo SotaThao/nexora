@@ -161,6 +161,8 @@ const LINE_STATUS_BADGE_CLASS: Record<string, string> = {
   [PosOrderItemStatus.Completed]: 'bg-emerald-100 text-emerald-700',
 }
 
+type LineStatusActionKind = 'start' | 'complete'
+
 interface DisplayServiceLine {
   key: string
   // Set for a line that already exists server-side (always set in Update mode, never set
@@ -935,6 +937,12 @@ export default function PosOrderWorkspace({
     .filter((l) => l.lineStatus !== PosOrderItemStatus.Completed)
     .map(describeLine)
 
+  // Which line's status button is mid-flight, so only that button shows a spinner. The ref covers
+  // the gap before React re-renders, exactly as useTicketActionLock's own ref does.
+  const [pendingLineStatusAction, setPendingLineStatusAction] =
+    useState<{ lineId: string; kind: LineStatusActionKind } | null>(null)
+  const lineStatusActionLockRef = useRef(false)
+
   const [mismatchWarning, setMismatchWarning] = useState<{
     kind: ServiceLineMismatchKind
     lines: string[]
@@ -973,28 +981,47 @@ export default function PosOrderWorkspace({
 
   // Per-line Start/Complete. Both are idempotent server-side, so a stale board that shows the
   // button one tap too late costs nothing.
-  const handleStartLine = (line: DisplayServiceLine) => {
+  //
+  // Deliberately NOT routed through startTicketAction(TicketBusySurface.Lines): that surface
+  // blanks the whole ticket panel behind a skeleton, which is the right weight for editing a
+  // line (price, technician, discount all move at once) but far too heavy for flipping one
+  // line's status — the only thing that changes is that line's badge. The pressed button carries
+  // its own spinner instead, and the ref below keeps the double-tap protection the surface lock
+  // used to provide.
+  //
+  // Success is also silent: the badge already changes, and the front desk taps these once per
+  // service — a confirmation dialog per tap would be three interruptions on a three-service
+  // ticket. Failures still surface through reportError.
+  const runLineStatusAction = (
+    line: DisplayServiceLine,
+    kind: LineStatusActionKind,
+    mutation: typeof startServiceLine,
+  ) => {
     if (!isPersistedLineId(line.existingId)) return
-    if (!startTicketAction(TicketBusySurface.Lines)) return
-    startServiceLine.mutate(
+    if (isBusy || lineStatusActionLockRef.current) return
+
+    lineStatusActionLockRef.current = true
+    setPendingLineStatusAction({ lineId: line.existingId as string, kind })
+
+    mutation.mutate(
       { orderId, serviceLineId: line.existingId as string },
       {
-        onSuccess: () =>
-          showToast(t('components.dashboard.views.pos.serviceLineStatus.startSuccess')),
         onError: reportError,
-        onSettled: endTicketAction,
+        onSettled: () => {
+          lineStatusActionLockRef.current = false
+          setPendingLineStatusAction(null)
+        },
       },
     )
   }
 
-  const handleCompleteLine = (line: DisplayServiceLine) => {
-    if (!isPersistedLineId(line.existingId)) return
-    if (!startTicketAction(TicketBusySurface.Lines)) return
-    markServiceLineDone.mutate(
-      { orderId, serviceLineId: line.existingId as string },
-      { onError: reportError, onSettled: endTicketAction },
-    )
-  }
+  const isLineStatusActionPending = (line: DisplayServiceLine, kind: LineStatusActionKind) =>
+    pendingLineStatusAction?.lineId === line.existingId && pendingLineStatusAction.kind === kind
+
+  const handleStartLine = (line: DisplayServiceLine) => runLineStatusAction(line, 'start', startServiceLine)
+
+  const handleCompleteLine = (line: DisplayServiceLine) =>
+    runLineStatusAction(line, 'complete', markServiceLineDone)
 
   const handleCheckoutFromUpdate = () => {
     if (isPaid) return
@@ -1291,8 +1318,11 @@ export default function PosOrderWorkspace({
                                 )}
                               </div>
 
-                              <div className="col-span-2 overflow-x-auto pt-1">
-                                <div className="flex min-w-max items-center gap-1.5">
+                              {/* Wraps rather than scrolls: a hidden action is an action the front
+                                  desk does not know exists, and Start/Complete now sit in this row.
+                                  Vertical growth is cheap here — the list above it already scrolls. */}
+                              <div className="col-span-2 pt-1">
+                                <div className="flex flex-wrap items-center gap-1.5">
                                   {/* Also offered on a line still awaiting the technician's acceptance:
                                       starting on their behalf is the designed way out when nobody
                                       answers, and it records the acceptance at the same instant. */}
@@ -1304,8 +1334,11 @@ export default function PosOrderWorkspace({
                                       data-testid={`start-line-${line.key}`}
                                       onClick={() => handleStartLine(line)}
                                       disabled={isBusy}
-                                      className="h-7 shrink-0 rounded-lg border border-emerald-200 bg-emerald-50/60 px-2 text-[10px] font-bold text-emerald-700 disabled:opacity-60"
+                                      className="inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50/60 px-2 text-[10px] font-bold text-emerald-700 disabled:opacity-60"
                                     >
+                                      {isLineStatusActionPending(line, 'start') ? (
+                                        <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                                      ) : null}
                                       {t('components.dashboard.views.pos.serviceLineStatus.startAction')}
                                     </button>
                                   ) : null}
@@ -1315,8 +1348,11 @@ export default function PosOrderWorkspace({
                                       data-testid={`complete-line-${line.key}`}
                                       onClick={() => handleCompleteLine(line)}
                                       disabled={isBusy}
-                                      className="h-7 shrink-0 rounded-lg border border-emerald-300 bg-emerald-500 px-2 text-[10px] font-bold text-white disabled:opacity-60"
+                                      className="inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border border-emerald-300 bg-emerald-500 px-2 text-[10px] font-bold text-white disabled:opacity-60"
                                     >
+                                      {isLineStatusActionPending(line, 'complete') ? (
+                                        <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                                      ) : null}
                                       {t('components.dashboard.views.pos.serviceLineStatus.completeAction')}
                                     </button>
                                   ) : null}

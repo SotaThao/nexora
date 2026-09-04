@@ -1,4 +1,6 @@
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { qk } from '../../../data/queryKeys'
 import { Check, ChevronLeft, LayoutGrid, Play, Radio } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -19,7 +21,10 @@ import {
   type WorkOrderItem,
 } from './constants'
 import WorkOrderCompleteServiceModal from './WorkOrderCompleteServiceModal'
-import WorkOrderServiceLines, { type WorkOrderLineActions } from './WorkOrderServiceLines'
+import WorkOrderServiceLines, {
+  type LineStatusActionKind,
+  type WorkOrderLineActions,
+} from './WorkOrderServiceLines'
 import { WorkOrderErrorCard } from './WorkOrderQueryFeedback'
 import { WorkOrderDetailSkeleton } from './WorkOrderSkeletons'
 import {
@@ -61,7 +66,14 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
   const rejectLine = useRejectServiceLine(businessId)
   const startLine = useStartServiceLine(businessId)
   const completeLine = useMarkServiceLineDone(businessId)
+  const queryClient = useQueryClient()
   const [declineTarget, setDeclineTarget] = useState<WorkOrderItem | null>(null)
+
+  // Which line's button is mid-flight, so the spinner stays on that button instead of putting the
+  // whole ticket into a pending state. The ref covers the gap before React re-renders.
+  const [pendingLineAction, setPendingLineAction] =
+    useState<{ lineId: string; kind: LineStatusActionKind } | null>(null)
+  const lineActionLockRef = useRef(false)
 
   const isMutating =
     startService.isPending
@@ -87,13 +99,37 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
     }
   }
 
+  // Same treatment as the front desk's ticket detail: success is silent (the line's own badge
+  // changes, and a technician taps these once per service), only the pressed button shows a
+  // spinner, and failures still raise a toast.
   const runLineAction = (
     mutation: { mutateAsync: (vars: { orderId: string; serviceLineId: string }) => Promise<unknown> },
     line: WorkOrderItem,
-    successKey: string,
+    kind: LineStatusActionKind,
   ) => {
     if (!line.id) return
-    void runAction(() => mutation.mutateAsync({ orderId, serviceLineId: line.id }), successKey)
+    if (isMutating || lineActionLockRef.current) return
+
+    const serviceLineId = line.id
+    lineActionLockRef.current = true
+    setPendingLineAction({ lineId: serviceLineId, kind })
+
+    void mutation
+      .mutateAsync({ orderId, serviceLineId })
+      .then(() => {
+        // The line-action hooks live on the merchant side and only invalidate merchant keys, so
+        // without this the technician's own screen keeps showing the status they just changed.
+        // The badge in the shell is derived from the same change, hence the count key too.
+        void queryClient.invalidateQueries({ queryKey: qk.staffWorkOrdersRoot() })
+        void queryClient.invalidateQueries({ queryKey: qk.staffPosPendingAcceptanceCount() })
+      })
+      .catch((err) => {
+        showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
+      })
+      .finally(() => {
+        lineActionLockRef.current = false
+        setPendingLineAction(null)
+      })
   }
 
   const handleConfirmCompletion = async (note: string | null) => {
@@ -121,11 +157,13 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
         onStart={() => void runAction(() => startService.mutateAsync(), WORK_ORDERS_I18N.startServiceSuccess)}
         onComplete={() => setIsCompleteModalOpen(true)}
         lineActions={{
-          onAccept: (line) => runLineAction(acceptLine, line, `${LINE_STATUS_I18N}.acceptSuccess`),
+          onAccept: (line) => runLineAction(acceptLine, line, 'accept'),
           onDecline: (line) => setDeclineTarget(line),
-          onStart: (line) => runLineAction(startLine, line, `${LINE_STATUS_I18N}.startSuccess`),
-          onComplete: (line) => runLineAction(completeLine, line, WORK_ORDERS_I18N.completeServiceSuccess),
+          onStart: (line) => runLineAction(startLine, line, 'start'),
+          onComplete: (line) => runLineAction(completeLine, line, 'complete'),
           isBusy: isMutating,
+          pendingLineId: pendingLineAction?.lineId ?? null,
+          pendingKind: pendingLineAction?.kind ?? null,
         }}
       />
       {declineTarget ? (
@@ -155,7 +193,7 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
                 onClick={() => {
                   const target = declineTarget
                   setDeclineTarget(null)
-                  runLineAction(rejectLine, target, `${LINE_STATUS_I18N}.declineSuccess`)
+                  runLineAction(rejectLine, target, 'decline')
                 }}
                 className="h-10 rounded-lg bg-rose-500 px-3 text-[11px] font-extrabold text-white disabled:opacity-60"
               >

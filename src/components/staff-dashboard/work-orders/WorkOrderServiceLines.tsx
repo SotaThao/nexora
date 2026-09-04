@@ -1,4 +1,4 @@
-import { Puzzle } from 'lucide-react'
+import { Loader2, Puzzle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
   PosOrderItemStatus,
@@ -12,12 +12,17 @@ import {
   workOrderTextOrPlaceholder,
 } from './workOrderTickets'
 
+export type LineStatusActionKind = 'accept' | 'decline' | 'start' | 'complete'
+
 export interface WorkOrderLineActions {
   onAccept: (line: WorkOrderItem) => void
   onDecline: (line: WorkOrderItem) => void
   onStart: (line: WorkOrderItem) => void
   onComplete: (line: WorkOrderItem) => void
   isBusy: boolean
+  /** The line whose button is mid-flight — only that button shows a spinner. */
+  pendingLineId: string | null
+  pendingKind: LineStatusActionKind | null
 }
 
 const LINE_STATUS_I18N = 'components.dashboard.views.pos.serviceLineStatus'
@@ -32,9 +37,9 @@ const LINE_STATUS_BADGE_CLASS: Record<string, string> = {
 
 // 44pt-ish tap targets: these are pressed one-handed, mid-service.
 const LINE_ACTION_PRIMARY_CLASS =
-  'h-9 rounded-lg bg-nexoraBrand px-3 text-[11px] font-extrabold text-white disabled:opacity-60'
+  'inline-flex h-9 items-center gap-1.5 rounded-lg bg-nexoraBrand px-3 text-[11px] font-extrabold text-white disabled:opacity-60'
 const LINE_ACTION_SECONDARY_CLASS =
-  'h-9 rounded-lg border border-nexoraBorder px-3 text-[11px] font-extrabold text-nexoraText disabled:opacity-60'
+  'inline-flex h-9 items-center gap-1.5 rounded-lg border border-nexoraBorder px-3 text-[11px] font-extrabold text-nexoraText disabled:opacity-60'
 
 interface WorkOrderServiceLinesProps {
   items: WorkOrderItem[]
@@ -114,6 +119,9 @@ function WorkOrderServiceLineRow({
   // technician is theirs to act on — neither gets buttons here.
   const canAct = Boolean(actions) && line.isMine && !line.isAddOn
 
+  const isPending = (kind: LineStatusActionKind) =>
+    actions?.pendingLineId === line.id && actions.pendingKind === kind
+
   return (
     <tr className={WORK_ORDERS_LAYOUT_CLASS.serviceRow}>
       <td className={WORK_ORDERS_LAYOUT_CLASS.serviceNameCell}>
@@ -149,6 +157,9 @@ function WorkOrderServiceLineRow({
                   disabled={actions.isBusy}
                   className={LINE_ACTION_PRIMARY_CLASS}
                 >
+                  {isPending('accept') ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                  ) : null}
                   {t(`${LINE_STATUS_I18N}.acceptAction`)}
                 </button>
                 <button
@@ -157,6 +168,9 @@ function WorkOrderServiceLineRow({
                   disabled={actions.isBusy}
                   className={LINE_ACTION_SECONDARY_CLASS}
                 >
+                  {isPending('decline') ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                  ) : null}
                   {t(`${LINE_STATUS_I18N}.declineAction`)}
                 </button>
               </>
@@ -168,6 +182,9 @@ function WorkOrderServiceLineRow({
                 disabled={actions.isBusy}
                 className={LINE_ACTION_PRIMARY_CLASS}
               >
+                {isPending('start') ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                ) : null}
                 {t(`${LINE_STATUS_I18N}.startAction`)}
               </button>
             ) : null}
@@ -178,6 +195,9 @@ function WorkOrderServiceLineRow({
                 disabled={actions.isBusy}
                 className={LINE_ACTION_PRIMARY_CLASS}
               >
+                {isPending('complete') ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                ) : null}
                 {t(`${LINE_STATUS_I18N}.completeAction`)}
               </button>
             ) : null}
