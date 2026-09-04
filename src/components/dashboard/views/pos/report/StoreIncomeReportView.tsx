@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, Mail, Printer, X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
+import { useNotification } from '../../../../../contexts/NotificationContext'
 import { SkeletonList } from '../../../../ui/skeleton'
 import {
   POS_STORE_INCOME_PAYMENT_METHODS,
@@ -69,6 +70,7 @@ function shiftIsoWeek(key: string, direction: -1 | 1): string {
 
 export default function StoreIncomeReportView({ businessId, businessTimeZone }: Props) {
   const { t, currentLanguage } = useTranslation()
+  const { showToast } = useNotification()
   const locale = currentLanguage === 'vi' ? 'vi-VN' : 'en-US'
   const today = useMemo(() => todayIso(businessTimeZone), [businessTimeZone])
   const currentWeek = useMemo(() => currentIsoWeekKey(businessTimeZone), [businessTimeZone])
@@ -221,7 +223,7 @@ export default function StoreIncomeReportView({ businessId, businessTimeZone }: 
     try {
       await emailMutation.mutateAsync({ params, toEmails: [email] })
       setEmailOpen(false)
-      setToast(t(`${TK}.email.sent`, { email }))
+      showToast(t(`${TK}.email.sent`, { email }), 'success')
     } catch {
       setToast(t(`${TK}.email.error`))
     }
