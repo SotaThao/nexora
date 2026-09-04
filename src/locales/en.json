@@ -709,7 +709,7 @@
       "taxiq_export": "Year-End Export",
       "analytics": "Analytics",
       "pos": "POS",
-      "pos_settings": "Salon Setting",
+      "pos_settings": "Salon Settings",
       "pos_roles": "Roles & Permissions",
       "pos_categories": "Categories",
       "pos_services": "Services",
@@ -3331,7 +3331,7 @@
             "cta": "Complete Onboarding"
           },
           "PosSalonSettingsView": {
-            "title": "Salon Setting",
+            "title": "Salon Settings",
             "description": "Manage salon information, staff, services, roles, and permissions.",
             "tabs": {
               "ariaLabel": "Salon settings",

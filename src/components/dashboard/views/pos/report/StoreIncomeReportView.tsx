@@ -225,7 +225,7 @@ export default function StoreIncomeReportView({ businessId, businessTimeZone }: 
       setEmailOpen(false)
       showToast(t(`${TK}.email.sent`, { email }), 'success')
     } catch {
-      setToast(t(`${TK}.email.error`))
+      showToast(t(`${TK}.email.error`), 'error')
     }
   }
 

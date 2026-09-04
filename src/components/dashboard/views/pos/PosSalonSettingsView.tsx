@@ -73,7 +73,7 @@ export default function PosSalonSettingsView({ verificationStatus, businessId }:
         {tabs.map(({ id, label, Icon }) => (
           <NavLink
             key={id}
-            to={posSalonSettingsPath(id)}
+            to={`${posSalonSettingsPath(id)}${location.search}`}
             className={({ isActive }) =>
               [
                 'inline-flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-lg border px-1 py-1.5 text-center text-xs font-bold leading-tight transition sm:min-h-11 sm:flex-row sm:px-3 sm:py-2',

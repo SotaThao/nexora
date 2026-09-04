@@ -1758,6 +1758,7 @@ export default function BookingSettingsPanel() {
         URL.revokeObjectURL(serviceModalObjectUrlRef.current);
       }
     },
+    [],
   );
 
   const openServiceModal = (categoryId?: string) => {

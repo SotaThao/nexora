@@ -36,12 +36,17 @@ export default function ImageFileInput({
     const file = event.target.files?.[0]
     if (!file) return
 
-    onPickFile?.(file)
-    if (onPick) {
-      const dataUrl = await readImageFileAsDataUrl(file)
-      onPick(dataUrl)
+    try {
+      onPickFile?.(file)
+      if (onPick) {
+        const dataUrl = await readImageFileAsDataUrl(file)
+        onPick(dataUrl)
+      }
+    } catch {
+      // Ignore unreadable files; consumers receive no invalid image data.
+    } finally {
+      event.target.value = ''
     }
-    event.target.value = ''
   }
 
   const handleActivate = (event) => {
