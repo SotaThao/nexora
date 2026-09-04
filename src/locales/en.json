@@ -3766,6 +3766,7 @@
             "saveTipSplitButton": "Save Split",
             "paymentMethodTitle": "Payment Method",
             "morePaymentMethods": "More",
+            "lessPaymentMethods": "Less",
             "cashReceived": "Cash received",
             "changeDue": "Change due",
             "amountRemaining": "Amount remaining",

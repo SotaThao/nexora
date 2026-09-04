@@ -93,7 +93,9 @@ export default function PosPaymentMethodSelector({
             onClick={handleToggleMore}
             className="inline-flex min-h-8 w-auto flex-none items-center justify-center rounded-lg border border-nexoraBorder/70 bg-white px-2 text-[11px] font-semibold text-nexoraText transition-colors hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft/40 disabled:opacity-60"
           >
-            ··· {t('components.dashboard.views.pos.PosOrderWorkspace.morePaymentMethods')}
+            ··· {t(showMore
+              ? 'components.dashboard.views.pos.PosOrderWorkspace.lessPaymentMethods'
+              : 'components.dashboard.views.pos.PosOrderWorkspace.morePaymentMethods')}
           </button>
         ) : null}
       </div>
