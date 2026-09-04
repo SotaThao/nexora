@@ -38,6 +38,7 @@ export interface BusinessApiDto {
   country?: string
   phone?: string
   website?: string
+  timeZone?: string | null
   logoUrl?: string | null
   bookingNotificationPhone?: string
   salesTaxRatePercent?: number
@@ -173,6 +174,18 @@ export interface PosAccessApiDto {
 }
 
 // POS Merchant Ops — Check-in & Waitlist (US-12, refactored to Order in US-026)
+/**
+ * Service progress of one ticket, so a board does not have to be opened to read it.
+ * Counts parent service lines only — an add-on has no lifecycle of its own.
+ */
+export interface PosServiceLineRollupApiDto {
+  serviceLineCount: number
+  completedServiceLineCount: number
+  pendingAcceptanceCount: number
+  /** Technicians who have not yet accepted their line on this ticket. */
+  pendingAcceptanceTechnicianNames: string[]
+}
+
 export interface PosWaitlistOrderApiDto {
   id: string
   orderNumber: string
@@ -180,6 +193,7 @@ export interface PosWaitlistOrderApiDto {
   checkedInAt: string
   waitMinutes: number
   serviceNames: string[]
+  serviceLines: PosServiceLineRollupApiDto
 }
 
 // US-17 — Order Workspace (Create mode) sends the whole draft (service + product lines,
@@ -245,6 +259,7 @@ export interface OrderListItemApiDto {
   // flag.
   hasUnassignedService: boolean
   hasNoServiceLine: boolean
+  serviceLines: PosServiceLineRollupApiDto
 }
 
 // POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filterable.
@@ -300,11 +315,18 @@ export interface StaffWorkOrderItemApiDto {
   isAddOn?: boolean
   note?: string | null
   technicianName?: string | null
+  posStaffProfileId?: string | null
+  /** See PosOrderItemStatus — drives the Accept/Decline/Start/Complete buttons. */
+  lineStatus?: string | null
+  isMine?: boolean
+  acceptedAt?: string | null
+  startedAt?: string | null
   completedAt?: string | null
 }
 
 export interface StaffWorkOrderDetailApiDto {
   id?: string
+  businessId?: string
   orderNumber?: string
   customerName?: string
   status?: string
@@ -429,6 +451,10 @@ export interface TurnBoardStationApiDto {
   currentCustomerPhone?: string | null
   currentServiceNames: string[]
   assignedAt?: string | null
+  /** See PosOrderItemStatus — the lifecycle of this technician's own line on the ticket above. */
+  currentLineStatus?: string | null
+  /** Lines across the whole salon still waiting for THIS technician to accept. */
+  pendingAcceptanceCount?: number
   // Not in the live contract yet (BE is adding it) — optional so today's response (neither field
   // present) reads as "not local staff", not as a false positive block on every station's Beep.
   isLocalStaff?: boolean
@@ -739,6 +765,10 @@ export interface OrderServiceLineApiDto {
   assignedPosStaffProfileId?: string | null
   technicianName?: string | null
   note?: string | null
+  /** See PosOrderItemStatus — Unassigned/PendingAcceptance/Assigned/Started/Completed. */
+  lineStatus: string
+  acceptedAt?: string | null
+  startedAt?: string | null
   completedAt?: string | null
   /** Extras sold against this service, in the order they were rung up. */
   addOns: OrderServiceAddOnLineApiDto[]
@@ -822,6 +852,8 @@ export interface AddOrderCustomServiceLinePayload {
   customServiceName: string
   price: number
   note: string | null
+  /** Null is "First available" — the line is left for someone on the floor to take. */
+  posStaffProfileId: string | null
 }
 
 /** Exactly one target: a catalog service, or a custom name + price. */
@@ -956,6 +988,12 @@ export interface AssignableStaffApiDto {
 // POS Booking — per-business booking rules (Ticket 2). Owner-configurable; Staff can
 // read/write too when their PosRole grants the Operations permission, same access rule
 // as Orders (see IPosOperationsAccessService, backend).
+/** Salon-wide rules for how a ticket's service lines move through their own lifecycle. */
+export interface PosOrderSettingsApiDto {
+  requireStaffAcceptance: boolean
+  warnOnServiceLineStatusMismatch: boolean
+}
+
 export interface PosBookingSettingsApiDto {
   autoConfirmEnabled: boolean
   minLeadTimeMinutes: number

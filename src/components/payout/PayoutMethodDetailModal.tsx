@@ -33,6 +33,10 @@ const PROFILE_TK = 'components.settings.tabs.ProfileTab'
 interface PayoutMethodDetailModalProps {
   method: PaymentMethodDto | null
   logo?: ReactNode
+  paymentAmount?: {
+    label: string
+    value: string
+  }
   onClose: () => void
 }
 
@@ -181,9 +185,53 @@ function VlinkpayAddressCards({ addresses }: { addresses: VlinkpayAddresses }) {
 export default function PayoutMethodDetailModal({
   method,
   logo,
+  paymentAmount,
   onClose,
 }: PayoutMethodDetailModalProps) {
   const { t } = useTranslation()
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!method || typeof document === 'undefined') return undefined
+
+    const previouslyFocused = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null
+    closeButtonRef.current?.focus()
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        onClose()
+        return
+      }
+      if (event.key !== 'Tab') return
+
+      const focusable = Array.from(
+        dialogRef.current?.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      )
+      if (focusable.length === 0) return
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      if (previouslyFocused?.isConnected) previouslyFocused.focus()
+    }
+  }, [method, onClose])
 
   if (!method || typeof document === 'undefined') return null
 
@@ -224,6 +272,7 @@ export default function PayoutMethodDetailModal({
   return createPortal(
     <div className="fixed inset-0 z-[100] flex h-dvh items-center justify-center overflow-hidden bg-slate-950/70 p-2 backdrop-blur-sm sm:p-4">
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={dialogTitleId}
@@ -233,6 +282,7 @@ export default function PayoutMethodDetailModal({
       >
         <div className={`relative ${isVlinkpay ? 'px-4 pb-5 pt-5 sm:px-5 sm:pb-6 sm:pt-6' : 'px-4 pb-4 pt-4'}`}>
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={onClose}
             aria-label={t('common.close')}
@@ -282,6 +332,17 @@ export default function PayoutMethodDetailModal({
             )}
           </div>
           )}
+
+          {paymentAmount ? (
+            <div className="mx-auto mt-3 rounded-xl border border-nexoraBrand/20 bg-nexoraBrandSoft/50 px-4 py-2.5">
+              <p className="text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
+                {paymentAmount.label}
+              </p>
+              <p className="mt-0.5 text-2xl font-black tabular-nums text-nexoraBrandDark">
+                {paymentAmount.value}
+              </p>
+            </div>
+          ) : null}
 
           <div className={`mt-4 text-left ${isVlinkpay ? '' : 'divide-y divide-slate-100 border-y border-slate-100'}`}>
             {hasAccountName && (

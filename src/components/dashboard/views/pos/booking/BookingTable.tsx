@@ -117,7 +117,7 @@ export default function BookingTable({
                 <td className="px-4 py-3 align-middle">
                   <div className="grid min-w-0 gap-1">
                     <div className="flex min-w-0 items-center gap-2">
-                      <span className="truncate font-extrabold text-nexoraText">{booking.customerName}</span>
+                      <span className="pos-customer-name truncate font-extrabold text-nexoraText">{booking.customerName}</span>
                       {booking.orderNumber ? (
                         <span className="shrink-0 rounded-full border border-nexoraBorder bg-white px-1.5 py-0.5 text-[9px] font-bold text-nexoraMuted">
                           #{booking.orderNumber}

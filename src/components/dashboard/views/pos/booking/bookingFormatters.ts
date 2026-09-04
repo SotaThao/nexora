@@ -67,6 +67,12 @@ export function bookingDateKey(iso: string, source?: string): string {
   return `${year}-${pad(month)}-${pad(day)}`
 }
 
+/** DayPilot input that preserves the same source-aware wall clock shown in Booking Detail. */
+export function bookingCalendarWallClock(iso: string, source?: string): string {
+  const { year, month, day, hours, minutes } = resolveBookingWallClockParts(iso, source)
+  return `${year}-${pad(month)}-${pad(day)}T${pad(hours)}:${pad(minutes)}:00`
+}
+
 export function statusLabelKey(status: string): string {
   switch (status) {
     case PosOrderStatus.Pending: return 'statusPending'

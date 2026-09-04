@@ -5,9 +5,11 @@
 // mistyped price must be fixable without deleting the line, which would throw away the technician
 // and the note. Nothing is computed here — the backend snapshots the typed price onto the line.
 import { useEffect, useState } from 'react'
-import { X } from 'lucide-react'
+import { ChevronRight, X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import IconButton from '../../../../ui/IconButton'
+import TechnicianPickerPopup from './TechnicianPickerPopup'
+import type { TechnicianOption } from '../../../../checkin/parts/TechnicianPickerGrid'
 import {
   MAX_CUSTOM_SERVICE_NAME_LENGTH,
   MAX_CUSTOM_SERVICE_PRICE,
@@ -23,23 +25,36 @@ export interface CustomServiceTarget {
   customServiceName?: string
   unitPrice?: number
   note?: string | null
+  // Add mode only: the ticket's sole technician, pre-selected so a one-off add on a ticket already
+  // being worked costs no extra tap. Null on an empty ticket or one with several technicians —
+  // there is nothing to infer from those, so the line is left for the floor to claim.
+  posStaffProfileId?: string | null
+  technicianName?: string | null
 }
 
 export interface CustomServiceSubmit {
   customServiceName: string
   price: number
   note: string | null
+  posStaffProfileId: string | null
+  // Display only, for the optimistic ticket row — never sent to the API.
+  technicianName: string | null
 }
 
 export default function CustomServiceModal({
   target,
   isSaving,
+  technicians,
+  isTechnicianRosterLoading,
   onSubmit,
   onPickFromMenu,
   onClose,
 }: {
   target: CustomServiceTarget | null
   isSaving: boolean
+  // The whole active roster: an off-menu service has no catalog entry to qualify anyone against.
+  technicians: TechnicianOption[]
+  isTechnicianRosterLoading?: boolean
   onSubmit: (payload: CustomServiceSubmit) => void
   // Only passed when correcting an existing line: hands the line over to the menu picker, which is
   // how work that turned out to be on the menu after all stops being a one-off.
@@ -50,6 +65,8 @@ export default function CustomServiceModal({
   const [name, setName] = useState('')
   const [priceInput, setPriceInput] = useState('')
   const [note, setNote] = useState('')
+  const [staffId, setStaffId] = useState<string | null>(null)
+  const [isPickingTechnician, setIsPickingTechnician] = useState(false)
 
   // Re-seeded per target rather than once on mount: the same instance opens for "add" and then for
   // a correction on some other line without unmounting in between.
@@ -58,11 +75,21 @@ export default function CustomServiceModal({
     setName(target.customServiceName ?? '')
     setPriceInput(target.unitPrice != null ? String(target.unitPrice) : '')
     setNote(target.note ?? '')
+    setStaffId(target.posStaffProfileId ?? null)
+    setIsPickingTechnician(false)
   }, [target])
 
   if (!target) return null
 
   const isEditing = target.serviceLineId !== undefined
+  // Falls back to the name the ticket already knows, so the pre-selected technician reads correctly
+  // while the roster is still in flight.
+  const selectedTechnicianName =
+    staffId === null
+      ? null
+      : technicians.find((tech) => tech.posStaffProfileId === staffId)?.displayName ??
+        target.technicianName ??
+        null
   const trimmedName = name.trim()
   const parsedPrice = Number(priceInput)
   const hasNumber = priceInput.trim() !== '' && Number.isFinite(parsedPrice)
@@ -147,6 +174,27 @@ export default function CustomServiceModal({
             ) : null}
           </div>
 
+          {/* Add mode only. On a line that already exists the technician is changed from the line's
+              own technician field, the same way a menu service is — one control per fact. */}
+          {isEditing ? null : (
+            <div className="space-y-1.5">
+              <span className="block text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+                {t(`${K}.customServiceTechnicianLabel`)}
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsPickingTechnician(true)}
+                disabled={isSaving}
+                className="flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-nexoraBorder px-3 text-left text-sm font-semibold text-nexoraText hover:border-nexoraBrand disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span className={`min-w-0 truncate ${selectedTechnicianName ? '' : 'text-nexoraMuted'}`}>
+                  {selectedTechnicianName ?? t(`${K}.firstAvailableLabel`)}
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-nexoraMuted" />
+              </button>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <label
               htmlFor="custom-service-note"
@@ -185,6 +233,8 @@ export default function CustomServiceModal({
                 customServiceName: trimmedName,
                 price: parsedPrice,
                 note: note.trim() === '' ? null : note.trim(),
+                posStaffProfileId: isEditing ? null : staffId,
+                technicianName: isEditing ? null : selectedTechnicianName,
               })
             }
             disabled={!canSubmit}
@@ -194,6 +244,18 @@ export default function CustomServiceModal({
           </button>
         </div>
       </div>
+
+      <TechnicianPickerPopup
+        open={isPickingTechnician}
+        technicians={technicians}
+        isLoading={isTechnicianRosterLoading}
+        selectedStaffId={staffId}
+        onSelect={(posStaffProfileId) => {
+          setStaffId(posStaffProfileId)
+          setIsPickingTechnician(false)
+        }}
+        onClose={() => setIsPickingTechnician(false)}
+      />
     </div>
   )
 }

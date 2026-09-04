@@ -37,5 +37,5 @@ export const MAX_DISCOUNT_PERCENT = 100
  * configurable: the Custom box covers anything else, and the promotion catalog is where a salon
  * declares the figures it actually runs.
  */
-export const ORDER_DISCOUNT_AMOUNT_CHIPS = [5, 10, 15, 20, 25] as const
+export const ORDER_DISCOUNT_AMOUNT_CHIPS = [5, 10, 15, 20] as const
 export const ORDER_DISCOUNT_PERCENT_CHIPS = [5, 10, 15, 20] as const

@@ -250,14 +250,24 @@ export function useAddOrderCustomServiceLine(businessId?: string) {
   return useMutation<
     string,
     Error,
-    { orderId: string; customServiceName: string; price: number; note: string | null },
+    {
+      orderId: string
+      customServiceName: string
+      price: number
+      note: string | null
+      posStaffProfileId: string | null
+      // Display only — never sent. Lets the ticket show the technician straight away instead of
+      // flashing "First available" until the refetch lands.
+      technicianName: string | null
+    },
     OrderMutationContext
   >({
-    mutationFn: ({ orderId, customServiceName, price, note }) =>
+    mutationFn: ({ orderId, customServiceName, price, note, posStaffProfileId }) =>
       posCheckoutRepository.addOrderCustomServiceLine(businessId as string, orderId, {
         customServiceName,
         price,
         note,
+        posStaffProfileId,
       }),
     onMutate: async ({ orderId, price }) => {
       const context = await snapshotOrderDetail(queryClient, businessId, orderId)
@@ -269,7 +279,10 @@ export function useAddOrderCustomServiceLine(businessId?: string) {
       return context
     },
     onError: (_err, _vars, context) => rollbackOrderDetail(queryClient, context),
-    onSuccess: (newServiceLineId, { orderId, customServiceName, price, note }) => {
+    onSuccess: (
+      newServiceLineId,
+      { orderId, customServiceName, price, note, posStaffProfileId, technicianName },
+    ) => {
       const queryKey = qk.merchantPosOrderDetail(businessId, orderId)
       const current = queryClient.getQueryData<OrderDetailApiDto>(queryKey)
       const serviceLines = current
@@ -283,9 +296,13 @@ export function useAddOrderCustomServiceLine(businessId?: string) {
             discountAmount: 0,
             staffDiscountShare: 0,
             lineTotalAfterDiscount: price,
+            // Left false on purpose: whether the technician can absorb a discount depends on their
+            // pay type, which only the refetch knows.
             canAssignDiscountToStaff: false,
             completedAt: null,
             note,
+            assignedPosStaffProfileId: posStaffProfileId,
+            technicianName,
             addOns: [],
           }))
         : null

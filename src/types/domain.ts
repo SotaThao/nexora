@@ -17,6 +17,7 @@ export interface MerchantBusinessInfo {
   country?: string
   phone?: string
   website?: string
+  timeZone?: string | null
   logo?: string | null
   bookingNotificationPhone?: string
   salesTaxRatePercent?: number
