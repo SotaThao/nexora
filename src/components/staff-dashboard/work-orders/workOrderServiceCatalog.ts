@@ -25,12 +25,15 @@ export type WorkOrderCatalogCategory = {
 
 export type WorkOrderEditableLine = {
   key: string
+  id?: string
   serviceName: string
   unitPrice: number
   durationMinutes: number
   isAddOn: boolean
   technicianName: string | null
   approval: WorkOrderServiceApproval | null
+  lineStatus?: string
+  isMine?: boolean
 }
 
 export const WORK_ORDER_CUSTOM_SERVICE_DEFAULT_DURATION = 30
@@ -95,12 +98,15 @@ export function canEditWorkOrderServices(status: PosOrderStatus): boolean {
 export function toWorkOrderEditableLines(items: WorkOrderItem[]): WorkOrderEditableLine[] {
   return items.map((item, index) => ({
     key: item.id || `api-${index}`,
+    id: item.id,
     serviceName: item.serviceName,
     unitPrice: item.lineTotal || item.unitPrice,
     durationMinutes: item.durationMinutes,
     isAddOn: item.isAddOn,
     technicianName: item.technicianName,
     approval: null,
+    lineStatus: item.lineStatus,
+    isMine: item.isMine,
   }))
 }
 
