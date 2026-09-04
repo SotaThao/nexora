@@ -176,6 +176,7 @@ export const errorCodeToI18nKey = {
   [CatalogErrorCode.ServiceBatchNameRequired]: 'errors.pos_service_name_required',
   [CatalogErrorCode.ServiceBatchNameTooLong]: 'errors.pos_service_name_too_long',
   [CatalogErrorCode.ServiceBatchPriceInvalid]: 'errors.pos_service_price_invalid',
+  [CatalogErrorCode.ServiceSupplyFeeInvalid]: 'errors.catalog_service_supply_fee_invalid',
   [CatalogErrorCode.ServiceBatchDurationInvalid]: 'errors.pos_service_duration_invalid',
   [CatalogErrorCode.ServiceBatchDescriptionTooLong]: 'errors.pos_service_description_too_long',
   [CatalogErrorCode.ServiceBatchIconTooLong]: 'errors.catalog_service_icon_too_long',

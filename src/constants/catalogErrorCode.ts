@@ -9,6 +9,7 @@ export enum CatalogErrorCode {
   ServiceBatchNameRequired = 'CATALOG_SERVICE_NAME_REQUIRED',
   ServiceBatchNameTooLong = 'CATALOG_SERVICE_NAME_TOO_LONG',
   ServiceBatchPriceInvalid = 'CATALOG_SERVICE_PRICE_INVALID',
+  ServiceSupplyFeeInvalid = 'CATALOG_SERVICE_SUPPLY_FEE_INVALID',
   ServiceBatchDurationInvalid = 'CATALOG_SERVICE_DURATION_INVALID',
   ServiceBatchDescriptionTooLong = 'CATALOG_SERVICE_DESCRIPTION_TOO_LONG',
   ServiceBatchIconTooLong = 'CATALOG_SERVICE_ICON_TOO_LONG',
