@@ -33,6 +33,8 @@ export const WORK_ORDERS_I18N = {
   emptySalonsBody: 'staff_dashboard.work_orders.empty_salons_body',
   loading: 'staff_dashboard.work_orders.loading',
   loadError: 'staff_dashboard.work_orders.load_error',
+  detailUnavailable: 'staff_dashboard.work_orders.detail_unavailable',
+  notAssignedToYou: 'staff_dashboard.work_orders.not_assigned_to_you',
   retry: 'staff_dashboard.work_orders.retry',
   technicianNamed: 'staff_dashboard.work_orders.technician_named',
   unassigned: 'staff_dashboard.work_orders.unassigned',

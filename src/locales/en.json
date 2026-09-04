@@ -282,7 +282,9 @@
       "start_service_success": "Service started.",
       "complete_service_success": "Service marked complete.",
       "notes_important": "Important",
-      "customer_notes": "Customer notes"
+      "customer_notes": "Customer notes",
+      "not_assigned_to_you": "You are no longer assigned to this ticket.",
+      "detail_unavailable": "This ticket could not be opened."
     },
     "missing_payout_toast": "Please set up your payout method to receive TIPS.",
     "missing_payout_title": "Action Required",
