@@ -40,7 +40,7 @@ export type WorkOrderEditableLine = {
 export const WORK_ORDER_CUSTOM_SERVICE_DEFAULT_DURATION = 30
 export const WORK_ORDER_CUSTOM_SERVICE_MAX_DURATION = 999
 export const WORK_ORDER_CUSTOM_SERVICE_MAX_PRICE = 9999.99
-export const WORK_ORDER_MOCK_APPROVAL_LAST4 = '0184'
+export const WORK_ORDER_APPROVAL_CODE_LENGTH = 4
 export const WORK_ORDER_PICKER_MODE = {
   add: 'add',
   edit: 'edit',
@@ -111,6 +111,68 @@ export function toWorkOrderEditableLines(items: WorkOrderItem[]): WorkOrderEdita
   }))
 }
 
+function isParentServiceLine(line: WorkOrderEditableLine): boolean {
+  return !line.isAddOn
+}
+
+export function applyWorkOrderLineStatus(
+  lines: WorkOrderEditableLine[],
+  lineId: string,
+  lineStatus: PosOrderItemStatus,
+): WorkOrderEditableLine[] {
+  return lines.map((line) => (line.id === lineId ? { ...line, lineStatus } : line))
+}
+
+export function applyWorkOrderAssignedLinesStarted(lines: WorkOrderEditableLine[]): WorkOrderEditableLine[] {
+  return lines.map((line) => (
+    isParentServiceLine(line) && line.lineStatus === PosOrderItemStatus.Assigned
+      ? { ...line, lineStatus: PosOrderItemStatus.Started }
+      : line
+  ))
+}
+
+export function applyWorkOrderStartedLinesCompleted(lines: WorkOrderEditableLine[]): WorkOrderEditableLine[] {
+  return lines.map((line) => (
+    isParentServiceLine(line) && line.lineStatus === PosOrderItemStatus.Started
+      ? { ...line, lineStatus: PosOrderItemStatus.Completed }
+      : line
+  ))
+}
+
+/** Keep local mock add/change overlays; take line status from the ticket after a refetch. */
+export function mergeWorkOrderLinesFromServer(
+  current: WorkOrderEditableLine[],
+  items: WorkOrderItem[],
+): WorkOrderEditableLine[] {
+  const fromServer = toWorkOrderEditableLines(items)
+  const serverIds = new Set(
+    fromServer.map((line) => line.id).filter((id): id is string => Boolean(id)),
+  )
+  const currentById = new Map(
+    current.filter((line) => line.id).map((line) => [line.id as string, line]),
+  )
+  const currentByKey = new Map(current.map((line) => [line.key, line]))
+  const merged = fromServer.map((line) => {
+    const prev = (line.id ? currentById.get(line.id) : undefined) ?? currentByKey.get(line.key)
+    if (!prev) return line
+    if (prev.approval === WORK_ORDER_SERVICE_APPROVAL.pending) {
+      return {
+        ...prev,
+        id: line.id,
+        lineStatus: line.lineStatus,
+        isMine: line.isMine,
+      }
+    }
+    return { ...line, approval: prev.approval }
+  })
+  const localOnly = current.filter((line) => {
+    if (line.id && serverIds.has(line.id)) return false
+    if (!line.id && fromServer.some((server) => server.key === line.key)) return false
+    return !line.id
+  })
+  return [...merged, ...localOnly]
+}
+
 export function workOrderEditableServiceTotal(lines: WorkOrderEditableLine[]): number {
   return lines.reduce((sum, line) => sum + (countsTowardTotal(line) ? line.unitPrice : 0), 0)
 }
@@ -121,18 +183,38 @@ export function workOrderPendingServiceLines(lines: WorkOrderEditableLine[]): Wo
   )
 }
 
-function isParentServiceLine(line: WorkOrderEditableLine): boolean {
-  return !line.isAddOn
+export const WORK_ORDER_TICKET_FOOTER_ACTION = {
+  start: 'start',
+  complete: 'complete',
+} as const
+
+export type WorkOrderTicketFooterAction =
+  (typeof WORK_ORDER_TICKET_FOOTER_ACTION)[keyof typeof WORK_ORDER_TICKET_FOOTER_ACTION]
+
+function parentLineHasStatus(lines: WorkOrderEditableLine[], status: PosOrderItemStatus): boolean {
+  return lines.some((line) => isParentServiceLine(line) && line.lineStatus === status)
 }
 
 /** Ticket Start Service shows when any parent service is still Assigned. */
 export function workOrderHasAssignedService(lines: WorkOrderEditableLine[]): boolean {
-  return lines.some((line) => isParentServiceLine(line) && line.lineStatus === PosOrderItemStatus.Assigned)
+  return parentLineHasStatus(lines, PosOrderItemStatus.Assigned)
 }
 
 /** Ticket Complete shows when any parent service is In Service (Started). */
 export function workOrderHasInServiceService(lines: WorkOrderEditableLine[]): boolean {
-  return lines.some((line) => isParentServiceLine(line) && line.lineStatus === PosOrderItemStatus.Started)
+  return parentLineHasStatus(lines, PosOrderItemStatus.Started)
+}
+
+/**
+ * One ticket footer action, from the lowest parent-line status that still needs work.
+ * Assigned beats In Service: a ticket with both only shows Start Service.
+ */
+export function workOrderTicketFooterAction(
+  lines: WorkOrderEditableLine[],
+): WorkOrderTicketFooterAction | null {
+  if (workOrderHasAssignedService(lines)) return WORK_ORDER_TICKET_FOOTER_ACTION.start
+  if (workOrderHasInServiceService(lines)) return WORK_ORDER_TICKET_FOOTER_ACTION.complete
+  return null
 }
 
 export function flattenWorkOrderCatalog(
@@ -217,15 +299,12 @@ export function addWorkOrderCustomService(
 ): WorkOrderEditableLine[] {
   return [
     ...lines,
-    {
-      key: nextLocalLineKey(),
-      serviceName: input.name,
-      unitPrice: input.price,
-      durationMinutes: input.durationMinutes,
-      isAddOn: false,
-      technicianName: null,
-      approval: WORK_ORDER_SERVICE_APPROVAL.pending,
-    },
+    lineFromCatalog({
+      id: nextLocalLineKey(),
+      name: input.name,
+      price: input.price,
+      durationMin: input.durationMinutes,
+    }),
   ]
 }
 
@@ -250,7 +329,7 @@ export function setWorkOrderPendingApproval(
 }
 
 export function parseWorkOrderLast4(value: string): string {
-  return value.replace(/\D/g, '').slice(0, 4)
+  return value.replace(/\D/g, '').slice(0, WORK_ORDER_APPROVAL_CODE_LENGTH)
 }
 
 export function clampWorkOrderDurationInput(raw: string): string {

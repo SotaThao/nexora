@@ -1,7 +1,7 @@
 import { useRef, useState, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { qk } from '../../../data/queryKeys'
-import { BadgeCheck, Check, ChevronLeft, LayoutGrid, NotebookPen, Play, Radio } from 'lucide-react'
+import { BadgeCheck, CheckCircle2, ChevronLeft, LayoutGrid, NotebookPen, Play, Radio } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { getErrorI18nKey } from '../../../data/errorCodes'
@@ -12,10 +12,13 @@ import {
 } from '../../../data/hooks/useStaffWorkOrders'
 import { getApiErrorCode } from '../../../types/domain'
 import { PosOrderStatus } from '../../../constants/posOrderStatus'
+import { PosOrderItemStatus } from '../../../constants/posOrderItemStatus'
 import {
   WORK_ORDER_EMPTY_PLACEHOLDER,
+  WORK_ORDER_SNACK_DURATION_MS,
   WORK_ORDER_STATUS_BADGE_VARIANT,
   WORK_ORDER_STATUS_I18N,
+  WORK_ORDER_TOAST_TYPE,
   WORK_ORDERS_I18N,
   WORK_ORDERS_LAYOUT_CLASS,
   workOrderStatusClass,
@@ -36,15 +39,18 @@ import {
   WORK_ORDER_SERVICE_APPROVAL,
   addWorkOrderCatalogService,
   addWorkOrderCustomService,
+  applyWorkOrderAssignedLinesStarted,
+  applyWorkOrderLineStatus,
+  applyWorkOrderStartedLinesCompleted,
   canEditWorkOrderServices,
   markWorkOrderLinePending,
   matchWorkOrderCatalogServiceByName,
+  mergeWorkOrderLinesFromServer,
   replaceWorkOrderCatalogService,
   setWorkOrderPendingApproval,
-  toWorkOrderEditableLines,
   workOrderEditableServiceTotal,
-  workOrderHasAssignedService,
-  workOrderHasInServiceService,
+  WORK_ORDER_TICKET_FOOTER_ACTION,
+  workOrderTicketFooterAction,
   workOrderPendingServiceLines,
   type WorkOrderCatalogService,
   type WorkOrderEditableLine,
@@ -75,15 +81,25 @@ interface StaffWorkOrderDetailProps {
 
 const LINE_STATUS_I18N = 'components.dashboard.views.pos.serviceLineStatus'
 
+function lineStatusAfterAction(kind: LineStatusActionKind): PosOrderItemStatus {
+  if (kind === 'accept') return PosOrderItemStatus.Assigned
+  if (kind === 'start') return PosOrderItemStatus.Started
+  if (kind === 'complete') return PosOrderItemStatus.Completed
+  return PosOrderItemStatus.Unassigned
+}
+
 export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrderDetailProps) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
+  const showSuccessSnack = (key: string) => {
+    showToast(t(key), WORK_ORDER_TOAST_TYPE.success, WORK_ORDER_SNACK_DURATION_MS)
+  }
   const detailQuery = useStaffWorkOrderDetail(orderId)
   const startService = useStartStaffWorkOrderService(orderId)
   const completeService = useCompleteStaffWorkOrderService(orderId)
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false)
   const [lines, setLines] = useState<WorkOrderEditableLine[]>([])
-  const [seededOrderId, setSeededOrderId] = useState('')
+  const [seededStamp, setSeededStamp] = useState('')
   const [picker, setPicker] = useState<{ mode: WorkOrderPickerMode; lineKey?: string } | null>(null)
   const [isCustomOpen, setIsCustomOpen] = useState(false)
   const [completedSession, setCompletedSession] = useState<{ orderId: string; note: string | null } | null>(null)
@@ -115,9 +131,12 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
 
   if (detailQuery.isPending) return <WorkOrderDetailSkeleton />
 
-  if (ticket && seededOrderId !== ticket.id) {
-    setSeededOrderId(ticket.id)
-    setLines(toWorkOrderEditableLines(ticket.items))
+  const itemsStamp = ticket
+    ? `${ticket.id}:${ticket.status}:${ticket.items.map((item) => `${item.id}:${item.lineStatus}`).join(',')}`
+    : ''
+  if (ticket && seededStamp !== itemsStamp) {
+    setSeededStamp(itemsStamp)
+    setLines((current) => mergeWorkOrderLinesFromServer(current, ticket.items))
   }
 
   const displayStatus = completedSession?.orderId === orderId
@@ -127,16 +146,21 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
     ? completedSession.note
     : null
 
+  const refreshWorkOrder = async () => {
+    await queryClient.invalidateQueries({ queryKey: qk.staffWorkOrdersRoot() })
+    await queryClient.invalidateQueries({ queryKey: qk.staffPosPendingAcceptanceCount() })
+  }
+
   const runAction = async (
     mutate: () => Promise<unknown>,
     successKey: string,
   ) => {
     try {
       await mutate()
-      showToast(t(successKey), 'success')
+      showToast(t(successKey), WORK_ORDER_TOAST_TYPE.success)
       return true
     } catch (err) {
-      showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
+      showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), WORK_ORDER_TOAST_TYPE.error)
       return false
     }
   }
@@ -158,15 +182,19 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
 
     void mutation
       .mutateAsync({ orderId, serviceLineId })
-      .then(() => {
+      .then(async () => {
+        setLines((current) => applyWorkOrderLineStatus(
+          current,
+          serviceLineId,
+          lineStatusAfterAction(kind),
+        ))
         // The line-action hooks live on the merchant side and only invalidate merchant keys, so
         // without this the technician's own screen keeps showing the status they just changed.
         // The badge in the shell is derived from the same change, hence the count key too.
-        void queryClient.invalidateQueries({ queryKey: qk.staffWorkOrdersRoot() })
-        void queryClient.invalidateQueries({ queryKey: qk.staffPosPendingAcceptanceCount() })
+        await refreshWorkOrder()
       })
       .catch((err) => {
-        showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
+        showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), WORK_ORDER_TOAST_TYPE.error)
       })
       .finally(() => {
         lineActionLockRef.current = false
@@ -174,15 +202,26 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
       })
   }
 
+  const handleStartTicket = async () => {
+    const succeeded = await runAction(
+      () => startService.mutateAsync(),
+      WORK_ORDERS_I18N.startServiceSuccess,
+    )
+    if (!succeeded) return
+    setLines((current) => applyWorkOrderAssignedLinesStarted(current))
+    await refreshWorkOrder()
+  }
+
   const handleConfirmCompletion = async (note: string | null) => {
     const succeeded = await runAction(
       () => completeService.mutateAsync(note),
       WORK_ORDERS_I18N.completeServiceSuccess,
     )
-    if (succeeded) {
-      setCompletedSession({ orderId, note })
-      setIsCompleteModalOpen(false)
-    }
+    if (!succeeded) return
+    setLines((current) => applyWorkOrderStartedLinesCompleted(current))
+    setCompletedSession({ orderId, note })
+    setIsCompleteModalOpen(false)
+    await refreshWorkOrder()
   }
 
   return (
@@ -202,14 +241,14 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
         isMutating={isMutating}
         onRetry={() => void detailQuery.refetch()}
         onBack={onBack}
-        onStart={() => void runAction(() => startService.mutateAsync(), WORK_ORDERS_I18N.startServiceSuccess)}
+        onStart={() => void handleStartTicket()}
         onComplete={() => setIsCompleteModalOpen(true)}
         onAddService={() => setPicker({ mode: WORK_ORDER_PICKER_MODE.add })}
         onAddCustomService={() => setIsCustomOpen(true)}
         onChangeService={(key) => setPicker({ mode: WORK_ORDER_PICKER_MODE.edit, lineKey: key })}
         onRemoveService={(key) => {
           setLines((current) => markWorkOrderLinePending(current, key))
-          showToast(t(WORK_ORDERS_I18N.toastRemoveService), 'success')
+          showSuccessSnack(WORK_ORDERS_I18N.toastRemoveService)
         }}
         onApprovePending={() => {
           setLines((current) => setWorkOrderPendingApproval(current, WORK_ORDER_SERVICE_APPROVAL.approved))
@@ -290,11 +329,10 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
                 ? replaceWorkOrderCatalogService(current, picker.lineKey, service)
                 : addWorkOrderCatalogService(current, service)
             ))
-            showToast(
-              t(picker.mode === WORK_ORDER_PICKER_MODE.edit
+            showSuccessSnack(
+              picker.mode === WORK_ORDER_PICKER_MODE.edit
                 ? WORK_ORDERS_I18N.toastChangeService
-                : WORK_ORDERS_I18N.toastAddService),
-              'success',
+                : WORK_ORDERS_I18N.toastAddService,
             )
             setPicker(null)
           }}
@@ -305,7 +343,7 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
         <WorkOrderCustomServiceModal
           onConfirm={(input) => {
             setLines((current) => addWorkOrderCustomService(current, input))
-            showToast(t(WORK_ORDERS_I18N.toastCustomService), 'success')
+            showSuccessSnack(WORK_ORDERS_I18N.toastCustomService)
             setIsCustomOpen(false)
           }}
           onClose={() => setIsCustomOpen(false)}
@@ -405,8 +443,9 @@ function WorkOrderDetailBody({
       </p>
     </aside>
   ) : null
-  const showStart = !isCompleted && workOrderHasAssignedService(lines)
-  const showComplete = !isCompleted && workOrderHasInServiceService(lines)
+  const footerAction = isCompleted ? null : workOrderTicketFooterAction(lines)
+  const showStart = footerAction === WORK_ORDER_TICKET_FOOTER_ACTION.start
+  const showComplete = footerAction === WORK_ORDER_TICKET_FOOTER_ACTION.complete
   const actions = showStart || showComplete ? (
     <div className={WORK_ORDERS_LAYOUT_CLASS.detailActions}>
       {showStart ? (
@@ -421,11 +460,7 @@ function WorkOrderDetailBody({
         <WorkOrderPrimaryAction
           disabled={isMutating}
           onClick={onComplete}
-          icon={(
-            <span className={WORK_ORDERS_LAYOUT_CLASS.primaryActionIcon}>
-              <Check className={WORK_ORDERS_LAYOUT_CLASS.primaryActionGlyph} aria-hidden="true" />
-            </span>
-          )}
+          icon={<CheckCircle2 className={WORK_ORDERS_LAYOUT_CLASS.primaryActionGlyph} aria-hidden="true" />}
           label={t(WORK_ORDERS_I18N.completeService)}
         />
       ) : null}

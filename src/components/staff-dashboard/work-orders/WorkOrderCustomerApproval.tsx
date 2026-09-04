@@ -3,7 +3,7 @@ import { Clock3, ShieldCheck } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { WORK_ORDERS_I18N, WORK_ORDERS_LAYOUT_CLASS } from './constants'
 import {
-  WORK_ORDER_MOCK_APPROVAL_LAST4,
+  WORK_ORDER_APPROVAL_CODE_LENGTH,
   parseWorkOrderLast4,
   type WorkOrderEditableLine,
 } from './workOrderServiceCatalog'
@@ -22,17 +22,9 @@ export default function WorkOrderCustomerApproval({
 }: WorkOrderCustomerApprovalProps) {
   const { t } = useTranslation()
   const [code, setCode] = useState('')
-  const [showError, setShowError] = useState(false)
+  const canApprove = code.length === WORK_ORDER_APPROVAL_CODE_LENGTH
 
   if (services.length === 0) return null
-
-  const handleApprove = () => {
-    if (code !== WORK_ORDER_MOCK_APPROVAL_LAST4) {
-      setShowError(true)
-      return
-    }
-    onApprove()
-  }
 
   return (
     <section className={WORK_ORDERS_LAYOUT_CLASS.approvalCard}>
@@ -56,33 +48,34 @@ export default function WorkOrderCustomerApproval({
           </span>
         ))}
       </div>
-      <div className={WORK_ORDERS_LAYOUT_CLASS.approvalDemo}>
-        {t(WORK_ORDERS_I18N.approvalDemo, { code: WORK_ORDER_MOCK_APPROVAL_LAST4 })}
-      </div>
       <p className={WORK_ORDERS_LAYOUT_CLASS.approvalHelp}>{t(WORK_ORDERS_I18N.approvalHelp)}</p>
       <div className={WORK_ORDERS_LAYOUT_CLASS.approvalForm}>
         <input
           type="text"
           inputMode="numeric"
           autoComplete="off"
-          maxLength={4}
+          maxLength={WORK_ORDER_APPROVAL_CODE_LENGTH}
           value={code}
           aria-label={t(WORK_ORDERS_I18N.approvalCodeAria)}
           placeholder={t(WORK_ORDERS_I18N.approvalCodePlaceholder)}
           className={WORK_ORDERS_LAYOUT_CLASS.approvalInput}
           onChange={(event) => {
             setCode(parseWorkOrderLast4(event.target.value))
-            setShowError(false)
           }}
         />
-        <button type="button" className={WORK_ORDERS_LAYOUT_CLASS.approvalSubmit} onClick={handleApprove}>
+        <button
+          type="button"
+          className={WORK_ORDERS_LAYOUT_CLASS.approvalSubmit}
+          disabled={!canApprove}
+          onClick={() => {
+            if (!canApprove) return
+            onApprove()
+          }}
+        >
           <ShieldCheck className={WORK_ORDERS_LAYOUT_CLASS.iconSm} aria-hidden="true" />
           {t(WORK_ORDERS_I18N.approvalSubmit)}
         </button>
       </div>
-      {showError ? (
-        <p className={WORK_ORDERS_LAYOUT_CLASS.fieldError}>{t(WORK_ORDERS_I18N.approvalError)}</p>
-      ) : null}
     </section>
   )
 }

@@ -1,17 +1,16 @@
-const MAIN_WIDTH = {
+import { STAFF_WORK_ORDERS_SCREEN } from './constants'
+
+const STAFF_DASHBOARD_MAIN_WIDTH = {
   default: 'max-w-3xl',
   medium: 'w-full max-w-5xl',
   wide: 'w-full max-w-6xl xl:max-w-7xl',
   workOrders: 'w-full max-w-[480px]',
-  workOrderDetail: 'w-full max-w-[480px] md:max-w-[640px] lg:max-w-[720px]',
 } as const
 
-const MAIN_PADDING = {
+const STAFF_DASHBOARD_MAIN_PADDING = {
   default: 'px-4 py-5 sm:px-6',
   workOrders: 'px-[18px] pt-[22px] pb-12',
 } as const
-
-const WORK_ORDER_DETAIL_PATH = /^\/staff\/work-orders\/[^/]+\/[^/]+$/
 
 export function resolveStaffDashboardPresentation(
   pathname: string,
@@ -21,8 +20,7 @@ export function resolveStaffDashboardPresentation(
   const normalizedPathname = pathname.replace(/\/+$/, '')
   const isSalonReport = normalizedPathname === '/staff/salons/report'
   const isSalonList = normalizedPathname === '/staff/salons'
-  const isWorkOrders = activeScreen === 'work-orders'
-  const isWorkOrderDetail = WORK_ORDER_DETAIL_PATH.test(normalizedPathname)
+  const isWorkOrders = activeScreen === STAFF_WORK_ORDERS_SCREEN
   const isWideContent =
     isSalonReport
     || activeScreen === 'payments'
@@ -32,15 +30,15 @@ export function resolveStaffDashboardPresentation(
   return {
     headerScreen: isSalonReport ? 'report' : activeScreen,
     isWideContent,
-    mainWidthClass: isWorkOrderDetail
-      ? MAIN_WIDTH.workOrderDetail
-      : isWorkOrders
-        ? MAIN_WIDTH.workOrders
-        : isWideContent
-          ? MAIN_WIDTH.wide
-          : isSalonList
-            ? MAIN_WIDTH.medium
-            : MAIN_WIDTH.default,
-    mainPaddingClass: isWorkOrders ? MAIN_PADDING.workOrders : MAIN_PADDING.default,
+    mainWidthClass: isWorkOrders
+      ? STAFF_DASHBOARD_MAIN_WIDTH.workOrders
+      : isWideContent
+        ? STAFF_DASHBOARD_MAIN_WIDTH.wide
+        : isSalonList
+          ? STAFF_DASHBOARD_MAIN_WIDTH.medium
+          : STAFF_DASHBOARD_MAIN_WIDTH.default,
+    mainPaddingClass: isWorkOrders
+      ? STAFF_DASHBOARD_MAIN_PADDING.workOrders
+      : STAFF_DASHBOARD_MAIN_PADDING.default,
   }
 }

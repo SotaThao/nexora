@@ -32,7 +32,6 @@ export const WORK_ORDERS_I18N = {
   upNext: 'staff_dashboard.work_orders.up_next',
   newAssignment: 'staff_dashboard.work_orders.new_assignment',
   viewTicket: 'staff_dashboard.work_orders.view_ticket',
-  viewCalendar: 'staff_dashboard.work_orders.view_calendar',
   featuredTicket: 'staff_dashboard.work_orders.featured_ticket',
   empty: 'staff_dashboard.work_orders.empty',
   emptyTitle: 'staff_dashboard.work_orders.empty_title',
@@ -117,17 +116,13 @@ export const WORK_ORDERS_I18N = {
   approvalTitle: 'staff_dashboard.work_orders.approval_title',
   approvalCancel: 'staff_dashboard.work_orders.approval_cancel',
   approvalCopy: 'staff_dashboard.work_orders.approval_copy',
-  approvalDemo: 'staff_dashboard.work_orders.approval_demo',
   approvalHelp: 'staff_dashboard.work_orders.approval_help',
   approvalCodePlaceholder: 'staff_dashboard.work_orders.approval_code_placeholder',
   approvalCodeAria: 'staff_dashboard.work_orders.approval_code_aria',
   approvalSubmit: 'staff_dashboard.work_orders.approval_submit',
-  approvalError: 'staff_dashboard.work_orders.approval_error',
   toastAddService: 'staff_dashboard.work_orders.toast_add_service',
   toastChangeService: 'staff_dashboard.work_orders.toast_change_service',
   toastCustomService: 'staff_dashboard.work_orders.toast_custom_service',
-  toastApproved: 'staff_dashboard.work_orders.toast_approved',
-  toastCancelled: 'staff_dashboard.work_orders.toast_cancelled',
   completedNotesTitle: 'staff_dashboard.work_orders.completed_notes_title',
   completedNotesFallback: 'staff_dashboard.work_orders.completed_notes_fallback',
 } as const
@@ -269,10 +264,8 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   statusTabs: 'flex w-full gap-2 overflow-x-auto p-px nexora-no-scrollbar',
   ordersLayout: 'block',
   ordersPanel: '',
-  ordersPanelHead: 'mb-[11px] flex items-center justify-between gap-2.5',
+  ordersPanelHead: 'mb-[11px]',
   ordersPanelTitle: 'text-[11px] font-extrabold text-[#62708a]',
-  viewCalendar:
-    'inline-flex min-h-8 items-center justify-center rounded-full border border-nexoraBorder bg-white px-3 text-[11px] font-extrabold text-nexoraText shadow-[0_3px_10px_rgba(15,23,42,0.05)] transition hover:border-nexoraBrand hover:text-nexoraBrand',
   ordersCount: 'hidden',
   featuredSlot: 'mb-[18px]',
   featuredCard:
@@ -304,9 +297,10 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   ticketMetaIcon: 'h-3 w-3 shrink-0 text-nexoraBrand',
   ticketBadge: 'inline-flex min-h-6 shrink-0 items-center rounded-full px-[9px] text-[11px] font-extrabold whitespace-nowrap',
   customerPhone: 'hidden font-semibold text-nexoraSubtle',
-  detailPage: '',
+  detailPage:
+    'overflow-hidden rounded-[17px] border border-nexoraBorder bg-white shadow-[0_10px_26px_rgba(15,23,42,0.06)]',
   detailHeader:
-    'mb-3 flex items-center justify-between gap-3 rounded-[15px] border border-nexoraBorder bg-white px-4 py-[13px] shadow-[0_8px_22px_rgba(15,23,42,0.055)]',
+    'flex items-center justify-between gap-3 border-b border-nexoraRule px-[18px] py-[15px]',
   detailHeadMain: 'flex min-w-0 items-center gap-2.5',
   detailBack:
     'grid h-[30px] w-[30px] shrink-0 place-items-center rounded-lg border-0 bg-transparent text-nexoraMuted transition hover:bg-nexoraCanvas',
@@ -315,8 +309,7 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   detailTitle: 'text-[15px] font-black leading-5 text-nexoraText',
   detailCode: 'mt-[3px] text-[11px] font-bold tracking-[0.03em] text-nexoraSubtle',
   detailBadge: 'inline-flex min-h-6 shrink-0 items-center rounded-full px-[9px] text-[11px] font-extrabold whitespace-nowrap',
-  detailBody:
-    'rounded-[17px] border border-nexoraBorder bg-white p-[18px] shadow-[0_10px_26px_rgba(15,23,42,0.06)]',
+  detailBody: 'px-[18px] pb-5 pt-[17px]',
   detailEmpty:
     'hidden min-h-[420px] flex-col items-center justify-center px-10 py-10 text-center text-nexoraSubtle lg:flex',
   detailEmptyIcon: 'mb-3 h-[34px] w-[34px] text-[#b4bdd0]',
@@ -355,15 +348,15 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   serviceActionCell: 'col-span-3 flex justify-end md:col-span-1 md:pl-2',
   servicePrice: 'text-[11px] font-extrabold text-nexoraText',
   serviceDuration: 'text-[11px] font-bold text-nexoraMuted',
-  serviceNameRow: 'flex min-w-0 items-center gap-1.5',
-  serviceAddOnName: 'flex min-w-0 items-center gap-1.5 pl-3 text-xs font-extrabold text-nexoraText',
+  serviceNameRow: 'flex min-w-0 items-center gap-[5px]',
+  serviceAddOnName: 'flex min-w-0 items-center gap-[5px] pl-3 text-xs font-extrabold text-nexoraText',
   serviceAddOnIcon: 'h-3.5 w-3.5 shrink-0 text-nexoraBrand',
   serviceActionGroup: 'inline-flex flex-wrap items-center justify-end gap-1',
   serviceChangeButton:
     'inline-flex min-h-[30px] items-center justify-center rounded-lg border border-[#c9cafa] bg-[#f6f6ff] px-2.5 text-[11px] font-extrabold whitespace-nowrap text-nexoraBrand transition hover:border-nexoraBrand hover:bg-[#ececff]',
   serviceRemoveButton:
     'inline-flex min-h-[30px] items-center justify-center rounded-lg border border-[#f3c9cd] bg-[#fff7f7] px-2.5 text-[11px] font-extrabold whitespace-nowrap text-[#c9434f] transition hover:border-[#e57d86] hover:bg-[#ffeded]',
-  approvalPill: 'ml-[5px] inline-flex h-[19px] shrink-0 items-center rounded-full px-[7px] text-[11px] font-extrabold uppercase',
+  approvalPill: 'inline-flex h-[19px] shrink-0 items-center rounded-full px-[7px] text-[10px] font-extrabold uppercase leading-none whitespace-nowrap',
   approvalPillPending: 'bg-[#FFF3D6] text-[#AD5A00]',
   approvalPillApproved: 'bg-[#E5F9F0] text-[#008655]',
   approvalPillRejected: 'bg-[#FEECEC] text-[#D42D2D]',
@@ -400,22 +393,19 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   approvalServices: 'mt-2 flex flex-col gap-1.5',
   approvalChip:
     'flex min-h-7 items-center justify-between gap-2 rounded-[9px] bg-white px-2.5 text-[11px] font-extrabold text-[#8D380C]',
-  approvalDemo:
-    'mt-2 flex min-h-9 items-center justify-center rounded-lg border border-nexoraBrand bg-white text-[11px] font-extrabold text-nexoraBrand',
   approvalHelp: 'mt-1.5 text-[11px] font-bold leading-snug text-nexoraMuted',
   approvalForm: 'mt-2 grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_7.5rem]',
   approvalInput:
     'h-11 w-full rounded-[11px] border border-nexoraBorder bg-white px-3 text-center text-base font-extrabold tracking-[0.22em] text-nexoraText outline-none placeholder:text-sm placeholder:tracking-[0.18em] placeholder:text-nexoraSubtle focus:border-nexoraBrand',
   approvalSubmit:
-    'inline-flex h-11 items-center justify-center gap-1.5 rounded-[11px] bg-nexoraBrand px-3 text-[11px] font-extrabold text-white',
+    'inline-flex h-11 items-center justify-center gap-1.5 rounded-[11px] bg-nexoraBrand px-3 text-[11px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50',
   serviceTotalRow: 'flex items-center justify-between border-b border-nexoraRule py-3.5',
   serviceTotalLabel: 'text-xs font-semibold text-nexoraMuted',
   serviceTotalValue: 'text-sm font-black tabular-nums text-nexoraText',
   detailActions: 'mt-4 flex flex-wrap gap-2',
   primaryAction:
-    'order-first inline-flex min-h-[46px] flex-1 basis-full items-center justify-center gap-[7px] rounded-[10px] border border-transparent bg-[linear-gradient(100deg,#315cff,#6c32ef)] px-3.5 text-xs font-extrabold text-white shadow-[0_10px_24px_rgba(70,72,216,0.22)] transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60',
-  primaryActionIcon: 'grid h-6 w-6 place-items-center rounded-full bg-white/20',
-  primaryActionGlyph: 'h-[14px] w-[14px] fill-current',
+    'order-first inline-flex min-h-[46px] flex-1 basis-full items-center justify-center gap-[7px] rounded-[10px] border border-transparent bg-[linear-gradient(100deg,#315cff,#6c32ef)] px-3.5 text-xs font-extrabold text-white shadow-[0_10px_24px_rgba(70,72,216,0.22)] transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:h-[18px] [&_svg]:w-[18px] [&_svg]:shrink-0',
+  primaryActionGlyph: 'h-[18px] w-[18px] shrink-0',
   modalOverlay:
     'fixed inset-0 z-[60] flex items-end justify-center bg-nexoraText/55 p-0 backdrop-blur-sm sm:items-center sm:p-4',
   modalCard: 'nexora-modal-card w-full max-w-md rounded-b-none p-0 sm:rounded-2xl',
@@ -456,6 +446,7 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   completedNoteTitle: 'inline-flex items-center gap-1.5 text-[11px] font-extrabold text-[#00794C]',
   completedNoteIcon: 'h-3.5 w-3.5 shrink-0',
   completedNoteBody: 'mt-1.5 text-[11px] font-semibold leading-relaxed text-[#2D6450]',
+  page: 'w-full',
   grow: 'min-w-0 flex-1',
   truncate: 'min-w-0 truncate',
   metaChip: 'inline-flex items-center gap-1',
@@ -468,8 +459,8 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   chrome: '',
   hideOnDetailMobile: 'hidden',
   emptyInline: 'mt-3 text-sm text-nexoraMuted sm:text-base',
-  serviceName: 'truncate text-xs font-extrabold text-nexoraText',
-  serviceTech: 'mt-0.5 truncate text-[11px] font-semibold text-nexoraSubtle',
+  serviceName: 'min-w-0 truncate text-xs font-extrabold text-nexoraText',
+  serviceTech: 'mt-0.5 text-[11px] font-semibold leading-snug text-nexoraSubtle',
   itemNote: 'mt-1.5 rounded-xl bg-amber-50 px-3 py-2 text-xs leading-relaxed text-nexoraText sm:text-sm',
   errorCard: 'rounded-2xl border border-rose-200 bg-rose-50 px-4 py-10 text-center',
   errorText: 'text-sm font-bold text-nexoraDanger sm:text-base',
@@ -502,6 +493,12 @@ export const WORK_ORDER_NUMBER_DIGITS = 4
 export const WORK_ORDER_EMPTY_PLACEHOLDER = '_'
 export const WORK_ORDER_COMPLETION_NOTE_MAX_LENGTH = 500
 export const WORK_ORDER_COMPLETION_NOTE_SEPARATOR = '. '
+/** Corner snack duration for add/change/custom/remove — blocking modal toast stays for errors. */
+export const WORK_ORDER_SNACK_DURATION_MS = 3200
+export const WORK_ORDER_TOAST_TYPE = {
+  success: 'success',
+  error: 'error',
+} as const
 export const WORK_ORDER_SKELETON_COUNT = {
   salons: 2,
   tickets: 3,
@@ -569,9 +566,9 @@ export const WORK_ORDER_APPROVAL_I18N = {
 } as const
 
 export const WORK_ORDER_APPROVAL_PILL_CLASS = {
-  pending: WORK_ORDERS_LAYOUT_CLASS.approvalPillPending,
-  approved: WORK_ORDERS_LAYOUT_CLASS.approvalPillApproved,
-  rejected: WORK_ORDERS_LAYOUT_CLASS.approvalPillRejected,
+  pending: `${WORK_ORDERS_LAYOUT_CLASS.approvalPill} ${WORK_ORDERS_LAYOUT_CLASS.approvalPillPending}`,
+  approved: `${WORK_ORDERS_LAYOUT_CLASS.approvalPill} ${WORK_ORDERS_LAYOUT_CLASS.approvalPillApproved}`,
+  rejected: `${WORK_ORDERS_LAYOUT_CLASS.approvalPill} ${WORK_ORDERS_LAYOUT_CLASS.approvalPillRejected}`,
 } as const
 
 export const WORK_ORDER_FILTER_TAB_STYLE: Record<

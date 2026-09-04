@@ -1,6 +1,6 @@
 import { ClipboardX } from 'lucide-react'
-import { useMemo, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffWorkOrders } from '../../../data/hooks/useStaffWorkOrders'
 import { formatLocalDateIso } from '../../../utils/localDate'
@@ -26,6 +26,16 @@ import { WorkOrderErrorCard } from './WorkOrderQueryFeedback'
 import { WorkOrderTicketListSkeleton } from './WorkOrderSkeletons'
 import WorkOrderTicketCard from './WorkOrderTicketCard'
 import {
+  WORK_ORDER_NAVIGATE_REPLACE,
+  WORK_ORDER_QUERY_PARAM,
+  applyWorkOrderListParams,
+  parseWorkOrderListDate,
+  parseWorkOrderListStatus,
+  workOrderListHref,
+  workOrderListParamsNeedSync,
+  workOrderLocationFromPath,
+} from './workOrderListUrl'
+import {
   countWorkOrdersByFilter,
   formatWorkOrderNumber,
   joinWorkOrderServiceNames,
@@ -47,20 +57,39 @@ export default function StaffWorkOrderTickets({
   const { t, currentLanguage } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
-  const fromSalons = (location.state as { from?: string } | null)?.from === STAFF_SALONS_PATH
+  const [searchParams, setSearchParams] = useSearchParams()
+  const fromSalons = workOrderLocationFromPath(location.state) === STAFF_SALONS_PATH
   const todayIso = formatLocalDateIso(new Date())
-  const [selectedDateIso, setSelectedDateIso] = useState(todayIso)
-  const [filter, setFilter] = useState<WorkOrderTicketFilter>(WORK_ORDER_TICKET_FILTER.Assigned)
+  const selectedDateIso = parseWorkOrderListDate(
+    searchParams.get(WORK_ORDER_QUERY_PARAM.date),
+    todayIso,
+  )
+  const filter = parseWorkOrderListStatus(searchParams.get(WORK_ORDER_QUERY_PARAM.status))
   const [calendarOpen, setCalendarOpen] = useState(false)
+  const listHref = (ticketId?: string) => workOrderListHref(salon.id, selectedDateIso, filter, ticketId)
+  const withListState = (replace = false) => (
+    replace
+      ? { ...WORK_ORDER_NAVIGATE_REPLACE, state: location.state }
+      : { state: location.state }
+  )
   const workOrdersQuery = useStaffWorkOrders(
     salon.id,
     selectedDateIso,
     WORK_ORDER_FILTER_STATUSES[WORK_ORDER_TICKET_FILTER.All],
   )
   const tickets = workOrdersQuery.data ?? []
+  const isListLoading = workOrdersQuery.data === undefined && !workOrdersQuery.isError
   const isDetailMode = Boolean(selectedTicketId)
   const chromeClass = isDetailMode ? WORK_ORDERS_LAYOUT_CLASS.hideOnDetailMobile : ''
   const changeSalonPath = fromSalons ? STAFF_SALONS_PATH : staffWorkOrdersPath()
+
+  useEffect(() => {
+    if (!workOrderListParamsNeedSync(searchParams, selectedDateIso, filter)) return
+    setSearchParams(
+      applyWorkOrderListParams(searchParams, selectedDateIso, filter),
+      WORK_ORDER_NAVIGATE_REPLACE,
+    )
+  }, [filter, searchParams, selectedDateIso, setSearchParams])
 
   const visibleTickets = useMemo(
     () => sortWorkOrderTicketsByTime(
@@ -68,18 +97,30 @@ export default function StaffWorkOrderTickets({
     ),
     [filter, tickets],
   )
-  const featuredTicket = filter === WORK_ORDER_TICKET_FILTER.Assigned
+
+  const updateListParams = (dateIso: string, nextFilter: WorkOrderTicketFilter) => {
+    if (selectedTicketId) {
+      navigate(workOrderListHref(salon.id, dateIso, nextFilter), withListState(true))
+      return
+    }
+    setSearchParams(
+      applyWorkOrderListParams(searchParams, dateIso, nextFilter),
+      WORK_ORDER_NAVIGATE_REPLACE,
+    )
+  }
+
+  const featuredTicket = !isListLoading && filter === WORK_ORDER_TICKET_FILTER.Assigned
     ? newestAssignedWorkOrder(visibleTickets)
     : null
   const listTickets = featuredTicket
     ? visibleTickets.filter((ticket) => ticket.id !== featuredTicket.id)
     : visibleTickets
   const openTicket = (ticketId: string) => {
-    navigate(staffWorkOrdersPath(salon.id, ticketId), { state: location.state })
+    navigate(listHref(ticketId), withListState())
   }
 
   return (
-    <div className="w-full">
+    <div className={WORK_ORDERS_LAYOUT_CLASS.page}>
       <div className={`${WORK_ORDERS_LAYOUT_CLASS.ticketsTitleRow} ${chromeClass}`}>
         <div className={WORK_ORDERS_LAYOUT_CLASS.workspaceSalon}>
           <div className={WORK_ORDERS_LAYOUT_CLASS.grow}>
@@ -100,7 +141,9 @@ export default function StaffWorkOrderTickets({
             </p>
           </div>
         </div>
-        <span className={WORK_ORDERS_LAYOUT_CLASS.countBadge}>{visibleTickets.length}</span>
+        <span className={WORK_ORDERS_LAYOUT_CLASS.countBadge}>
+          {isListLoading ? WORK_ORDER_EMPTY_PLACEHOLDER : visibleTickets.length}
+        </span>
       </div>
 
       <div className={`${WORK_ORDERS_LAYOUT_CLASS.filterBar} ${chromeClass}`}>
@@ -110,10 +153,7 @@ export default function StaffWorkOrderTickets({
           language={currentLanguage}
           calendarOpen={calendarOpen}
           onCalendarOpenChange={setCalendarOpen}
-          onChange={(iso) => {
-            setSelectedDateIso(iso)
-            if (selectedTicketId) navigate(staffWorkOrdersPath(salon.id), { state: location.state })
-          }}
+          onChange={(iso) => updateListParams(iso, filter)}
         />
         <div className={WORK_ORDERS_LAYOUT_CLASS.statusTabs} role="tablist">
           {WORK_ORDER_FILTER_TABS.map((tab) => (
@@ -123,14 +163,11 @@ export default function StaffWorkOrderTickets({
               role="tab"
               aria-selected={tab === filter}
               className={workOrderFilterTabClass(tab, tab === filter)}
-              onClick={() => {
-                setFilter(tab)
-                if (selectedTicketId) navigate(staffWorkOrdersPath(salon.id), { state: location.state })
-              }}
+              onClick={() => updateListParams(selectedDateIso, tab)}
             >
               <span>{t(WORK_ORDER_FILTER_I18N[tab])}</span>
               <span className={workOrderFilterCountClass(tab)}>
-                {countWorkOrdersByFilter(tickets, tab)}
+                {isListLoading ? WORK_ORDER_EMPTY_PLACEHOLDER : countWorkOrdersByFilter(tickets, tab)}
               </span>
             </button>
           ))}
@@ -145,20 +182,15 @@ export default function StaffWorkOrderTickets({
         ) : null}
         <div className={WORK_ORDERS_LAYOUT_CLASS.ordersPanelHead}>
           <h2 className={WORK_ORDERS_LAYOUT_CLASS.ordersPanelTitle}>
-            {featuredTicket
-              ? t(WORK_ORDERS_I18N.upNext)
-              : t(WORK_ORDERS_I18N.ticketCount, { count: visibleTickets.length })}
+            {isListLoading
+              ? t(WORK_ORDERS_I18N.loading)
+              : featuredTicket
+                ? t(WORK_ORDERS_I18N.upNext)
+                : t(WORK_ORDERS_I18N.ticketCount, { count: visibleTickets.length })}
           </h2>
-          <button
-            type="button"
-            className={WORK_ORDERS_LAYOUT_CLASS.viewCalendar}
-            onClick={() => setCalendarOpen(true)}
-          >
-            {t(WORK_ORDERS_I18N.viewCalendar)}
-          </button>
         </div>
         <WorkOrderTicketResults
-          isPending={workOrdersQuery.isPending}
+          isLoading={isListLoading}
           isError={workOrdersQuery.isError}
           tickets={listTickets}
           selectedTicketId={selectedTicketId}
@@ -171,7 +203,7 @@ export default function StaffWorkOrderTickets({
       {selectedTicketId ? (
         <StaffWorkOrderDetail
           orderId={selectedTicketId}
-          onBack={() => navigate(staffWorkOrdersPath(salon.id), { state: location.state })}
+          onBack={() => navigate(listHref(), withListState())}
         />
       ) : null}
     </div>
@@ -216,7 +248,7 @@ function WorkOrderFeaturedTicket({
 }
 
 function WorkOrderTicketResults({
-  isPending,
+  isLoading,
   isError,
   tickets,
   selectedTicketId,
@@ -224,7 +256,7 @@ function WorkOrderTicketResults({
   onRetry,
   onSelect,
 }: {
-  isPending: boolean
+  isLoading: boolean
   isError: boolean
   tickets: WorkOrderListItem[]
   selectedTicketId?: string
@@ -234,7 +266,7 @@ function WorkOrderTicketResults({
 }) {
   const { t } = useTranslation()
 
-  if (isPending && tickets.length === 0 && !hasFeatured) return <WorkOrderTicketListSkeleton />
+  if (isLoading) return <WorkOrderTicketListSkeleton />
   if (isError) return <WorkOrderErrorCard onAction={onRetry} />
   if (tickets.length === 0) {
     return (

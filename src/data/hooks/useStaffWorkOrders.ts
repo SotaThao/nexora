@@ -36,7 +36,6 @@ export function useStaffWorkOrders(
     }),
     enabled: canLoad,
     retry: false,
-    placeholderData: (previous) => previous,
   })
 }
 
