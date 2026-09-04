@@ -284,7 +284,9 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
     'inline-flex min-h-7 max-w-full items-center justify-center truncate rounded-md px-1.5 text-[11px] font-extrabold whitespace-nowrap text-nexoraBrand transition hover:bg-nexoraBrandSoft sm:min-h-8 sm:px-2 sm:text-xs',
   serviceRemoveButton:
     'inline-flex min-h-7 max-w-full items-center justify-center truncate rounded-md px-1.5 text-[11px] font-extrabold whitespace-nowrap text-rose-500 transition hover:bg-rose-50 sm:min-h-8 sm:px-2 sm:text-xs',
-  serviceActionGroup: 'flex items-center justify-end gap-1',
+  // Stacked, not side by side: "Change service" + "Remove" together are wider than this
+  // column in English, and a row would spill over the Time cell next to it.
+  serviceActionGroup: 'flex flex-col items-stretch gap-1',
   approvalPill: 'inline-flex h-[19px] shrink-0 items-center rounded-full px-1.5 text-[8px] font-extrabold uppercase',
   approvalPillPending: 'bg-[#FFF3D6] text-[#AD5A00]',
   approvalPillApproved: 'bg-[#E5F9F0] text-[#008655]',
