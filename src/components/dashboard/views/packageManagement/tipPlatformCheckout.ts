@@ -5,7 +5,7 @@ import type {
   PurchasableSubscriptionPlan,
   SubscriptionPackage,
 } from '../../../../data/repositories/subscriptionPayments'
-import { isTipPlatformPlanBelowCurrent } from '../../../../utils/subscriptionDisplay'
+import { isTipPlatformUpgradeMove } from '../../../../utils/subscriptionDisplay'
 import {
   PACKAGE_QUERY_PARAM,
   TIP_PLATFORM_COMPARE_PLAN_IDS,
@@ -60,15 +60,23 @@ export function findTipPlatformPackage(
   )
 }
 
-/** False when selecting current tier, a lower locked tier, or an empty id. */
+/**
+ * False when selecting the exact current plan+cycle, or a move that isn't an upgrade per the
+ * backend's cycle-first-then-tier ordering (downgrade in tier on the same cycle, or any move
+ * from a longer to a shorter billing cycle).
+ */
 export function canOpenTipPlatformCheckout(
   planId: string,
+  targetPeriodInMonths: number | null | undefined,
   currentTipPlanId: string | null | undefined,
+  currentPeriodInMonths: number | null | undefined,
 ): boolean {
-  if (!planId) return false
-  if (planId === currentTipPlanId) return false
-  if (isTipPlatformPlanBelowCurrent(planId, currentTipPlanId)) return false
-  return true
+  return isTipPlatformUpgradeMove(
+    planId,
+    targetPeriodInMonths,
+    currentTipPlanId,
+    currentPeriodInMonths,
+  )
 }
 
 export function stripPlanQueryParam(

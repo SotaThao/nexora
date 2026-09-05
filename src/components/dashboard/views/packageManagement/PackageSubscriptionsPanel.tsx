@@ -120,6 +120,7 @@ export default function PackageSubscriptionsPanel({
 
   const {
     tipPlatformSubscription,
+    currentPeriodInMonths,
     comparePlanId,
     packages,
     paymentPlan,
@@ -143,6 +144,7 @@ export default function PackageSubscriptionsPanel({
       <div className="nexora-package-content package-plan-content">
         <ManagePlanView
           currentSubscription={tipPlatformSubscription}
+          currentPeriodInMonths={currentPeriodInMonths}
           packages={packages}
           onSelectPlan={handleSelectPlan}
           billingCycle={billingCycle}
@@ -162,6 +164,8 @@ export default function PackageSubscriptionsPanel({
         paymentPlanPrice={paymentPlanPrice}
         billingCycle={checkoutBillingCycle}
         currentSubscription={tipPlatformSubscription}
+        currentPeriodInMonths={currentPeriodInMonths}
+        catalogPackages={packages}
         onClose={clearCheckout}
       />
       <CompleteStoreSetupGateModal

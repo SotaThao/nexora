@@ -5,7 +5,10 @@ import { SHOW_HARDWARE_DEVICES } from '../constants'
 
 import Overview from '../overview/Overview'
 import TouchpointsView from '../../TouchpointsView'
-import { normalizeTouchpointSection } from '../../touchpoints/touchpointSections'
+import {
+  buildTouchpointsSearch,
+  normalizeTouchpointSection,
+} from '../../touchpoints/touchpointSections'
 import ReviewsView from '../views/ReviewsView'
 import TipsView from '../../TipsView'
 import ReportsView from '../views/ReportsView'
@@ -95,7 +98,7 @@ export function OverviewRoute() {
       transactions={ctx.transactions}
       selectedStaff={ctx.selectedLeaderboardStaff}
       setSelectedStaff={ctx.handleSelectLeaderboardStaff}
-      onOpenTouchpoints={() => navigate('/dashboard/touchpoints')}
+      onOpenTouchpoints={() => navigate(`/dashboard/touchpoints?${buildTouchpointsSearch()}`)}
       onOpenReviews={() => navigate('/dashboard/reviews')}
       onOpenStaff={() => navigate('/dashboard/staff')}
       onOpenBookings={() => navigate('/dashboard/pos?tab=booking')}
@@ -1236,6 +1239,7 @@ export function SubscriptionsRoute() {
 
   const {
     tipPlatformSubscription,
+    currentPeriodInMonths,
     packages,
     paymentPlan,
     selectedPackage,
@@ -1257,6 +1261,7 @@ export function SubscriptionsRoute() {
     <>
       <ManagePlanView
         currentSubscription={tipPlatformSubscription}
+        currentPeriodInMonths={currentPeriodInMonths}
         packages={packages}
         onSelectPlan={handleSelectPlan}
       />
@@ -1266,6 +1271,8 @@ export function SubscriptionsRoute() {
         paymentPlanPrice={paymentPlanPrice}
         billingCycle={checkoutBillingCycle}
         currentSubscription={tipPlatformSubscription}
+        currentPeriodInMonths={currentPeriodInMonths}
+        catalogPackages={packages}
         onClose={clearCheckout}
       />
       <CompleteStoreSetupGateModal

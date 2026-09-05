@@ -52,6 +52,7 @@ import PosOnboardingLayout from "./PosOnboardingLayout";
 import RootRedirect from "./RootRedirect";
 import { VoiceCallPlanRoute } from "../data/voiceTrial/domain";
 import { PUBLIC_BOOKING_ROUTE } from "../components/public/booking/constants";
+import { ONEQR_ROUTE } from "../constants/oneQr";
 
 const SetupWizard = lazyWithRetry(() => import("../components/SetupWizard"));
 const DashboardOwnerShell = lazyWithRetry(
@@ -127,6 +128,9 @@ const StaffClockScan = lazyWithRetry(
 const StaffFrontDesk = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffFrontDesk"),
 );
+const StaffWorkOrders = lazyWithRetry(
+  () => import("../components/staff-dashboard/work-orders/StaffWorkOrders"),
+);
 const ForgotPassword = lazyWithRetry(
   () => import("../components/ForgotPassword"),
 );
@@ -136,6 +140,9 @@ const ResetPassword = lazyWithRetry(
 const LoginScreen = lazyWithRetry(() => import("./LoginScreen"));
 const QrRedirectPage = lazyWithRetry(
   () => import("../components/public/QrRedirectPage"),
+);
+const OneQrLandingPage = lazyWithRetry(
+  () => import("../components/public/oneqr/OneQrLandingPage"),
 );
 const PrivacyPolicyPage = lazyWithRetry(
   () => import("../components/legal/PrivacyPolicyPage"),
@@ -326,6 +333,7 @@ export default function AppRouter() {
           <Route path="/merchant/payments/:paymentId" element={<PaymentsRedirect />} />
           <Route path="/qr/:code" element={<QrRedirectPage />} />
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
+          <Route path={ONEQR_ROUTE.path} element={<OneQrLandingPage />} />
           <Route path={PUBLIC_BOOKING_ROUTE.path} element={<PublicBookingPage />} />
           <Route path="/booking/:businessSlug" element={<PublicPosBookingPage />} />
           <Route path="/booking/manage/:manageToken" element={<ManageBookingPage />} />
@@ -476,6 +484,7 @@ export default function AppRouter() {
             <Route path="salons" element={<StaffMySalons />} />
             <Route path="salons/report" element={<StaffSalonReport />} />
             <Route path="salons/:businessId/front-desk" element={<StaffFrontDesk />} />
+            <Route path="work-orders/:salonId?/:ticketId?" element={<StaffWorkOrders />} />
             {/* Landing page for the rotating clock-in QR — salon id and token arrive as ?b=&t= */}
             <Route path="clock-scan" element={<StaffClockScan />} />
             <Route path="profile" element={<StaffProfile />} />

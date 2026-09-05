@@ -1,6 +1,6 @@
 // StaffNotifications — notification feed + push preferences.
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, Bell, Calendar, CreditCard, Star, Users, Wallet } from 'lucide-react'
+import { AlertTriangle, Bell, BellRing, Calendar, CreditCard, Star, UserCheck, UserMinus, Users, Wallet } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import {
@@ -43,6 +43,14 @@ const TYPE_ICON: Record<string, typeof Bell> = {
   TaxIqDisputeResolved: Wallet,
   TaxIqDisputeRejected: AlertTriangle,
   BookingConfirmed: Calendar,
+  // Front desk calling the tech out — the actionable version lives in the shell sheet, these rows
+  // are the history of it.
+  PosStaffBeep: BellRing,
+  PosStaffBeepResponse: BellRing,
+  // Work-order assignment lands on the ticket itself via actionUrl, so these rows are tappable.
+  PosServiceLineAssigned: UserCheck,
+  PosBookingAssigned: Calendar,
+  PosServiceLineUnassigned: UserMinus,
 };
 
 function notificationIcon(type: string) {
