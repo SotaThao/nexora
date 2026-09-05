@@ -2282,6 +2282,7 @@ export default function BookingSettingsPanel() {
       }
       syncCategoryDraftsFromApi(mergedCategories);
       setCategoryOrderDirty(false);
+      setCategoryModalOpen(false);
       showToast(t(`${TK}.saveSuccess`), "success");
     } catch (error) {
       const message = t(getErrorI18nKey(getApiErrorCode(error)));
