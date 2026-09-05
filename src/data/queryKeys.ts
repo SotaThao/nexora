@@ -185,6 +185,10 @@ export const qk = {
   // POS iPad redesign, Ticket 2 — Check-in "returning customer" lookup by phone.
   merchantPosCustomerLookup: (businessId?: string, phone?: string) =>
     ['merchantSettings', 'posCustomerLookup', businessId ?? '', phone ?? ''],
+  // POS receipt printing (US-047) - device-scoped, deliberately without a businessId: the printer
+  // is attached to this iPad, so these are not business settings and must not be keyed as such.
+  posPrinterProfile: () => ['posDevice', 'printerProfile'],
+  posReceiptSettings: () => ['posDevice', 'receiptSettings'],
   // POS Booking — per-business settings (Ticket 2)
   merchantPosBookingSettings: (businessId?: string) => ['merchantSettings', 'posBookingSettings', businessId ?? ''],
   merchantPosOrderSettings: (businessId?: string) => ['merchantSettings', 'posOrderSettings', businessId ?? ''],

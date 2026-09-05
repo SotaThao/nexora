@@ -1269,6 +1269,24 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
     overflow: visible !important;
   }
 
+  /* Multi-copy printing (US-047). PassPRNT prints one document per launch, but the browser path
+     has no such limit, so N copies are one print dialog containing N page-broken receipts rather
+     than N dialogs. iOS Safari fires afterprint unreliably, which rules out printing in sequence. */
+  body.printing-pos-invoice .pos-receipt-print-offscreen {
+    position: static !important;
+    left: auto !important;
+    width: 80mm !important;
+  }
+
+  body.printing-pos-invoice .pos-receipt-print-extra {
+    display: block !important;
+  }
+
+  .pos-receipt-print--page-break {
+    break-after: page;
+    page-break-after: always;
+  }
+
   @page pos-staff-report {
     size: 80mm auto;
     margin: 0;
@@ -1682,6 +1700,20 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   .public-checkin-key {
     height: 4rem;
   }
+}
+
+/* Host for the extra copies the browser print path renders. Portalled to <body> as a sibling of
+   #root on purpose: the print stylesheet hides #root outright, so anything mounted inside the app
+   tree would be hidden with it. Positioned off-screen rather than display:none, because a hidden
+   element has no layout and prints blank. */
+.pos-receipt-print-offscreen {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+}
+
+.pos-receipt-print-extra {
+  display: none;
 }
 
 /* Beep bell — the tech's incoming-call icon (staff beep sheet + its minimised pill).

@@ -99,7 +99,20 @@ import PosCashPaymentPanel, { isCashPaymentCovered } from './PosCashPaymentPanel
 import PosReceivePaymentPanel from './PosReceivePaymentPanel'
 import PosRemoveConfirmAction from './PosRemoveConfirmAction'
 import PosCheckoutSuccessView, { type PosCheckoutReceiptItem } from './PosCheckoutSuccessView'
-import PosReceiptPrintPreview, { type PosReceiptPrintGroup } from './PosReceiptPrintPreview'
+import PosReceiptPrintPreview from './PosReceiptPrintPreview'
+import { buildPosReceiptDocument, resolveReceiptCopies } from './receipt/posReceiptDocument'
+import {
+  resolveProductsGroupLabel,
+  resolvePosReceiptLabels,
+  resolvePosReceiptTotalsLabels,
+  resolveUnassignedTechnicianLabel,
+} from './receipt/posReceiptLabels'
+import { usePosReceiptPrint } from './receipt/usePosReceiptPrint'
+import type { PosReceiptDocument } from '../../../../types/domain'
+import { PosFrontDeskTab } from '../../../../constants/posFrontDesk'
+import { DASHBOARD_MENU_ID } from '../../constants'
+import { DEFAULT_POS_RECEIPT_SETTINGS, PosPrintTransport } from '../../../../constants/posPrinter'
+import { usePosReceiptSettings } from '../../../../data/hooks/usePosPrinterSettings'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { selectNextTurnTechnician } from './posNextTurn'
 import type { PosReceiptMode } from './posWorkspaceUrl'
@@ -255,6 +268,9 @@ function addOnsTotalAfterDiscount(line: DisplayLine): number {
   return line.addOns.reduce((sum, addOn) => sum + addOn.lineTotalAfterDiscount, 0)
 }
 
+/** Where a PassPRNT callback comes back to. Query-free by design — see passprntTransport. */
+const POS_FRONT_DESK_ROUTE_PATH = `/dashboard/${DASHBOARD_MENU_ID.pos}`
+
 export default function PosOrderWorkspace({
   businessId,
   orderId,
@@ -269,6 +285,9 @@ export default function PosOrderWorkspace({
   businessPhone,
   businessTimeZone,
   canViewReport = false,
+  receiptPrintTab = PosFrontDeskTab.CheckoutCustomer,
+  printFallbackOrderId = null,
+  onPrintFallbackHandled,
 }: {
   businessId: string
   orderId: string
@@ -286,8 +305,26 @@ export default function PosOrderWorkspace({
   businessPhone?: string
   businessTimeZone?: string
   canViewReport?: boolean
+  // Which Front Desk tab to return to after a PassPRNT round trip. Printing leaves the app, so
+  // the callback lands on a fresh mount and has to be told where the operator was.
+  receiptPrintTab?: string
+  // Order whose PassPRNT print just failed. The preview opens on it so the operator can fall
+  // back to the browser dialog without going anywhere.
+  printFallbackOrderId?: string | null
+  onPrintFallbackHandled?: () => void
 }) {
   const { t, currentLanguage } = useTranslation()
+  // Device-local receipt options (what to print, how many copies). Read here rather than at
+  // print time so the document is already shaped correctly for the preview the operator sees.
+  const { data: receiptSettings } = usePosReceiptSettings()
+  const { print: printReceipt, printSurface, transport: printTransport } = usePosReceiptPrint()
+  // Set in the completion callback, acted on one commit later — see the effect below.
+  const [autoPrintIntent, setAutoPrintIntent] = useState<{
+    orderId: string
+    copies: number
+    doc: PosReceiptDocument
+  } | null>(null)
+  const autoPrintedOrderIdRef = useRef<string | null>(null)
   const { showToast } = useNotification()
 
   const { data: order, isLoading: isOrderLoading } = useOrderDetail(businessId, orderId)
@@ -1180,6 +1217,37 @@ export default function PosOrderWorkspace({
         onSuccess: (result) => {
           setCompletedPayment(result)
           onPaymentCompleted?.(result.orderId, submittedReceiptMode)
+
+          // Built here, synchronously, rather than in the effect: completing the order
+          // invalidates the order query, so by the time an effect runs `order` may be mid
+          // refetch. The lines in this closure are the correct pre-completion snapshot
+          // (Complete does not change lines) and `result` carries the server-confirmed money.
+          if (submittedReceiptMode !== 'print') return
+          const settings = receiptSettings ?? DEFAULT_POS_RECEIPT_SETTINGS
+          const copies = resolveReceiptCopies(paymentMethod, settings)
+          if (copies < 1) return
+          setAutoPrintIntent({
+            orderId: result.orderId,
+            copies,
+            doc: buildPosReceiptDocument(
+              {
+                order,
+                confirmed: result,
+                business: {
+                  name: businessName,
+                  address: businessAddress,
+                  phone: businessPhone,
+                },
+                unassignedTechnicianLabel: resolveUnassignedTechnicianLabel(t),
+                productsLabel: resolveProductsGroupLabel(t),
+                paymentMethodLabel: getPosCheckoutPaymentMethodLabel(paymentMethod, t),
+                totalsLabels: resolvePosReceiptTotalsLabels(t),
+                labels: resolvePosReceiptLabels(t),
+                locale: currentLanguage,
+              },
+              settings,
+            ),
+          })
         },
         onError: reportError,
         onSettled: endTicketAction,
@@ -2107,75 +2175,102 @@ export default function PosOrderWorkspace({
     ]
   })
 
-  const printableServiceGroups = visibleLines.reduce<Array<{ technician: string; lines: DisplayServiceLine[] }>>(
-    (groups, line) => {
-      if (line.itemType !== 'Service') return groups
-
-      const technician = line.technicianName?.trim() || t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel')
-      const group = groups.find((entry) => entry.technician === technician)
-      if (group) {
-        group.lines.push(line)
-      } else {
-        groups.push({ technician, lines: [line] })
-      }
-      return groups
-    },
-    [],
-  )
-  const printableProductLines = visibleLines.filter(
-    (line): line is DisplayProductLine => line.itemType === 'Product',
-  )
   const isPaidReceiptPreview = isPaid || Boolean(completedPayment)
-  const printableReceiptGroups: PosReceiptPrintGroup[] = [
-    ...printableServiceGroups.map((group) => ({
-      id: `technician-${group.technician}`,
-      label: group.technician,
-      lines: group.lines.map((line) => ({
-        id: line.key,
-        name: line.serviceName,
-        amount: lineTotal(line),
-        discountLabel: line.discountAmount > 0
-          ? formatDiscountPriceBadge(line.discountType, line.discountValue, line.discountAmount)
-          : undefined,
-        addOns: line.addOns.map((addOn) => ({
-          id: addOn.id,
-          name: addOn.addOnName,
-          amount: addOn.lineTotal,
-          discountLabel: addOn.discountAmount > 0
-            ? formatDiscountPriceBadge(addOn.discountType, addOn.discountValue, addOn.discountAmount)
-            : undefined,
-        })),
-      })),
-    })),
-    ...(printableProductLines.length > 0 ? [{
-      id: 'products',
-      label: t('components.dashboard.views.pos.PosOrderWorkspace.summaryProducts'),
-      lines: printableProductLines.map((line) => ({
-        id: line.key,
-        name: line.productName,
-        amount: lineTotal(line),
-      })),
-    }] : []),
-  ]
-  const printableReceipt = order ? (
+
+  // One builder for every print surface. The grouping, the discount badges and the totals used
+  // to be assembled here and again in PosCompletedOrdersPanel; they now live in
+  // buildPosReceiptDocument so the preview, the printed paper and a replayed copy cannot differ.
+  const receiptDocument = useMemo(
+    () =>
+      order
+        ? buildPosReceiptDocument(
+            {
+              order,
+              business: {
+                name: businessName,
+                address: businessAddress,
+                phone: businessPhone,
+              },
+              unassignedTechnicianLabel: resolveUnassignedTechnicianLabel(t),
+              productsLabel: resolveProductsGroupLabel(t),
+              paymentMethodLabel: order.paymentMethodType
+                ? getPosCheckoutPaymentMethodLabel(order.paymentMethodType, t)
+                : undefined,
+              totalsLabels: resolvePosReceiptTotalsLabels(t),
+              labels: resolvePosReceiptLabels(t),
+              locale: currentLanguage,
+            },
+            receiptSettings ?? DEFAULT_POS_RECEIPT_SETTINGS,
+          )
+        : null,
+    [order, businessName, businessAddress, businessPhone, receiptSettings, currentLanguage, t],
+  )
+
+  // One commit after the intent is set, so the success screen (and the print surface) exist
+  // before anything navigates away to PassPRNT.
+  useEffect(() => {
+    if (!autoPrintIntent) return
+    // Assigned before any async work: StrictMode double-invoke, a re-render and a double tap on
+    // Complete all have to collapse to a single print.
+    if (autoPrintedOrderIdRef.current === autoPrintIntent.orderId) return
+    autoPrintedOrderIdRef.current = autoPrintIntent.orderId
+    printReceipt(autoPrintIntent.doc, {
+      jobId: autoPrintIntent.orderId,
+      copies: autoPrintIntent.copies,
+      backPath: POS_FRONT_DESK_ROUTE_PATH,
+      restore: {
+        surface: 'frontDesk',
+        tab: receiptPrintTab,
+        orderId: autoPrintIntent.orderId,
+        mode: 'success',
+        receiptMode: 'print',
+      },
+    })
+    setAutoPrintIntent(null)
+  }, [autoPrintIntent, printReceipt, receiptPrintTab])
+
+  // The manual Print button has to respect the device transport too. Without this, a salon that
+  // paired a Star printer would still get the browser dialog every time someone pressed Print —
+  // auto-print would go to the printer while the button beside it did something else.
+  //
+  // Only wired for PassPRNT: on the browser transport the modal already prints its own DOM, and
+  // routing that through the hook would render the receipt twice (once in the modal, once in the
+  // off-screen surface) and print both.
+  // A failed print leaves the transport untouched — the salon still wants its Star printer — so
+  // only this one print falls back, by opening the preview whose button uses window.print().
+  const isPrintFallback = Boolean(printFallbackOrderId) && printFallbackOrderId === orderId
+  useEffect(() => {
+    if (!isPrintFallback) return
+    setPrintPreviewOpen(true)
+    onPrintFallbackHandled?.()
+  }, [isPrintFallback, onPrintFallbackHandled])
+
+  const handleManualPrint =
+    receiptDocument && printTransport === PosPrintTransport.PassPrnt && !isPrintFallback
+      ? () =>
+          printReceipt(
+            { ...receiptDocument, isPaid: isPaidReceiptPreview },
+            {
+              jobId: orderId,
+              copies: 1,
+              backPath: POS_FRONT_DESK_ROUTE_PATH,
+              restore: {
+                surface: 'frontDesk',
+                tab: receiptPrintTab,
+                orderId,
+                mode: isPaidReceiptPreview ? 'success' : 'checkout',
+                receiptMode: 'print',
+              },
+            },
+          )
+      : undefined
+
+  const printableReceipt = receiptDocument ? (
     <PosReceiptPrintPreview
       open={printPreviewOpen}
       onClose={() => setPrintPreviewOpen(false)}
-      orderNumber={order.orderNumber}
-      businessName={businessName}
-      businessAddress={businessAddress}
-      businessPhone={businessPhone}
-      completedAt={order.completedAt}
-      groups={printableReceiptGroups}
-      tipAmount={order.tipAmount}
-      discountAmount={order.discountAmount}
-      orderDiscountAmount={order.orderDiscountAmount}
-      orderDiscountLabel={order.appliedPromotionName ?? undefined}
-      total={order.total}
-      paymentMethodLabel={order.paymentMethodType
-        ? getPosCheckoutPaymentMethodLabel(order.paymentMethodType, t)
-        : undefined}
-      isPaid={isPaidReceiptPreview}
+      doc={{ ...receiptDocument, isPaid: isPaidReceiptPreview }}
+      onPrint={handleManualPrint}
     />
   ) : null
 
@@ -2218,6 +2313,7 @@ export default function PosOrderWorkspace({
           onStartNext={() => (onCompleted ?? onClose)?.()}
         />
         {printableReceipt}
+        {printSurface}
       </>
     )
   }
@@ -2461,6 +2557,7 @@ export default function PosOrderWorkspace({
       />
     ) : null}
     {printableReceipt}
+    {printSurface}
     </>
   )
 }
