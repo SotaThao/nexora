@@ -1,10 +1,10 @@
-import { ChevronLeft, ClipboardX } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useTranslation } from '../../../contexts/LanguageContext'
-import { useStaffWorkOrders } from '../../../data/hooks/useStaffWorkOrders'
-import { formatDateIsoInTimeZone } from '../../../utils/localDate'
-import { STAFF_SALONS_PATH } from '../staffSalonPaths'
+import { ChevronLeft, ClipboardX } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "../../../contexts/LanguageContext";
+import { useStaffWorkOrders } from "../../../data/hooks/useStaffWorkOrders";
+import { formatDateIsoInTimeZone } from "../../../utils/localDate";
+import { STAFF_SALONS_PATH } from "../staffSalonPaths";
 import {
   WORK_ORDER_EMPTY_PLACEHOLDER,
   WORK_ORDER_FILTER_I18N,
@@ -18,21 +18,21 @@ import {
   type WorkOrderListItem,
   type WorkOrderSalon,
   type WorkOrderTicketFilter,
-} from './constants'
-import StaffWorkOrderDetail from './StaffWorkOrderDetail'
-import WorkOrderDatePicker from './WorkOrderDatePicker'
-import { WorkOrderErrorCard } from './WorkOrderQueryFeedback'
-import { WorkOrderTicketListSkeleton } from './WorkOrderSkeletons'
-import WorkOrderTicketCard from './WorkOrderTicketCard'
+} from "./constants";
+import StaffWorkOrderDetail from "./StaffWorkOrderDetail";
+import WorkOrderDatePicker from "./WorkOrderDatePicker";
 import {
-  WORK_ORDER_NAVIGATE_REPLACE,
-  WORK_ORDER_QUERY_PARAM,
   applyWorkOrderListParams,
   parseWorkOrderListDate,
   parseWorkOrderListStatus,
+  WORK_ORDER_NAVIGATE_REPLACE,
+  WORK_ORDER_QUERY_PARAM,
   workOrderListHref,
   workOrderListParamsNeedSync,
-} from './workOrderListUrl'
+} from "./workOrderListUrl";
+import { WorkOrderErrorCard } from "./WorkOrderQueryFeedback";
+import { WorkOrderTicketListSkeleton } from "./WorkOrderSkeletons";
+import WorkOrderTicketCard from "./WorkOrderTicketCard";
 import {
   countWorkOrdersByFilter,
   formatWorkOrderNumber,
@@ -41,79 +41,98 @@ import {
   sortWorkOrderTicketsByTime,
   workOrderTextOrPlaceholder,
   workOrderTicketMatchesFilter,
-} from './workOrderTickets'
+} from "./workOrderTickets";
 
 interface StaffWorkOrderTicketsProps {
-  salon: WorkOrderSalon
-  selectedTicketId?: string
+  salon: WorkOrderSalon;
+  selectedTicketId?: string;
 }
 
 export default function StaffWorkOrderTickets({
   salon,
   selectedTicketId,
 }: StaffWorkOrderTicketsProps) {
-  const { t, currentLanguage } = useTranslation()
-  const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const todayIso = formatDateIsoInTimeZone(new Date(), salon.timeZone)
+  const { t, currentLanguage } = useTranslation();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const todayIso = formatDateIsoInTimeZone(new Date(), salon.timeZone);
   const selectedDateIso = parseWorkOrderListDate(
     searchParams.get(WORK_ORDER_QUERY_PARAM.date),
     todayIso,
-  )
-  const filter = parseWorkOrderListStatus(searchParams.get(WORK_ORDER_QUERY_PARAM.status))
-  const [calendarOpen, setCalendarOpen] = useState(false)
-  const listHref = (ticketId?: string) => workOrderListHref(salon.id, selectedDateIso, filter, ticketId)
-  const goToSalons = () => navigate(STAFF_SALONS_PATH)
+  );
+  const filter = parseWorkOrderListStatus(
+    searchParams.get(WORK_ORDER_QUERY_PARAM.status),
+  );
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const listHref = (ticketId?: string) =>
+    workOrderListHref(salon.id, selectedDateIso, filter, ticketId);
+  const goToSalons = () => navigate(STAFF_SALONS_PATH);
   const workOrdersQuery = useStaffWorkOrders(
     salon.id,
     selectedDateIso,
     WORK_ORDER_FILTER_STATUSES[WORK_ORDER_TICKET_FILTER.All],
-  )
-  const tickets = workOrdersQuery.data ?? []
-  const isListLoading = workOrdersQuery.data === undefined && !workOrdersQuery.isError
-  const isDetailMode = Boolean(selectedTicketId)
-  const chromeClass = isDetailMode ? WORK_ORDERS_LAYOUT_CLASS.hideOnDetailMobile : ''
+  );
+  const tickets = workOrdersQuery.data ?? [];
+  const isListLoading =
+    workOrdersQuery.data === undefined && !workOrdersQuery.isError;
+  const isDetailMode = Boolean(selectedTicketId);
+  const chromeClass = isDetailMode
+    ? WORK_ORDERS_LAYOUT_CLASS.hideOnDetailMobile
+    : "";
 
   useEffect(() => {
-    if (!workOrderListParamsNeedSync(searchParams, selectedDateIso, filter)) return
+    if (!workOrderListParamsNeedSync(searchParams, selectedDateIso, filter))
+      return;
     setSearchParams(
       applyWorkOrderListParams(searchParams, selectedDateIso, filter),
       WORK_ORDER_NAVIGATE_REPLACE,
-    )
-  }, [filter, searchParams, selectedDateIso, setSearchParams])
+    );
+  }, [filter, searchParams, selectedDateIso, setSearchParams]);
 
   const visibleTickets = useMemo(
-    () => sortWorkOrderTicketsByTime(
-      tickets.filter((ticket) => workOrderTicketMatchesFilter(ticket.status, filter)),
-      salon.timeZone,
-    ),
+    () =>
+      sortWorkOrderTicketsByTime(
+        tickets.filter((ticket) =>
+          workOrderTicketMatchesFilter(ticket.status, filter),
+        ),
+        salon.timeZone,
+      ),
     [filter, salon.timeZone, tickets],
-  )
+  );
 
-  const updateListParams = (dateIso: string, nextFilter: WorkOrderTicketFilter) => {
+  const updateListParams = (
+    dateIso: string,
+    nextFilter: WorkOrderTicketFilter,
+  ) => {
     if (selectedTicketId) {
-      navigate(workOrderListHref(salon.id, dateIso, nextFilter), WORK_ORDER_NAVIGATE_REPLACE)
-      return
+      navigate(
+        workOrderListHref(salon.id, dateIso, nextFilter),
+        WORK_ORDER_NAVIGATE_REPLACE,
+      );
+      return;
     }
     setSearchParams(
       applyWorkOrderListParams(searchParams, dateIso, nextFilter),
       WORK_ORDER_NAVIGATE_REPLACE,
-    )
-  }
+    );
+  };
 
-  const featuredTicket = !isListLoading && filter === WORK_ORDER_TICKET_FILTER.Assigned
-    ? newestAssignedWorkOrder(visibleTickets)
-    : null
+  const featuredTicket =
+    !isListLoading && filter === WORK_ORDER_TICKET_FILTER.Assigned
+      ? newestAssignedWorkOrder(visibleTickets)
+      : null;
   const listTickets = featuredTicket
     ? visibleTickets.filter((ticket) => ticket.id !== featuredTicket.id)
-    : visibleTickets
+    : visibleTickets;
   const openTicket = (ticketId: string) => {
-    navigate(listHref(ticketId))
-  }
+    navigate(listHref(ticketId));
+  };
 
   return (
     <div className={WORK_ORDERS_LAYOUT_CLASS.page}>
-      <div className={`${WORK_ORDERS_LAYOUT_CLASS.ticketsTitleRow} ${chromeClass}`}>
+      <div
+        className={`${WORK_ORDERS_LAYOUT_CLASS.ticketsTitleRow} ${chromeClass}`}
+      >
         <div className={WORK_ORDERS_LAYOUT_CLASS.workspaceSalon}>
           <button
             type="button"
@@ -121,7 +140,10 @@ export default function StaffWorkOrderTickets({
             aria-label={t(WORK_ORDERS_I18N.backToSalons)}
             onClick={goToSalons}
           >
-            <ChevronLeft className={WORK_ORDERS_LAYOUT_CLASS.ticketsBackIcon} aria-hidden="true" />
+            <ChevronLeft
+              className={WORK_ORDERS_LAYOUT_CLASS.ticketsBackIcon}
+              aria-hidden="true"
+            />
           </button>
           <div className={WORK_ORDERS_LAYOUT_CLASS.grow}>
             <p className={WORK_ORDERS_LAYOUT_CLASS.workspaceKicker}>
@@ -168,17 +190,25 @@ export default function StaffWorkOrderTickets({
             >
               <span>{t(WORK_ORDER_FILTER_I18N[tab])}</span>
               <span className={workOrderFilterCountClass(tab)}>
-                {isListLoading ? WORK_ORDER_EMPTY_PLACEHOLDER : countWorkOrdersByFilter(tickets, tab)}
+                {isListLoading
+                  ? WORK_ORDER_EMPTY_PLACEHOLDER
+                  : countWorkOrdersByFilter(tickets, tab)}
               </span>
             </button>
           ))}
         </div>
       </div>
 
-      <section className={`${WORK_ORDERS_LAYOUT_CLASS.ordersPanel} ${chromeClass}`} aria-label={t(WORK_ORDERS_I18N.pageTitle)}>
+      <section
+        className={`${WORK_ORDERS_LAYOUT_CLASS.ordersPanel} ${chromeClass}`}
+        aria-label={t(WORK_ORDERS_I18N.pageTitle)}
+      >
         {featuredTicket ? (
           <div className={WORK_ORDERS_LAYOUT_CLASS.featuredSlot}>
-            <WorkOrderFeaturedTicket ticket={featuredTicket} onSelect={() => openTicket(featuredTicket.id)} />
+            <WorkOrderFeaturedTicket
+              ticket={featuredTicket}
+              onSelect={() => openTicket(featuredTicket.id)}
+            />
           </div>
         ) : null}
         <div className={WORK_ORDERS_LAYOUT_CLASS.ordersPanelHead}>
@@ -187,7 +217,9 @@ export default function StaffWorkOrderTickets({
               ? t(WORK_ORDERS_I18N.loading)
               : featuredTicket
                 ? t(WORK_ORDERS_I18N.upNext)
-                : t(WORK_ORDERS_I18N.ticketCount, { count: visibleTickets.length })}
+                : t(WORK_ORDERS_I18N.ticketCount, {
+                    count: visibleTickets.length,
+                  })}
           </h2>
         </div>
         <WorkOrderTicketResults
@@ -210,24 +242,30 @@ export default function StaffWorkOrderTickets({
         />
       ) : null}
     </div>
-  )
+  );
 }
 
 function WorkOrderFeaturedTicket({
   ticket,
   onSelect,
 }: {
-  ticket: WorkOrderListItem
-  onSelect: () => void
+  ticket: WorkOrderListItem;
+  onSelect: () => void;
 }) {
-  const { t } = useTranslation()
-  const services = workOrderTextOrPlaceholder(joinWorkOrderServiceNames(ticket.serviceNames))
+  const { t } = useTranslation();
+  const services = workOrderTextOrPlaceholder(
+    joinWorkOrderServiceNames(ticket.serviceNames),
+  );
 
   return (
     <article className={WORK_ORDERS_LAYOUT_CLASS.featuredCard}>
       <div className={WORK_ORDERS_LAYOUT_CLASS.featuredTop}>
-        <span className={WORK_ORDERS_LAYOUT_CLASS.featuredEyebrow}>{t(WORK_ORDERS_I18N.newAssignment)}</span>
-        <span className={WORK_ORDERS_LAYOUT_CLASS.featuredStatus}>{t(WORK_ORDERS_I18N.statusAssigned)}</span>
+        <span className={WORK_ORDERS_LAYOUT_CLASS.featuredEyebrow}>
+          {t(WORK_ORDERS_I18N.newAssignment)}
+        </span>
+        <span className={WORK_ORDERS_LAYOUT_CLASS.featuredStatus}>
+          {t(WORK_ORDERS_I18N.statusAssigned)}
+        </span>
       </div>
       <h2 className={WORK_ORDERS_LAYOUT_CLASS.featuredTitle}>
         {t(WORK_ORDERS_I18N.featuredTicket, {
@@ -237,17 +275,18 @@ function WorkOrderFeaturedTicket({
       </h2>
       <p className={WORK_ORDERS_LAYOUT_CLASS.featuredService}>
         {services}
-        {' · '}
+        {" · "}
         {WORK_ORDER_EMPTY_PLACEHOLDER}
       </p>
-      <p className={WORK_ORDERS_LAYOUT_CLASS.featuredNote}>
-        “{WORK_ORDER_EMPTY_PLACEHOLDER}”
-      </p>
-      <button type="button" className={WORK_ORDERS_LAYOUT_CLASS.featuredButton} onClick={onSelect}>
+      <button
+        type="button"
+        className={WORK_ORDERS_LAYOUT_CLASS.featuredButton}
+        onClick={onSelect}
+      >
         {t(WORK_ORDERS_I18N.viewTicket)}
       </button>
     </article>
-  )
+  );
 }
 
 function WorkOrderTicketResults({
@@ -260,33 +299,44 @@ function WorkOrderTicketResults({
   onRetry,
   onSelect,
 }: {
-  isLoading: boolean
-  isError: boolean
-  tickets: WorkOrderListItem[]
-  timeZone?: string | null
-  selectedTicketId?: string
-  hasFeatured: boolean
-  onRetry: () => void
-  onSelect: (ticketId: string) => void
+  isLoading: boolean;
+  isError: boolean;
+  tickets: WorkOrderListItem[];
+  timeZone?: string | null;
+  selectedTicketId?: string;
+  hasFeatured: boolean;
+  onRetry: () => void;
+  onSelect: (ticketId: string) => void;
 }) {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
 
-  if (isLoading) return <WorkOrderTicketListSkeleton />
-  if (isError) return <WorkOrderErrorCard onAction={onRetry} />
+  if (isLoading) return <WorkOrderTicketListSkeleton />;
+  if (isError) return <WorkOrderErrorCard onAction={onRetry} />;
   if (tickets.length === 0) {
     return (
       <div className={WORK_ORDERS_LAYOUT_CLASS.ticketEmpty}>
         {hasFeatured ? null : (
-          <ClipboardX className={WORK_ORDERS_LAYOUT_CLASS.emptyIcon} aria-hidden="true" />
+          <ClipboardX
+            className={WORK_ORDERS_LAYOUT_CLASS.emptyIcon}
+            aria-hidden="true"
+          />
         )}
         <strong className={WORK_ORDERS_LAYOUT_CLASS.emptyTitle}>
-          {t(hasFeatured ? WORK_ORDERS_I18N.emptyMoreTitle : WORK_ORDERS_I18N.emptyTitle)}
+          {t(
+            hasFeatured
+              ? WORK_ORDERS_I18N.emptyMoreTitle
+              : WORK_ORDERS_I18N.emptyTitle,
+          )}
         </strong>
         <span className={WORK_ORDERS_LAYOUT_CLASS.emptyBody}>
-          {t(hasFeatured ? WORK_ORDERS_I18N.emptyMoreHint : WORK_ORDERS_I18N.emptyHint)}
+          {t(
+            hasFeatured
+              ? WORK_ORDERS_I18N.emptyMoreHint
+              : WORK_ORDERS_I18N.emptyHint,
+          )}
         </span>
       </div>
-    )
+    );
   }
 
   return (
@@ -301,5 +351,5 @@ function WorkOrderTicketResults({
         />
       ))}
     </div>
-  )
+  );
 }
