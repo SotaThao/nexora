@@ -135,6 +135,7 @@ export function applyWorkOrderLineStatus(
 export function applyWorkOrderAssignedLinesStarted(lines: WorkOrderEditableLine[]): WorkOrderEditableLine[] {
   return lines.map((line) => (
     isParentServiceLine(line)
+      && line.isMine !== false
       && (line.lineStatus === PosOrderItemStatus.Assigned
         || line.lineStatus === PosOrderItemStatus.PendingAcceptance)
       ? { ...line, lineStatus: PosOrderItemStatus.Started }
@@ -144,7 +145,9 @@ export function applyWorkOrderAssignedLinesStarted(lines: WorkOrderEditableLine[
 
 export function applyWorkOrderStartedLinesCompleted(lines: WorkOrderEditableLine[]): WorkOrderEditableLine[] {
   return lines.map((line) => (
-    isParentServiceLine(line) && line.lineStatus !== PosOrderItemStatus.Completed
+    isParentServiceLine(line)
+      && line.isMine !== false
+      && line.lineStatus !== PosOrderItemStatus.Completed
       ? { ...line, lineStatus: PosOrderItemStatus.Completed }
       : line
   ))

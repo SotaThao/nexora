@@ -163,9 +163,7 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
     setLines(toWorkOrderEditableLines(ticket.items))
   }
 
-  const displayStatus = completedSession?.orderId === orderId
-    ? PosOrderStatus.Completed
-    : ticket?.status
+  const displayStatus = ticket?.status
   const localCompletionNote = completedSession?.orderId === orderId
     ? completedSession.note
     : null
@@ -264,23 +262,26 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
       WORK_ORDERS_I18N.completeServiceSuccess,
     )
     if (!succeeded) return
-    setLines((current) => applyWorkOrderStartedLinesCompleted(current))
+    const nextLines = applyWorkOrderStartedLinesCompleted(lines)
+    setLines(nextLines)
     setCompletedSession({ orderId, note })
     setIsCompleteModalOpen(false)
-    // Keep the open detail in sync before/while the list+detail refetch lands — otherwise a
-    // reload of the same ticket still reads the previous InService payload from cache briefly.
+    const ticketFullyDone = nextLines
+      .filter((line) => !line.isAddOn)
+      .every((line) => line.lineStatus === PosOrderItemStatus.Completed)
+    // Keep the open detail in sync before/while the list+detail refetch lands.
     queryClient.setQueryData(
       qk.staffWorkOrderDetail(orderId),
       (current: WorkOrderDetail | null | undefined) => (
         current
           ? {
               ...current,
-              status: PosOrderStatus.Completed,
+              status: ticketFullyDone ? PosOrderStatus.Completed : current.status,
               canStartService: false,
               canCompleteService: false,
               completionNote: note ?? current.completionNote,
               items: current.items.map((item) => (
-                item.isAddOn
+                item.isAddOn || item.isMine === false
                   ? item
                   : {
                       ...item,
