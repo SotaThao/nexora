@@ -9,6 +9,8 @@ export const STAFF_CALENDAR_I18N = {
   kicker: 'staff_dashboard.calendar.kicker',
   title: 'staff_dashboard.titles.calendar',
   today: 'staff_dashboard.calendar.today',
+  previousDay: 'staff_dashboard.calendar.previous_day',
+  nextDay: 'staff_dashboard.calendar.next_day',
   weekLabel: 'staff_dashboard.calendar.week_label',
   heading: 'staff_dashboard.calendar.heading',
   headingOne: 'staff_dashboard.calendar.heading_one',
@@ -41,7 +43,7 @@ export const STAFF_CALENDAR_STATUS_I18N: Partial<Record<PosOrderStatus, string>>
 }
 
 export const STAFF_CALENDAR_LAYOUT_CLASS = {
-  page: 'mx-auto w-full max-w-[500px] pb-8',
+  page: 'mx-auto w-full max-w-[640px] pb-8',
   calendar: 'flex flex-col gap-5',
   header: 'flex items-end justify-between gap-4',
   kicker: 'mb-1.5 text-[11px] font-extrabold uppercase tracking-[0.12em] text-nexoraSubtle',
@@ -50,6 +52,7 @@ export const STAFF_CALENDAR_LAYOUT_CLASS = {
     'inline-flex min-h-10 shrink-0 items-center justify-center rounded-[13px] border border-nexoraBorder bg-white px-[15px] text-xs font-extrabold text-nexoraText shadow-[0_5px_14px_rgba(15,23,42,0.04)] transition hover:border-nexoraBrand hover:text-nexoraBrand',
   weekShell:
     'rounded-[20px] border border-nexoraBorder bg-white/75 p-[9px] shadow-[0_10px_28px_rgba(15,23,42,0.045)] max-[420px]:-mx-1 max-[420px]:p-[7px]',
+  weekNavigation: 'flex items-center gap-2',
   week: 'flex items-stretch gap-1',
   day: 'flex min-h-[66px] min-w-0 flex-1 flex-col items-center justify-center gap-[7px] rounded-[14px] border-0 bg-transparent text-nexoraMuted max-[420px]:min-h-[62px]',
   dayIdle: 'hover:bg-nexoraBrandSoft hover:text-nexoraBrand',
@@ -86,6 +89,10 @@ export const STAFF_CALENDAR_LAYOUT_CLASS = {
   salonSelect:
     'min-h-10 shrink-0 rounded-[13px] border border-nexoraBorder bg-white px-3 text-xs font-extrabold text-nexoraText shadow-[0_5px_14px_rgba(15,23,42,0.04)] outline-none transition hover:border-nexoraBrand focus:border-nexoraBrand',
   headerActions: 'flex shrink-0 items-center gap-2',
+  dateNavigation: 'flex items-center gap-1',
+  dateNavigationButton:
+    'grid h-10 w-10 shrink-0 place-items-center rounded-[13px] border border-nexoraBorder bg-white text-nexoraBrand shadow-[0_5px_14px_rgba(15,23,42,0.04)] transition hover:border-nexoraBrand hover:bg-nexoraBrandSoft',
+  dateNavigationIcon: 'h-4 w-4',
   back: 'inline-flex items-center gap-1.5 self-start text-xs font-extrabold text-nexoraBrand',
   backIcon: 'h-[15px] w-[15px]',
   navCount:

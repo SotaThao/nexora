@@ -289,7 +289,7 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   featuredNote:
     'mb-[13px] mt-[15px] rounded-xl border border-white/[.18] bg-white/10 px-3 py-[11px] text-[11px] font-semibold leading-[1.45] text-white',
   featuredButton:
-    'h-10 w-full rounded-xl border-0 bg-white text-xs font-black text-nexoraBrand shadow-[0_8px_18px_rgba(24,27,90,0.16)]',
+    'mt-4 h-10 w-full rounded-xl border-0 bg-white text-xs font-black text-nexoraBrand shadow-[0_8px_18px_rgba(24,27,90,0.16)]',
   listMeta: 'mt-4 flex items-center justify-between text-xs font-medium text-nexoraSubtle lg:mt-5 sm:text-sm',
   ticketList: 'flex flex-col gap-[9px]',
   ticketCard:
@@ -340,19 +340,23 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   addServiceLink: 'cursor-not-allowed select-none text-sm font-semibold text-nexoraBrand/40',
   addOnLink: 'block cursor-not-allowed select-none text-right text-sm font-semibold whitespace-nowrap text-nexoraBrand/40',
   serviceTable: 'w-full min-w-0 border-t border-nexoraRule',
+  serviceGridRead:
+    'grid grid-cols-[minmax(0,1fr)_72px_56px] items-center gap-x-3 max-[400px]:grid-cols-[minmax(0,1fr)_56px_44px]',
+  serviceGridEdit:
+    'grid grid-cols-[minmax(0,1fr)_72px_56px_136px] items-center gap-x-3 max-[400px]:grid-cols-[minmax(0,1fr)_56px_44px]',
   serviceColPrice: '',
   serviceColTime: '',
   serviceColAction: '',
   serviceHeadCell: 'text-[11px] font-extrabold text-nexoraSubtle',
   serviceHeadCellEnd: 'text-right text-[11px] font-extrabold text-nexoraSubtle',
   serviceTableHead:
-    'grid grid-cols-[minmax(0,1fr)_72px_56px_auto] items-center gap-x-3 py-2 text-[11px] font-extrabold text-nexoraSubtle',
+    'items-center gap-x-3 py-2 text-[11px] font-extrabold text-nexoraSubtle',
   serviceTableHeadRead:
-    'grid grid-cols-[minmax(0,1fr)_72px_56px] items-center gap-x-3 py-2 text-[11px] font-extrabold text-nexoraSubtle',
+    'items-center gap-x-3 py-2 text-[11px] font-extrabold text-nexoraSubtle',
   serviceRow:
-    'grid grid-cols-[minmax(0,1fr)_72px_56px] items-center gap-x-3 gap-y-1.5 border-b border-nexoraRule py-3',
+    'items-center gap-x-3 gap-y-1.5 border-b border-nexoraRule py-3',
   serviceRowEdit:
-    'grid grid-cols-[minmax(0,1fr)_72px_56px_auto] items-center gap-x-3 gap-y-1.5 border-b border-nexoraRule py-3',
+    'items-center gap-x-3 gap-y-1.5 border-b border-nexoraRule py-3',
   serviceNameCell: 'min-w-0',
   serviceMeta: 'col-span-full min-w-0',
   serviceNumCell: 'self-center text-right tabular-nums whitespace-nowrap',
@@ -362,11 +366,11 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   serviceNameRow: 'flex min-w-0 items-center gap-[5px]',
   serviceAddOnName: 'flex min-w-0 items-center gap-[5px] pl-3 text-xs font-extrabold text-nexoraText',
   serviceAddOnIcon: 'h-3.5 w-3.5 shrink-0 text-nexoraBrand',
-  serviceActionGroup: 'inline-flex flex-wrap items-center justify-end gap-1',
+  serviceActionGroup: 'grid w-full grid-cols-2 items-stretch gap-1 max-[400px]:w-fit',
   serviceChangeButton:
-    'inline-flex min-h-[30px] items-center justify-center rounded-lg border border-[#c9cafa] bg-[#f6f6ff] px-2.5 text-[11px] font-extrabold whitespace-nowrap text-nexoraBrand transition hover:border-nexoraBrand hover:bg-[#ececff] disabled:cursor-not-allowed disabled:opacity-50',
+    'inline-flex min-h-[30px] w-full items-center justify-center rounded-lg border border-[#c9cafa] bg-[#f6f6ff] px-2.5 text-[11px] font-extrabold whitespace-nowrap text-nexoraBrand transition hover:border-nexoraBrand hover:bg-[#ececff] disabled:cursor-not-allowed disabled:opacity-50 max-[400px]:w-[84px]',
   serviceRemoveButton:
-    'inline-flex min-h-[30px] items-center justify-center rounded-lg border border-[#f3c9cd] bg-[#fff7f7] px-2.5 text-[11px] font-extrabold whitespace-nowrap text-[#c9434f] transition hover:border-[#e57d86] hover:bg-[#ffeded] disabled:cursor-not-allowed disabled:opacity-50',
+    'inline-flex min-h-[30px] w-full items-center justify-center rounded-lg border border-[#f3c9cd] bg-[#fff7f7] px-2.5 text-[11px] font-extrabold whitespace-nowrap text-[#c9434f] transition hover:border-[#e57d86] hover:bg-[#ffeded] disabled:cursor-not-allowed disabled:opacity-50 max-[400px]:w-[84px]',
   approvalPill: 'inline-flex h-[19px] shrink-0 items-center rounded-full px-[7px] text-[10px] font-extrabold uppercase leading-none whitespace-nowrap',
   approvalPillPending: 'bg-[#FFF3D6] text-[#AD5A00]',
   approvalPillApproved: 'bg-[#E5F9F0] text-[#008655]',
@@ -618,12 +622,20 @@ export function workOrderFilterCountClass(tab: WorkOrderTicketFilter) {
 }
 
 export function workOrderServiceRowClass(canEdit: boolean, pendingRemoval = false) {
-  const base = canEdit ? WORK_ORDERS_LAYOUT_CLASS.serviceRowEdit : WORK_ORDERS_LAYOUT_CLASS.serviceRow
+  const base = canEdit
+    ? `${WORK_ORDERS_LAYOUT_CLASS.serviceGridEdit} ${WORK_ORDERS_LAYOUT_CLASS.serviceRowEdit}`
+    : `${WORK_ORDERS_LAYOUT_CLASS.serviceGridRead} ${WORK_ORDERS_LAYOUT_CLASS.serviceRow}`
   return pendingRemoval ? `${base} opacity-60` : base
 }
 
 export function workOrderServiceTableHeadClass(canEdit: boolean) {
-  return canEdit ? WORK_ORDERS_LAYOUT_CLASS.serviceTableHead : WORK_ORDERS_LAYOUT_CLASS.serviceTableHeadRead
+  const grid = canEdit
+    ? WORK_ORDERS_LAYOUT_CLASS.serviceGridEdit
+    : WORK_ORDERS_LAYOUT_CLASS.serviceGridRead
+  const head = canEdit
+    ? WORK_ORDERS_LAYOUT_CLASS.serviceTableHead
+    : WORK_ORDERS_LAYOUT_CLASS.serviceTableHeadRead
+  return `${grid} ${head}`
 }
 
 export function workOrderTicketCardClass(isActive: boolean) {

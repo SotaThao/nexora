@@ -48,7 +48,7 @@ export default function WorkOrderCompleteServiceModal({
   const cardStyle = viewport ? { maxHeight: '100%' } : undefined
 
   const completionNote = composeWorkOrderCompletionNote(selectedSuggestions, additionalNote)
-  const canConfirm = completionNote !== null && !isPending
+  const canConfirm = !isPending
 
   const handleConfirm = () => {
     if (!canConfirm) return

@@ -19,6 +19,13 @@ export function toCalendarDateKey(date: Date): string {
   return formatLocalDateIso(date)
 }
 
+export function shiftCalendarDate(dateKey: string, dayDelta: number): string {
+  const date = parseCalendarDateKey(dateKey)
+  if (!date) return dateKey
+  date.setDate(date.getDate() + dayDelta)
+  return toCalendarDateKey(date)
+}
+
 export function calendarWeekDays(selectedDateKey: string): { key: string; date: Date }[] {
   const active = parseCalendarDateKey(selectedDateKey)
   if (!active) return []

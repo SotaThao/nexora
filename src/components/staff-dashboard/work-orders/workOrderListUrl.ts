@@ -19,12 +19,14 @@ export type WorkOrderLocationState = {
 
 /** URL slugs for the ticket tabs — not backend PosOrderStatus wire values. */
 export const WORK_ORDER_STATUS_QUERY_VALUE = {
+  [WORK_ORDER_TICKET_FILTER.All]: 'all',
   [WORK_ORDER_TICKET_FILTER.Assigned]: 'assigned',
   [WORK_ORDER_TICKET_FILTER.InService]: 'in-service',
   [WORK_ORDER_TICKET_FILTER.Completed]: 'completed',
 } as const
 
 const FILTER_BY_STATUS_QUERY: Record<string, WorkOrderTicketFilter> = {
+  [WORK_ORDER_STATUS_QUERY_VALUE[WORK_ORDER_TICKET_FILTER.All]]: WORK_ORDER_TICKET_FILTER.All,
   [WORK_ORDER_STATUS_QUERY_VALUE[WORK_ORDER_TICKET_FILTER.Assigned]]: WORK_ORDER_TICKET_FILTER.Assigned,
   [WORK_ORDER_STATUS_QUERY_VALUE[WORK_ORDER_TICKET_FILTER.InService]]: WORK_ORDER_TICKET_FILTER.InService,
   [WORK_ORDER_STATUS_QUERY_VALUE[WORK_ORDER_TICKET_FILTER.Completed]]: WORK_ORDER_TICKET_FILTER.Completed,
@@ -56,7 +58,7 @@ export function parseWorkOrderListStatus(raw: string | null | undefined): WorkOr
 
 export function workOrderListStatusQuery(filter: WorkOrderTicketFilter): string {
   return WORK_ORDER_STATUS_QUERY_VALUE[filter as keyof typeof WORK_ORDER_STATUS_QUERY_VALUE]
-    ?? WORK_ORDER_STATUS_QUERY_VALUE[WORK_ORDER_TICKET_FILTER.Assigned]
+    ?? WORK_ORDER_STATUS_QUERY_VALUE[WORK_ORDER_TICKET_FILTER.All]
 }
 
 export function applyWorkOrderListParams(

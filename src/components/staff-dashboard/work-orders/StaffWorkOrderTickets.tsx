@@ -240,9 +240,6 @@ function WorkOrderFeaturedTicket({
         {' · '}
         {WORK_ORDER_EMPTY_PLACEHOLDER}
       </p>
-      <p className={WORK_ORDERS_LAYOUT_CLASS.featuredNote}>
-        “{WORK_ORDER_EMPTY_PLACEHOLDER}”
-      </p>
       <button type="button" className={WORK_ORDERS_LAYOUT_CLASS.featuredButton} onClick={onSelect}>
         {t(WORK_ORDERS_I18N.viewTicket)}
       </button>

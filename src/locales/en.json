@@ -349,6 +349,8 @@
     "calendar": {
       "kicker": "My schedule only",
       "today": "Today",
+      "previous_day": "Previous day",
+      "next_day": "Next day",
       "week_label": "Choose a day",
       "heading": "{{weekday}} · {{count}} appointments",
       "heading_one": "{{weekday}} · 1 appointment",

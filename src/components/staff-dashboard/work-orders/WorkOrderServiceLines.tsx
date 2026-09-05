@@ -188,7 +188,7 @@ function WorkOrderServiceLineRow({
         {formatWorkOrderDurationMinutes(line.durationMinutes, t)}
       </div>
       {canEdit ? (
-        <div className={WORK_ORDERS_LAYOUT_CLASS.serviceActionCell}>
+        <div className={`${WORK_ORDERS_LAYOUT_CLASS.serviceActionCell} max-[400px]:col-span-full max-[400px]:justify-start max-[400px]:pl-0`}>
           {line.isAddOn ? null : (
             <span className={WORK_ORDERS_LAYOUT_CLASS.serviceActionGroup}>
               <button

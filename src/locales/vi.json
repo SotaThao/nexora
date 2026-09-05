@@ -359,6 +359,8 @@
     "calendar": {
       "kicker": "Chỉ lịch của tôi",
       "today": "Hôm nay",
+      "previous_day": "Ngày trước",
+      "next_day": "Ngày sau",
       "week_label": "Chọn ngày",
       "heading": "{{weekday}} · {{count}} lịch hẹn",
       "heading_one": "{{weekday}} · 1 lịch hẹn",

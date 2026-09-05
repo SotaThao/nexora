@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, CalendarCheck } from 'lucide-react'
+import { ArrowLeft, CalendarCheck, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import type { TFunction } from '../../../types/contexts'
 import { useStaffBookingCalendar } from '../../../data/hooks/useStaffWorkOrders'
@@ -23,6 +23,7 @@ import {
   formatCalendarTime,
   formatCalendarWeekday,
   parseCalendarDateKey,
+  shiftCalendarDate,
   toCalendarDateKey,
 } from './calendarUtils'
 import StaffMyCalendarSkeleton from './StaffMyCalendarSkeleton'
@@ -105,35 +106,59 @@ export default function StaffMyCalendar() {
         </div>
 
         <div className={STAFF_CALENDAR_LAYOUT_CLASS.weekShell}>
-          <div
-            className={STAFF_CALENDAR_LAYOUT_CLASS.week}
-            role="group"
-            aria-label={t(STAFF_CALENDAR_I18N.weekLabel)}
-          >
-            {weekDays.map((day) => {
-              const isSelected = day.key === selectedDate
-              const isToday = day.key === todayKey
-              return (
-                <button
-                  key={day.key}
-                  className={calendarDayClass(isSelected)}
-                  type="button"
-                  aria-pressed={isSelected}
-                  onClick={() => setPickedDate(day.key)}
-                >
-                  <span className={STAFF_CALENDAR_LAYOUT_CLASS.weekday}>
-                    {formatCalendarWeekday(day.date, currentLanguage, 'short')}
-                  </span>
-                  <span
-                    className={`${STAFF_CALENDAR_LAYOUT_CLASS.date}${
-                      isToday && !isSelected ? ` ${STAFF_CALENDAR_LAYOUT_CLASS.dateToday}` : ''
-                    }`}
+          <div className={STAFF_CALENDAR_LAYOUT_CLASS.weekNavigation}>
+            <button
+              className={STAFF_CALENDAR_LAYOUT_CLASS.dateNavigationButton}
+              type="button"
+              aria-label={t(STAFF_CALENDAR_I18N.previousDay)}
+              onClick={() => setPickedDate(shiftCalendarDate(selectedDate, -1))}
+            >
+              <ChevronLeft
+                className={STAFF_CALENDAR_LAYOUT_CLASS.dateNavigationIcon}
+                aria-hidden="true"
+              />
+            </button>
+            <div
+              className={`${STAFF_CALENDAR_LAYOUT_CLASS.week} flex-1`}
+              role="group"
+              aria-label={t(STAFF_CALENDAR_I18N.weekLabel)}
+            >
+              {weekDays.map((day) => {
+                const isSelected = day.key === selectedDate
+                const isToday = day.key === todayKey
+                return (
+                  <button
+                    key={day.key}
+                    className={calendarDayClass(isSelected)}
+                    type="button"
+                    aria-pressed={isSelected}
+                    onClick={() => setPickedDate(day.key)}
                   >
-                    {day.date.getDate()}
-                  </span>
-                </button>
-              )
-            })}
+                    <span className={STAFF_CALENDAR_LAYOUT_CLASS.weekday}>
+                      {formatCalendarWeekday(day.date, currentLanguage, 'short')}
+                    </span>
+                    <span
+                      className={`${STAFF_CALENDAR_LAYOUT_CLASS.date}${
+                        isToday && !isSelected ? ` ${STAFF_CALENDAR_LAYOUT_CLASS.dateToday}` : ''
+                      }`}
+                    >
+                      {day.date.getDate()}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+            <button
+              className={STAFF_CALENDAR_LAYOUT_CLASS.dateNavigationButton}
+              type="button"
+              aria-label={t(STAFF_CALENDAR_I18N.nextDay)}
+              onClick={() => setPickedDate(shiftCalendarDate(selectedDate, 1))}
+            >
+              <ChevronRight
+                className={STAFF_CALENDAR_LAYOUT_CLASS.dateNavigationIcon}
+                aria-hidden="true"
+              />
+            </button>
           </div>
         </div>
 

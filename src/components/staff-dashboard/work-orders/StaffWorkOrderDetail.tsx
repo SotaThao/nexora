@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { qk } from '../../../data/queryKeys'
-import { BadgeCheck, Check, CheckCircle2, ChevronLeft, LayoutGrid, NotebookPen, Play, Radio } from 'lucide-react'
+import { BadgeCheck, CheckCircle2, ChevronLeft, NotebookPen, Play } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { getErrorI18nKey, getErrorMessage } from '../../../data/errorCodes'
@@ -16,7 +16,6 @@ import { getApiErrorCode } from '../../../types/domain'
 import { PosOrderStatus } from '../../../constants/posOrderStatus'
 import { PosOrderItemStatus } from '../../../constants/posOrderItemStatus'
 import {
-  WORK_ORDER_EMPTY_PLACEHOLDER,
   WORK_ORDER_STATUS_BADGE_VARIANT,
   WORK_ORDER_STATUS_I18N,
   WORK_ORDER_TOAST_TYPE,
@@ -62,9 +61,7 @@ import {
 import {
   canStartWorkOrderNow,
   formatWorkOrderNumber,
-  formatWorkOrderStationValue,
   isWorkOrderCompletedStatus,
-  workOrderBeeperChipText,
   workOrderCompletionNoteText,
   workOrderCustomerInitials,
   workOrderTextOrPlaceholder,
@@ -571,23 +568,6 @@ function WorkOrderDetailBody({
             <p className={WORK_ORDERS_LAYOUT_CLASS.customerName}>
               {workOrderTextOrPlaceholder(ticket.customerName)}
             </p>
-            <span className={WORK_ORDERS_LAYOUT_CLASS.ticketMeta}>
-              <span className={WORK_ORDERS_LAYOUT_CLASS.metaChip}>
-                <LayoutGrid className={WORK_ORDERS_LAYOUT_CLASS.ticketMetaIcon} aria-hidden="true" />
-                <span>
-                  {t(WORK_ORDERS_I18N.station, {
-                    number: formatWorkOrderStationValue(ticket.stationNumber),
-                  })}
-                </span>
-              </span>
-              <span className={WORK_ORDERS_LAYOUT_CLASS.metaChip}>
-                <Radio className={WORK_ORDERS_LAYOUT_CLASS.ticketMetaIcon} aria-hidden="true" />
-                <span>{workOrderBeeperChipText(ticket.beeper, t)}</span>
-              </span>
-              <span className={WORK_ORDERS_LAYOUT_CLASS.customerPhone}>
-                {WORK_ORDER_EMPTY_PLACEHOLDER}
-              </span>
-            </span>
           </div>
         </div>
       </div>
