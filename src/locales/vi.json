@@ -4448,6 +4448,7 @@
             "uncategorized": "Chưa phân loại",
             "searchServicesPlaceholder": "Tìm dịch vụ...",
             "unassigned": "Chưa gán (Owner sẽ gán sau)",
+            "noAvailableTechnician": "Không có thợ nào làm việc vào khung giờ này.",
             "removeLine": "Xóa",
             "estimatedTotal": "Tạm tính",
             "errorName": "Vui lòng nhập tên khách hàng.",

@@ -168,9 +168,16 @@ export function createPosOrdersRepository(client: HttpClient = httpClient) {
 
     // Technician picker filtered by skill (PosStaffServiceAssignment) for one service —
     // includes busy staff (isBusy flag) since a manager may still pick them as an override.
-    async getAssignableStaffForService(businessId: string, posServiceId: string): Promise<AssignableStaffApiDto[]> {
+    // scheduledAt (optional) narrows the list to technicians whose own registered working
+    // hours cover that slot; omitting it lists every non-locked technician with the skill.
+    async getAssignableStaffForService(
+      businessId: string,
+      posServiceId: string,
+      scheduledAt?: string,
+    ): Promise<AssignableStaffApiDto[]> {
+      const query = scheduledAt ? `?scheduledAt=${encodeURIComponent(scheduledAt)}` : ''
       const res = await client.get<AssignableStaffApiDto[]>(
-        `/api/v1/merchant/pos/${businessId}/orders/services/${posServiceId}/assignable-staff`,
+        `/api/v1/merchant/pos/${businessId}/orders/services/${posServiceId}/assignable-staff${query}`,
       )
       return res ?? []
     },

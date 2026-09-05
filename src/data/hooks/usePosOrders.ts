@@ -198,11 +198,19 @@ export function useStartOrderService(businessId?: string) {
 
 // Technician picker filtered by skill for one service — includes busy staff (isBusy flag)
 // so the manager can still assign them as an explicit override.
-export function useAssignableStaffForService(businessId?: string, posServiceId?: string) {
+export function useAssignableStaffForService(
+  businessId?: string,
+  posServiceId?: string,
+  scheduledAt?: string,
+) {
   const { isAuthenticated } = useSessionRole()
   return useQuery<AssignableStaffApiDto[]>({
-    queryKey: qk.merchantPosAssignableStaff(businessId, posServiceId),
-    queryFn: () => posOrdersRepository.getAssignableStaffForService(businessId as string, posServiceId as string),
+    queryKey: qk.merchantPosAssignableStaff(businessId, posServiceId, scheduledAt),
+    queryFn: () => posOrdersRepository.getAssignableStaffForService(
+      businessId as string,
+      posServiceId as string,
+      scheduledAt,
+    ),
     enabled: isAuthenticated && Boolean(businessId) && Boolean(posServiceId),
     retry: false,
   })

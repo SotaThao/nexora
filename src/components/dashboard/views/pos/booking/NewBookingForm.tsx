@@ -22,6 +22,7 @@ import { useCreateStaffBooking } from '../../../../../data/hooks/usePosBooking'
 import IconButton from '../../../../ui/IconButton'
 import CategoryGroupedCatalogPicker from '../CategoryGroupedCatalogPicker'
 import { randomUuid } from '../../../../../utils/uuid'
+import { toBookingWallClockIso } from '../../../../../utils/bookingWallClock'
 import { TWELVE_HOUR_INPUT_LANG } from '../../../../../constants/timeFormat'
 
 interface BookingLineDraft {
@@ -62,12 +63,17 @@ function FieldError({ message }: { message?: string }) {
 // Per-line technician dropdown — a plain <select>, not the walk-in SelectTechniciansModal,
 // because a booking has no "Next Available" auto-pick concept: leaving it blank always
 // means "unassigned", never "resolve to a free technician at save time".
+// The list is NOT limited to technicians clocked in right now (a booking is usually for a
+// later day) — it holds every non-locked technician who can perform the service and, once
+// scheduledAt is known, whose own registered working hours cover that slot.
 export function TechnicianSelect({
   businessId,
   posServiceId,
   value,
   onChange,
   unassignedLabel,
+  noAvailableLabel,
+  scheduledAt,
   preferredStaffId,
   preferredStaffName,
 }: {
@@ -76,10 +82,21 @@ export function TechnicianSelect({
   value?: string
   onChange: (posStaffProfileId?: string) => void
   unassignedLabel: string
+  noAvailableLabel: string
+  scheduledAt?: string
   preferredStaffId?: string | null
   preferredStaffName?: string | null
 }) {
-  const { data: staff = [] } = useAssignableStaffForService(businessId, posServiceId)
+  const { data: staff = [], isSuccess } = useAssignableStaffForService(businessId, posServiceId, scheduledAt)
+
+  // Moving the slot can drop the picked technician out of the list (their working hours no
+  // longer cover it) — release the stale selection instead of submitting an id the save
+  // would reject. Guarded on isSuccess so an in-flight refetch cannot clear a valid pick.
+  useEffect(() => {
+    if (!isSuccess || !value) return
+    if (!staff.some((member) => member.posStaffProfileId === value)) onChange(undefined)
+  }, [isSuccess, onChange, staff, value])
+
   useEffect(() => {
     if (value || (!preferredStaffId && !preferredStaffName)) return
     const matchingStaff = (
@@ -96,18 +113,23 @@ export function TechnicianSelect({
     if (matchingStaff) onChange(matchingStaff.posStaffProfileId)
   }, [onChange, preferredStaffId, preferredStaffName, staff, value])
   return (
-    <select
-      value={value ?? ''}
-      onChange={(e) => onChange(e.target.value || undefined)}
-      className="h-8 w-full rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand"
-    >
-      <option value="">{unassignedLabel}</option>
-      {staff.map((s) => (
-        <option key={s.posStaffProfileId} value={s.posStaffProfileId}>
-          {s.displayName}
-        </option>
-      ))}
-    </select>
+    <>
+      <select
+        value={value ?? ''}
+        onChange={(e) => onChange(e.target.value || undefined)}
+        className="h-8 w-full rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand"
+      >
+        <option value="">{unassignedLabel}</option>
+        {staff.map((s) => (
+          <option key={s.posStaffProfileId} value={s.posStaffProfileId}>
+            {s.displayName}
+          </option>
+        ))}
+      </select>
+      {isSuccess && staff.length === 0 ? (
+        <p className="mt-1 text-[10px] font-semibold text-nexoraMuted">{noAvailableLabel}</p>
+      ) : null}
+    </>
   )
 }
 
@@ -222,6 +244,10 @@ export default function NewBookingForm({
 
   const subtotal = lines.reduce((sum, l) => sum + l.unitPrice, 0)
 
+  // Drives both the technician list (the server filters it by each technician's own working
+  // hours) and the submitted ScheduledAt, so picker and save always mean the same slot.
+  const scheduledWallClock = toBookingWallClockIso(scheduledDate, scheduledTime)
+
   const validateFields = (): NewBookingFormErrors => {
     const errors: NewBookingFormErrors = {}
     const name = customerName.trim()
@@ -252,15 +278,8 @@ export default function NewBookingForm({
 
     const name = customerName.trim()
     const phone = customerPhone.trim()
-
-    // Built with Date.UTC (not the local-timezone Date constructor) so the picked
-    // wall-clock numbers travel to the backend unshifted — PosBusinessOperatingHour/
-    // PosStaffWeeklySchedule are plain TimeOnly values with no timezone concept
-    // anywhere in this POS module (see BookingAvailabilityService), so a genuine
-    // local-to-UTC conversion here would silently compare against the wrong hour.
-    const [year, month, day] = scheduledDate.split('-').map(Number)
-    const [hour, minute] = scheduledTime.split(':').map(Number)
-    const scheduledAt = new Date(Date.UTC(year, month - 1, day, hour, minute)).toISOString()
+    const scheduledAt = scheduledWallClock
+    if (!scheduledAt) return
 
     createBooking.mutate(
       {
@@ -467,6 +486,8 @@ export default function NewBookingForm({
                               value={line.posStaffProfileId}
                               onChange={(staffId) => handleLineStaffChange(line.key, staffId)}
                               unassignedLabel={t('components.dashboard.views.pos.NewBookingForm.unassigned')}
+                              noAvailableLabel={t('components.dashboard.views.pos.NewBookingForm.noAvailableTechnician')}
+                              scheduledAt={scheduledWallClock}
                               preferredStaffId={line.preferredStaffId}
                               preferredStaffName={line.preferredStaffName}
                             />
