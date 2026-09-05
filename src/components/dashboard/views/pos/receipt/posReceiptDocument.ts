@@ -263,7 +263,7 @@ export function buildPosReceiptDocument(
     customerName: order.customerName?.trim() ?? '',
     // Never the bare national number: since the phone refactor `customerPhone` carries no country
     // code, so the E.164 field is the only value that formats correctly.
-    customerPhone: order.customerPhone
+    customerPhone: order.customerPhone || order.customerPhoneE164
       ? formatCustomerPhone(order.customerPhone, order.customerPhoneE164)
       : '',
     completedAtLabel: formatPosDateTime(
@@ -272,7 +272,7 @@ export function buildPosReceiptDocument(
     ),
     businessName: business?.name?.trim() ?? '',
     businessAddress: business?.address?.trim() ?? '',
-    businessPhone: business?.phone?.trim() ?? '',
+    businessPhone: formatCustomerPhone(business?.phone, business?.phone?.trim().startsWith('+') ? business.phone : undefined),
     rows,
     totals,
     paidWithLabel: isPaid ? (input.paymentMethodLabel ?? '') : '',

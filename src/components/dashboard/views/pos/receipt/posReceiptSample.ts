@@ -6,6 +6,7 @@
  * If the sample prints correctly, a real receipt will too — which is the entire point of the
  * button, and would not hold if this were a separate hand-written layout.
  */
+import { formatCustomerPhone } from '../customer/customerFormatters'
 import type { PosReceiptDocument, PosReceiptLabels } from '../../../../../types/domain'
 
 export interface PosReceiptSampleInput {
@@ -31,7 +32,7 @@ export function buildPosReceiptSampleDocument(
     completedAtLabel: input.completedAtLabel,
     businessName: input.business?.name?.trim() ?? '',
     businessAddress: input.business?.address?.trim() ?? '',
-    businessPhone: input.business?.phone?.trim() ?? '',
+    businessPhone: formatCustomerPhone(input.business?.phone, input.business?.phone?.trim().startsWith('+') ? input.business.phone : undefined),
     rows: [
       { id: 'sample-group', kind: 'group', label: input.technicianLabel },
       { id: 'sample-line', kind: 'line', label: input.serviceLabel, amount: 25 },

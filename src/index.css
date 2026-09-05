@@ -885,6 +885,8 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   padding: 14px 14px;
   background: #ffffff;
   color: #000000;
+  font-size: 12px;
+  line-height: 1.4;
   font-weight: 400;
   font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -924,9 +926,9 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 .pos-receipt-business p {
   margin: 0;
   color: #000000;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 400;
-  line-height: 1.2;
+  line-height: 1.4;
   white-space: pre-line;
 }
 
@@ -992,9 +994,9 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 .pos-receipt-print-header p {
   margin: 0;
   color: #000000;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 400;
-  line-height: 1.2;
+  line-height: 1.4;
 }
 
 .pos-receipt-print-header .pos-receipt-ticket {
@@ -1019,6 +1021,7 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 
 .pos-receipt-meta > div,
 .pos-receipt-group-lines > div,
+.pos-receipt-line-row,
 .pos-receipt-totals > div {
   display: flex;
   align-items: baseline;
@@ -1028,7 +1031,7 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 
 .pos-receipt-meta dt {
   color: #000000;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .pos-receipt-meta dd {
@@ -1056,10 +1059,10 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   gap: 6px;
   margin: 0;
   color: #000000;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.06em;
-  line-height: 1.2;
+  line-height: 1.4;
 }
 
 .pos-receipt-tech-heading::before {
@@ -1081,7 +1084,8 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   gap: 3px;
 }
 
-.pos-receipt-group-lines > div > span:first-child {
+.pos-receipt-group-lines > div > span:first-child,
+.pos-receipt-line-row > span:first-child {
   min-width: 0;
   overflow-wrap: anywhere;
   color: #000000;
@@ -1093,10 +1097,12 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   font-weight: 600;
 }
 
-.pos-receipt-group-lines > div > span:last-child {
+.pos-receipt-group-lines > div > span:last-child,
+.pos-receipt-line-row > span:last-child {
+  white-space: nowrap;
   flex-shrink: 0;
   color: #000000;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .pos-receipt-lines > p {
@@ -1109,7 +1115,7 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   display: grid;
   gap: 5px;
   margin: 10px 0 0;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .pos-receipt-totals dt {
@@ -1129,7 +1135,7 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 .pos-receipt-totals .pos-receipt-total {
   margin-top: 5px;
   padding-top: 9px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -1144,8 +1150,8 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   border-top: 1px solid #cbd5e1;
   padding-top: 10px;
   color: #000000;
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 400;
   text-align: center;
 }
 
@@ -1153,8 +1159,8 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   margin: 16px 0 0;
   padding-top: 8px;
   color: #000000;
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 400;
   text-align: center;
 }
 
