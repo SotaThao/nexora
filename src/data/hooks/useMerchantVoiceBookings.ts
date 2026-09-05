@@ -19,6 +19,7 @@ import {
   type UpdateMerchantVoiceServiceRequest,
   type SaveServiceBatchItem,
   type SaveServicesBatchResult,
+  type ReorderMerchantVoiceServiceItem,
   type SaveCategoryBatchItem,
   type SaveCategoriesBatchResult,
   MerchantVoiceLeadStatus,
@@ -375,6 +376,17 @@ export function useUpdateMerchantVoiceService() {
 export function useSaveServicesBatch() {
   return useMutation<SaveServicesBatchResult, Error, SaveServiceBatchItem[]>({
     mutationFn: (items) => merchantVoiceRepository.saveServicesBatch(items),
+  })
+}
+
+export function useReorderMerchantVoiceServices() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, ReorderMerchantVoiceServiceItem[]>({
+    mutationFn: (items) => merchantVoiceRepository.reorderServices(items),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServices() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServiceCategories() })
+    },
   })
 }
 

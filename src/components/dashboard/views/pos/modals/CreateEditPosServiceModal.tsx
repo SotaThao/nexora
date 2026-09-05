@@ -1,16 +1,29 @@
-// CreateEditPosServiceModal — POS > Services (US-017). Single modal reused for
-// both create and edit: pass `service` to prefill fields in edit mode, omit it
-// for create. Handles name/price/duration, multi-category checklist, a tag
-// input with autocomplete sourced from the Business's PosTag catalog, an
-// optional photo upload, and an Active/Inactive toggle.
-import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { ImagePlus, Loader2, X } from 'lucide-react'
+// POS adapts its API state to the shared AI Hub service editor. POS-only tags
+// and add-ons use the extension slot; status uses the shared name-row action slot.
+import { useEffect, useState } from 'react'
+import { X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
-import IconButton from '../../../../ui/IconButton'
-import type { PosCategoryApiDto, PosServiceApiDto, PosServiceStatus, PosTagApiDto } from '../../../../../types/repositories'
+import type {
+  PosCategoryApiDto,
+  PosServiceApiDto,
+  PosServiceStatus,
+  PosTagApiDto,
+} from '../../../../../types/repositories'
 import type { PosServiceInput } from '../../../../../data/repositories/posServices'
-import ServiceAddOnsSection from '../ServiceAddOnsSection'
 import { SHOW_SERVICE_ADD_ONS } from '../../../../../constants/posFeatureVisibility'
+import ToggleSwitch from '../../../../ui/ToggleSwitch'
+import {
+  ServicesPricingFieldLabel,
+  ServicesPricingServiceModal,
+  SERVICE_PRICE_INPUT_MAX_LENGTH,
+  normalizeServicesPricingPrice,
+  type ServicesPricingServiceModalField,
+  type ServicesPricingServiceModalFieldErrors,
+} from '../../services/ServicesPricingServiceEditor'
+import ServiceAddOnsSection from '../ServiceAddOnsSection'
+
+const AI_TK = 'components.dashboard.views.BookingHubView.settings'
+const POS_TK = 'components.dashboard.views.pos.PosServicesView'
 
 export default function CreateEditPosServiceModal({
   open,
@@ -20,6 +33,7 @@ export default function CreateEditPosServiceModal({
   categories,
   tagSuggestions,
   service,
+  defaultCategoryId,
 }: {
   open: boolean
   onClose: () => void
@@ -28,13 +42,13 @@ export default function CreateEditPosServiceModal({
   categories: PosCategoryApiDto[]
   tagSuggestions: PosTagApiDto[]
   service?: PosServiceApiDto | null
+  defaultCategoryId?: string | null
 }) {
   const { t } = useTranslation()
   const isEditMode = Boolean(service)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
+  const [supplyFee, setSupplyFee] = useState('0')
   const [durationMinutes, setDurationMinutes] = useState('')
   const [description, setDescription] = useState('')
   const [categoryIds, setCategoryIds] = useState<Set<string>>(new Set())
@@ -43,20 +57,32 @@ export default function CreateEditPosServiceModal({
   const [status, setStatus] = useState<PosServiceStatus>('Active')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<ServicesPricingServiceModalFieldErrors>({})
+  const [categoriesError, setCategoriesError] = useState('')
+  const [supplyFeeError, setSupplyFeeError] = useState('')
 
   useEffect(() => {
     if (!open) return
     setName(service?.name ?? '')
     setPrice(service ? String(service.price) : '')
+    setSupplyFee(service ? String(service.supplyFee) : '0')
     setDurationMinutes(service ? String(service.durationMinutes) : '')
     setDescription(service?.description ?? '')
-    setCategoryIds(new Set(service?.categoryIds ?? []))
+    const assignedCategoryIds = service?.categoryIds.length
+      ? service.categoryIds
+      : defaultCategoryId
+        ? [defaultCategoryId]
+        : []
+    setCategoryIds(new Set(assignedCategoryIds))
     setTags(service?.tags ?? [])
     setTagDraft('')
     setStatus(service?.status ?? 'Active')
     setPhotoFile(null)
     setPhotoPreviewUrl(service?.photoUrl ?? null)
-  }, [open, service])
+    setFieldErrors({})
+    setCategoriesError('')
+    setSupplyFeeError('')
+  }, [defaultCategoryId, open, service])
 
   useEffect(() => {
     if (!photoFile) return
@@ -65,15 +91,27 @@ export default function CreateEditPosServiceModal({
     return () => URL.revokeObjectURL(url)
   }, [photoFile])
 
-  if (!open) return null
-
   const toggleCategory = (categoryId: string) => {
-    setCategoryIds((prev) => {
-      const next = new Set(prev)
+    setCategoriesError('')
+    setCategoryIds((previous) => {
+      const next = new Set(previous)
       if (next.has(categoryId)) next.delete(categoryId)
       else next.add(categoryId)
       return next
     })
+  }
+
+  const updateField = (field: ServicesPricingServiceModalField, value: string) => {
+    setFieldErrors((previous) => {
+      if (!previous[field]) return previous
+      const next = { ...previous }
+      delete next[field]
+      return next
+    })
+    if (field === 'name') setName(value)
+    if (field === 'price') setPrice(value)
+    if (field === 'duration') setDurationMinutes(value)
+    if (field === 'description') setDescription(value)
   }
 
   const addTag = (rawValue: string) => {
@@ -83,239 +121,226 @@ export default function CreateEditPosServiceModal({
       setTagDraft('')
       return
     }
-    setTags((prev) => [...prev, trimmed])
+    setTags((previous) => [...previous, trimmed])
     setTagDraft('')
   }
 
-  const removeTag = (tag: string) => {
-    setTags((prev) => prev.filter((t) => t !== tag))
-  }
-
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
+  const submit = () => {
     const trimmedName = name.trim()
     const priceValue = Number(price)
+    const supplyFeeValue = supplyFee.trim() === '' ? 0 : Number(supplyFee)
     const durationValue = Number(durationMinutes)
-    if (!trimmedName || !Number.isFinite(priceValue) || priceValue < 0 || !(durationValue > 0)) return
+    const selectedCategoryIds = Array.from(categoryIds)
+
+    const nextFieldErrors: ServicesPricingServiceModalFieldErrors = {}
+    const nextCategoriesError = selectedCategoryIds.length === 0
+      ? t(`${AI_TK}.serviceModalCategoryRequired`)
+      : ''
+    if (!trimmedName) {
+      nextFieldErrors.name = t(`${AI_TK}.serviceModalNameRequired`)
+    }
+    if (
+      price.trim() === '' ||
+      !Number.isFinite(priceValue) ||
+      priceValue < 0 ||
+      priceValue > 1_000_000
+    ) {
+      nextFieldErrors.price = t(`${AI_TK}.serviceModalPriceInvalid`)
+    }
+    const nextSupplyFeeError =
+      !Number.isFinite(supplyFeeValue) ||
+      supplyFeeValue < 0 ||
+      supplyFeeValue > priceValue
+        ? t(`${POS_TK}.supplyFeeInvalid`)
+        : ''
+    if (!Number.isFinite(durationValue) || durationValue <= 0 || durationValue > 720) {
+      nextFieldErrors.duration = t(`${AI_TK}.serviceModalDurationInvalid`)
+    }
+    setFieldErrors(nextFieldErrors)
+    setCategoriesError(nextCategoriesError)
+    setSupplyFeeError(nextSupplyFeeError)
+    if (nextCategoriesError || nextSupplyFeeError || Object.keys(nextFieldErrors).length > 0) {
+      return
+    }
 
     onSubmit({
       name: trimmedName,
       price: priceValue,
+      supplyFee: supplyFeeValue,
       durationMinutes: durationValue,
       description: description.trim() || undefined,
-      categoryIds: Array.from(categoryIds),
+      categoryIds: selectedCategoryIds,
       tags,
       status,
       photo: photoFile,
     })
   }
 
-  const isValid =
-    name.trim().length > 0 &&
-    price.trim().length > 0 &&
-    Number(price) >= 0 &&
-    Number(durationMinutes) > 0
-
   const availableSuggestions = tagSuggestions.filter(
-    (suggestion) => !tags.some((t) => t.toLowerCase() === suggestion.name.toLowerCase()),
+    (suggestion) =>
+      !tags.some((tag) => tag.toLowerCase() === suggestion.name.toLowerCase()),
   )
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
-      <div className="nexora-modal-card max-w-lg">
-        <div className="mb-4 flex shrink-0 items-center justify-between">
-          <h2 className="text-sm font-extrabold text-nexoraText">
-            {isEditMode
-              ? t('components.dashboard.views.pos.PosServicesView.editServiceModalTitle')
-              : t('components.dashboard.views.pos.PosServicesView.addServiceModalTitle')}
-          </h2>
-          <IconButton label={t('components.dashboard.views.pos.PosServicesView.cancel')} onClick={onClose}>
-            <X className="h-4 w-4" />
-          </IconButton>
+    <ServicesPricingServiceModal
+      open={open}
+      mode={isEditMode ? 'edit' : 'create'}
+      value={{
+        name,
+        price,
+        duration: durationMinutes,
+        description,
+        categoryIds: Array.from(categoryIds),
+        photoPreviewUrl,
+      }}
+      categories={categories.map((category) => ({
+        id: category.id,
+        name: category.name,
+        checked: categoryIds.has(category.id),
+      }))}
+      controller={{
+        onClose,
+        onFieldChange: updateField,
+        onToggleCategory: toggleCategory,
+        onPhotoChange: setPhotoFile,
+        onSubmit: submit,
+      }}
+      labels={{
+        title: t(`${POS_TK}.${isEditMode ? 'editServiceModalTitle' : 'addServiceModalTitle'}`),
+        subtitle: t(`${AI_TK}.${isEditMode ? 'serviceModalEditSub' : 'serviceModalSub'}`),
+        categories: t(`${AI_TK}.serviceModalCategories`),
+        categoriesEmpty: t(`${AI_TK}.serviceModalCategoriesEmpty`),
+        categoriesHelp: t(`${POS_TK}.serviceModalCategoriesHelp`),
+        name: t(`${AI_TK}.serviceModalName`),
+        namePlaceholder: t(`${AI_TK}.placeholderServiceName`),
+        price: t(`${AI_TK}.serviceModalPrice`),
+        pricePlaceholder: t(`${AI_TK}.placeholderServicePrice`),
+        duration: t(`${AI_TK}.serviceModalDuration`),
+        durationPlaceholder: t(`${AI_TK}.placeholderServiceDuration`),
+        durationUnit: t(`${AI_TK}.durationUnit`),
+        description: t(`${AI_TK}.serviceModalDescription`),
+        descriptionPlaceholder: t(`${AI_TK}.serviceModalDescriptionPlaceholder`),
+        image: t(`${AI_TK}.serviceModalImage`),
+        chooseImage: t(`${AI_TK}.serviceModalChoosePhoto`),
+        takePhoto: t(`${AI_TK}.serviceModalTakePhoto`),
+        imageHelp: t(`${AI_TK}.serviceModalImageHelp`),
+        imageFormats: t(`${AI_TK}.serviceModalImageFormats`),
+        imageSizeHint: t(`${AI_TK}.serviceModalImageSizeHint`),
+        cameraTitle: t(`${AI_TK}.serviceModalCameraTitle`),
+        cameraHint: t(`${AI_TK}.serviceModalCameraHint`),
+        photoUploadAria: t(`${AI_TK}.serviceModalPhotoUploadAria`),
+        required: t(`${AI_TK}.serviceModalRequired`),
+        optional: t(`${AI_TK}.serviceModalOptional`),
+        close: t(`${AI_TK}.serviceModalCloseAria`),
+        cancel: t(`${AI_TK}.serviceModalCancel`),
+        submit: t(`${AI_TK}.${isEditMode ? 'serviceModalUpdate' : 'serviceModalSave'}`),
+      }}
+      nameAction={
+        <div className="settings-service-modal-status-control">
+          <span>{t(`${POS_TK}.activeLabel`)}</span>
+          <ToggleSwitch
+            checked={status === 'Active'}
+            onChange={() => setStatus(status === 'Active' ? 'Inactive' : 'Active')}
+            activeColor="bg-nexoraBrand"
+            inactiveColor="bg-nexoraBorder"
+            ariaLabel={t(`${POS_TK}.activeLabel`)}
+            title={t(`${POS_TK}.activeLabel`)}
+            disabled={isSubmitting}
+          />
         </div>
-
-        <form onSubmit={handleSubmit} className="flex-1 space-y-4 overflow-y-auto">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-nexoraBorder bg-nexoraCanvas text-slate-400 hover:border-nexoraBrand hover:text-nexoraBrand"
-            >
-              {photoPreviewUrl ? (
-                <img src={photoPreviewUrl} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <ImagePlus className="h-5 w-5" />
-              )}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
+      }
+      beforeImageExtension={
+        <div className="grid gap-3">
+          <label className={`settings-field${supplyFeeError ? ' has-error' : ''}`}>
+            <ServicesPricingFieldLabel
+              label={t(`${POS_TK}.supplyFeeLabel`)}
+              requirement={t(`${AI_TK}.serviceModalOptional`)}
+              optional
             />
-            <span className="text-[11px] text-nexoraMuted">
-              {t('components.dashboard.views.pos.PosServicesView.photoHint')}
-            </span>
-          </div>
-
-          <div>
-            <input
-              type="text"
-              autoFocus
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              maxLength={200}
-              placeholder={t('components.dashboard.views.pos.PosServicesView.namePlaceholder')}
-              className="h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand focus:bg-white"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
-                {t('components.dashboard.views.pos.PosServicesView.priceLabel')}
-              </label>
+            <div className="settings-service-input-wrap settings-service-modal-input-wrap">
+              <span className="settings-service-prefix" aria-hidden="true">$</span>
               <input
-                type="number"
-                min={0}
-                step="0.01"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="0.00"
-                className="h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand focus:bg-white"
+                className="settings-input settings-service-modal-affix-input is-price"
+                type="text"
+                inputMode="decimal"
+                maxLength={SERVICE_PRICE_INPUT_MAX_LENGTH}
+                value={supplyFee}
+                placeholder={t(`${POS_TK}.supplyFeePlaceholder`)}
+                aria-label={t(`${POS_TK}.supplyFeeLabel`)}
+                aria-invalid={supplyFeeError ? 'true' : undefined}
+                aria-describedby={supplyFeeError ? 'pos-service-supply-fee-error' : undefined}
+                disabled={isSubmitting}
+                onChange={(event) => {
+                  setSupplyFee(normalizeServicesPricingPrice(event.target.value))
+                  setSupplyFeeError('')
+                }}
               />
             </div>
-            <div>
-              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
-                {t('components.dashboard.views.pos.PosServicesView.durationLabel')}
-              </label>
-              <input
-                type="number"
-                min={1}
-                step="1"
-                value={durationMinutes}
-                onChange={(e) => setDurationMinutes(e.target.value)}
-                placeholder="30"
-                className="h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand focus:bg-white"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
-              {t('components.dashboard.views.pos.PosServicesView.descriptionLabel')}
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              maxLength={1000}
-              rows={2}
-              placeholder={t('components.dashboard.views.pos.PosServicesView.descriptionPlaceholder')}
-              className="w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3.5 py-2 text-xs text-nexoraText outline-none focus:border-nexoraBrand focus:bg-white"
-            />
-          </div>
-
-          {categories.length > 0 && (
-            <div>
-              <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
-                {t('components.dashboard.views.pos.PosServicesView.categoriesLabel')}
-              </label>
-              <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                {categories.map((category) => (
-                  <label
-                    key={category.id}
-                    className="flex items-center gap-2 text-xs font-semibold text-nexoraText"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={categoryIds.has(category.id)}
-                      onChange={() => toggleCategory(category.id)}
-                      className="h-4 w-4 rounded border-nexoraBorder"
-                    />
-                    {category.name}
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div>
-            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
-              {t('components.dashboard.views.pos.PosServicesView.tagsLabel')}
-            </label>
-            {tags.length > 0 && (
-              <div className="mb-1.5 flex flex-wrap gap-1.5">
-                {tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center gap-1 rounded-full bg-nexoraCanvas px-2.5 py-1 text-[10px] font-bold text-nexoraText"
-                  >
-                    {tag}
-                    <button type="button" onClick={() => removeTag(tag)} className="text-slate-400 hover:text-rose-600">
-                      <X className="h-3 w-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-            <input
-              type="text"
-              list="pos-service-tag-suggestions"
-              value={tagDraft}
-              onChange={(e) => setTagDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  addTag(tagDraft)
-                }
-              }}
-              maxLength={50}
-              placeholder={t('components.dashboard.views.pos.PosServicesView.tagsPlaceholder')}
-              className="h-9 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3 text-xs text-nexoraText outline-none focus:border-nexoraBrand focus:bg-white"
-            />
-            <datalist id="pos-service-tag-suggestions">
-              {availableSuggestions.map((suggestion) => (
-                <option key={suggestion.id} value={suggestion.name} />
-              ))}
-            </datalist>
-          </div>
-
-          <label className="flex items-center gap-2 text-xs font-semibold text-nexoraText">
-            <input
-              type="checkbox"
-              checked={status === 'Active'}
-              onChange={(e) => setStatus(e.target.checked ? 'Active' : 'Inactive')}
-              className="h-4 w-4 rounded border-nexoraBorder"
-            />
-            {t('components.dashboard.views.pos.PosServicesView.activeLabel')}
+            {supplyFeeError ? (
+              <small id="pos-service-supply-fee-error" className="settings-field-error" role="alert">
+                {supplyFeeError}
+              </small>
+            ) : null}
           </label>
-
-          {/* Edit mode only: an add-on needs a saved service to hang off, and each row here persists
-              on its own endpoint rather than through this form's Save. */}
-          {SHOW_SERVICE_ADD_ONS && isEditMode && service ? (
-            <ServiceAddOnsSection serviceId={service.id} />
+          <label className="settings-label" htmlFor="pos-service-tags">
+            <ServicesPricingFieldLabel
+              label={t(`${POS_TK}.tagsLabel`)}
+              requirement={t(`${AI_TK}.serviceModalOptional`)}
+              optional
+            />
+          </label>
+          {tags.length > 0 ? (
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center gap-1 rounded-full bg-nexoraCanvas px-2.5 py-1 text-[10px] font-bold text-nexoraText"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setTags((previous) => previous.filter((item) => item !== tag))
+                    }
+                    className="text-slate-400 hover:text-rose-600"
+                    aria-label={`${t(`${POS_TK}.deleteService`)} ${tag}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
           ) : null}
-
-          <div className="flex justify-end gap-2 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded px-3 py-1.5 text-[10px] font-bold text-slate-500 hover:bg-slate-50"
-            >
-              {t('components.dashboard.views.pos.PosServicesView.cancel')}
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || !isValid}
-              className="inline-flex items-center gap-1.5 rounded bg-nexoraBrand px-4 py-1.5 text-[10px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
-            >
-              {isSubmitting && <Loader2 className="h-3 w-3 animate-spin" />}
-              {t('components.dashboard.views.pos.PosServicesView.save')}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+          <input
+            id="pos-service-tags"
+            className="settings-input"
+            type="text"
+            list="pos-service-tag-suggestions"
+            value={tagDraft}
+            maxLength={50}
+            placeholder={t(`${POS_TK}.tagsPlaceholder`)}
+            onChange={(event) => setTagDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter') return
+              event.preventDefault()
+              addTag(tagDraft)
+            }}
+          />
+          <datalist id="pos-service-tag-suggestions">
+            {availableSuggestions.map((suggestion) => (
+              <option key={suggestion.id} value={suggestion.name} />
+            ))}
+          </datalist>
+        </div>
+      }
+      extension={
+        SHOW_SERVICE_ADD_ONS && isEditMode && service ? (
+          <ServiceAddOnsSection serviceId={service.id} />
+        ) : null
+      }
+      fieldErrors={fieldErrors}
+      categoriesError={categoriesError}
+      isSubmitting={isSubmitting}
+    />
   )
 }

@@ -101,6 +101,7 @@ export interface PosServiceApiDto {
   id: string
   name: string
   price: number
+  supplyFee: number
   durationMinutes: number
   description?: string | null
   icon?: string | null

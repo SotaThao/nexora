@@ -30,7 +30,7 @@ interface StaffTableItem {
   email: string | null
 }
 
-export default function PosStaffProfileView() {
+export default function PosStaffProfileView({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
   const selectedLinkId = searchParams.get('staff') ?? undefined
@@ -77,8 +77,8 @@ export default function PosStaffProfileView() {
     <div className="space-y-6">
       <section className="flex flex-col gap-3 px-0.5 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold leading-tight text-nexoraText">{t('dashboard.menu.pos_staff')}</h1>
-          <p className="text-sm font-medium text-nexoraMuted">
+          {!embedded ? <h1 className="text-2xl font-bold leading-tight text-nexoraText">{t('dashboard.menu.pos_staff')}</h1> : null}
+          <p className={`${embedded ? 'text-xs' : 'text-sm'} font-medium text-nexoraMuted`}>
             {t('components.dashboard.views.pos.PosStaffProfileView.description')}
           </p>
         </div>

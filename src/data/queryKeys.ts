@@ -130,6 +130,11 @@ export const qk = {
     if (selection) key.push(selection)
     return key
   },
+  merchantPosStoreIncomeReport: (businessId?: string, selection?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posStoreIncomeReport', businessId ?? '']
+    if (selection) key.push(selection)
+    return key
+  },
   merchantPosReportDetail: (businessId?: string, posStaffProfileId?: string, selection?: string) => [
     'merchantSettings',
     'posReportDetail',

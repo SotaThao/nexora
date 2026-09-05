@@ -8,5 +8,5 @@ import PosFrontDeskView from '../../dashboard/views/pos/PosFrontDeskView'
 export default function StaffFrontDesk() {
   const { businessId } = useParams<{ businessId: string }>()
   if (!businessId) return null
-  return <PosFrontDeskView businessId={businessId} />
+  return <PosFrontDeskView businessId={businessId} includeTechnicianReportTab />
 }

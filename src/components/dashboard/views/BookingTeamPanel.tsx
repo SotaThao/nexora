@@ -234,7 +234,7 @@ function formatSkills(skills: string | null | undefined): string[] {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
-  return parsed;
+  return Array.from(new Set(parsed));
 }
 
 function scheduleToString(staff: MerchantVoiceStaffDto) {

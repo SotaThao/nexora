@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { useOutletContext, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Navigate, useLocation, useOutletContext, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { SHOW_HARDWARE_DEVICES } from '../constants'
 
@@ -56,14 +56,11 @@ import Form1099NecView from '../views/taxiq/Form1099NecView'
 import TipLedgerView from '../views/taxiq/TipLedgerView'
 import FormsReportsView from '../views/taxiq/FormsReportsView'
 import TaxEstimateView from '../views/taxiq/TaxEstimateView'
-import PosGeneralSettingsView from '../views/pos/PosGeneralSettingsView'
-import PosRolesView from '../views/pos/PosRolesView'
-import PosCategoriesView from '../views/pos/PosCategoriesView'
-import PosServicesView from '../views/pos/PosServicesView'
+import PosSalonSettingsView from '../views/pos/PosSalonSettingsView'
 import PosProductsView from '../views/pos/PosProductsView'
 import PosPromotionsView from '../views/pos/PosPromotionsView'
-import PosStaffProfileView from '../views/pos/PosStaffProfileView'
 import PosFrontDeskView from '../views/pos/PosFrontDeskView'
+import PosReportsView from '../views/pos/report/PosReportsView'
 import { formatBusinessAddress } from '../views/pos/posDisplay'
 import PosDevicesView from '../views/pos/devices/PosDevicesView'
 import PosPublicCheckInView from '../views/pos/PosPublicCheckInView'
@@ -73,6 +70,9 @@ import {
   StaffListRouteContent,
 } from './StaffManagementRouteContent'
 import { STAFF_ROUTE_FAMILY } from './staffRoutePaths'
+import { POS_FRONT_DESK_TAB_PARAM, PosFrontDeskTab } from '../../../constants/posFrontDesk'
+import { posReportPath, PosReportTab } from '../../../constants/posReports'
+import { posSalonSettingsPath, PosSalonSettingsTab } from '../../../constants/posSalonSettings'
 
 export function OverviewRoute() {
   const ctx = useOutletContext<LooseObject>()
@@ -359,28 +359,43 @@ export function SettingsRoute() {
 // screen takes verificationStatus from the same outlet context as
 // SettingsRoute above. Business Hours was previously its own route
 // (PosBusinessHoursRoute, /pos/business-hours) — merged into this screen.
-export function PosGeneralSettingsRoute() {
+export function PosSalonSettingsRoute() {
   const ctx = useOutletContext<LooseObject>()
   const { data: merchantSetupData } = useMerchantSetup()
   const businessId = merchantSetupData?.businessInfo?.businessId
-  return <PosGeneralSettingsView verificationStatus={ctx.verificationStatus} businessId={businessId} />
+  if (!businessId) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={1} />
+      </div>
+    )
+  }
+  return <PosSalonSettingsView verificationStatus={ctx?.verificationStatus} businessId={businessId} />
 }
 
+function LegacyPosSalonSettingRedirect({ tab }: { tab: PosSalonSettingsTab }) {
+  const location = useLocation()
+  return <Navigate to={`${posSalonSettingsPath(tab)}${location.search}`} replace />
+}
+
+/** @deprecated Kept as a route-level redirect for bookmarked POS URLs. */
+export function PosGeneralSettingsRoute() {
+  return <LegacyPosSalonSettingRedirect tab={PosSalonSettingsTab.SalonInformation} />
+}
+
+/** @deprecated Kept as a route-level redirect for bookmarked POS URLs. */
 export function PosRolesRoute() {
-  return <PosRolesView />
+  return <LegacyPosSalonSettingRedirect tab={PosSalonSettingsTab.RolesPermissions} />
 }
 
-// Categories are catalog/menu data (not salon identity fields, no payment
-// processing), so unlike PosGeneralSettingsRoute this route is not gated
-// behind verificationStatus/KYB.
+/** @deprecated Categories are managed inside Salon Setting > Services. */
 export function PosCategoriesRoute() {
-  return <PosCategoriesView />
+  return <LegacyPosSalonSettingRedirect tab={PosSalonSettingsTab.Services} />
 }
 
-// Same rationale as PosCategoriesRoute — Services is catalog/menu data, not
-// gated behind verificationStatus/KYB.
+/** @deprecated Kept as a route-level redirect for bookmarked POS URLs. */
 export function PosServicesRoute() {
-  return <PosServicesView />
+  return <LegacyPosSalonSettingRedirect tab={PosSalonSettingsTab.Services} />
 }
 
 // Same rationale as PosCategoriesRoute/PosServicesRoute — Products is
@@ -408,7 +423,7 @@ export function PosPromotionsRoute() {
 // Staff profile (role/pay/tips/tax filing) is not salon identity data either —
 // not gated behind verificationStatus/KYB, same rationale as the other POS catalog routes.
 export function PosStaffProfileRoute() {
-  return <PosStaffProfileView />
+  return <LegacyPosSalonSettingRedirect tab={PosSalonSettingsTab.Staff} />
 }
 
 // Front Desk (Check-in queue / Turn Board / Checkout, US-12) — shared component
@@ -416,6 +431,18 @@ export function PosStaffProfileRoute() {
 // For the Owner, businessId always comes from their own merchant setup data.
 export function PosFrontDeskRoute() {
   const { data: merchantSetupData } = useMerchantSetup()
+  const [searchParams] = useSearchParams()
+  if (searchParams.get(POS_FRONT_DESK_TAB_PARAM) === PosFrontDeskTab.Report) {
+    const reportParams = new URLSearchParams(searchParams)
+    reportParams.delete(POS_FRONT_DESK_TAB_PARAM)
+    const query = reportParams.toString()
+    return (
+      <Navigate
+        to={`${posReportPath(PosReportTab.Technician)}${query ? `?${query}` : ''}`}
+        replace
+      />
+    )
+  }
   const businessId = merchantSetupData?.businessInfo?.businessId
   const businessName = merchantSetupData?.businessInfo?.name
   const businessLogoUrl = merchantSetupData?.businessInfo?.logo
@@ -441,6 +468,20 @@ export function PosFrontDeskRoute() {
       businessTimeZone={businessTimeZone ?? null}
     />
   )
+}
+
+export function PosReportsRoute() {
+  const { data: merchantSetupData } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+  const businessTimeZone = merchantSetupData?.businessInfo?.timeZone?.trim() || 'UTC'
+  if (!businessId) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={1} />
+      </div>
+    )
+  }
+  return <PosReportsView businessId={businessId} businessTimeZone={businessTimeZone} />
 }
 
 // Check-In Devices (POS Self Check-In) — pairing and managing the tablets customers use to check

@@ -70,11 +70,11 @@ export function validateNewServiceDrafts(
       fields.push('name')
       rowMessages.push(messages.nameRequired)
     }
-    if (!draft.price.trim() || !Number.isFinite(price) || price < 0) {
+    if (!draft.price.trim() || !Number.isFinite(price) || price < 0 || price > 1_000_000) {
       fields.push('price')
       rowMessages.push(messages.priceInvalid)
     }
-    if (!draft.duration.trim() || !Number.isFinite(duration) || duration <= 0) {
+    if (!draft.duration.trim() || !Number.isFinite(duration) || duration <= 0 || duration > 720) {
       fields.push('duration')
       rowMessages.push(messages.durationInvalid)
     }
