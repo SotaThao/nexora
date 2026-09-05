@@ -75,6 +75,7 @@ interface StaffBusinessApiDto {
   url?: string | null
   qrImageUrl?: string | null
   ownerUserProfileId?: string | null
+  timeZone?: string | null
   touchPoints?: StaffBusinessTouchPointApiDto[] | null
 }
 
@@ -132,6 +133,11 @@ function normalizeStaffBusinessLink(b: StaffBusinessApiDto): StaffBusinessLink {
     ?? b.ownerUserProfileId
     ?? null
   const ownerUserProfileId = ownerUserProfileIdRaw?.trim() || null
+  const timeZoneRaw =
+    readField<string | null>(b as Record<string, unknown>, 'timeZone', 'TimeZone')
+    ?? b.timeZone
+    ?? null
+  const timeZone = timeZoneRaw?.trim() || null
 
   return {
     businessId: readField<string>(b as Record<string, unknown>, 'businessId', 'BusinessId') ?? '',
@@ -154,6 +160,7 @@ function normalizeStaffBusinessLink(b: StaffBusinessApiDto): StaffBusinessLink {
     qrImageUrl,
     touchPointsMissing,
     ownerUserProfileId,
+    timeZone,
   }
 }
 

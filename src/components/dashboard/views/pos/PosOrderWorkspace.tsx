@@ -10,7 +10,8 @@
 // Creating an order is no longer done here: the Check-in tab renders the shared check-in
 // page (PosCheckInTab / CheckInSurface), the same one the customer kiosk runs.
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, Loader2, Package, Printer, ClipboardCheck } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { ArrowLeft, Loader2, Package, X, Printer, ClipboardCheck } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getErrorMessage } from '../../../../data/errorCodes'
@@ -36,14 +37,25 @@ import {
 } from '../../../../data/hooks/usePosCheckout'
 import {
   useAssignStaffToServiceLine,
+  useMarkServiceLineDone,
   useStartOrderService,
+  useStartServiceLine,
 } from '../../../../data/hooks/usePosOrders'
+import { useOrderSettings } from '../../../../data/hooks/usePosOrderSettings'
+import ServiceLineMismatchWarningModal, {
+  type ServiceLineMismatchKind,
+} from './modals/ServiceLineMismatchWarningModal'
 import { useCheckInTechnicians } from '../../../../data/hooks/usePosCheckIn'
 import { useTimeClockRoster } from '../../../../data/hooks/usePosTimeClock'
 import { usePosReport } from '../../../../data/hooks/usePosReport'
 import { usePublicBusinessPaymentMethods } from '../../../../data/hooks/usePublicTouch'
 import { SHOW_SERVICE_ADD_ONS } from '../../../../constants/posFeatureVisibility'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
+import {
+  PosOrderItemStatus,
+  isLineAtOrPast,
+  posOrderItemStatusLabelKey,
+} from '../../../../constants/posOrderItemStatus'
 import { PosReportMode } from '../../../../constants/posReportMode'
 import { isLineBusySurface, TicketBusySurface } from '../../../../constants/posTicketAction'
 import {
@@ -63,6 +75,7 @@ import type {
   CompleteOrderResultApiDto,
 } from '../../../../types/repositories'
 import { Skeleton, SkeletonList, SkeletonListItem } from '../../../ui/skeleton'
+import { formatCustomerPhone } from './customer/customerFormatters'
 import CategoryGroupedCatalogPicker from './CategoryGroupedCatalogPicker'
 import TicketActionSkeletonOverlay, { TICKET_SKELETON_ROW_COUNT } from './TicketActionSkeletonOverlay'
 import ChangeServiceModal from './modals/ChangeServiceModal'
@@ -75,6 +88,7 @@ import ServiceDiscountModal, {
   type ServiceDiscountTarget,
 } from './modals/ServiceDiscountModal'
 import ChangeTechnicianModal from './modals/ChangeTechnicianModal'
+import { formatPosDateTime } from './posDateTime'
 import { useTicketActionLock } from './useTicketActionLock'
 import PosPaymentMethodSelector from './PosPaymentMethodSelector'
 import {
@@ -85,7 +99,21 @@ import PosCashPaymentPanel, { isCashPaymentCovered } from './PosCashPaymentPanel
 import PosReceivePaymentPanel from './PosReceivePaymentPanel'
 import PosRemoveConfirmAction from './PosRemoveConfirmAction'
 import PosCheckoutSuccessView, { type PosCheckoutReceiptItem } from './PosCheckoutSuccessView'
-import PosReceiptPrintPreview, { type PosReceiptPrintGroup } from './PosReceiptPrintPreview'
+import PosReceiptPrintPreview from './PosReceiptPrintPreview'
+import PosTicketPrintPreview, { type PosTicketPrintGroup } from './PosTicketPrintPreview'
+import { buildPosReceiptDocument, resolveReceiptCopies } from './receipt/posReceiptDocument'
+import {
+  resolveProductsGroupLabel,
+  resolvePosReceiptLabels,
+  resolvePosReceiptTotalsLabels,
+  resolveUnassignedTechnicianLabel,
+} from './receipt/posReceiptLabels'
+import { usePosReceiptPrint } from './receipt/usePosReceiptPrint'
+import type { PosReceiptDocument } from '../../../../types/domain'
+import { PosFrontDeskTab } from '../../../../constants/posFrontDesk'
+import { DASHBOARD_MENU_ID } from '../../constants'
+import { DEFAULT_POS_RECEIPT_SETTINGS, PosPrintTransport } from '../../../../constants/posPrinter'
+import { usePosReceiptSettings } from '../../../../data/hooks/usePosPrinterSettings'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { selectNextTurnTechnician } from './posNextTurn'
 import type { PosReceiptMode } from './posWorkspaceUrl'
@@ -143,6 +171,18 @@ function formatDiscountPriceBadge(
   return `(-${formatEnteredDiscountValue(discountType, discountValue, discountAmount)})`
 }
 
+// Badge palette per line status. Unassigned is deliberately the loudest of the "not done" states:
+// it is the only one the front desk must act on before the ticket can be paid.
+const LINE_STATUS_BADGE_CLASS: Record<string, string> = {
+  [PosOrderItemStatus.Unassigned]: 'bg-rose-100 text-rose-700',
+  [PosOrderItemStatus.PendingAcceptance]: 'bg-amber-100 text-amber-700',
+  [PosOrderItemStatus.Assigned]: 'bg-sky-100 text-sky-700',
+  [PosOrderItemStatus.Started]: 'bg-indigo-100 text-indigo-700',
+  [PosOrderItemStatus.Completed]: 'bg-emerald-100 text-emerald-700',
+}
+
+type LineStatusActionKind = 'start' | 'complete'
+
 interface DisplayServiceLine {
   key: string
   // Set for a line that already exists server-side (always set in Update mode, never set
@@ -157,6 +197,9 @@ interface DisplayServiceLine {
   posStaffProfileId?: string
   technicianName?: string
   note?: string
+  // See PosOrderItemStatus. Only a parent service line carries one; add-ons follow this line.
+  lineStatus: string
+  startedAt?: string | null
   completedAt?: string | null
   // Discount stays alongside the original price rather than replacing it: unitPrice/lineTotal are
   // what commission and the tip split are measured on, discountAmount is what the customer saves.
@@ -226,6 +269,9 @@ function addOnsTotalAfterDiscount(line: DisplayLine): number {
   return line.addOns.reduce((sum, addOn) => sum + addOn.lineTotalAfterDiscount, 0)
 }
 
+/** Where a PassPRNT callback comes back to. Query-free by design — see passprntTransport. */
+const POS_FRONT_DESK_ROUTE_PATH = `/dashboard/${DASHBOARD_MENU_ID.pos}`
+
 export default function PosOrderWorkspace({
   businessId,
   orderId,
@@ -240,6 +286,9 @@ export default function PosOrderWorkspace({
   businessPhone,
   businessTimeZone,
   canViewReport = false,
+  receiptPrintTab = PosFrontDeskTab.CheckoutCustomer,
+  printFallbackOrderId = null,
+  onPrintFallbackHandled,
 }: {
   businessId: string
   orderId: string
@@ -257,8 +306,26 @@ export default function PosOrderWorkspace({
   businessPhone?: string
   businessTimeZone?: string
   canViewReport?: boolean
+  // Which Front Desk tab to return to after a PassPRNT round trip. Printing leaves the app, so
+  // the callback lands on a fresh mount and has to be told where the operator was.
+  receiptPrintTab?: string
+  // Order whose PassPRNT print just failed. The preview opens on it so the operator can fall
+  // back to the browser dialog without going anywhere.
+  printFallbackOrderId?: string | null
+  onPrintFallbackHandled?: () => void
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
+  // Device-local receipt options (what to print, how many copies). Read here rather than at
+  // print time so the document is already shaped correctly for the preview the operator sees.
+  const { data: receiptSettings } = usePosReceiptSettings()
+  const { print: printReceipt, printSurface, transport: printTransport } = usePosReceiptPrint()
+  // Set in the completion callback, acted on one commit later — see the effect below.
+  const [autoPrintIntent, setAutoPrintIntent] = useState<{
+    orderId: string
+    copies: number
+    doc: PosReceiptDocument
+  } | null>(null)
+  const autoPrintedOrderIdRef = useRef<string | null>(null)
   const { showToast } = useNotification()
 
   const { data: order, isLoading: isOrderLoading } = useOrderDetail(businessId, orderId)
@@ -289,6 +356,9 @@ export default function PosOrderWorkspace({
   const addServiceAddOnLine = useAddOrderServiceAddOnLine(businessId)
   const removeServiceAddOnLine = useRemoveOrderServiceAddOnLine(businessId)
   const startOrderService = useStartOrderService(businessId)
+  const startServiceLine = useStartServiceLine(businessId)
+  const markServiceLineDone = useMarkServiceLineDone(businessId)
+  const orderSettings = useOrderSettings(businessId)
   const setOrderDiscount = useSetOrderDiscount(businessId)
   const setTip = useSetOrderTip(businessId)
   const setNote = useSetOrderNote(businessId)
@@ -308,6 +378,8 @@ export default function PosOrderWorkspace({
     assignStaffToServiceLine.isPending ||
     setServiceLineDiscount.isPending ||
     startOrderService.isPending ||
+    startServiceLine.isPending ||
+    markServiceLineDone.isPending ||
     setTip.isPending ||
     setStaffTipSplit.isPending ||
     completeOrder.isPending
@@ -408,7 +480,14 @@ export default function PosOrderWorkspace({
   const [tipSplitInputs, setTipSplitInputs] = useState<Record<string, string>>({})
   const initializedWorkspaceRef = useRef<string | null>(null)
   const initializedOrderIdRef = useRef<string | null>(null)
+  const printCleanupRef = useRef<(() => void) | null>(null)
   const serviceLineIdsBeforeAddRef = useRef<Set<string> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      printCleanupRef.current?.()
+    }
+  }, [])
 
   // No local draft for the lines — the table is always a live reflection of the latest
   // GetOrderDetailQuery result, since every edit already calls its endpoint immediately
@@ -430,6 +509,8 @@ export default function PosOrderWorkspace({
           posStaffProfileId: l.assignedPosStaffProfileId ?? undefined,
           technicianName: l.technicianName ?? undefined,
           note: l.note ?? undefined,
+          lineStatus: l.lineStatus,
+          startedAt: l.startedAt,
           completedAt: l.completedAt,
           discountType: l.discountType,
           discountValue: l.discountValue,
@@ -912,11 +993,53 @@ export default function PosOrderWorkspace({
     )
   }
 
-  const handleStartService = () => {
-    if (hasUnassignedServiceLine) {
-      showToast(t('components.dashboard.views.pos.PosOrderWorkspace.assignTechnicianFirst'), 'error')
+  // The warning is advisory and switchable off per salon; the backend behaves identically either
+  // way (it force-syncs the lines), so this only decides whether the front desk is asked first.
+  const warnOnMismatch = orderSettings.data?.warnOnServiceLineStatusMismatch ?? true
+
+  const parentServiceLines = useMemo(
+    () => visibleLines.filter((l): l is DisplayServiceLine => l.itemType === 'Service'),
+    [visibleLines],
+  )
+
+  const describeLine = (line: DisplayServiceLine) =>
+    line.technicianName ? `${line.serviceName} — ${line.technicianName}` : line.serviceName
+
+  // Nobody has taken a service yet: every line is still unassigned or waiting to be accepted.
+  const noLineReadyToStart =
+    parentServiceLines.length > 0
+    && !parentServiceLines.some((l) => isLineAtOrPast(l.lineStatus, PosOrderItemStatus.Assigned))
+
+  const unfinishedLineLabels = parentServiceLines
+    .filter((l) => l.lineStatus !== PosOrderItemStatus.Completed)
+    .map(describeLine)
+
+  // Which line's status button is mid-flight, so only that button shows a spinner. The ref covers
+  // the gap before React re-renders, exactly as useTicketActionLock's own ref does.
+  const [pendingLineStatusAction, setPendingLineStatusAction] =
+    useState<{ lineId: string; kind: LineStatusActionKind } | null>(null)
+  const lineStatusActionLockRef = useRef(false)
+
+  const [mismatchWarning, setMismatchWarning] = useState<{
+    kind: ServiceLineMismatchKind
+    lines: string[]
+    onConfirm: () => void
+  } | null>(null)
+
+  const confirmMismatch = (
+    kind: ServiceLineMismatchKind,
+    lines: string[],
+    shouldWarn: boolean,
+    run: () => void,
+  ) => {
+    if (!warnOnMismatch || !shouldWarn) {
+      run()
       return
     }
+    setMismatchWarning({ kind, lines, onConfirm: run })
+  }
+
+  const runStartService = () => {
     if (!startTicketAction(TicketBusySurface.Status)) return
     startOrderService.mutate(orderId, {
       onSuccess: () => showToast(t('components.dashboard.views.pos.PosOrderWorkspace.startServiceSuccess')),
@@ -924,6 +1047,58 @@ export default function PosOrderWorkspace({
       onSettled: endTicketAction,
     })
   }
+
+  const handleStartService = () => {
+    if (hasUnassignedServiceLine) {
+      showToast(t('components.dashboard.views.pos.PosOrderWorkspace.assignTechnicianFirst'), 'error')
+      return
+    }
+    confirmMismatch('start', [], noLineReadyToStart, runStartService)
+  }
+
+  // Per-line Start/Complete. Both are idempotent server-side, so a stale board that shows the
+  // button one tap too late costs nothing.
+  //
+  // Deliberately NOT routed through startTicketAction(TicketBusySurface.Lines): that surface
+  // blanks the whole ticket panel behind a skeleton, which is the right weight for editing a
+  // line (price, technician, discount all move at once) but far too heavy for flipping one
+  // line's status — the only thing that changes is that line's badge. The pressed button carries
+  // its own spinner instead, and the ref below keeps the double-tap protection the surface lock
+  // used to provide.
+  //
+  // Success is also silent: the badge already changes, and the front desk taps these once per
+  // service — a confirmation dialog per tap would be three interruptions on a three-service
+  // ticket. Failures still surface through reportError.
+  const runLineStatusAction = (
+    line: DisplayServiceLine,
+    kind: LineStatusActionKind,
+    mutation: typeof startServiceLine,
+  ) => {
+    if (!isPersistedLineId(line.existingId)) return
+    if (isBusy || lineStatusActionLockRef.current) return
+
+    lineStatusActionLockRef.current = true
+    setPendingLineStatusAction({ lineId: line.existingId as string, kind })
+
+    mutation.mutate(
+      { orderId, serviceLineId: line.existingId as string },
+      {
+        onError: reportError,
+        onSettled: () => {
+          lineStatusActionLockRef.current = false
+          setPendingLineStatusAction(null)
+        },
+      },
+    )
+  }
+
+  const isLineStatusActionPending = (line: DisplayServiceLine, kind: LineStatusActionKind) =>
+    pendingLineStatusAction?.lineId === line.existingId && pendingLineStatusAction.kind === kind
+
+  const handleStartLine = (line: DisplayServiceLine) => runLineStatusAction(line, 'start', startServiceLine)
+
+  const handleCompleteLine = (line: DisplayServiceLine) =>
+    runLineStatusAction(line, 'complete', markServiceLineDone)
 
   const handleCheckoutFromUpdate = () => {
     if (isPaid) return
@@ -1017,12 +1192,19 @@ export default function PosOrderWorkspace({
       showToast(t('components.dashboard.views.pos.PosOrderWorkspace.addLineFirst'), 'error')
       return
     }
+    // A line with no technician is a money problem (no commission, no tip split), so it stays a
+    // hard block rather than something the mismatch warning can be switched off for.
     if (hasUnassignedServiceLine) {
       showToast(t('components.dashboard.views.pos.PosOrderWorkspace.assignTechnicianFirst'), 'error')
       return
     }
-    const submittedReceiptMode = receiptChoice
+    confirmMismatch('checkout', unfinishedLineLabels, unfinishedLineLabels.length > 0, runComplete)
+  }
+
+  const runComplete = () => {
+    if (!order) return
     if (!startTicketAction(TicketBusySurface.Complete)) return
+    const submittedReceiptMode = receiptChoice
     completeOrder.mutate(
       {
         orderId,
@@ -1037,6 +1219,37 @@ export default function PosOrderWorkspace({
         onSuccess: (result) => {
           setCompletedPayment(result)
           onPaymentCompleted?.(result.orderId, submittedReceiptMode)
+
+          // Built here, synchronously, rather than in the effect: completing the order
+          // invalidates the order query, so by the time an effect runs `order` may be mid
+          // refetch. The lines in this closure are the correct pre-completion snapshot
+          // (Complete does not change lines) and `result` carries the server-confirmed money.
+          if (submittedReceiptMode !== 'print') return
+          const settings = receiptSettings ?? DEFAULT_POS_RECEIPT_SETTINGS
+          const copies = resolveReceiptCopies(paymentMethod, settings)
+          if (copies < 1) return
+          setAutoPrintIntent({
+            orderId: result.orderId,
+            copies,
+            doc: buildPosReceiptDocument(
+              {
+                order,
+                confirmed: result,
+                business: {
+                  name: businessName,
+                  address: businessAddress,
+                  phone: businessPhone,
+                },
+                unassignedTechnicianLabel: resolveUnassignedTechnicianLabel(t),
+                productsLabel: resolveProductsGroupLabel(t),
+                paymentMethodLabel: getPosCheckoutPaymentMethodLabel(paymentMethod, t),
+                totalsLabels: resolvePosReceiptTotalsLabels(t),
+                labels: resolvePosReceiptLabels(t),
+                locale: currentLanguage,
+              },
+              settings,
+            ),
+          })
         },
         onError: reportError,
         onSettled: endTicketAction,
@@ -1046,6 +1259,27 @@ export default function PosOrderWorkspace({
 
   const handleOpenPrintPreview = () => {
     setPrintPreviewOpen(true)
+  }
+
+  const handlePrintDocument = () => {
+    if (typeof window !== 'undefined' && typeof window.print === 'function') {
+      printCleanupRef.current?.()
+      document.body.classList.add('printing-pos-invoice')
+
+      const cleanup = () => {
+        window.removeEventListener('afterprint', cleanup)
+        document.body.classList.remove('printing-pos-invoice')
+        if (printCleanupRef.current === cleanup) printCleanupRef.current = null
+      }
+
+      printCleanupRef.current = cleanup
+      window.addEventListener('afterprint', cleanup, { once: true })
+      try {
+        window.print()
+      } catch {
+        cleanup()
+      }
+    }
   }
 
   const mutationSkeletonLabel = t('common.loading')
@@ -1167,6 +1401,12 @@ export default function PosOrderWorkspace({
                                       {t('components.dashboard.views.pos.PosOrderWorkspace.customServiceBadge')}
                                     </span>
                                   ) : null}
+                                  <span
+                                    data-testid={`line-status-${line.key}`}
+                                    className={`shrink-0 rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${LINE_STATUS_BADGE_CLASS[line.lineStatus] ?? LINE_STATUS_BADGE_CLASS[PosOrderItemStatus.Unassigned]}`}
+                                  >
+                                    {t(posOrderItemStatusLabelKey(line.lineStatus))}
+                                  </span>
                                 </div>
                                 <p className="mt-1 min-w-0 truncate text-xs font-semibold leading-tight text-nexoraText">
                                   <span className="text-[10px] font-normal text-nexoraMuted">
@@ -1196,8 +1436,44 @@ export default function PosOrderWorkspace({
                                 )}
                               </div>
 
+                              {/* Wraps rather than scrolls: a hidden action is an action the front
+                                  desk does not know exists, and Start/Complete now sit in this row.
+                                  Vertical growth is cheap here — the list above it already scrolls. */}
                               <div className="col-span-2 min-w-0 pt-1">
                                 <div className="flex flex-wrap items-center gap-1.5">
+                                  {/* Also offered on a line still awaiting the technician's acceptance:
+                                      starting on their behalf is the designed way out when nobody
+                                      answers, and it records the acceptance at the same instant. */}
+                                  {canMutateLine
+                                    && (line.lineStatus === PosOrderItemStatus.Assigned
+                                      || line.lineStatus === PosOrderItemStatus.PendingAcceptance) ? (
+                                    <button
+                                      type="button"
+                                      data-testid={`start-line-${line.key}`}
+                                      onClick={() => handleStartLine(line)}
+                                      disabled={isBusy}
+                                      className="inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50/60 px-2 text-[10px] font-bold text-emerald-700 disabled:opacity-60"
+                                    >
+                                      {isLineStatusActionPending(line, 'start') ? (
+                                        <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                                      ) : null}
+                                      {t('components.dashboard.views.pos.serviceLineStatus.startAction')}
+                                    </button>
+                                  ) : null}
+                                  {canMutateLine && line.lineStatus === PosOrderItemStatus.Started ? (
+                                    <button
+                                      type="button"
+                                      data-testid={`complete-line-${line.key}`}
+                                      onClick={() => handleCompleteLine(line)}
+                                      disabled={isBusy}
+                                      className="inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border border-emerald-300 bg-emerald-500 px-2 text-[10px] font-bold text-white disabled:opacity-60"
+                                    >
+                                      {isLineStatusActionPending(line, 'complete') ? (
+                                        <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                                      ) : null}
+                                      {t('components.dashboard.views.pos.serviceLineStatus.completeAction')}
+                                    </button>
+                                  ) : null}
                                   {canMutateLine ? (
                                     <button
                                       type="button"
@@ -1931,11 +2207,7 @@ export default function PosOrderWorkspace({
     },
     [],
   )
-  const printableProductLines = visibleLines.filter(
-    (line): line is DisplayProductLine => line.itemType === 'Product',
-  )
-  const isPaidReceiptPreview = isPaid || Boolean(completedPayment)
-  const printableReceiptGroups: PosReceiptPrintGroup[] = [
+  const printableReceiptGroups: PosTicketPrintGroup[] = [
     ...printableServiceGroups.map((group) => ({
       id: `technician-${group.id}`,
       label: group.technician,
@@ -1957,38 +2229,115 @@ export default function PosOrderWorkspace({
         })),
       })),
     })),
-    ...(printableProductLines.length > 0 ? [{
-      id: 'products',
-      label: t('components.dashboard.views.pos.PosOrderWorkspace.summaryProducts'),
-      lines: printableProductLines.map((line) => ({
-        id: line.key,
-        name: line.productName,
-        amount: lineTotal(line),
-      })),
-    }] : []),
   ]
-  const printableReceipt = order ? (
-    <PosReceiptPrintPreview
-      open={printPreviewOpen || ticketPreviewOpen}
-      ticketMode={ticketPreviewOpen}
+  const printableTicket = order ? (
+    <PosTicketPrintPreview
+      open={ticketPreviewOpen}
       customerName={order.customerName}
       orderNote={noteInput}
-      onClose={() => { setPrintPreviewOpen(false); setTicketPreviewOpen(false) }}
+      onClose={() => setTicketPreviewOpen(false)}
       orderNumber={order.orderNumber}
-      businessName={businessName}
-      businessAddress={businessAddress}
-      businessPhone={businessPhone}
       completedAt={order.completedAt}
-      groups={ticketPreviewOpen ? printableReceiptGroups.filter((group) => group.id !== 'products') : printableReceiptGroups}
-      tipAmount={order.tipAmount}
-      discountAmount={order.discountAmount}
-      orderDiscountAmount={order.orderDiscountAmount}
-      orderDiscountLabel={order.appliedPromotionName ?? undefined}
-      total={order.total}
-      paymentMethodLabel={order.paymentMethodType
-        ? getPosCheckoutPaymentMethodLabel(order.paymentMethodType, t)
-        : undefined}
-      isPaid={isPaidReceiptPreview}
+      groups={printableReceiptGroups}
+    />
+  ) : null
+
+  const isPaidReceiptPreview = isPaid || Boolean(completedPayment)
+
+  // One builder for every print surface. The grouping, the discount badges and the totals used
+  // to be assembled here and again in PosCompletedOrdersPanel; they now live in
+  // buildPosReceiptDocument so the preview, the printed paper and a replayed copy cannot differ.
+  const receiptDocument = useMemo(
+    () =>
+      order
+        ? buildPosReceiptDocument(
+            {
+              order,
+              business: {
+                name: businessName,
+                address: businessAddress,
+                phone: businessPhone,
+              },
+              unassignedTechnicianLabel: resolveUnassignedTechnicianLabel(t),
+              productsLabel: resolveProductsGroupLabel(t),
+              paymentMethodLabel: order.paymentMethodType
+                ? getPosCheckoutPaymentMethodLabel(order.paymentMethodType, t)
+                : undefined,
+              totalsLabels: resolvePosReceiptTotalsLabels(t),
+              labels: resolvePosReceiptLabels(t),
+              locale: currentLanguage,
+            },
+            receiptSettings ?? DEFAULT_POS_RECEIPT_SETTINGS,
+          )
+        : null,
+    [order, businessName, businessAddress, businessPhone, receiptSettings, currentLanguage, t],
+  )
+
+  // One commit after the intent is set, so the success screen (and the print surface) exist
+  // before anything navigates away to PassPRNT.
+  useEffect(() => {
+    if (!autoPrintIntent) return
+    // Assigned before any async work: StrictMode double-invoke, a re-render and a double tap on
+    // Complete all have to collapse to a single print.
+    if (autoPrintedOrderIdRef.current === autoPrintIntent.orderId) return
+    autoPrintedOrderIdRef.current = autoPrintIntent.orderId
+    printReceipt(autoPrintIntent.doc, {
+      jobId: autoPrintIntent.orderId,
+      copies: autoPrintIntent.copies,
+      backPath: POS_FRONT_DESK_ROUTE_PATH,
+      restore: {
+        surface: 'frontDesk',
+        tab: receiptPrintTab,
+        orderId: autoPrintIntent.orderId,
+        mode: 'success',
+        receiptMode: 'print',
+      },
+    })
+    setAutoPrintIntent(null)
+  }, [autoPrintIntent, printReceipt, receiptPrintTab])
+
+  // The manual Print button has to respect the device transport too. Without this, a salon that
+  // paired a Star printer would still get the browser dialog every time someone pressed Print —
+  // auto-print would go to the printer while the button beside it did something else.
+  //
+  // Only wired for PassPRNT: on the browser transport the modal already prints its own DOM, and
+  // routing that through the hook would render the receipt twice (once in the modal, once in the
+  // off-screen surface) and print both.
+  // A failed print leaves the transport untouched — the salon still wants its Star printer — so
+  // only this one print falls back, by opening the preview whose button uses window.print().
+  const isPrintFallback = Boolean(printFallbackOrderId) && printFallbackOrderId === orderId
+  useEffect(() => {
+    if (!isPrintFallback) return
+    setPrintPreviewOpen(true)
+    onPrintFallbackHandled?.()
+  }, [isPrintFallback, onPrintFallbackHandled])
+
+  const handleManualPrint =
+    receiptDocument && printTransport === PosPrintTransport.PassPrnt && !isPrintFallback
+      ? () =>
+          printReceipt(
+            { ...receiptDocument, isPaid: isPaidReceiptPreview },
+            {
+              jobId: orderId,
+              copies: 1,
+              backPath: POS_FRONT_DESK_ROUTE_PATH,
+              restore: {
+                surface: 'frontDesk',
+                tab: receiptPrintTab,
+                orderId,
+                mode: isPaidReceiptPreview ? 'success' : 'checkout',
+                receiptMode: 'print',
+              },
+            },
+          )
+      : undefined
+
+  const printableReceipt = receiptDocument ? (
+    <PosReceiptPrintPreview
+      open={printPreviewOpen}
+      onClose={() => setPrintPreviewOpen(false)}
+      doc={{ ...receiptDocument, isPaid: isPaidReceiptPreview }}
+      onPrint={handleManualPrint}
     />
   ) : null
 
@@ -2031,6 +2380,8 @@ export default function PosOrderWorkspace({
           onStartNext={() => (onCompleted ?? onClose)?.()}
         />
         {printableReceipt}
+    {printableTicket}
+        {printSurface}
       </>
     )
   }
@@ -2260,7 +2611,22 @@ export default function PosOrderWorkspace({
         </div>
       ) : null}
     </div>
+    {mismatchWarning ? (
+      <ServiceLineMismatchWarningModal
+        kind={mismatchWarning.kind}
+        affectedLines={mismatchWarning.lines}
+        isBusy={isBusy}
+        onCancel={() => setMismatchWarning(null)}
+        onConfirm={() => {
+          const run = mismatchWarning.onConfirm
+          setMismatchWarning(null)
+          run()
+        }}
+      />
+    ) : null}
     {printableReceipt}
+    {printableTicket}
+    {printSurface}
     </>
   )
 }

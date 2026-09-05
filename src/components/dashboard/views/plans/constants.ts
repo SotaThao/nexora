@@ -38,6 +38,38 @@ export function isVoiceAiPlanBelowCurrent(
   return planRank < currentRank
 }
 
+/**
+ * A lower tier is never purchasable regardless of cycle — a longer (yearly) cycle can't
+ * compensate for a lower tier (e.g. Pro monthly -> Starter yearly is blocked).
+ */
+export function isVoiceAiUpgradeMove(
+  planId: PaidServicePlanId,
+  targetPeriodInMonths: number | null | undefined,
+  currentPlanId: PaidServicePlanId | null | undefined,
+  currentPeriodInMonths: number | null | undefined,
+): boolean {
+  if (!currentPlanId) return true
+  const targetPeriod = targetPeriodInMonths ?? 1
+  const currentPeriod = currentPeriodInMonths ?? 1
+  const currentRank = getVoiceAiPlanRank(currentPlanId)
+  const targetRank = getVoiceAiPlanRank(planId)
+  if (currentRank < 0 || targetRank < 0) return false
+  if (targetRank < currentRank) return false
+  if (targetPeriod > currentPeriod) return true
+  if (targetPeriod < currentPeriod) return false
+  return targetRank > currentRank
+}
+
+export function isVoiceAiPlanCurrentCycle(
+  planId: PaidServicePlanId,
+  targetPeriodInMonths: number | null | undefined,
+  currentPlanId: PaidServicePlanId | null | undefined,
+  currentPeriodInMonths: number | null | undefined,
+): boolean {
+  if (!currentPlanId || planId !== currentPlanId) return false
+  return (targetPeriodInMonths ?? 1) === (currentPeriodInMonths ?? 1)
+}
+
 /** Sub-views under AI Hub → Plans. */
 export enum PlansView {
   Package = 'package',

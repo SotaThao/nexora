@@ -5,7 +5,10 @@ import { SHOW_HARDWARE_DEVICES } from '../constants'
 
 import Overview from '../overview/Overview'
 import TouchpointsView from '../../TouchpointsView'
-import { normalizeTouchpointSection } from '../../touchpoints/touchpointSections'
+import {
+  buildTouchpointsSearch,
+  normalizeTouchpointSection,
+} from '../../touchpoints/touchpointSections'
 import ReviewsView from '../views/ReviewsView'
 import TipsView from '../../TipsView'
 import ReportsView from '../views/ReportsView'
@@ -63,6 +66,7 @@ import PosFrontDeskView from '../views/pos/PosFrontDeskView'
 import PosReportsView from '../views/pos/report/PosReportsView'
 import { formatBusinessAddress } from '../views/pos/posDisplay'
 import PosDevicesView from '../views/pos/devices/PosDevicesView'
+import PosPrinterSetupView from '../views/pos/printer/PosPrinterSetupView'
 import PosPublicCheckInView from '../views/pos/PosPublicCheckInView'
 import ResponsiveStaffRoute from './ResponsiveStaffRoute'
 import {
@@ -94,7 +98,7 @@ export function OverviewRoute() {
       transactions={ctx.transactions}
       selectedStaff={ctx.selectedLeaderboardStaff}
       setSelectedStaff={ctx.handleSelectLeaderboardStaff}
-      onOpenTouchpoints={() => navigate('/dashboard/touchpoints')}
+      onOpenTouchpoints={() => navigate(`/dashboard/touchpoints?${buildTouchpointsSearch()}`)}
       onOpenReviews={() => navigate('/dashboard/reviews')}
       onOpenStaff={() => navigate('/dashboard/staff')}
       onOpenBookings={() => navigate('/dashboard/pos?tab=booking')}
@@ -482,6 +486,22 @@ export function PosReportsRoute() {
     )
   }
   return <PosReportsView businessId={businessId} businessTimeZone={businessTimeZone} />
+}
+
+// POS > Printer. Device-scoped configuration (which printer this iPad talks to, how many
+// copies it prints), so it is not gated on verificationStatus/KYB — same reasoning as the
+// other POS catalog routes. Business identity is forwarded so a test print shows the real
+// salon header rather than a blank one.
+export function PosPrinterSetupRoute() {
+  const { data: merchantSetupData } = useMerchantSetup()
+  const businessInfo = merchantSetupData?.businessInfo
+  return (
+    <PosPrinterSetupView
+      businessName={businessInfo?.name}
+      businessAddress={formatBusinessAddress(businessInfo ?? {})}
+      businessPhone={businessInfo?.phone}
+    />
+  )
 }
 
 // Check-In Devices (POS Self Check-In) — pairing and managing the tablets customers use to check
@@ -1219,6 +1239,7 @@ export function SubscriptionsRoute() {
 
   const {
     tipPlatformSubscription,
+    currentPeriodInMonths,
     packages,
     paymentPlan,
     selectedPackage,
@@ -1240,6 +1261,7 @@ export function SubscriptionsRoute() {
     <>
       <ManagePlanView
         currentSubscription={tipPlatformSubscription}
+        currentPeriodInMonths={currentPeriodInMonths}
         packages={packages}
         onSelectPlan={handleSelectPlan}
       />
@@ -1249,6 +1271,8 @@ export function SubscriptionsRoute() {
         paymentPlanPrice={paymentPlanPrice}
         billingCycle={checkoutBillingCycle}
         currentSubscription={tipPlatformSubscription}
+        currentPeriodInMonths={currentPeriodInMonths}
+        catalogPackages={packages}
         onClose={clearCheckout}
       />
       <CompleteStoreSetupGateModal

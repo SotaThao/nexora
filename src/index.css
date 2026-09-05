@@ -143,6 +143,24 @@ body:has(.pos-front-desk-action-surface)
     padding-bottom: calc(1.5rem + var(--app-safe-area-bottom));
   }
 
+  /* Docks the staff beep surfaces (the sheet and its minimised bell) just above StaffBottomNav:
+     68px of nav, plus the home indicator, plus a gap. Both surfaces share it, and the lg override
+     below drops the nav clearance once the sidebar layout takes over.
+
+     A real utility rather than the Tailwind arbitrary `bottom-[calc(68px+var(--app-safe-area-bottom,
+     env(safe-area-inset-bottom,0px))+0.75rem)]` this replaces — that class did compile correctly,
+     it was just unreadable at a glance and duplicated across two call sites. */
+  .staff-beep-dock {
+    bottom: calc(68px + var(--app-safe-area-bottom) + 0.75rem);
+  }
+
+  /* Sidebar layout at lg — no bottom nav to clear. */
+  @media (min-width: 1024px) {
+    .staff-beep-dock {
+      bottom: 1.5rem;
+    }
+  }
+
   /* Modal overlay padding that keeps the dialog clear of the notch / status bar
      and home indicator on mobile so the close button is always tappable. */
   .modal-overlay-safe {
@@ -400,6 +418,11 @@ body:not(.homepage-active):not(.public-booking-active) input.vlinkpay-address-in
     font-size: 13px !important;
     font-weight: 600;
   }
+}
+
+/* Staff work-order inputs — beat the 16px mobile/iOS floor so typed text stays compact. */
+body:not(.homepage-active):not(.public-booking-active) input.nexora-work-order-input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]) {
+  font-size: 12px !important;
 }
 
 /* Keyboard focus visibility for buttons and links */
@@ -1266,6 +1289,24 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
     overflow: visible !important;
   }
 
+  /* Multi-copy printing (US-047). PassPRNT prints one document per launch, but the browser path
+     has no such limit, so N copies are one print dialog containing N page-broken receipts rather
+     than N dialogs. iOS Safari fires afterprint unreliably, which rules out printing in sequence. */
+  body.printing-pos-invoice .pos-receipt-print-offscreen {
+    position: static !important;
+    left: auto !important;
+    width: 80mm !important;
+  }
+
+  body.printing-pos-invoice .pos-receipt-print-extra {
+    display: block !important;
+  }
+
+  .pos-receipt-print--page-break {
+    break-after: page;
+    page-break-after: always;
+  }
+
   @page pos-staff-report {
     size: 80mm auto;
     margin: 0;
@@ -1687,5 +1728,57 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 @media (min-width: 640px) {
   .public-checkin-key {
     height: 4rem;
+  }
+}
+
+/* Host for the extra copies the browser print path renders. Portalled to <body> as a sibling of
+   #root on purpose: the print stylesheet hides #root outright, so anything mounted inside the app
+   tree would be hidden with it. Positioned off-screen rather than display:none, because a hidden
+   element has no layout and prints blank. */
+.pos-receipt-print-offscreen {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+}
+
+.pos-receipt-print-extra {
+  display: none;
+}
+
+/* Beep bell — the tech's incoming-call icon (staff beep sheet + its minimised pill).
+   Swings twice then rests, rather than a constant wobble: it has to read as "someone is
+   ringing you" from across the salon floor without becoming visual noise while the tech
+   works. Rotation only, so it composes with whatever sizing/colour utility the icon has. */
+@keyframes beep-bell-swing {
+  0%,
+  55%,
+  100% {
+    transform: rotate(0deg);
+  }
+  6% {
+    transform: rotate(-14deg);
+  }
+  16% {
+    transform: rotate(12deg);
+  }
+  26% {
+    transform: rotate(-9deg);
+  }
+  36% {
+    transform: rotate(6deg);
+  }
+  46% {
+    transform: rotate(-3deg);
+  }
+}
+.animate-beep-bell {
+  /* Pivot at the bell's crown, not its centre — swinging around the middle looks like a
+     spinning object instead of a ringing bell. */
+  transform-origin: 50% 15%;
+  animation: beep-bell-swing 1.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-beep-bell {
+    animation: none;
   }
 }
