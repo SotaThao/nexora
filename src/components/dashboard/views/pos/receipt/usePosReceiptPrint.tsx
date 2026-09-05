@@ -81,8 +81,9 @@ export function usePosReceiptPrint() {
     const teardown = () => {
       if (torn) return
       torn = true
-      window.removeEventListener("afterprint", teardown)
+      window.removeEventListener('afterprint', teardown)
       window.clearTimeout(timer)
+      handle.cancel()
       setPendingBrowserPrint(null)
       printingRef.current = false
       setIsPrinting(false)
