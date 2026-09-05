@@ -9,6 +9,7 @@
  * identical text. Follows `packageHistoryDocuments.ts` — a pure builder taking pre-translated copy
  * and returning a string.
  */
+import { maskReceiptPhone } from './maskReceiptPhone'
 import { RECEIPT_DOTS_PER_MM } from '../../../../../constants/posPrinter'
 import type { PosReceiptDocument, PosReceiptTotalRow } from '../../../../../types/domain'
 
@@ -101,7 +102,7 @@ export function buildPosReceiptHtml(
       ? `<p>${escapeHtml(doc.labels.customer)}: ${escapeHtml(doc.customerName)}</p>`
       : '',
     doc.customerPhone
-      ? `<p>${escapeHtml(doc.labels.phone)}: ${escapeHtml(doc.customerPhone)}</p>`
+      ? `<p>${escapeHtml(doc.labels.phone)}: <span class="masked-phone">${Array.from(maskReceiptPhone(doc.customerPhone)).map((character) => `<span>${escapeHtml(character)}</span>`).join('')}</span></p>`
       : '',
   ].join('')
 
@@ -122,23 +123,24 @@ export function buildPosReceiptHtml(
     `.ticket{display:inline-block;background:#000;color:#fff;padding:2px 10px;font-size:24px;font-weight:700;}` +
     `.head{text-align:center;padding-bottom:8px;}` +
     `.head h1{font-size:30px;font-weight:700;margin:8px 0 2px;}` +
-    `.head p{font-size:20px;}` +
-    `.cust{text-align:left;margin-top:8px;font-size:20px;}` +
+    `.head p{font-size:22px;}` +
+    `.masked-phone{display:inline-flex;align-items:baseline;font:inherit;white-space:nowrap;}.masked-phone>span{display:inline-block;width:0.65em;font:inherit;text-align:center;}` +
+    `.cust{text-align:left;margin-top:8px;font-size:22px;}` +
     `hr{border:0;border-top:2px dashed #000;margin:8px 0;}` +
     `.lines div,.totals div{display:flex;justify-content:space-between;gap:8px;padding:2px 0;}` +
     `.lines .addon{padding-left:14px;}` +
-    `.amt{white-space:nowrap;}` +
-    `.group{font-weight:700;font-size:20px;margin-top:8px;text-transform:uppercase;}` +
-    `.disc{font-size:19px;margin-left:6px;}` +
+    `.lines div>span:first-child{min-width:0;overflow-wrap:anywhere;}.amt{white-space:nowrap;flex-shrink:0;}` +
+    `.group{font-weight:700;font-size:22px;margin-top:8px;text-transform:uppercase;}` +
+    `.disc{font-size:22px;margin-left:6px;}` +
     `.totals{margin-top:4px;}` +
-    `.totals .grand{font-weight:700;font-size:26px;border-top:2px solid #000;margin-top:4px;padding-top:6px;}` +
+    `.totals .grand{font-weight:700;font-size:22px;border-top:2px solid #000;margin-top:4px;padding-top:6px;}` +
     `.paid,.thanks{text-align:center;margin-top:10px;}` +
-    `.thanks{font-weight:700;}` +
+    `.thanks{font-weight:400;}` +
     `.empty{text-align:center;padding:8px 0;}` +
     `</style></head><body>` +
     `<div class="head"><span class="ticket">${escapeHtml(doc.labels.ticket)} #${escapeHtml(doc.orderNumber)}</span>` +
-    businessBlock +
     `<p>${escapeHtml(doc.completedAtLabel)}</p>` +
+    businessBlock +
     (customerBlock ? `<div class="cust">${customerBlock}</div>` : '') +
     `</div><hr>` +
     `<div class="lines">${rowsMarkup(doc)}</div><hr>` +

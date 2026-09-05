@@ -10,6 +10,7 @@
  * Styling stays on the existing `.pos-receipt-*` classes in index.css, which already carry the
  * 80mm @page rules and the force-black print ink.
  */
+import { maskReceiptPhone } from './maskReceiptPhone'
 import { Fragment } from 'react'
 import { formatUsdAmount } from '../../../../../utils/currencyInput'
 import type { PosReceiptDocument, PosReceiptTotalRow } from '../../../../../types/domain'
@@ -40,6 +41,7 @@ export default function PosReceiptPrintDocument({
         <p className="pos-receipt-ticket">
           {doc.labels.ticket} #{doc.orderNumber}
         </p>
+        <p>{doc.completedAtLabel}</p>
         {hasBusiness ? (
           <div className="pos-receipt-business">
             {doc.businessName ? <h2>{doc.businessName}</h2> : null}
@@ -47,7 +49,6 @@ export default function PosReceiptPrintDocument({
             {doc.businessPhone ? <p>{doc.businessPhone}</p> : null}
           </div>
         ) : null}
-        <p>{doc.completedAtLabel}</p>
         {hasCustomer ? (
           <div className="pos-receipt-customer">
             {doc.customerName ? (
@@ -57,7 +58,11 @@ export default function PosReceiptPrintDocument({
             ) : null}
             {doc.customerPhone ? (
               <p>
-                {doc.labels.phone}: {doc.customerPhone}
+                {doc.labels.phone}: <span className="pos-receipt-masked-phone">
+                  {Array.from(maskReceiptPhone(doc.customerPhone)).map((character, index) => (
+                    <span key={index}>{character}</span>
+                  ))}
+                </span>
               </p>
             ) : null}
           </div>
@@ -73,7 +78,7 @@ export default function PosReceiptPrintDocument({
               </p>
             ) : (
               <Fragment key={row.id}>
-                <div className={row.kind === 'addOn' ? 'pos-receipt-addon-row' : undefined}>
+                <div className={`pos-receipt-line-row${row.kind === 'addOn' ? ' pos-receipt-addon-row' : ''}`}>
                   <span>
                     {row.kind === 'addOn' ? `+ ${row.label}` : row.label}
                     {row.discountLabel ? (

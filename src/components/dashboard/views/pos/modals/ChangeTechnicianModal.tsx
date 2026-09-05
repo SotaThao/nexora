@@ -54,7 +54,7 @@ export default function ChangeTechnicianModal({
           </IconButton>
         </div>
 
-        <div className="flex-1 space-y-3 overflow-y-auto">
+        <div className="flex-1 space-y-3 overflow-y-auto p-0.5">
           <TechnicianPickerGrid
             technicians={technicians}
             isLoading={isLoading}

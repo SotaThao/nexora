@@ -4178,6 +4178,7 @@
             "receiptReprint": "Re-print",
             "printPreviewLabel": "Print preview",
             "printReceiptTitle": "Receipt",
+            "printTicketAction": "Print Ticket",
             "printInvoiceAction": "Print",
             "printReceiptAction": "Print Receipt",
             "printPreviewClose": "Close",

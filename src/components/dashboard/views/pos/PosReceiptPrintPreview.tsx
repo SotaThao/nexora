@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { X } from 'lucide-react'
+import { Printer, X } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import PosReceiptPrintDocument from './receipt/PosReceiptPrintDocument'
 import { printDomWithBodyClass } from './receipt/browserPrintTransport'
@@ -115,8 +115,9 @@ export default function PosReceiptPrintPreview({
           <button
             type="button"
             onClick={handlePrintDocument}
-            className="h-10 flex-1 rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark"
+            className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark"
           >
+            <Printer className="h-4 w-4" aria-hidden="true" />
             {t(
               `components.dashboard.views.pos.PosOrderWorkspace.${
                 doc.isPaid ? 'printReceiptAction' : 'printInvoiceAction'
