@@ -55,7 +55,7 @@ export default function OneQrLandingPage() {
   // backend can say whether this scanner is entitled to that view.
   const viewAs = searchParams.get(ONEQR_ROUTE.asQuery)
 
-  const { data, isLoading, isError } = usePublicOneQrLanding({
+  const { data, isPending, isError } = usePublicOneQrLanding({
     businessSlug,
     sessionId,
     viewAs,
@@ -81,7 +81,32 @@ export default function OneQrLandingPage() {
     [businessSlug, data, sessionId, trackClick],
   )
 
-  if (isLoading) {
+  // No slug means there is nothing to look up — a real dead end, and the only
+  // case where the query stays disabled forever. Checked before the pending
+  // branch so it cannot spin indefinitely.
+  if (!businessSlug) {
+    return (
+      <Shell>
+        <StatusCard
+          title={t('oneqr.landing.not_found_title')}
+          description={t('oneqr.landing.not_found_desc')}
+        />
+      </Shell>
+    )
+  }
+
+  /*
+   * `isPending`, not `isLoading`.
+   *
+   * The query is disabled until auth finishes restoring (a stored token decides
+   * Customer vs Staff vs Owner). While disabled, TanStack v5 reports
+   * `isPending: true` but `isFetching: false` — and `isLoading` is
+   * `isPending && isFetching`, so it is **false**. Keying the spinner off
+   * `isLoading` therefore fell straight through to the `!data` branch and
+   * flashed "QR code not found" on every cold open, before any request was even
+   * made. `isPending` covers both waiting-to-start and in-flight.
+   */
+  if (isPending) {
     return (
       <Shell>
         <div className="flex flex-col items-center gap-3 py-24" role="status">
