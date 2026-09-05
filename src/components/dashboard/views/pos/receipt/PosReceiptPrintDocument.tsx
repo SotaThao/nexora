@@ -58,7 +58,11 @@ export default function PosReceiptPrintDocument({
             ) : null}
             {doc.customerPhone ? (
               <p>
-                {doc.labels.phone}: {maskReceiptPhone(doc.customerPhone)}
+                {doc.labels.phone}: <span className="pos-receipt-masked-phone">
+                  {Array.from(maskReceiptPhone(doc.customerPhone)).map((character, index) => (
+                    <span key={index}>{character}</span>
+                  ))}
+                </span>
               </p>
             ) : null}
           </div>

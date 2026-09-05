@@ -102,7 +102,7 @@ export function buildPosReceiptHtml(
       ? `<p>${escapeHtml(doc.labels.customer)}: ${escapeHtml(doc.customerName)}</p>`
       : '',
     doc.customerPhone
-      ? `<p>${escapeHtml(doc.labels.phone)}: ${escapeHtml(maskReceiptPhone(doc.customerPhone))}</p>`
+      ? `<p>${escapeHtml(doc.labels.phone)}: <span class="masked-phone">${Array.from(maskReceiptPhone(doc.customerPhone)).map((character) => `<span>${escapeHtml(character)}</span>`).join('')}</span></p>`
       : '',
   ].join('')
 
@@ -124,6 +124,7 @@ export function buildPosReceiptHtml(
     `.head{text-align:center;padding-bottom:8px;}` +
     `.head h1{font-size:30px;font-weight:700;margin:8px 0 2px;}` +
     `.head p{font-size:22px;}` +
+    `.masked-phone{display:inline-flex;align-items:baseline;font:inherit;white-space:nowrap;}.masked-phone>span{display:inline-block;width:0.65em;font:inherit;text-align:center;}` +
     `.cust{text-align:left;margin-top:8px;font-size:22px;}` +
     `hr{border:0;border-top:2px dashed #000;margin:8px 0;}` +
     `.lines div,.totals div{display:flex;justify-content:space-between;gap:8px;padding:2px 0;}` +

@@ -1145,6 +1145,20 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   font-weight: 700;
 }
 
+.pos-receipt-masked-phone {
+  display: inline-flex;
+  align-items: baseline;
+  font: inherit;
+  white-space: nowrap;
+}
+
+.pos-receipt-masked-phone > span {
+  display: inline-block;
+  width: 0.65em;
+  font: inherit;
+  text-align: center;
+}
+
 .pos-receipt-payment {
   margin: 10px 0 0;
   padding-top: 10px;
