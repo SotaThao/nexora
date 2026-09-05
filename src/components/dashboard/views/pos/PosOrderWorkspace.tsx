@@ -30,6 +30,7 @@ import {
   useUpdateOrderServiceLine,
   useEligiblePromotions,
   useSetOrderDiscount,
+  useSetOrderNote,
   useSetOrderStaffTipSplit,
   useSetOrderTip,
   useUpdateOrderProductLineQuantity,
@@ -46,6 +47,7 @@ import ServiceLineMismatchWarningModal, {
 } from './modals/ServiceLineMismatchWarningModal'
 import { useCheckInTechnicians } from '../../../../data/hooks/usePosCheckIn'
 import { useTimeClockRoster } from '../../../../data/hooks/usePosTimeClock'
+import { usePosReport } from '../../../../data/hooks/usePosReport'
 import { usePublicBusinessPaymentMethods } from '../../../../data/hooks/usePublicTouch'
 import { SHOW_SERVICE_ADD_ONS } from '../../../../constants/posFeatureVisibility'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
@@ -54,6 +56,7 @@ import {
   isLineAtOrPast,
   posOrderItemStatusLabelKey,
 } from '../../../../constants/posOrderItemStatus'
+import { PosReportMode } from '../../../../constants/posReportMode'
 import { isLineBusySurface, TicketBusySurface } from '../../../../constants/posTicketAction'
 import {
   formatUsdAmount,
@@ -96,8 +99,11 @@ import PosCashPaymentPanel, { isCashPaymentCovered } from './PosCashPaymentPanel
 import PosReceivePaymentPanel from './PosReceivePaymentPanel'
 import PosRemoveConfirmAction from './PosRemoveConfirmAction'
 import PosCheckoutSuccessView, { type PosCheckoutReceiptItem } from './PosCheckoutSuccessView'
+import PosReceiptPrintPreview, { type PosReceiptPrintGroup } from './PosReceiptPrintPreview'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { selectNextTurnTechnician } from './posNextTurn'
+import type { PosReceiptMode } from './posWorkspaceUrl'
+import { todayIso as reportTodayIso } from './report/posReportPeriod'
 
 type TipMode = 'noTip' | 'fixed10' | 'fixed15' | 'pct10' | 'pct20' | 'custom'
 export type PosOrderWorkspaceMode = 'edit' | 'checkout' | 'success'
@@ -253,6 +259,7 @@ export default function PosOrderWorkspace({
   businessId,
   orderId,
   mode = 'edit',
+  successReceiptMode,
   onClose,
   onCompleted,
   onPaymentCompleted,
@@ -260,20 +267,25 @@ export default function PosOrderWorkspace({
   businessLogoUrl,
   businessAddress,
   businessPhone,
+  businessTimeZone,
+  canViewReport = false,
 }: {
   businessId: string
   orderId: string
   // Edit is operational order maintenance. Checkout is the only entry mode that reveals
   // tip, payment method, receipt and payment summary immediately.
   mode?: PosOrderWorkspaceMode
+  successReceiptMode?: PosReceiptMode
   // Renders a "Back" button next to the title.
   onClose?: () => void
   onCompleted?: () => void
-  onPaymentCompleted?: (orderId: string) => void
+  onPaymentCompleted?: (orderId: string, receiptMode: PosReceiptMode) => void
   businessName?: string
   businessLogoUrl?: string | null
   businessAddress?: string
   businessPhone?: string
+  businessTimeZone?: string
+  canViewReport?: boolean
 }) {
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
@@ -311,6 +323,7 @@ export default function PosOrderWorkspace({
   const orderSettings = useOrderSettings(businessId)
   const setOrderDiscount = useSetOrderDiscount(businessId)
   const setTip = useSetOrderTip(businessId)
+  const setNote = useSetOrderNote(businessId)
   const setStaffTipSplit = useSetOrderStaffTipSplit(businessId)
   const completeOrder = useCompleteOrder(businessId)
 
@@ -368,6 +381,17 @@ export default function PosOrderWorkspace({
     enabled: technicianTarget !== null,
     refetchInterval: false,
   })
+  const technicianServiceAmountReportQuery = usePosReport(
+    technicianTarget !== null && canViewReport
+      ? {
+          businessId,
+          timeZone: businessTimeZone,
+          mode: PosReportMode.Daily,
+          dates: [reportTodayIso(businessTimeZone)],
+        }
+      : null,
+    { enabled: technicianTarget !== null && canViewReport },
+  )
   const [noteDraft, setNoteDraft] = useState('')
   // Chosen technician shown immediately so the row never flashes the previous name while
   // AssignStaffToServiceLine and the order-detail refetch catch up.
@@ -396,6 +420,7 @@ export default function PosOrderWorkspace({
   const [discountTarget, setDiscountTarget] = useState<ServiceDiscountTarget | null>(null)
   const [tipMode, setTipMode] = useState<TipMode>('noTip')
   const [customTipInput, setCustomTipInput] = useState('')
+  const [noteInput, setNoteInput] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<PosCheckoutPaymentMethodType>('Cash')
   const [cashReceived, setCashReceived] = useState('')
   const cashReceivedWasEditedRef = useRef(false)
@@ -411,7 +436,7 @@ export default function PosOrderWorkspace({
   //
   // Defaults to No Receipt: a receipt costs an SMS and most walk-ins do not ask for one, so it is
   // opted into per checkout rather than sent unless someone remembers to turn it off.
-  const [receiptChoice, setReceiptChoice] = useState<'sms' | 'print' | 'none'>('none')
+  const [receiptChoice, setReceiptChoice] = useState<PosReceiptMode>('none')
   const [printPreviewOpen, setPrintPreviewOpen] = useState(false)
   const [tipSplitInputs, setTipSplitInputs] = useState<Record<string, string>>({})
   const initializedWorkspaceRef = useRef<string | null>(null)
@@ -524,6 +549,7 @@ export default function PosOrderWorkspace({
     // Status never reveals checkout information by itself. An InService order reached through
     // Edit still opens as an operational ticket; only an explicit Checkout entry reveals payment.
     setShowPaymentSection(mode === 'checkout' && !isPaid)
+    setNoteInput(order.note ?? '')
     if (mode !== 'success') {
       setReceiptChoice('none')
       setPaymentMethod('Cash')
@@ -614,7 +640,19 @@ export default function PosOrderWorkspace({
     const turnsByTechnicianId = new Map(
       rosterRows.map((row) => [row.posStaffProfileId, row.turnsToday]),
     )
-    const nextTurnTechnician = selectNextTurnTechnician(rosterRows, eligibleTechnicianIds)
+    const serviceAmountsByTechnicianId = new Map(
+      (technicianServiceAmountReportQuery.data?.rows ?? []).map((row) => [
+        row.posStaffProfileId,
+        row.serviceAmount,
+      ]),
+    )
+    const nextTurnTechnician = technicianServiceAmountReportQuery.data
+      ? selectNextTurnTechnician(
+          rosterRows,
+          eligibleTechnicianIds,
+          serviceAmountsByTechnicianId,
+        )
+      : undefined
 
     return eligibleTechnicians.map((technician) => ({
       ...technician,
@@ -1060,6 +1098,16 @@ export default function PosOrderWorkspace({
     applyTip('custom', round2(parsed))
   }
 
+  const handleNoteCommit = () => {
+    if (setNote.isPending) return
+    const trimmed = noteInput.trim()
+    if (trimmed === (order?.note ?? '')) return
+    setNote.mutate(
+      { orderId, note: trimmed.length > 0 ? trimmed : null },
+      { onError: reportError },
+    )
+  }
+
   // A percentage tip mode (pct10/pct20) is a live % of servicesSubtotal, not a one-time
   // dollar snapshot — without this, adding/removing a service after picking e.g. 10%
   // leaves the old dollar amount on the order, so Payment Summary's Tip/Total silently
@@ -1117,6 +1165,7 @@ export default function PosOrderWorkspace({
   const runComplete = () => {
     if (!order) return
     if (!startTicketAction(TicketBusySurface.Complete)) return
+    const submittedReceiptMode = receiptChoice
     completeOrder.mutate(
       {
         orderId,
@@ -1124,14 +1173,13 @@ export default function PosOrderWorkspace({
           paymentMethodType: paymentMethod,
           // E.164, not the bare national number: the backend re-parses this value and only a
           // full number tells it which country the receipt SMS is addressed to.
-          receiptPhone: receiptChoice === 'sms' ? order?.customerPhoneE164 ?? undefined : undefined,
+          receiptPhone: submittedReceiptMode === 'sms' ? order?.customerPhoneE164 ?? undefined : undefined,
         },
       },
       {
         onSuccess: (result) => {
-          showToast(t('components.dashboard.views.pos.PosOrderWorkspace.completeSuccess'))
           setCompletedPayment(result)
-          onPaymentCompleted?.(result.orderId)
+          onPaymentCompleted?.(result.orderId, submittedReceiptMode)
         },
         onError: reportError,
         onSettled: endTicketAction,
@@ -1573,6 +1621,24 @@ export default function PosOrderWorkspace({
               ) : null}
             </div>
 
+            <div className="space-y-2 rounded-xl border border-nexoraBorder/70 bg-nexoraSurface p-3 shadow-sm">
+              <label htmlFor="pos-ticket-note" className="block text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
+                {t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteTitle')}
+              </label>
+              <textarea
+                id="pos-ticket-note"
+                value={noteInput}
+                onChange={(e) => setNoteInput(e.target.value)}
+                onBlur={handleNoteCommit}
+                disabled={isBusy}
+                maxLength={500}
+                rows={2}
+                placeholder={t('components.dashboard.views.pos.PosOrderWorkspace.ticketNotePlaceholder')}
+                aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteLabel')}
+                className="w-full rounded-lg border border-nexoraBorder bg-white px-2.5 py-2 text-xs text-nexoraText outline-none focus:border-nexoraBrand disabled:cursor-not-allowed disabled:opacity-60"
+              />
+            </div>
+
             {!showPaymentSection ? (
               <div className="flex gap-2">
                 {order?.status === PosOrderStatus.Waiting && hasServiceLines ? (
@@ -1819,7 +1885,8 @@ export default function PosOrderWorkspace({
                         type="button"
                         onClick={() => setReceiptChoice('none')}
                         aria-pressed={receiptChoice === 'none'}
-                        className={`h-8 rounded-lg border text-[11px] font-semibold transition-colors ${
+                        disabled={isBusy}
+                        className={`h-8 rounded-lg border text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                           receiptChoice === 'none'
                             ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
                             : 'border-nexoraBorder/70 bg-white text-nexoraText hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft/40'
@@ -1831,7 +1898,7 @@ export default function PosOrderWorkspace({
                         type="button"
                         onClick={() => setReceiptChoice('sms')}
                         aria-pressed={receiptChoice === 'sms'}
-                        disabled={!order?.customerPhoneE164}
+                        disabled={isBusy || !order?.customerPhoneE164}
                         className={`h-8 rounded-lg border text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                           receiptChoice === 'sms'
                             ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
@@ -1844,7 +1911,8 @@ export default function PosOrderWorkspace({
                         type="button"
                         onClick={() => setReceiptChoice('print')}
                         aria-pressed={receiptChoice === 'print'}
-                        className={`h-8 rounded-lg border text-[11px] font-semibold transition-colors ${
+                        disabled={isBusy}
+                        className={`h-8 rounded-lg border text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                           receiptChoice === 'print'
                             ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
                             : 'border-nexoraBorder/70 bg-white text-nexoraText hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft/40'
@@ -1857,7 +1925,8 @@ export default function PosOrderWorkspace({
                       <button
                         type="button"
                         onClick={handleOpenPrintPreview}
-                        className="col-start-3 justify-self-center text-[10px] font-semibold text-nexoraBrand underline underline-offset-2 hover:text-nexoraBrandDark"
+                        disabled={isBusy}
+                        className="col-start-3 justify-self-center text-[10px] font-semibold text-nexoraBrand underline underline-offset-2 hover:text-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewLabel')}
                       </button>
@@ -2056,192 +2125,59 @@ export default function PosOrderWorkspace({
   const printableProductLines = visibleLines.filter(
     (line): line is DisplayProductLine => line.itemType === 'Product',
   )
-  const printableLineCount = printableServiceGroups.reduce((count, group) => count + group.lines.length, 0) + printableProductLines.length
-  const printableBusinessName = businessName?.trim()
-  const printableBusinessAddress = businessAddress?.trim()
-  const printableBusinessPhone = businessPhone?.trim()
   const isPaidReceiptPreview = isPaid || Boolean(completedPayment)
-  const printableReceipt =
-    order && printPreviewOpen && typeof document !== 'undefined'
-      ? createPortal(
-          <div className="pos-front-desk-action-surface pos-invoice-modal-backdrop">
-            <div
-              className="pos-invoice-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-label={isPaidReceiptPreview ? undefined : t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewLabel')}
-              aria-labelledby={isPaidReceiptPreview ? 'pos-print-preview-title' : undefined}
-            >
-              <div className="pos-invoice-modal-header">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-                    {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewLabel')}
-                  </p>
-                  {isPaidReceiptPreview ? (
-                    <h2 id="pos-print-preview-title" className="text-lg font-black text-nexoraText">
-                      {t('components.dashboard.views.pos.PosOrderWorkspace.printReceiptTitle')}
-                    </h2>
-                  ) : null}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setPrintPreviewOpen(false)}
-                  className="pos-invoice-modal-close inline-flex h-9 w-9 items-center justify-center rounded-lg border border-nexoraBorder text-nexoraText hover:border-nexoraBrand"
-                  aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewClose')}
-                  title={t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewClose')}
-                >
-                  <X className="h-4 w-4" aria-hidden="true" />
-                </button>
-              </div>
-
-              <div className="pos-invoice-modal-body">
-                <article
-                  className="pos-receipt-print pos-receipt-ink-black"
-                  data-testid="pos-receipt-print"
-                >
-                  <div className="pos-receipt-print-header">
-                    <p className="pos-receipt-ticket">Ticket #{order.orderNumber}</p>
-                    {printableBusinessName || printableBusinessAddress || printableBusinessPhone ? (
-                      <div className="pos-receipt-business">
-                        {printableBusinessName ? <h2>{printableBusinessName}</h2> : null}
-                        {printableBusinessAddress ? <p>{printableBusinessAddress}</p> : null}
-                        {printableBusinessPhone ? <p>{formatCustomerPhone(printableBusinessPhone, printableBusinessPhone)}</p> : null}
-                      </div>
-                    ) : null}
-                    <p>{formatPosDateTime(order.completedAt ?? new Date().toISOString(), currentLanguage)}</p>
-                  </div>
-
-                  <section className="pos-receipt-lines" aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.summaryItem')}>
-                    {printableLineCount > 0 ? (
-                      <>
-                        {printableServiceGroups.map((group) => (
-                          <div className="pos-receipt-tech-group" key={group.technician}>
-                            <p className="pos-receipt-tech-heading">{group.technician.toUpperCase()}</p>
-                            <div className="pos-receipt-group-lines">
-                              {group.lines.map((line) => (
-                                <Fragment key={line.key}>
-                                  <div>
-                                    <span>
-                                      {line.serviceName}
-                                      {line.discountAmount > 0 ? (
-                                        <span className="pos-receipt-line-discount ml-1 text-rose-500">
-                                          {formatDiscountPriceBadge(
-                                            line.discountType,
-                                            line.discountValue,
-                                            line.discountAmount,
-                                          )}
-                                        </span>
-                                      ) : null}
-                                    </span>
-                                    <span className="tabular-nums">{formatUsdAmount(lineTotal(line))}</span>
-                                  </div>
-                                  {/* Printed as its own line under the service — a customer must be
-                                      able to see where an extra charge came from. */}
-                                  {line.addOns.map((addOn) => (
-                                    <div key={addOn.id}>
-                                      <span>
-                                        + {addOn.addOnName}
-                                        {addOn.discountAmount > 0 ? (
-                                          <span className="pos-receipt-line-discount ml-1 text-rose-500">
-                                            {formatDiscountPriceBadge(
-                                              addOn.discountType,
-                                              addOn.discountValue,
-                                              addOn.discountAmount,
-                                            )}
-                                          </span>
-                                        ) : null}
-                                      </span>
-                                      <span className="tabular-nums">{formatUsdAmount(addOn.lineTotal)}</span>
-                                    </div>
-                                  ))}
-                                </Fragment>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                        {printableProductLines.length > 0 ? (
-                          <div className="pos-receipt-tech-group" key="products">
-                            <p className="pos-receipt-tech-heading">
-                              {t('components.dashboard.views.pos.PosOrderWorkspace.summaryProducts').toUpperCase()}
-                            </p>
-                            <div className="pos-receipt-group-lines">
-                              {printableProductLines.map((line) => (
-                                <div key={line.key}>
-                                  <span>{line.productName}</span>
-                                  <span className="tabular-nums">{formatUsdAmount(lineTotal(line))}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ) : null}
-                      </>
-                    ) : (
-                      <p>{t('components.dashboard.views.pos.PosOrderWorkspace.noLines')}</p>
-                    )}
-                  </section>
-
-                  <dl className="pos-receipt-totals">
-                    <div>
-                      <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryTip')}</dt>
-                      <dd>{formatUsdAmount(order.tipAmount)}</dd>
-                    </div>
-                    <div>
-                      <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryDiscount')}</dt>
-                      <dd>{formatUsdAmount(order.discountAmount === 0 ? 0 : -Math.abs(order.discountAmount))}</dd>
-                    </div>
-                    {order.orderDiscountAmount > 0 ? (
-                      <div>
-                        <dt>
-                          {order.appliedPromotionName
-                            ?? t('components.dashboard.views.pos.PosOrderWorkspace.summaryOrderDiscount')}
-                        </dt>
-                        <dd>-${order.orderDiscountAmount.toFixed(2)}</dd>
-                      </div>
-                    ) : null}
-                    <div className="pos-receipt-total">
-                      <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryTotal')}</dt>
-                      <dd>{formatUsdAmount(order.total)}</dd>
-                    </div>
-                  </dl>
-
-                  {isPaid && order.paymentMethodType ? (
-                    <p className="pos-receipt-payment">
-                      {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewPaidWith')}{' '}
-                      {getPosCheckoutPaymentMethodLabel(order.paymentMethodType, t)}
-                    </p>
-                  ) : null}
-
-                  <p className="pos-receipt-thank-you">
-                    {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewThankYou')}
-                  </p>
-                </article>
-              </div>
-
-              <div className="pos-invoice-modal-actions">
-                <button
-                  type="button"
-                  onClick={() => setPrintPreviewOpen(false)}
-                  className="h-10 flex-1 rounded-lg border border-nexoraBorder text-xs font-bold text-nexoraText hover:border-nexoraBrand"
-                >
-                  {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewClose')}
-                </button>
-                <button
-                  type="button"
-                  onClick={handlePrintDocument}
-                  className="h-10 flex-1 rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark"
-                >
-                  {t(
-                    `components.dashboard.views.pos.PosOrderWorkspace.${
-                      isPaidReceiptPreview ? 'printReceiptAction' : 'printInvoiceAction'
-                    }`,
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )
-      : null
+  const printableReceiptGroups: PosReceiptPrintGroup[] = [
+    ...printableServiceGroups.map((group) => ({
+      id: `technician-${group.technician}`,
+      label: group.technician,
+      lines: group.lines.map((line) => ({
+        id: line.key,
+        name: line.serviceName,
+        amount: lineTotal(line),
+        discountLabel: line.discountAmount > 0
+          ? formatDiscountPriceBadge(line.discountType, line.discountValue, line.discountAmount)
+          : undefined,
+        addOns: line.addOns.map((addOn) => ({
+          id: addOn.id,
+          name: addOn.addOnName,
+          amount: addOn.lineTotal,
+          discountLabel: addOn.discountAmount > 0
+            ? formatDiscountPriceBadge(addOn.discountType, addOn.discountValue, addOn.discountAmount)
+            : undefined,
+        })),
+      })),
+    })),
+    ...(printableProductLines.length > 0 ? [{
+      id: 'products',
+      label: t('components.dashboard.views.pos.PosOrderWorkspace.summaryProducts'),
+      lines: printableProductLines.map((line) => ({
+        id: line.key,
+        name: line.productName,
+        amount: lineTotal(line),
+      })),
+    }] : []),
+  ]
+  const printableReceipt = order ? (
+    <PosReceiptPrintPreview
+      open={printPreviewOpen}
+      onClose={() => setPrintPreviewOpen(false)}
+      orderNumber={order.orderNumber}
+      businessName={businessName}
+      businessAddress={businessAddress}
+      businessPhone={businessPhone}
+      completedAt={order.completedAt}
+      groups={printableReceiptGroups}
+      tipAmount={order.tipAmount}
+      discountAmount={order.discountAmount}
+      orderDiscountAmount={order.orderDiscountAmount}
+      orderDiscountLabel={order.appliedPromotionName ?? undefined}
+      total={order.total}
+      paymentMethodLabel={order.paymentMethodType
+        ? getPosCheckoutPaymentMethodLabel(order.paymentMethodType, t)
+        : undefined}
+      isPaid={isPaidReceiptPreview}
+    />
+  ) : null
 
   const showCheckoutSuccess = Boolean(order && (
     completedPayment || (mode === 'success' && isPaid)
@@ -2250,9 +2186,7 @@ export default function PosOrderWorkspace({
   if (showCheckoutSuccess && order) {
     const completedReceiptChoice = completedPayment
       ? receiptChoice
-      : order.receiptPhone
-        ? 'sms'
-        : 'none'
+      : successReceiptMode ?? (order.receiptPhone ? 'sms' : 'none')
     const receiptLabel = completedReceiptChoice === 'sms'
       ? t('components.dashboard.views.pos.PosOrderWorkspace.receiptSendSms')
       : completedReceiptChoice === 'print'
@@ -2272,6 +2206,7 @@ export default function PosOrderWorkspace({
             t,
           )}
           receiptLabel={receiptLabel}
+          receiptWasPrinted={completedReceiptChoice === 'print'}
           total={completedPayment?.totalAmount ?? order.total}
           discountAmount={
             (completedPayment?.discountAmount ?? order.discountAmount)

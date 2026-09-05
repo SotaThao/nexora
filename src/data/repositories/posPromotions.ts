@@ -8,6 +8,21 @@ import type { PosPromotionApiDto, PosPromotionPayload } from '../../types/reposi
 
 type HttpClient = typeof httpClient
 
+function buildFormData(payload: PosPromotionPayload): FormData {
+  const formData = new FormData()
+  formData.append('name', payload.name)
+  if (payload.badgeLabel) formData.append('badgeLabel', payload.badgeLabel)
+  if (payload.description) formData.append('description', payload.description)
+  if (payload.photo) formData.append('photo', payload.photo)
+  formData.append('discountType', payload.discountType)
+  formData.append('discountValue', String(payload.discountValue))
+  payload.daysOfWeek.forEach((day) => formData.append('daysOfWeek', day))
+  formData.append('startTime', payload.startTime)
+  formData.append('endTime', payload.endTime)
+  formData.append('isActive', String(payload.isActive))
+  return formData
+}
+
 export function createPosPromotionsRepository(client: HttpClient = httpClient) {
   return {
     // Includes inactive offers: deactivating is how an offer is retired, so the Owner still needs
@@ -18,7 +33,11 @@ export function createPosPromotionsRepository(client: HttpClient = httpClient) {
     },
 
     async createPosPromotion(businessId: string, payload: PosPromotionPayload): Promise<string> {
-      return await client.post<string>(`/api/v1/merchant/pos/${businessId}/promotions`, payload)
+      return await client.upload<string>(
+        `/api/v1/merchant/pos/${businessId}/promotions`,
+        buildFormData(payload),
+        'POST',
+      )
     },
 
     async updatePosPromotion(
@@ -26,9 +45,10 @@ export function createPosPromotionsRepository(client: HttpClient = httpClient) {
       promotionId: string,
       payload: PosPromotionPayload,
     ): Promise<boolean> {
-      return await client.put<boolean>(
+      return await client.upload<boolean>(
         `/api/v1/merchant/pos/${businessId}/promotions/${promotionId}`,
-        payload,
+        buildFormData(payload),
+        'PUT',
       )
     },
 

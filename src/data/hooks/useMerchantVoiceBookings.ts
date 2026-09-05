@@ -19,6 +19,7 @@ import {
   type UpdateMerchantVoiceServiceRequest,
   type SaveServiceBatchItem,
   type SaveServicesBatchResult,
+  type ReorderMerchantVoiceServiceItem,
   type SaveCategoryBatchItem,
   type SaveCategoriesBatchResult,
   MerchantVoiceLeadStatus,
@@ -191,6 +192,7 @@ export function useCreateMerchantVoiceStaff() {
     mutationFn: (body: CreateMerchantVoiceStaffRequest) => merchantVoiceRepository.createStaff(body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['merchantVoice', 'staff'] })
+      queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
     },
   })
 }
@@ -377,6 +379,17 @@ export function useSaveServicesBatch() {
   })
 }
 
+export function useReorderMerchantVoiceServices() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, ReorderMerchantVoiceServiceItem[]>({
+    mutationFn: (items) => merchantVoiceRepository.reorderServices(items),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServices() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServiceCategories() })
+    },
+  })
+}
+
 // Saves multiple categories (create + rename) in one atomic JSON request instead of
 // one create/update request per row. No onSuccess invalidation here: the caller
 // (saveCategoryModal in BookingSettingsPanel.tsx) always refetches categories right
@@ -512,4 +525,3 @@ export function useMerchantVoiceUsageActivity(
     enabled,
   })
 }
-

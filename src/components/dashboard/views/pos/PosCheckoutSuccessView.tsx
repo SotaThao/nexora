@@ -1,4 +1,4 @@
-import { Check, ArrowRight } from 'lucide-react'
+import { Check, ArrowRight, Printer } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { formatUsdAmount } from '../../../../utils/currencyInput'
 
@@ -19,6 +19,7 @@ export default function PosCheckoutSuccessView({
   orderNumber,
   paymentMethodLabel,
   receiptLabel,
+  receiptWasPrinted = false,
   total,
   discountAmount,
   tipAmount,
@@ -34,6 +35,7 @@ export default function PosCheckoutSuccessView({
   orderNumber: string
   paymentMethodLabel: string
   receiptLabel: string
+  receiptWasPrinted?: boolean
   total: number
   discountAmount: number
   tipAmount: number
@@ -72,7 +74,19 @@ export default function PosCheckoutSuccessView({
             [t('components.dashboard.views.pos.PosOrderWorkspace.successTicket'), `#${orderNumber}`],
           ].map(([label, value]) => <div key={label} className="rounded-xl bg-nexoraCanvas p-2.5"><dt className="text-nexoraMuted">{label}</dt><dd className="mt-1 font-black text-nexoraText">{value}</dd></div>)}
         </dl>
-        <button type="button" onClick={onStartNext} className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-nexoraBrand text-sm font-black text-white hover:bg-nexoraBrandDark">
+        <button
+          type="button"
+          onClick={onReprint}
+          className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-nexoraBrand transition-colors hover:text-nexoraBrandDark hover:underline"
+        >
+          <Printer className="h-3.5 w-3.5" aria-hidden="true" />
+          {t(
+            `components.dashboard.views.pos.PosOrderWorkspace.${
+              receiptWasPrinted ? 'receiptReprint' : 'printReceiptAction'
+            }`,
+          )}
+        </button>
+        <button type="button" onClick={onStartNext} className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-nexoraBrand text-sm font-black text-white hover:bg-nexoraBrandDark">
           {t('components.dashboard.views.pos.PosOrderWorkspace.startNextCheckout')} <ArrowRight className="h-4 w-4" />
         </button>
       </section>
@@ -176,13 +190,6 @@ export default function PosCheckoutSuccessView({
                 <p className="text-xs text-nexoraMuted">
                   {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewThankYou')}
                 </p>
-                <button
-                  type="button"
-                  onClick={onReprint}
-                  className="mx-auto mt-1 block text-xs font-bold text-nexoraBrand transition-colors hover:text-nexoraBrandDark hover:underline"
-                >
-                  {t('components.dashboard.views.pos.PosOrderWorkspace.receiptReprint')}
-                </button>
               </footer>
           </article>
         </div>

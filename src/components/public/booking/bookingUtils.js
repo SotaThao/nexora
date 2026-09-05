@@ -15,6 +15,7 @@ import {
 import { HOLIDAY_TYPE } from '../../../constants/holiday'
 import {
   PUBLIC_BOOKING_ANY_STAFF_ID,
+  PUBLIC_BOOKING_CUSTOMER_ERRORS,
   PUBLIC_BOOKING_EM_DASH,
   PUBLIC_BOOKING_LANG,
   PUBLIC_BOOKING_ROUTE,
@@ -206,6 +207,19 @@ export function validateBookingDraft(draft, catalog, minDate) {
   }
 
   return { ok: errors.length === 0, errors }
+}
+
+/**
+ * Split validation errors by the step that owns the field.
+ * Step 1 holds services / technician / slot; step 2 holds phone + name, so choosing a service
+ * is never blocked by an empty phone box the customer has not reached yet.
+ */
+export function errorsForBookingStep(errorKeys, step) {
+  const errors = Array.isArray(errorKeys) ? errorKeys : []
+  const isCustomerError = (key) => PUBLIC_BOOKING_CUSTOMER_ERRORS.includes(key)
+  return step === PUBLIC_BOOKING_STEP.review
+    ? errors.filter(isCustomerError)
+    : errors.filter((key) => !isCustomerError(key))
 }
 
 /**

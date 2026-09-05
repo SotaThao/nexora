@@ -63,6 +63,7 @@ export default function PosPromotionsView({ businessId }: { businessId?: string 
         payload: {
           name: promotion.name,
           badgeLabel: promotion.badgeLabel ?? null,
+          description: promotion.description ?? null,
           discountType: promotion.discountType,
           discountValue: promotion.discountValue,
           daysOfWeek: promotion.daysOfWeek,

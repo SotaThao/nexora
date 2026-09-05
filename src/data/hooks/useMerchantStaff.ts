@@ -97,6 +97,26 @@ export function useMerchantStaff({
   })
 }
 
+/** Resolve the active business-staff link for a shared staff profile. */
+export function useResolveMerchantStaffLink() {
+  return useMutation<string, Error, { staffProfileId: string; keyword?: string }>({
+    mutationFn: async ({ staffProfileId, keyword }) => {
+      const page = await merchantStaffRepository.list(
+        StatusFilter.Active,
+        1,
+        100,
+        keyword,
+      )
+      const match = page.items.find((item) => item.staffProfileId === staffProfileId)
+      const linkId = typeof match?.linkId === 'string' ? match.linkId : ''
+      if (!linkId) {
+        throw new Error('Unable to resolve the business staff link for the new technician.')
+      }
+      return linkId
+    },
+  })
+}
+
 export function useInviteStaff() {
   const queryClient = useQueryClient()
   return useMutation<LooseObject, Error, StaffInviteParams>({

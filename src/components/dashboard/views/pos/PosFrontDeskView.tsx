@@ -33,6 +33,7 @@ import { qk } from '../../../../data/queryKeys'
 import { usePosAccess } from '../../../../data/hooks/usePosAccess'
 import { useStaffBusinesses } from '../../../../data/hooks/useStaffSelf'
 import { useWeeklyPayroll } from '../../../../data/hooks/useWeeklyPayroll'
+import { usePosReport } from '../../../../data/hooks/usePosReport'
 import { formatPosTime } from './posDateTime'
 import { useCancelOrder, useCompletedOrders, useOrderList } from '../../../../data/hooks/usePosOrders'
 import { useInServiceOrders, useOrderDetails } from '../../../../data/hooks/usePosCheckout'
@@ -80,6 +81,7 @@ import {
   isSelectionComplete as isReportSelectionComplete,
   parseIsoWeekKey,
   parseMonthKey,
+  todayIso as reportTodayIso,
   type PosReportSelection,
 } from './report/posReportPeriod'
 import PosCheckInTab from './PosCheckInTab'
@@ -368,6 +370,7 @@ export default function PosFrontDeskView({
   businessPhone,
   businessSlug,
   businessTimeZone,
+  includeTechnicianReportTab = false,
 }: {
   businessId: string
   // Shown on Check-in Step 1's welcome message — optional since the Staff dashboard route
@@ -378,6 +381,7 @@ export default function PosFrontDeskView({
   businessPhone?: string
   businessSlug?: string
   businessTimeZone?: string | null
+  includeTechnicianReportTab?: boolean
 }) {
   const { t, currentLanguage } = useTranslation()
   const { showToast, showConfirm } = useNotification()
@@ -403,6 +407,9 @@ export default function PosFrontDeskView({
     : businessTimeZone?.trim()
       || detectTimeZoneFromAddressText(receiptBusinessAddress ?? '')
       || DEFAULT_SETTINGS_TIMEZONE
+  const availableTabs = includeTechnicianReportTab
+    ? [...POS_FRONT_DESK_TABS, PosFrontDeskTab.Report]
+    : POS_FRONT_DESK_TABS
 
   // Deep-link support for the Owner Dashboard's "Total Bookings" KPI card (Ticket 10),
   // which navigates here with ?tab=booking to land straight on the Bookings tab. Also
@@ -411,7 +418,7 @@ export default function PosFrontDeskView({
   const [searchParams, setSearchParams] = useSearchParams()
   const tabFromUrl = searchParams.get(POS_FRONT_DESK_TAB_PARAM) as PosFrontDeskTab | null
   const initialTab: PosFrontDeskTab =
-    tabFromUrl && POS_FRONT_DESK_TABS.includes(tabFromUrl) ? tabFromUrl : DEFAULT_POS_FRONT_DESK_TAB
+    tabFromUrl && availableTabs.includes(tabFromUrl) ? tabFromUrl : DEFAULT_POS_FRONT_DESK_TAB
   const [activeTab, setActiveTabState] = useState<PosFrontDeskTab>(initialTab)
   const previousActiveTabRef = useRef<PosFrontDeskTab | null>(null)
   // Each Front Desk data set is loaded only while its tab is open. Leaving a tab disables its
@@ -461,6 +468,18 @@ export default function PosFrontDeskView({
       || activeTab === PosFrontDeskTab.Booking,
     refetchInterval: false,
   })
+  const canReadNextTurnReport = activeTab === PosFrontDeskTab.TurnBoard && Boolean(access?.canViewReport)
+  const todayServiceAmountReportQuery = usePosReport(
+    canReadNextTurnReport
+      ? {
+          businessId,
+          timeZone: reportBusinessTimeZone,
+          mode: PosReportMode.Daily,
+          dates: [reportTodayIso(reportBusinessTimeZone)],
+        }
+      : null,
+    { enabled: canReadNextTurnReport },
+  )
   // The roster above deliberately does not poll, so a station card would never notice a reply.
   // The beep feed is its own polled query, which is what keeps the station pill live here.
   const { data: turnBoardBeeps = [] } = useMerchantBeepFeed(businessId, todayTurnWindow, {
@@ -521,10 +540,19 @@ export default function PosFrontDeskView({
       )
       .map((technician) => technician.posStaffProfileId),
   )
-  const nextTurnTechnician = selectNextTurnTechnician(
-    todayTurnRows,
-    nextTurnSkilledTechnicianIds,
+  const serviceAmountsTodayByStaffId = new Map(
+    (todayServiceAmountReportQuery.data?.rows ?? []).map((row) => [
+      row.posStaffProfileId,
+      row.serviceAmount,
+    ]),
   )
+  const nextTurnTechnician = todayServiceAmountReportQuery.data
+    ? selectNextTurnTechnician(
+        todayTurnRows,
+        nextTurnSkilledTechnicianIds,
+        serviceAmountsTodayByStaffId,
+      )
+    : undefined
   // A ticket with one technician is already unambiguous from the list response. Only fetch
   // details for multi-technician tickets, where the list's aggregated arrays cannot identify
   // which service line belongs to which technician.
@@ -614,7 +642,7 @@ export default function PosFrontDeskView({
       { replace: true },
     )
   }
-  const [orderListFilter, setOrderListFilter] = useState<OrderListFilter>(OrderListFilter.All)
+  const [orderListFilter, setOrderListFilter] = useState<OrderListFilter>(OrderListFilter.Waiting)
   const [viewMode, setViewMode] = useState<OrderListViewMode>(() =>
     storage.getItem(ORDER_LIST_VIEW_MODE_STORAGE_KEY) === OrderListViewMode.Card
       ? OrderListViewMode.Card
@@ -639,7 +667,11 @@ export default function PosFrontDeskView({
   useEffect(() => {
     const workspaceFromUrl = readPosWorkspaceFromParams(searchParams)
     setUpdateWorkspaceState((current) => {
-      if (current?.orderId === workspaceFromUrl?.orderId && current?.mode === workspaceFromUrl?.mode) {
+      if (
+        current?.orderId === workspaceFromUrl?.orderId
+        && current?.mode === workspaceFromUrl?.mode
+        && current?.receiptMode === workspaceFromUrl?.receiptMode
+      ) {
         return current
       }
       return workspaceFromUrl
@@ -713,7 +745,7 @@ export default function PosFrontDeskView({
   }
 
   // Tab id doubles as its own i18n suffix (tabs.<id>) and as the ?tab= value, so the bar is
-  // derived from POS_FRONT_DESK_TABS rather than re-listing all seven by hand.
+  // derived from the route-specific tab list rather than duplicating it by hand.
   // All counts every guest on the books today, tickets plus the appointments that have not
   // arrived yet, so the number reads as the floor's whole workload — and its list shows them all
   // too (see notArrivedRows below).
@@ -727,7 +759,7 @@ export default function PosFrontDeskView({
   // Report exposes every technician's earnings and is gated on its own permission, so a front-desk
   // account without it never sees the tab. access is undefined while loading — keep the tab hidden
   // until the answer arrives rather than flashing it and then removing it.
-  const visibleTabs = POS_FRONT_DESK_TABS.filter(
+  const visibleTabs = availableTabs.filter(
     (tab) => tab !== PosFrontDeskTab.Report || access?.canViewReport === true,
   )
 
@@ -916,7 +948,7 @@ export default function PosFrontDeskView({
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
               <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-extrabold ${
                 station.currentStatus === PosOrderStatus.InService
-                  ? 'border-cyan-200 bg-cyan-50 text-cyan-700'
+                  ? 'border-rose-200 bg-rose-50 text-rose-700'
                   : 'border-emerald-200 bg-emerald-50 text-emerald-700'
               }`}>
                 {t(tk(`stationStatus.${station.currentStatus}`))}
@@ -1275,16 +1307,18 @@ export default function PosFrontDeskView({
           </p>
         ) : (
           <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
-            <table className="w-full min-w-[600px] table-fixed text-left text-xs">
+            <table className="w-full min-w-[720px] table-fixed text-left text-xs">
               <colgroup>
-                <col className="w-[35%]" />
-                <col className="w-[15%]" />
-                <col className="w-[50%]" />
+                <col className="w-[28%]" />
+                <col className="w-[12%]" />
+                <col className="w-[20%]" />
+                <col className="w-[40%]" />
               </colgroup>
               <thead>
                 <tr className={POS_TABLE_HEADER_ROW_CLASS}>
                   <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('todayTurnsColumnTechnician'))}</th>
                   <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('todayTurnsColumnTurns'))}</th>
+                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('todayTurnsColumnServiceAmount'))}</th>
                   <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('todayTurnsColumnServices'))}</th>
                 </tr>
               </thead>
@@ -1299,15 +1333,35 @@ export default function PosFrontDeskView({
                       className={`border-t border-nexoraBorder/70 transition-colors ${isNext ? 'bg-emerald-50/40 hover:bg-emerald-50/65' : 'hover:bg-violet-50/35'}`}
                     >
                       <td className="px-3 py-2.5 font-semibold text-nexoraText">
-                        <span className="inline-flex max-w-full rounded-full bg-cyan-100/70 px-2.5 py-1 text-cyan-800">
-                          <span className="truncate">{row.displayName}</span>
-                        </span>
-                        {row.turnRank != null ? (
-                          <span className="ml-2 text-[10px] font-bold text-nexoraMuted">#{row.turnRank}</span>
-                        ) : null}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="max-w-full truncate text-xs font-extrabold uppercase tracking-wide text-nexoraText">
+                            {row.displayName}
+                          </span>
+                          <span
+                            className={`inline-flex items-center gap-1 whitespace-nowrap text-[10px] font-bold ${
+                              row.isClockedIn
+                                ? 'text-emerald-700'
+                                : 'text-slate-500'
+                            }`}
+                          >
+                            <span
+                              aria-hidden="true"
+                              className={`h-1.5 w-1.5 shrink-0 rounded-full ${row.isClockedIn ? 'bg-emerald-500' : 'bg-slate-400'}`}
+                            />
+                            <span>{t(tk(row.isClockedIn ? 'todayTurnsClockedIn' : 'todayTurnsNotClockedIn'))}</span>
+                          </span>
+                          {row.turnRank != null ? (
+                            <span className="text-[10px] font-bold text-nexoraMuted">#{row.turnRank}</span>
+                          ) : null}
+                        </div>
                       </td>
                       <td className="px-3 py-2.5 text-right font-bold tabular-nums text-nexoraText">
                         {row.turnsToday}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2.5 text-right font-bold tabular-nums text-nexoraText">
+                        {todayServiceAmountReportQuery.data
+                          ? formatCurrency(serviceAmountsTodayByStaffId.get(row.posStaffProfileId) ?? 0)
+                          : '—'}
                       </td>
                       <td className="max-w-[320px] px-3 py-2.5 font-semibold text-nexoraText">
                         {renderServiceChips(services)}
@@ -1343,7 +1397,7 @@ export default function PosFrontDeskView({
 
       {/* Tab bar uses the shared nexora* color tokens — see tailwind.config.js. */}
       <ScrollableTabStrip>
-        {POS_FRONT_DESK_TABS.map((tab) => (
+        {visibleTabs.map((tab) => (
           <button
             key={tab}
             type="button"
@@ -1386,12 +1440,15 @@ export default function PosFrontDeskView({
           businessId={businessId}
           orderId={updateWorkspace.orderId}
           mode={updateWorkspace.mode}
+          successReceiptMode={updateWorkspace.receiptMode}
           businessName={receiptBusinessName}
           businessLogoUrl={receiptBusinessLogoUrl}
           businessAddress={receiptBusinessAddress}
           businessPhone={businessPhone}
-          onPaymentCompleted={(completedOrderId) => {
-            setUpdateWorkspace({ orderId: completedOrderId, mode: 'success' })
+          businessTimeZone={reportBusinessTimeZone}
+          canViewReport={Boolean(access?.canViewReport)}
+          onPaymentCompleted={(completedOrderId, receiptMode) => {
+            setUpdateWorkspace({ orderId: completedOrderId, mode: 'success', receiptMode })
           }}
           onClose={() => {
             setUpdateWorkspace(null)
@@ -1440,6 +1497,7 @@ export default function PosFrontDeskView({
                     key={filter}
                     type="button"
                     onClick={() => setOrderListFilter(filter)}
+                    aria-pressed={orderListFilter === filter}
                     className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold transition-all ${
                       orderListFilter === filter
                         ? ORDER_LIST_FILTER_STYLES[filter].active
@@ -1753,7 +1811,14 @@ export default function PosFrontDeskView({
         </div>
       )}
 
-      {activeTab === PosFrontDeskTab.Completed && <PosCompletedOrdersPanel businessId={businessId} />}
+      {activeTab === PosFrontDeskTab.Completed && (
+        <PosCompletedOrdersPanel
+          businessId={businessId}
+          businessName={receiptBusinessName}
+          businessAddress={receiptBusinessAddress}
+          businessPhone={businessPhone}
+        />
+      )}
 
       {activeTab === PosFrontDeskTab.Booking && (
         <BookingTab
@@ -1779,7 +1844,7 @@ export default function PosFrontDeskView({
 
       {activeTab === PosFrontDeskTab.Customer && <CustomerTab businessId={businessId} />}
 
-      {activeTab === PosFrontDeskTab.Report && (
+      {activeTab === PosFrontDeskTab.Report && access?.canViewReport === true && (
         <PosReportPanel
           businessId={businessId}
           businessTimeZone={reportBusinessTimeZone}

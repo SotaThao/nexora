@@ -25,9 +25,11 @@ type SettingsFormErrors = Record<string, string>
 export default function PosGeneralSettingsView({
   verificationStatus,
   businessId,
+  embedded = false,
 }: {
   verificationStatus?: string
   businessId?: string
+  embedded?: boolean
 }) {
   const { t, currentLanguage } = useTranslation()
   const { data: setupData } = useMerchantSetup()
@@ -65,14 +67,14 @@ export default function PosGeneralSettingsView({
 
   return (
     <div className="space-y-6">
-      <section className="space-y-1 px-0.5">
+      {!embedded ? <section className="space-y-1 px-0.5">
         <h1 className="text-2xl font-bold leading-tight text-nexoraText">
           {t('dashboard.menu.pos_settings')}
         </h1>
         <p className="text-sm font-medium text-nexoraMuted">
           {t('components.dashboard.views.pos.PosGeneralSettingsView.description')}
         </p>
-      </section>
+      </section> : null}
 
       {/* Plain vertical stack, not a grid — BusinessInfoCard carries a `md:col-span-2`
           meant for its original 2-column parent (ProfileTab.tsx). Wrapping it in a
