@@ -63,7 +63,6 @@ import {
   formatWorkOrderNumber,
   formatWorkOrderStationValue,
   isWorkOrderCompletedStatus,
-  isWorkOrderStartDateReached,
   workOrderBeeperChipText,
   workOrderCompletionNoteText,
   workOrderCustomerInitials,
@@ -281,7 +280,7 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
               canCompleteService: false,
               completionNote: note ?? current.completionNote,
               items: current.items.map((item) => (
-                item.isAddOn || item.isMine === false
+                item.isAddOn || item.isMine === false || item.lineStatus !== PosOrderItemStatus.Started
                   ? item
                   : {
                       ...item,
@@ -532,8 +531,9 @@ function WorkOrderDetailBody({
       </p>
     </aside>
   ) : null
-  const showStart = !isCompleted && ticket.canStartService
-  const showComplete = !isCompleted && ticket.status === PosOrderStatus.InService && ticket.canCompleteService
+  const footerAction = isCompleted ? null : workOrderTicketFooterAction(lines)
+  const showStart = footerAction === WORK_ORDER_TICKET_FOOTER_ACTION.start
+  const showComplete = footerAction === WORK_ORDER_TICKET_FOOTER_ACTION.complete
   const actions = (
     <div className={WORK_ORDERS_LAYOUT_CLASS.detailActions}>
       {showStart ? (

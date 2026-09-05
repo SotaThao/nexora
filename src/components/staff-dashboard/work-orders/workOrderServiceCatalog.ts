@@ -134,8 +134,7 @@ export function applyWorkOrderLineStatus(
 
 export function applyWorkOrderAssignedLinesStarted(lines: WorkOrderEditableLine[]): WorkOrderEditableLine[] {
   return lines.map((line) => (
-    isParentServiceLine(line)
-      && line.isMine !== false
+    isCallerParentServiceLine(line)
       && (line.lineStatus === PosOrderItemStatus.Assigned
         || line.lineStatus === PosOrderItemStatus.PendingAcceptance)
       ? { ...line, lineStatus: PosOrderItemStatus.Started }
@@ -145,9 +144,8 @@ export function applyWorkOrderAssignedLinesStarted(lines: WorkOrderEditableLine[
 
 export function applyWorkOrderStartedLinesCompleted(lines: WorkOrderEditableLine[]): WorkOrderEditableLine[] {
   return lines.map((line) => (
-    isParentServiceLine(line)
-      && line.isMine !== false
-      && line.lineStatus !== PosOrderItemStatus.Completed
+    isCallerParentServiceLine(line)
+      && line.lineStatus === PosOrderItemStatus.Started
       ? { ...line, lineStatus: PosOrderItemStatus.Completed }
       : line
   ))
@@ -212,18 +210,22 @@ export const WORK_ORDER_TICKET_FOOTER_ACTION = {
 export type WorkOrderTicketFooterAction =
   (typeof WORK_ORDER_TICKET_FOOTER_ACTION)[keyof typeof WORK_ORDER_TICKET_FOOTER_ACTION]
 
-function parentLineHasStatus(lines: WorkOrderEditableLine[], status: PosOrderItemStatus): boolean {
-  return lines.some((line) => isParentServiceLine(line) && line.lineStatus === status)
+function isCallerParentServiceLine(line: WorkOrderEditableLine): boolean {
+  return isParentServiceLine(line) && Boolean(line.isMine) && !line.pendingRemoval
 }
 
-/** Ticket Start Service shows when any parent service is still Assigned. */
+function callerParentLineHasStatus(lines: WorkOrderEditableLine[], status: PosOrderItemStatus): boolean {
+  return lines.some((line) => isCallerParentServiceLine(line) && line.lineStatus === status)
+}
+
+/** Ticket Start Service shows when this technician still has a parent service Assigned. */
 export function workOrderHasAssignedService(lines: WorkOrderEditableLine[]): boolean {
-  return parentLineHasStatus(lines, PosOrderItemStatus.Assigned)
+  return callerParentLineHasStatus(lines, PosOrderItemStatus.Assigned)
 }
 
-/** Ticket Complete shows when any parent service is In Service (Started). */
+/** Ticket Complete shows when this technician has a parent service In Service (Started). */
 export function workOrderHasInServiceService(lines: WorkOrderEditableLine[]): boolean {
-  return parentLineHasStatus(lines, PosOrderItemStatus.Started)
+  return callerParentLineHasStatus(lines, PosOrderItemStatus.Started)
 }
 
 // find something, not a statement about where a service "really" belongs. Anything with no category
@@ -263,8 +265,9 @@ export function buildWorkOrderCatalogCategories(
 }
 
 /**
- * One ticket footer action, from the lowest parent-line status that still needs work.
- * Assigned beats In Service: a ticket with both only shows Start Service.
+ * Footer is per technician, not per ticket. Other staff's Done/In-service lines never
+ * decide this screen: Staff B still sees Start Service until B's own line has started.
+ * Assigned beats Started so a mixed basket of theirs only offers Start.
  */
 export function workOrderTicketFooterAction(
   lines: WorkOrderEditableLine[],
