@@ -5,6 +5,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import type { TFunction } from '../../../types/contexts'
 import { useStaffBookingCalendar } from '../../../data/hooks/useStaffWorkOrders'
 import { staffWorkOrdersPath, type WorkOrderSalon } from '../work-orders/constants'
+import { STAFF_SALONS_PATH } from '../staffSalonPaths'
 import { WorkOrderErrorCard } from '../work-orders/WorkOrderQueryFeedback'
 import {
   calendarAppointmentBarClass,
@@ -170,7 +171,7 @@ export default function StaffMyCalendar() {
         </section>
 
         <Link
-          to={staffWorkOrdersPath(salon?.id)}
+          to={salon?.id ? staffWorkOrdersPath(salon.id) : STAFF_SALONS_PATH}
           className={STAFF_CALENDAR_LAYOUT_CLASS.back}
         >
           <ArrowLeft className={STAFF_CALENDAR_LAYOUT_CLASS.backIcon} aria-hidden="true" />
@@ -252,7 +253,7 @@ function CalendarAppointmentRow({
   // The detail screen is addressed by order id; the WO number is only what the card shows.
   const href = salonId
     ? staffWorkOrdersPath(salonId, appointment.id)
-    : staffWorkOrdersPath()
+    : STAFF_SALONS_PATH
 
   return (
     <Link to={href} className={STAFF_CALENDAR_LAYOUT_CLASS.row}>

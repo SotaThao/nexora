@@ -1,6 +1,6 @@
-import { ClipboardX } from 'lucide-react'
+import { ChevronLeft, ClipboardX } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffWorkOrders } from '../../../data/hooks/useStaffWorkOrders'
 import { formatDateIsoInTimeZone } from '../../../utils/localDate'
@@ -13,7 +13,6 @@ import {
   WORK_ORDER_TICKET_FILTER,
   WORK_ORDERS_I18N,
   WORK_ORDERS_LAYOUT_CLASS,
-  staffWorkOrdersPath,
   workOrderFilterCountClass,
   workOrderFilterTabClass,
   type WorkOrderListItem,
@@ -33,7 +32,6 @@ import {
   parseWorkOrderListStatus,
   workOrderListHref,
   workOrderListParamsNeedSync,
-  workOrderLocationFromPath,
 } from './workOrderListUrl'
 import {
   countWorkOrdersByFilter,
@@ -56,9 +54,7 @@ export default function StaffWorkOrderTickets({
 }: StaffWorkOrderTicketsProps) {
   const { t, currentLanguage } = useTranslation()
   const navigate = useNavigate()
-  const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
-  const fromSalons = workOrderLocationFromPath(location.state) === STAFF_SALONS_PATH
   const todayIso = formatDateIsoInTimeZone(new Date(), salon.timeZone)
   const selectedDateIso = parseWorkOrderListDate(
     searchParams.get(WORK_ORDER_QUERY_PARAM.date),
@@ -67,11 +63,7 @@ export default function StaffWorkOrderTickets({
   const filter = parseWorkOrderListStatus(searchParams.get(WORK_ORDER_QUERY_PARAM.status))
   const [calendarOpen, setCalendarOpen] = useState(false)
   const listHref = (ticketId?: string) => workOrderListHref(salon.id, selectedDateIso, filter, ticketId)
-  const withListState = (replace = false) => (
-    replace
-      ? { ...WORK_ORDER_NAVIGATE_REPLACE, state: location.state }
-      : { state: location.state }
-  )
+  const goToSalons = () => navigate(STAFF_SALONS_PATH)
   const workOrdersQuery = useStaffWorkOrders(
     salon.id,
     selectedDateIso,
@@ -81,7 +73,6 @@ export default function StaffWorkOrderTickets({
   const isListLoading = workOrdersQuery.data === undefined && !workOrdersQuery.isError
   const isDetailMode = Boolean(selectedTicketId)
   const chromeClass = isDetailMode ? WORK_ORDERS_LAYOUT_CLASS.hideOnDetailMobile : ''
-  const changeSalonPath = fromSalons ? STAFF_SALONS_PATH : staffWorkOrdersPath()
 
   useEffect(() => {
     if (!workOrderListParamsNeedSync(searchParams, selectedDateIso, filter)) return
@@ -101,7 +92,7 @@ export default function StaffWorkOrderTickets({
 
   const updateListParams = (dateIso: string, nextFilter: WorkOrderTicketFilter) => {
     if (selectedTicketId) {
-      navigate(workOrderListHref(salon.id, dateIso, nextFilter), withListState(true))
+      navigate(workOrderListHref(salon.id, dateIso, nextFilter), WORK_ORDER_NAVIGATE_REPLACE)
       return
     }
     setSearchParams(
@@ -117,13 +108,21 @@ export default function StaffWorkOrderTickets({
     ? visibleTickets.filter((ticket) => ticket.id !== featuredTicket.id)
     : visibleTickets
   const openTicket = (ticketId: string) => {
-    navigate(listHref(ticketId), withListState())
+    navigate(listHref(ticketId))
   }
 
   return (
     <div className={WORK_ORDERS_LAYOUT_CLASS.page}>
       <div className={`${WORK_ORDERS_LAYOUT_CLASS.ticketsTitleRow} ${chromeClass}`}>
         <div className={WORK_ORDERS_LAYOUT_CLASS.workspaceSalon}>
+          <button
+            type="button"
+            className={WORK_ORDERS_LAYOUT_CLASS.ticketsBack}
+            aria-label={t(WORK_ORDERS_I18N.backToSalons)}
+            onClick={goToSalons}
+          >
+            <ChevronLeft className={WORK_ORDERS_LAYOUT_CLASS.ticketsBackIcon} aria-hidden="true" />
+          </button>
           <div className={WORK_ORDERS_LAYOUT_CLASS.grow}>
             <p className={WORK_ORDERS_LAYOUT_CLASS.workspaceKicker}>
               {t(WORK_ORDERS_I18N.breadcrumbWorkspace)}
@@ -135,7 +134,8 @@ export default function StaffWorkOrderTickets({
               <button
                 type="button"
                 className={WORK_ORDERS_LAYOUT_CLASS.workspaceSalonButton}
-                onClick={() => navigate(changeSalonPath)}
+                aria-label={t(WORK_ORDERS_I18N.changeSalon)}
+                onClick={goToSalons}
               >
                 {workOrderTextOrPlaceholder(salon.name)}
               </button>
@@ -206,7 +206,7 @@ export default function StaffWorkOrderTickets({
         <StaffWorkOrderDetail
           orderId={selectedTicketId}
           timeZone={salon.timeZone}
-          onBack={() => navigate(listHref(), withListState())}
+          onBack={() => navigate(listHref())}
         />
       ) : null}
     </div>

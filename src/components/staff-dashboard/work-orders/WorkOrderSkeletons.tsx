@@ -5,35 +5,20 @@ import {
   WORK_ORDERS_LAYOUT_CLASS,
 } from './constants'
 
-export function WorkOrderSalonPickerSkeleton() {
-  return (
-    <div role="status" aria-busy="true">
-      <Skeleton width={120} height={14} borderRadius={6} />
-      <Skeleton width="55%" height={28} borderRadius={8} className={WORK_ORDERS_LAYOUT_CLASS.skeletonMt3} />
-      <Skeleton width="75%" height={14} borderRadius={6} className={WORK_ORDERS_LAYOUT_CLASS.skeletonMt2} />
-      <div className={WORK_ORDERS_LAYOUT_CLASS.list}>
-        {Array.from({ length: WORK_ORDER_SKELETON_COUNT.salons }, (_, index) => (
-          <div key={index} className={WORK_ORDERS_LAYOUT_CLASS.card} aria-hidden="true">
-            <Skeleton width={40} height={40} borderRadius={12} />
-            <div className={WORK_ORDERS_LAYOUT_CLASS.grow}>
-              <Skeleton width="50%" height={16} borderRadius={6} />
-              <Skeleton width="70%" height={12} borderRadius={6} className={WORK_ORDERS_LAYOUT_CLASS.skeletonMt2} />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 export function WorkOrderTicketsSkeleton() {
   return (
     <div role="status" aria-busy="true">
       <div className={WORK_ORDERS_LAYOUT_CLASS.ticketsTitleRow}>
-        <Skeleton width={180} height={28} borderRadius={8} />
+        <div className={WORK_ORDERS_LAYOUT_CLASS.workspaceSalon}>
+          <Skeleton circle width={40} height={40} />
+          <div className={WORK_ORDERS_LAYOUT_CLASS.grow}>
+            <Skeleton width={96} height={12} borderRadius={6} />
+            <Skeleton width={180} height={28} borderRadius={8} className={WORK_ORDERS_LAYOUT_CLASS.skeletonMt2} />
+            <Skeleton width={140} height={14} borderRadius={6} className={WORK_ORDERS_LAYOUT_CLASS.skeletonMt2} />
+          </div>
+        </div>
         <Skeleton circle width={32} height={32} />
       </div>
-      <Skeleton width={140} height={16} borderRadius={6} className={WORK_ORDERS_LAYOUT_CLASS.skeletonMt2} />
       <div className={WORK_ORDERS_LAYOUT_CLASS.filterBar}>
         <div className={WORK_ORDERS_LAYOUT_CLASS.dateNav}>
           <div className={WORK_ORDERS_LAYOUT_CLASS.dateNavRow}>

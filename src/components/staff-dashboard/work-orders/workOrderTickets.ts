@@ -5,6 +5,7 @@ import {
   STAFF_BUSINESS_LINK_STATUS,
   resolveStaffBusinessLinkStatusLabel,
 } from '../../../utils/staffBusinessLinkStatus'
+import { STAFF_SALONS_PATH } from '../staffSalonPaths'
 import {
   StaffWorkOrdersViewKind,
   WORK_ORDERS_I18N,
@@ -29,7 +30,6 @@ import {
   WORK_ORDER_VIETNAMESE_PREFIX,
   WORK_ORDER_WEEKDAY_COUNT,
   WORK_ORDER_WEEKDAY_SUNDAY,
-  staffWorkOrdersPath,
   type WorkOrderDetail,
   type WorkOrderListItem,
   type WorkOrderSalon,
@@ -500,7 +500,6 @@ export function workOrderAssignedTechnicianLabel(
 }
 
 export type StaffWorkOrdersView =
-  | { kind: StaffWorkOrdersViewKind.Picker }
   | { kind: StaffWorkOrdersViewKind.Redirect; to: string }
   | { kind: StaffWorkOrdersViewKind.Tickets; salon: WorkOrderSalon }
   | { kind: StaffWorkOrdersViewKind.Detail; salon: WorkOrderSalon; orderId: string }
@@ -510,7 +509,7 @@ export function resolveStaffWorkOrdersView(
   ticketId: string | undefined,
   salons: WorkOrderSalon[],
 ): StaffWorkOrdersView {
-  if (!salonId) return { kind: StaffWorkOrdersViewKind.Picker }
+  if (!salonId) return { kind: StaffWorkOrdersViewKind.Redirect, to: STAFF_SALONS_PATH }
 
   const salon = getWorkOrderSalonById(salons, salonId) ?? {
     id: salonId,

@@ -58,6 +58,7 @@ export const WORK_ORDERS_I18N = {
   statusCancelled: 'staff_dashboard.work_orders.status_cancelled',
   detailTitle: 'staff_dashboard.work_orders.detail_title',
   back: 'staff_dashboard.work_orders.back',
+  backToSalons: 'staff_dashboard.work_orders.back_to_salons',
   customer: 'staff_dashboard.work_orders.customer',
   station: 'staff_dashboard.work_orders.station',
   beeper: 'staff_dashboard.work_orders.beeper',
@@ -220,11 +221,14 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   pinIcon: 'h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5',
   chevronIcon: 'h-4 w-4 shrink-0 text-nexoraSubtle sm:h-5 sm:w-5',
   ticketsTitleRow: 'mb-[18px] flex items-start justify-between gap-4',
+  ticketsBack:
+    'mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-full text-nexoraText transition hover:bg-nexoraCanvas',
+  ticketsBackIcon: 'h-5 w-5',
   ticketsTitle: 'truncate text-[24px] font-black leading-[1.15] text-nexoraText',
   ticketsSalon: 'mt-[3px] text-xs font-semibold text-nexoraSubtle',
   countBadge: 'inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-[#e9eaff] px-2 text-xs font-black text-nexoraBrand',
   workspaceKicker: 'mb-1.5 text-[11px] font-bold text-nexoraSubtle',
-  workspaceSalon: 'flex min-w-0 items-center gap-3',
+  workspaceSalon: 'flex min-w-0 items-start gap-3',
   workspaceAvatar: 'hidden',
   workspaceSalonButton:
     'border-0 bg-transparent p-0 text-left text-xs font-extrabold text-nexoraBrand',
@@ -505,7 +509,6 @@ export const WORK_ORDER_TOAST_TYPE = {
   error: 'error',
 } as const
 export const WORK_ORDER_SKELETON_COUNT = {
-  salons: 2,
   tickets: 3,
   services: 3,
   metaChips: 3,
@@ -530,7 +533,6 @@ export const WORK_ORDER_DATE_STEP = { day: 1, month: 1 } as const
 export const STAFF_HOME_PATH = '/staff'
 
 export enum StaffWorkOrdersViewKind {
-  Picker = 'picker',
   Redirect = 'redirect',
   Tickets = 'tickets',
   Detail = 'detail',
