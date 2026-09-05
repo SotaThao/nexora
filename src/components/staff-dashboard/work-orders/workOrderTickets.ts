@@ -366,10 +366,12 @@ export function isWorkOrderStartActionVisible(status: PosOrderStatus): boolean {
 }
 
 export function canStartWorkOrderNow(
-  ticket: Pick<WorkOrderDetail, 'canStartService' | 'scheduledAt'>,
+  ticket: Pick<WorkOrderDetail, 'status' | 'scheduledAt'>,
   todayIso: string,
 ): boolean {
-  return ticket.canStartService && isWorkOrderStartDateReached(ticket.scheduledAt, todayIso)
+  // The guest is already in the chair — remaining Assigned work for this technician can begin now.
+  if (ticket.status === PosOrderStatus.InService) return true
+  return isWorkOrderStartDateReached(ticket.scheduledAt, todayIso)
 }
 
 export function toggleWorkOrderSuggestion(selected: string[], suggestion: string): string[] {
