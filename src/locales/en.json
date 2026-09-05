@@ -4448,6 +4448,7 @@
             "uncategorized": "Uncategorized",
             "searchServicesPlaceholder": "Search services...",
             "unassigned": "Unassigned (Owner assigns later)",
+            "noAvailableTechnician": "No technician is scheduled to work at this time.",
             "removeLine": "Remove",
             "estimatedTotal": "Estimated Total",
             "errorName": "Customer name is required.",

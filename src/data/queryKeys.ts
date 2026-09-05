@@ -291,8 +291,10 @@ export const qk = {
     ['merchantSettings', 'posCheckoutServiceCatalog', businessId ?? ''],
   merchantPosCheckoutProductCatalog: (businessId?: string) =>
     ['merchantSettings', 'posCheckoutProductCatalog', businessId ?? ''],
-  merchantPosAssignableStaff: (businessId?: string, posServiceId?: string) =>
-    ['merchantSettings', 'posAssignableStaff', businessId ?? '', posServiceId ?? ''],
+  // scheduledAt is part of the key: the eligible technicians for a booking depend on the
+  // slot (each technician's own weekly working hours are checked server-side).
+  merchantPosAssignableStaff: (businessId?: string, posServiceId?: string, scheduledAt?: string) =>
+    ['merchantSettings', 'posAssignableStaff', businessId ?? '', posServiceId ?? '', scheduledAt ?? ''],
   // Add-on picker — keyed by the service LINE, not the service: the options are scoped to the
   // line the picker was opened from.
   merchantPosServiceLineAddOnOptions: (businessId?: string, orderId?: string, serviceLineId?: string) =>
