@@ -8,7 +8,6 @@ import { useQueries, useQuery, useMutation, useQueryClient, type QueryKey } from
 import { qk } from '../queryKeys'
 import { useSessionRole } from '../../auth/useSessionRole'
 import posCheckoutRepository from '../repositories/posCheckout'
-import { randomUuid } from '../../utils/uuid'
 import { resolveOrderDiscountAmount, resolveOrderDiscountCap } from '../../utils/posOrderDiscount'
 import { isPersistedLineId, randomUuid, unlessOptimisticId } from '../../utils/uuid'
 import type {
@@ -243,6 +242,80 @@ export function useAddOrderServiceLine(businessId?: string) {
   })
 }
 
+// A custom (off-menu) service: the price comes from the form, not the catalog, so the optimistic
+// patch uses what was typed. Mirrors useAddOrderServiceLine otherwise, including never inserting a
+// client-generated line id — Assign/Delete/Discount read ids off this cache.
+export function useAddOrderCustomServiceLine(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<
+    string,
+    Error,
+    {
+      orderId: string
+      customServiceName: string
+      price: number
+      note: string | null
+      posStaffProfileId: string | null
+      // Display only — never sent. Lets the ticket show the technician straight away instead of
+      // flashing "First available" until the refetch lands.
+      technicianName: string | null
+    },
+    OrderMutationContext
+  >({
+    mutationFn: ({ orderId, customServiceName, price, note, posStaffProfileId }) =>
+      posCheckoutRepository.addOrderCustomServiceLine(businessId as string, orderId, {
+        customServiceName,
+        price,
+        note,
+        posStaffProfileId,
+      }),
+    onMutate: async ({ orderId, price }) => {
+      const context = await snapshotOrderDetail(queryClient, businessId, orderId)
+      if (context.previousOrder) {
+        queryClient.setQueryData<OrderDetailApiDto>(context.queryKey, applyOrderTotalsPatch(context.previousOrder, {
+          servicesSubtotal: roundCurrency(context.previousOrder.servicesSubtotal + price),
+        }))
+      }
+      return context
+    },
+    onError: (_err, _vars, context) => rollbackOrderDetail(queryClient, context),
+    onSuccess: (
+      newServiceLineId,
+      { orderId, customServiceName, price, note, posStaffProfileId, technicianName },
+    ) => {
+      const queryKey = qk.merchantPosOrderDetail(businessId, orderId)
+      const current = queryClient.getQueryData<OrderDetailApiDto>(queryKey)
+      const serviceLines = current
+        ? withPersistedLine(current.serviceLines, newServiceLineId, (id) => ({
+            id,
+            posServiceId: null,
+            serviceName: customServiceName,
+            unitPrice: price,
+            quantity: 1,
+            lineTotal: price,
+            discountAmount: 0,
+            staffDiscountShare: 0,
+            lineTotalAfterDiscount: price,
+            // Left false on purpose: whether the technician can absorb a discount depends on their
+            // pay type, which only the refetch knows.
+            canAssignDiscountToStaff: false,
+            completedAt: null,
+            note,
+            assignedPosStaffProfileId: posStaffProfileId,
+            technicianName,
+            addOns: [],
+          }))
+        : null
+      if (current && serviceLines) {
+        queryClient.setQueryData<OrderDetailApiDto>(queryKey, { ...current, serviceLines })
+      }
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosInServiceOrders(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
+    },
+  })
+}
+
 // Changing the service re-prices the line from the catalog server-side, and drops the technician
 // when they are not trained on the new service — so the turn board is invalidated too, and the
 // optimistic patch deliberately touches only name and price rather than guessing at the assignment.
@@ -251,13 +324,28 @@ export function useUpdateOrderServiceLine(businessId?: string) {
   return useMutation<
     boolean,
     Error,
-    { orderId: string; serviceLineId: string; posServiceId: string; unitPrice: number; serviceName: string },
+    {
+      orderId: string
+      serviceLineId: string
+      // Null retargets the line to a custom service, named and priced by unitPrice/serviceName.
+      posServiceId: string | null
+      unitPrice: number
+      serviceName: string
+    },
     OrderMutationContext
   >({
-    mutationFn: ({ orderId, serviceLineId, posServiceId }) =>
+    mutationFn: ({ orderId, serviceLineId, posServiceId, unitPrice, serviceName }) =>
       unlessOptimisticId(
         serviceLineId,
-        () => posCheckoutRepository.updateOrderServiceLine(businessId as string, orderId, serviceLineId, posServiceId),
+        () =>
+          posCheckoutRepository.updateOrderServiceLine(
+            businessId as string,
+            orderId,
+            serviceLineId,
+            posServiceId !== null
+              ? { posServiceId }
+              : { customServiceName: serviceName, price: unitPrice },
+          ),
         false,
       ),
     onMutate: async ({ orderId, serviceLineId, posServiceId, unitPrice, serviceName }) => {
@@ -625,6 +713,25 @@ export function useSetOrderTip(businessId?: string) {
           context.queryKey,
           applyOrderTotalsPatch(context.previousOrder, { tipAmount }),
         )
+      }
+      return context
+    },
+    onError: (_err, _vars, context) => rollbackOrderDetail(queryClient, context),
+    onSuccess: (_result, { orderId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
+    },
+  })
+}
+
+export function useSetOrderNote(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<boolean, Error, { orderId: string; note: string | null }, OrderMutationContext>({
+    mutationFn: ({ orderId, note }) =>
+      posCheckoutRepository.setOrderNote(businessId as string, orderId, note),
+    onMutate: async ({ orderId, note }) => {
+      const context = await snapshotOrderDetail(queryClient, businessId, orderId)
+      if (context.previousOrder) {
+        queryClient.setQueryData<OrderDetailApiDto>(context.queryKey, { ...context.previousOrder, note })
       }
       return context
     },

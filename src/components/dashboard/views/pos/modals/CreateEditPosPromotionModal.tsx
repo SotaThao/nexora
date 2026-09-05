@@ -3,8 +3,8 @@
 //
 // One window per promotion by design: a different window on Saturday is a second offer with its own
 // name, which is also how the front desk reads the cards at the counter.
-import { useEffect, useState } from 'react'
-import { X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { ImagePlus, X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import IconButton from '../../../../ui/IconButton'
 import { MAX_DISCOUNT_PERCENT, PosServiceDiscountType } from '../../../../../constants/posDiscount'
@@ -61,8 +61,12 @@ export default function CreateEditPosPromotionModal({
   onClose: () => void
 }) {
   const { t } = useTranslation()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [name, setName] = useState('')
   const [badgeLabel, setBadgeLabel] = useState('')
+  const [description, setDescription] = useState('')
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null)
   const [discountType, setDiscountType] = useState<PosServiceDiscountType>(PosServiceDiscountType.Percent)
   const [valueInput, setValueInput] = useState('')
   const [days, setDays] = useState<string[]>([])
@@ -74,6 +78,9 @@ export default function CreateEditPosPromotionModal({
   useEffect(() => {
     setName(promotion?.name ?? '')
     setBadgeLabel(promotion?.badgeLabel ?? '')
+    setDescription(promotion?.description ?? '')
+    setPhotoFile(null)
+    setPhotoPreviewUrl(promotion?.photoUrl ?? null)
     setDiscountType(
       promotion?.discountType === PosServiceDiscountType.Amount
         ? PosServiceDiscountType.Amount
@@ -86,6 +93,13 @@ export default function CreateEditPosPromotionModal({
     setIsActive(promotion?.isActive ?? true)
     setFieldErrors({})
   }, [promotion])
+
+  useEffect(() => {
+    if (!photoFile) return
+    const url = URL.createObjectURL(photoFile)
+    setPhotoPreviewUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [photoFile])
 
   const parsedValue = Number(valueInput)
   const isPercent = discountType === PosServiceDiscountType.Percent
@@ -137,6 +151,8 @@ export default function CreateEditPosPromotionModal({
     onSubmit({
       name: name.trim(),
       badgeLabel: badgeLabel.trim() || null,
+      description: description.trim() || null,
+      photo: photoFile,
       discountType,
       discountValue: parsedValue,
       daysOfWeek: days,
@@ -194,6 +210,43 @@ export default function CreateEditPosPromotionModal({
             />
           </div>
 
+          <div>
+            <label className="mb-1 block text-[11px] font-semibold text-nexoraMuted">
+              {t(`${K}.descriptionLabel`)}
+            </label>
+            <textarea
+              value={description}
+              maxLength={1000}
+              rows={2}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder={t(`${K}.descriptionPlaceholder`)}
+              className="w-full rounded-lg border border-nexoraBorder bg-white px-3 py-2 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              aria-label={t(`${K}.photoLabel`)}
+              onClick={() => fileInputRef.current?.click()}
+              className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-nexoraBorder bg-nexoraCanvas text-slate-400 hover:border-nexoraBrand hover:text-nexoraBrand"
+            >
+              {photoPreviewUrl ? (
+                <img src={photoPreviewUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <ImagePlus className="h-5 w-5" />
+              )}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
+            />
+            <span className="text-[11px] text-nexoraMuted">{t(`${K}.photoLabel`)}</span>
+          </div>
+
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-[11px] font-semibold text-nexoraMuted">{t(`${K}.typeLabel`)}</label>
@@ -218,7 +271,7 @@ export default function CreateEditPosPromotionModal({
               </div>
             </div>
             <div>
-              <label className="mb-1 block text-[11px] font-semibold text-nexoraMuted">{t(`${K}.valueLabel`)}</label>
+              <div aria-hidden className="mb-1 h-[15px]" />
               <div className="relative">
                 <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs font-medium text-nexoraMuted">
                   {isPercent ? '%' : '$'}
@@ -232,6 +285,7 @@ export default function CreateEditPosPromotionModal({
                     clearFieldError(PromotionField.Value)
                   }}
                   placeholder={isPercent ? '15' : '10'}
+                  aria-label={t(`${K}.valueLabel`)}
                   aria-invalid={Boolean(fieldErrors.value)}
                   className={`${fieldClass(PromotionField.Value)} pl-7`}
                 />

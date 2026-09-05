@@ -72,7 +72,7 @@ export default function CustomerTable({
             return (
               <tr key={customer.id} className={`border-t border-nexoraBorder/70 transition-colors ${statusStyle.row}`}>
                 <td className="px-4 py-3">
-                  <p className="font-bold text-nexoraText">{customer.name || t(p + 'unnamedCustomer')}</p>
+                  <p className="pos-customer-name font-bold text-nexoraText">{customer.name || t(p + 'unnamedCustomer')}</p>
                   <div className="mt-1 flex flex-wrap items-center gap-1.5 md:hidden">
                     <span className={`rounded-full border px-2 py-0.5 text-[10px] font-extrabold ${statusStyle.badge}`}>
                       {t(p + statusLabelKey(customer.status))}

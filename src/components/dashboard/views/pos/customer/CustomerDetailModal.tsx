@@ -144,7 +144,7 @@ export default function CustomerDetailModal({
                 </div>
               ) : (
                 <>
-                  <h2 className="mt-1 truncate text-xl font-black text-nexoraText sm:text-2xl">{customerName}</h2>
+                  <h2 className="pos-customer-name mt-1 truncate text-xl font-black text-nexoraText sm:text-2xl">{customerName}</h2>
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
                     <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-nexoraBrandDark ring-1 ring-inset ring-nexoraBrand/20">
                       {customerType}

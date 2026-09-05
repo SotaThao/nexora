@@ -17,6 +17,10 @@ html.capacitor-native {
   --app-safe-area-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
 }
 
+.pos-front-desk-action-surface .pos-customer-name {
+  text-transform: uppercase;
+}
+
 /* POS Front Desk interaction contract. Keep every actionable control visibly
    discoverable without changing its existing semantic/status color. */
 body:has(.pos-front-desk-action-surface)
@@ -1242,6 +1246,73 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
     overflow: visible !important;
   }
 
+  @page pos-staff-report {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  body.printing-pos-report-detail > #root {
+    display: none !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-backdrop {
+    position: static !important;
+    display: block !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-modal {
+    display: block !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    max-height: none !important;
+    margin: 0 auto !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    page: pos-staff-report;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-body,
+  body.printing-pos-report-detail .pos-report-detail-print {
+    display: block !important;
+    overflow: visible !important;
+    color: #000000 !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-header,
+  body.printing-pos-report-detail .pos-report-detail-print * {
+    color: #000000 !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-print .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-print table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-print th,
+  body.printing-pos-report-detail .pos-report-detail-print td {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-actions,
+  body.printing-pos-report-detail .pos-report-detail-close {
+    display: none !important;
+  }
+
   /* Reset body and html for print */
   html,
   body {
@@ -1509,5 +1580,83 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .plan-recommend-badge {
     animation: none;
+  }
+}
+
+/* Public check-in — guest phone keypad (matches the door-QR landing mockup). */
+.public-checkin-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: #060b22;
+  background-image:
+    radial-gradient(ellipse 58% 90% at 108% 42%, rgba(108, 48, 255, 0.78) 0%, rgba(62, 22, 180, 0.38) 34%, transparent 68%),
+    radial-gradient(ellipse 50% 55% at -8% 108%, rgba(30, 110, 255, 0.32) 0%, transparent 62%),
+    radial-gradient(ellipse 70% 60% at 50% 48%, rgba(12, 22, 70, 0.45) 0%, transparent 72%),
+    linear-gradient(168deg, #070e28 0%, #0a1438 42%, #080a24 100%);
+}
+
+.public-checkin-card {
+  width: 100%;
+  max-width: 380px;
+  border-radius: 28px;
+  padding: 2.25rem 1.6rem 1.5rem;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(14, 22, 68, 0.62) 0%, rgba(8, 12, 40, 0.78) 100%);
+  border: 1px solid rgba(90, 200, 255, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(70, 170, 255, 0.28),
+    0 0 24px rgba(40, 160, 255, 0.5),
+    0 0 72px rgba(50, 90, 255, 0.28),
+    0 28px 80px rgba(2, 4, 24, 0.55),
+    inset 0 1px 0 rgba(170, 230, 255, 0.38),
+    inset 0 0 48px rgba(30, 70, 180, 0.18);
+  backdrop-filter: blur(24px);
+}
+
+.public-checkin-key {
+  display: flex;
+  height: 3.5rem;
+  align-items: center;
+  justify-content: center;
+  appearance: none;
+  border: 0;
+  border-radius: 18px;
+  background:
+    radial-gradient(130% 90% at 50% -10%, rgba(96, 128, 255, 0.42) 0%, rgba(28, 24, 90, 0) 55%),
+    linear-gradient(180deg, #2a2874 0%, #171454 50%, #100e3c 100%);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #fff;
+  box-shadow:
+    0 0 0 1px rgba(110, 165, 255, 0.32),
+    0 5px 14px rgba(4, 2, 28, 0.5),
+    0 0 16px rgba(70, 120, 255, 0.2),
+    inset 0 1px 0 rgba(200, 220, 255, 0.3),
+    inset 0 -12px 20px rgba(6, 4, 32, 0.5);
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: filter 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+.public-checkin-key:hover {
+  filter: brightness(1.12);
+  box-shadow:
+    0 0 0 1px rgba(140, 190, 255, 0.45),
+    0 5px 16px rgba(4, 2, 28, 0.5),
+    0 0 22px rgba(90, 140, 255, 0.3),
+    inset 0 1px 0 rgba(210, 225, 255, 0.38),
+    inset 0 -12px 20px rgba(6, 4, 32, 0.42);
+}
+
+.public-checkin-key:active {
+  transform: scale(0.97);
+  filter: brightness(0.94);
+}
+
+@media (min-width: 640px) {
+  .public-checkin-key {
+    height: 4rem;
   }
 }

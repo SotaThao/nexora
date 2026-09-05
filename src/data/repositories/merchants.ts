@@ -30,6 +30,7 @@ export function mapBusinessApiDtoToSetup(res: BusinessApiDto): MerchantSetup {
       country: res.country || '',
       phone: res.phone || '',
       website: res.website || '',
+      timeZone: res.timeZone?.trim() || null,
       logo: res.logoUrl || null,
       bookingNotificationPhone: res.bookingNotificationPhone || '',
       salesTaxRatePercent: res.salesTaxRatePercent,
