@@ -8,9 +8,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import { useSessionRole } from '../../auth/useSessionRole'
 import staffWorkOrdersRepository, {
+  type StaffBookingCalendar,
+  type StaffWorkOrderCatalogItem,
   type StaffWorkOrderDetail,
   type StaffWorkOrderListItem,
 } from '../repositories/staffWorkOrders'
+import type { SaveStaffWorkOrderServiceLinesPayload } from '../../types/repositories'
 import type { PosOrderStatus } from '../../constants/posOrderStatus'
 
 const ALL_STATUS_FILTER_KEY = 'all'
@@ -36,7 +39,21 @@ export function useStaffWorkOrders(
     }),
     enabled: canLoad,
     retry: false,
-    placeholderData: (previous) => previous,
+  })
+}
+
+// "My Calendar" — one day of the technician's own appointments at one salon.
+export function useStaffBookingCalendar(businessId: string | undefined, date: string) {
+  const { isStaff } = useSessionRole()
+
+  return useQuery<StaffBookingCalendar>({
+    queryKey: qk.staffBookingCalendar(businessId, date),
+    queryFn: () => staffWorkOrdersRepository.getBookingCalendar({
+      businessId: businessId ?? '',
+      date,
+    }),
+    enabled: isStaff && Boolean(businessId) && Boolean(date),
+    retry: false,
   })
 }
 
@@ -49,6 +66,31 @@ export function useStaffWorkOrderDetail(orderId: string | undefined) {
     queryFn: () => staffWorkOrdersRepository.getWorkOrderDetail(orderId ?? ''),
     enabled: canLoad,
     retry: false,
+  })
+}
+
+export function useStaffWorkOrderServiceCatalog(orderId: string | undefined) {
+  const { isStaff } = useSessionRole()
+
+  return useQuery<StaffWorkOrderCatalogItem[]>({
+    queryKey: qk.staffWorkOrderServiceCatalog(orderId),
+    queryFn: () => staffWorkOrdersRepository.getMyServiceCatalog(orderId ?? ''),
+    enabled: isStaff && Boolean(orderId),
+    retry: false,
+  })
+}
+
+// Returns the saved ticket so the screen can re-seed from it instead of rendering the basket it
+// just sent — the server is the one that resolved prices, ids and line statuses.
+export function useSaveMyWorkOrderServiceLines(orderId: string | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: SaveStaffWorkOrderServiceLinesPayload) =>
+      staffWorkOrdersRepository.saveMyServiceLines(orderId ?? '', payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: qk.staffWorkOrdersRoot() })
+    },
   })
 }
 

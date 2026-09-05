@@ -47,9 +47,12 @@ export default function WorkOrderCompleteServiceModal({
     : undefined
   const cardStyle = viewport ? { maxHeight: '100%' } : undefined
 
+  const completionNote = composeWorkOrderCompletionNote(selectedSuggestions, additionalNote)
+  const canConfirm = completionNote !== null && !isPending
+
   const handleConfirm = () => {
-    if (isPending) return
-    onConfirm(composeWorkOrderCompletionNote(selectedSuggestions, additionalNote))
+    if (!canConfirm) return
+    onConfirm(completionNote)
   }
 
   return (
@@ -149,7 +152,7 @@ export default function WorkOrderCompleteServiceModal({
           <button
             type="button"
             className={WORK_ORDERS_LAYOUT_CLASS.modalConfirm}
-            disabled={isPending}
+            disabled={!canConfirm}
             onClick={handleConfirm}
           >
             <span className={WORK_ORDERS_LAYOUT_CLASS.modalConfirmIcon}>

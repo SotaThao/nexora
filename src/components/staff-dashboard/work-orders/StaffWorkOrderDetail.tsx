@@ -1,63 +1,121 @@
-import { useRef, useState, type ReactNode } from 'react'
+import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { qk } from '../../../data/queryKeys'
-import { Check, ChevronLeft, LayoutGrid, Play, Radio } from 'lucide-react'
+import { BadgeCheck, Check, CheckCircle2, ChevronLeft, LayoutGrid, NotebookPen, Play, Radio } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { getErrorI18nKey } from '../../../data/errorCodes'
+import { getErrorI18nKey, getErrorMessage } from '../../../data/errorCodes'
 import {
   useCompleteStaffWorkOrderService,
+  useSaveMyWorkOrderServiceLines,
   useStaffWorkOrderDetail,
+  useStaffWorkOrderServiceCatalog,
   useStartStaffWorkOrderService,
 } from '../../../data/hooks/useStaffWorkOrders'
 import { getApiErrorCode } from '../../../types/domain'
+import { PosOrderStatus } from '../../../constants/posOrderStatus'
+import { PosOrderItemStatus } from '../../../constants/posOrderItemStatus'
 import {
+  WORK_ORDER_EMPTY_PLACEHOLDER,
   WORK_ORDER_STATUS_BADGE_VARIANT,
   WORK_ORDER_STATUS_I18N,
+  WORK_ORDER_TOAST_TYPE,
   WORK_ORDERS_I18N,
   WORK_ORDERS_LAYOUT_CLASS,
   workOrderStatusClass,
   type WorkOrderDetail,
-  type WorkOrderItem,
 } from './constants'
 import WorkOrderCompleteServiceModal from './WorkOrderCompleteServiceModal'
+import WorkOrderCustomServiceModal from './WorkOrderCustomServiceModal'
+import WorkOrderCustomerApproval from './WorkOrderCustomerApproval'
 import WorkOrderServiceLines, {
   type LineStatusActionKind,
   type WorkOrderLineActions,
 } from './WorkOrderServiceLines'
+import WorkOrderServicePickerModal from './WorkOrderServicePickerModal'
 import { WorkOrderErrorCard } from './WorkOrderQueryFeedback'
 import { WorkOrderDetailSkeleton } from './WorkOrderSkeletons'
+import {
+  WORK_ORDER_PICKER_MODE,
+  WORK_ORDER_SERVICE_APPROVAL,
+  buildWorkOrderCatalogCategories,
+  addWorkOrderCatalogService,
+  addWorkOrderCustomService,
+  applyWorkOrderAssignedLinesStarted,
+  applyWorkOrderLineStatus,
+  applyWorkOrderStartedLinesCompleted,
+  canEditWorkOrderServices,
+  removeWorkOrderServiceLine,
+  replaceWorkOrderCatalogService,
+  toSaveWorkOrderServiceLinesPayload,
+  toWorkOrderEditableLines,
+  workOrderEditableServiceTotal,
+  WORK_ORDER_TICKET_FOOTER_ACTION,
+  workOrderTicketFooterAction,
+  workOrderPendingServiceLines,
+  workOrderRemovedServiceLines,
+  type WorkOrderCatalogService,
+  type WorkOrderEditableLine,
+  type WorkOrderPickerMode,
+} from './workOrderServiceCatalog'
 import {
   canStartWorkOrderNow,
   formatWorkOrderNumber,
   formatWorkOrderStationValue,
+  isWorkOrderCompletedStatus,
+  workOrderBeeperChipText,
+  workOrderCompletionNoteText,
   workOrderCustomerInitials,
   workOrderTextOrPlaceholder,
 } from './workOrderTickets'
-import type { PosOrderStatus } from '../../../constants/posOrderStatus'
 import {
   useAcceptServiceLine,
   useMarkServiceLineDone,
   useRejectServiceLine,
   useStartServiceLine,
 } from '../../../data/hooks/usePosOrders'
-import { formatLocalDateIso } from '../../../utils/localDate'
+import { formatDateIsoInTimeZone } from '../../../utils/localDate'
 
 interface StaffWorkOrderDetailProps {
   orderId: string
+  /** Salon IANA zone — the appointment day is the salon's calendar day, not the device's. */
+  timeZone?: string | null
   onBack: () => void
 }
 
 const LINE_STATUS_I18N = 'components.dashboard.views.pos.serviceLineStatus'
 
-export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrderDetailProps) {
+function lineStatusAfterAction(kind: LineStatusActionKind): PosOrderItemStatus {
+  if (kind === 'accept') return PosOrderItemStatus.Assigned
+  if (kind === 'start') return PosOrderItemStatus.Started
+  if (kind === 'complete') return PosOrderItemStatus.Completed
+  return PosOrderItemStatus.Unassigned
+}
+
+export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: StaffWorkOrderDetailProps) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const detailQuery = useStaffWorkOrderDetail(orderId)
   const startService = useStartStaffWorkOrderService(orderId)
   const completeService = useCompleteStaffWorkOrderService(orderId)
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false)
+  const [lines, setLines] = useState<WorkOrderEditableLine[]>([])
+  const [seededOrderId, setSeededOrderId] = useState('')
+  const [seededStamp, setSeededStamp] = useState('')
+  const [picker, setPicker] = useState<{ mode: WorkOrderPickerMode; lineKey?: string } | null>(null)
+  const [isCustomOpen, setIsCustomOpen] = useState(false)
+  const [approvalError, setApprovalError] = useState<string | null>(null)
+  const [completedSession, setCompletedSession] = useState<{ orderId: string; note: string | null } | null>(null)
   const ticket = detailQuery.data ?? null
+  const saveServiceLines = useSaveMyWorkOrderServiceLines(orderId)
+  const catalogQuery = useStaffWorkOrderServiceCatalog(picker ? orderId : undefined)
+  const catalogCategories = useMemo(
+    () => buildWorkOrderCatalogCategories(
+      catalogQuery.data ?? [],
+      t(WORK_ORDERS_I18N.pickerUncategorized),
+    ),
+    [catalogQuery.data, t],
+  )
 
   // Line-level actions live on the merchant endpoints: the same handler serves the front desk and
   // the technician, and decides which of the two is calling. Hence businessId from the ticket.
@@ -67,7 +125,7 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
   const startLine = useStartServiceLine(businessId)
   const completeLine = useMarkServiceLineDone(businessId)
   const queryClient = useQueryClient()
-  const [declineTarget, setDeclineTarget] = useState<WorkOrderItem | null>(null)
+  const [declineTarget, setDeclineTarget] = useState<WorkOrderEditableLine | null>(null)
 
   // Which line's button is mid-flight, so the spinner stays on that button instead of putting the
   // whole ticket into a pending state. The ref covers the gap before React re-renders.
@@ -76,7 +134,8 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
   const lineActionLockRef = useRef(false)
 
   const isMutating =
-    startService.isPending
+    saveServiceLines.isPending
+    || startService.isPending
     || completeService.isPending
     || acceptLine.isPending
     || rejectLine.isPending
@@ -85,16 +144,44 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
 
   if (detailQuery.isPending) return <WorkOrderDetailSkeleton />
 
+  const ticketStamp = ticket
+    ? `${ticket.status}:${ticket.items.map((item) => `${item.id}:${item.lineStatus}`).join(',')}`
+    : ''
+  const hasPendingLineEdits = lines.some((line) => (
+    Boolean(line.pendingRemoval) || line.approval === WORK_ORDER_SERVICE_APPROVAL.pending
+  ))
+
+  if (ticket && seededOrderId !== ticket.id) {
+    setSeededOrderId(ticket.id)
+    setSeededStamp(ticketStamp)
+    setLines(toWorkOrderEditableLines(ticket.items))
+    setApprovalError(null)
+  } else if (ticket && seededStamp !== ticketStamp && !hasPendingLineEdits) {
+    // After ticket/line start-complete, refetch must redraw badges even when the order id is unchanged.
+    setSeededStamp(ticketStamp)
+    setLines(toWorkOrderEditableLines(ticket.items))
+  }
+
+  const displayStatus = ticket?.status
+  const localCompletionNote = completedSession?.orderId === orderId
+    ? completedSession.note
+    : null
+
+  const refreshWorkOrder = async () => {
+    await queryClient.invalidateQueries({ queryKey: qk.staffWorkOrdersRoot() })
+    await queryClient.invalidateQueries({ queryKey: qk.staffPosPendingAcceptanceCount() })
+  }
+
   const runAction = async (
     mutate: () => Promise<unknown>,
     successKey: string,
   ) => {
     try {
       await mutate()
-      showToast(t(successKey), 'success')
+      showToast(t(successKey), WORK_ORDER_TOAST_TYPE.success)
       return true
     } catch (err) {
-      showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
+      showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), WORK_ORDER_TOAST_TYPE.error)
       return false
     }
   }
@@ -104,7 +191,7 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
   // spinner, and failures still raise a toast.
   const runLineAction = (
     mutation: { mutateAsync: (vars: { orderId: string; serviceLineId: string }) => Promise<unknown> },
-    line: WorkOrderItem,
+    line: WorkOrderEditableLine,
     kind: LineStatusActionKind,
   ) => {
     if (!line.id) return
@@ -116,12 +203,16 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
 
     void mutation
       .mutateAsync({ orderId, serviceLineId })
-      .then(() => {
+      .then(async () => {
+        setLines((current) => applyWorkOrderLineStatus(
+          current,
+          serviceLineId,
+          lineStatusAfterAction(kind),
+        ))
         // The line-action hooks live on the merchant side and only invalidate merchant keys, so
         // without this the technician's own screen keeps showing the status they just changed.
         // The badge in the shell is derived from the same change, hence the count key too.
-        void queryClient.invalidateQueries({ queryKey: qk.staffWorkOrdersRoot() })
-        void queryClient.invalidateQueries({ queryKey: qk.staffPosPendingAcceptanceCount() })
+        await refreshWorkOrder()
       })
       .catch((err) => {
         showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
@@ -132,12 +223,76 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
       })
   }
 
+  // One request for the whole basket, with the customer's digits attached: the server decides
+  // whether they match, and answers with the ticket as it now stands.
+  const handleApproveChanges = (customerPhoneLast4: string) => {
+    setApprovalError(null)
+    saveServiceLines.mutate(
+      { customerPhoneLast4, lines: toSaveWorkOrderServiceLinesPayload(lines) },
+      {
+        // Silent on success, like the line-status actions: the ticket redraws from the saved
+        // response, so a popup would only add a dismiss step between the technician and the chair.
+        onSuccess: (saved) => {
+          if (saved) setLines(toWorkOrderEditableLines(saved.items))
+        },
+        onError: (err) => setApprovalError(getErrorMessage(err, t)),
+      },
+    )
+  }
+
+  const handleDiscardChanges = () => {
+    setLines(ticket ? toWorkOrderEditableLines(ticket.items) : [])
+    setApprovalError(null)
+  }
+  
+  const handleStartTicket = async () => {
+    const succeeded = await runAction(
+      () => startService.mutateAsync(),
+      WORK_ORDERS_I18N.startServiceSuccess,
+    )
+    if (!succeeded) return
+    setLines((current) => applyWorkOrderAssignedLinesStarted(current))
+    await refreshWorkOrder()
+  }
+
   const handleConfirmCompletion = async (note: string | null) => {
     const succeeded = await runAction(
       () => completeService.mutateAsync(note),
       WORK_ORDERS_I18N.completeServiceSuccess,
     )
-    if (succeeded) setIsCompleteModalOpen(false)
+    if (!succeeded) return
+    const nextLines = applyWorkOrderStartedLinesCompleted(lines)
+    setLines(nextLines)
+    setCompletedSession({ orderId, note })
+    setIsCompleteModalOpen(false)
+    const ticketFullyDone = nextLines
+      .filter((line) => !line.isAddOn)
+      .every((line) => line.lineStatus === PosOrderItemStatus.Completed)
+    // Keep the open detail in sync before/while the list+detail refetch lands.
+    queryClient.setQueryData(
+      qk.staffWorkOrderDetail(orderId),
+      (current: WorkOrderDetail | null | undefined) => (
+        current
+          ? {
+              ...current,
+              status: ticketFullyDone ? PosOrderStatus.Completed : current.status,
+              canStartService: false,
+              canCompleteService: false,
+              completionNote: note ?? current.completionNote,
+              items: current.items.map((item) => (
+                item.isAddOn || item.isMine === false || item.lineStatus !== PosOrderItemStatus.Started
+                  ? item
+                  : {
+                      ...item,
+                      lineStatus: PosOrderItemStatus.Completed,
+                      completedAt: item.completedAt ?? new Date().toISOString(),
+                    }
+              )),
+            }
+          : current
+      ),
+    )
+    await refreshWorkOrder()
   }
 
   return (
@@ -145,17 +300,32 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
       <WorkOrderDetailHeader
         onBack={onBack}
         orderNumber={ticket?.orderNumber}
-        status={ticket?.status}
+        status={displayStatus}
       />
       <WorkOrderDetailBody
         isError={detailQuery.isError}
         errorMessage={detailQuery.isError ? t(getErrorI18nKey(getApiErrorCode(detailQuery.error))) : undefined}
         ticket={ticket}
+        timeZone={timeZone}
+        displayStatus={displayStatus}
+        localCompletionNote={localCompletionNote}
+        lines={lines}
         isMutating={isMutating}
         onRetry={() => void detailQuery.refetch()}
         onBack={onBack}
-        onStart={() => void runAction(() => startService.mutateAsync(), WORK_ORDERS_I18N.startServiceSuccess)}
+        onStart={() => void handleStartTicket()}
         onComplete={() => setIsCompleteModalOpen(true)}
+        onAddService={() => setPicker({ mode: WORK_ORDER_PICKER_MODE.add })}
+        onAddCustomService={() => setIsCustomOpen(true)}
+        onChangeService={(key) => setPicker({ mode: WORK_ORDER_PICKER_MODE.edit, lineKey: key })}
+        onRemoveService={(key) => {
+          setLines((current) => removeWorkOrderServiceLine(current, key))
+          setApprovalError(null)
+        }}
+        isSaving={saveServiceLines.isPending}
+        approvalError={approvalError}
+        onApprovePending={handleApproveChanges}
+        onCancelPending={handleDiscardChanges}
         lineActions={{
           onAccept: (line) => runLineAction(acceptLine, line, 'accept'),
           onDecline: (line) => setDeclineTarget(line),
@@ -213,6 +383,38 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
           }}
         />
       ) : null}
+      {picker ? (
+        <WorkOrderServicePickerModal
+          mode={picker.mode}
+          categories={catalogCategories}
+          isLoading={catalogQuery.isPending}
+          initialServiceId={
+            picker.lineKey
+              ? lines.find((line) => line.key === picker.lineKey)?.posServiceId ?? ''
+              : ''
+          }
+          onConfirm={(service: WorkOrderCatalogService) => {
+            setApprovalError(null)
+            setLines((current) => (
+              picker.mode === WORK_ORDER_PICKER_MODE.edit && picker.lineKey
+                ? replaceWorkOrderCatalogService(current, picker.lineKey, service)
+                : addWorkOrderCatalogService(current, service)
+            ))
+            setPicker(null)
+          }}
+          onClose={() => setPicker(null)}
+        />
+      ) : null}
+      {isCustomOpen ? (
+        <WorkOrderCustomServiceModal
+          onConfirm={(input) => {
+            setApprovalError(null)
+            setLines((current) => addWorkOrderCustomService(current, input))
+            setIsCustomOpen(false)
+          }}
+          onClose={() => setIsCustomOpen(false)}
+        />
+      ) : null}
     </div>
   )
 }
@@ -221,21 +423,45 @@ function WorkOrderDetailBody({
   isError,
   errorMessage,
   ticket,
+  timeZone,
+  displayStatus,
+  localCompletionNote,
+  lines,
   isMutating,
   onRetry,
   onBack,
   onStart,
   onComplete,
+  onAddService,
+  onAddCustomService,
+  onChangeService,
+  onRemoveService,
+  isSaving,
+  approvalError,
+  onApprovePending,
+  onCancelPending,
   lineActions,
 }: {
   isError: boolean
   errorMessage?: string
   ticket: WorkOrderDetail | null
+  timeZone?: string | null
+  displayStatus?: PosOrderStatus
+  localCompletionNote?: string | null
+  lines: WorkOrderEditableLine[]
   isMutating: boolean
   onRetry: () => void
   onBack: () => void
   onStart: () => void
   onComplete: () => void
+  onAddService: () => void
+  onAddCustomService: () => void
+  onChangeService: (key: string) => void
+  onRemoveService: (key: string) => void
+  isSaving: boolean
+  approvalError: string | null
+  onApprovePending: (customerPhoneLast4: string) => void
+  onCancelPending: () => void
   lineActions: WorkOrderLineActions
 }) {
   const { t } = useTranslation()
@@ -273,10 +499,65 @@ function WorkOrderDetailBody({
     )
   }
 
-  const todayIso = formatLocalDateIso(new Date())
+  const todayIso = formatDateIsoInTimeZone(new Date(), timeZone)
+  const status = displayStatus ?? ticket.status
+  const isCompleted = isWorkOrderCompletedStatus(status)
+  const canEdit = canEditWorkOrderServices(status)
+  const pendingServices = workOrderPendingServiceLines(lines)
+  const removedLines = workOrderRemovedServiceLines(lines)
+  const customerNotes = ticket.customerNotes?.trim() ?? ''
+  const notesCard = customerNotes ? (
+    <aside className={WORK_ORDERS_LAYOUT_CLASS.notesCard}>
+      <NotebookPen className={WORK_ORDERS_LAYOUT_CLASS.notesIcon} aria-hidden="true" />
+      <span>
+        <span className={WORK_ORDERS_LAYOUT_CLASS.notesKicker}>{t(WORK_ORDERS_I18N.notesImportant)}</span>
+        <strong className={WORK_ORDERS_LAYOUT_CLASS.notesTitle}>{t(WORK_ORDERS_I18N.customerNotes)}</strong>
+        {customerNotes}
+      </span>
+    </aside>
+  ) : null
+  const completedNotes = isCompleted ? (
+    <aside className={WORK_ORDERS_LAYOUT_CLASS.completedNote}>
+      <strong className={WORK_ORDERS_LAYOUT_CLASS.completedNoteTitle}>
+        <BadgeCheck className={WORK_ORDERS_LAYOUT_CLASS.completedNoteIcon} aria-hidden="true" />
+        {t(WORK_ORDERS_I18N.completedNotesTitle)}
+      </strong>
+      <p className={WORK_ORDERS_LAYOUT_CLASS.completedNoteBody}>
+        {workOrderCompletionNoteText(
+          ticket,
+          t(WORK_ORDERS_I18N.completedNotesFallback),
+          localCompletionNote,
+        )}
+      </p>
+    </aside>
+  ) : null
+  const footerAction = isCompleted ? null : workOrderTicketFooterAction(lines)
+  const showStart = footerAction === WORK_ORDER_TICKET_FOOTER_ACTION.start
+  const showComplete = footerAction === WORK_ORDER_TICKET_FOOTER_ACTION.complete
+  const actions = (
+    <div className={WORK_ORDERS_LAYOUT_CLASS.detailActions}>
+      {showStart ? (
+        <WorkOrderPrimaryAction
+          disabled={isMutating || !canStartWorkOrderNow(ticket, todayIso)}
+          onClick={onStart}
+          icon={<Play className={`${WORK_ORDERS_LAYOUT_CLASS.iconSm} ${WORK_ORDERS_LAYOUT_CLASS.iconFill}`} aria-hidden="true" />}
+          label={t(WORK_ORDERS_I18N.startService)}
+        />
+      ) : null}
+      {showComplete ? (
+        <WorkOrderPrimaryAction
+          disabled={isMutating}
+          onClick={onComplete}
+          icon={<CheckCircle2 className={WORK_ORDERS_LAYOUT_CLASS.primaryActionGlyph} aria-hidden="true" />}
+          label={t(WORK_ORDERS_I18N.completeService)}
+        />
+      ) : null}
+    </div>
+  )
 
   return (
     <>
+      <div className={WORK_ORDERS_LAYOUT_CLASS.detailBody}>
       <div className={WORK_ORDERS_LAYOUT_CLASS.customerCard}>
         <div className={WORK_ORDERS_LAYOUT_CLASS.customerRow}>
           <span className={WORK_ORDERS_LAYOUT_CLASS.avatar}>
@@ -300,7 +581,10 @@ function WorkOrderDetailBody({
               </span>
               <span className={WORK_ORDERS_LAYOUT_CLASS.metaChip}>
                 <Radio className={WORK_ORDERS_LAYOUT_CLASS.ticketMetaIcon} aria-hidden="true" />
-                <span>{t(WORK_ORDERS_I18N.beeper, { code: workOrderTextOrPlaceholder(ticket.beeper) })}</span>
+                <span>{workOrderBeeperChipText(ticket.beeper, t)}</span>
+              </span>
+              <span className={WORK_ORDERS_LAYOUT_CLASS.customerPhone}>
+                {WORK_ORDER_EMPTY_PLACEHOLDER}
               </span>
             </span>
           </div>
@@ -308,40 +592,30 @@ function WorkOrderDetailBody({
       </div>
 
       <WorkOrderServiceLines
-        items={ticket.items}
-        serviceTotal={ticket.serviceTotal}
+        items={lines}
+        serviceTotal={workOrderEditableServiceTotal(lines)}
+        canEdit={canEdit}
+        onAddService={onAddService}
+        onAddCustomService={onAddCustomService}
+        onChangeService={onChangeService}
+        onRemoveService={onRemoveService}
         actions={lineActions}
       />
 
-      {ticket.customerNotes ? (
-        <aside className={WORK_ORDERS_LAYOUT_CLASS.notesCard}>
-          <p className={WORK_ORDERS_LAYOUT_CLASS.notesKicker}>{t(WORK_ORDERS_I18N.notesImportant)}</p>
-          <p className={WORK_ORDERS_LAYOUT_CLASS.notesTitle}>{t(WORK_ORDERS_I18N.customerNotes)}</p>
-          <p className={WORK_ORDERS_LAYOUT_CLASS.notesBody}>{ticket.customerNotes}</p>
-        </aside>
-      ) : null}
-
-      {ticket.canStartService ? (
-        <WorkOrderPrimaryAction
-          disabled={isMutating || !canStartWorkOrderNow(ticket, todayIso)}
-          onClick={onStart}
-          icon={<Play className={`${WORK_ORDERS_LAYOUT_CLASS.iconSm} ${WORK_ORDERS_LAYOUT_CLASS.iconFill}`} aria-hidden="true" />}
-          label={t(WORK_ORDERS_I18N.startService)}
+      {!isCompleted && (pendingServices.length > 0 || removedLines.length > 0) ? (
+        <WorkOrderCustomerApproval
+          services={pendingServices}
+          removedServices={removedLines}
+          isSaving={isSaving}
+          errorMessage={approvalError}
+          onApprove={onApprovePending}
+          onCancel={onCancelPending}
         />
       ) : null}
 
-      {ticket.canCompleteService ? (
-        <WorkOrderPrimaryAction
-          disabled={isMutating}
-          onClick={onComplete}
-          icon={(
-            <span className={WORK_ORDERS_LAYOUT_CLASS.primaryActionIcon}>
-              <Check className={WORK_ORDERS_LAYOUT_CLASS.iconSm} aria-hidden="true" />
-            </span>
-          )}
-          label={t(WORK_ORDERS_I18N.completeService)}
-        />
-      ) : null}
+      {isCompleted ? completedNotes : actions}
+      {notesCard}
+      </div>
     </>
   )
 }
@@ -383,21 +657,23 @@ function WorkOrderDetailHeader({
 
   return (
     <div className={WORK_ORDERS_LAYOUT_CLASS.detailHeader}>
-      <button
-        type="button"
-        className={WORK_ORDERS_LAYOUT_CLASS.detailBack}
-        aria-label={t(WORK_ORDERS_I18N.back)}
-        onClick={onBack}
-      >
-        <ChevronLeft className={WORK_ORDERS_LAYOUT_CLASS.iconMd} aria-hidden="true" />
-      </button>
-      <div className={WORK_ORDERS_LAYOUT_CLASS.detailTitleWrap}>
-        <h2 className={WORK_ORDERS_LAYOUT_CLASS.detailTitle}>
-          {t(WORK_ORDERS_I18N.detailTitle)}
-        </h2>
-        <p className={WORK_ORDERS_LAYOUT_CLASS.detailCode}>
-          {formatWorkOrderNumber(orderNumber)}
-        </p>
+      <div className={WORK_ORDERS_LAYOUT_CLASS.detailHeadMain}>
+        <button
+          type="button"
+          className={WORK_ORDERS_LAYOUT_CLASS.detailBack}
+          aria-label={t(WORK_ORDERS_I18N.back)}
+          onClick={onBack}
+        >
+          <ChevronLeft className={WORK_ORDERS_LAYOUT_CLASS.detailBackIcon} aria-hidden="true" />
+        </button>
+        <div className={WORK_ORDERS_LAYOUT_CLASS.detailTitleWrap}>
+          <h2 className={WORK_ORDERS_LAYOUT_CLASS.detailTitle}>
+            {t(WORK_ORDERS_I18N.detailTitle)}
+          </h2>
+          <p className={WORK_ORDERS_LAYOUT_CLASS.detailCode}>
+            {formatWorkOrderNumber(orderNumber)}
+          </p>
+        </div>
       </div>
       {status ? (
         <span className={workOrderStatusClass(status, WORK_ORDER_STATUS_BADGE_VARIANT.detail)}>

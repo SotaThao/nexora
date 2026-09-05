@@ -8,6 +8,11 @@ import httpClient from '../../lib/httpClient'
 import { PosOrderStatus } from '../../constants/posOrderStatus'
 import type {
   CompleteStaffWorkOrderServicePayload,
+  StaffBookingCalendarApiDto,
+  StaffBookingCalendarItemApiDto,
+  StaffBookingCalendarQuery,
+  SaveStaffWorkOrderServiceLinesPayload,
+  StaffWorkOrderCatalogItemApiDto,
   StaffWorkOrderDetailApiDto,
   StaffWorkOrderItemApiDto,
   StaffWorkOrderListItemApiDto,
@@ -16,8 +21,18 @@ import type {
 
 type HttpClient = typeof httpClient
 
+export type StaffWorkOrderCatalogItem = {
+  id: string
+  name: string
+  price: number
+  durationMinutes: number
+  categories: { id: string; name: string }[]
+}
+
 export type StaffWorkOrderItem = {
   id: string
+  /** Null on a custom (off-menu) line — the editor sends name and price back instead. */
+  posServiceId: string | null
   serviceName: string
   unitPrice: number
   lineTotal: number
@@ -46,6 +61,26 @@ export type StaffWorkOrderListItem = {
   beeper: string | null
 }
 
+/** One appointment on "My Calendar" — figures already narrowed to the caller's own lines. */
+export type StaffBookingCalendarItem = {
+  id: string
+  orderNumber: string
+  customerName: string
+  status: PosOrderStatus
+  lineStatus: string
+  /** Carries the salon's UTC offset; parse the offset, do not shift to browser local. */
+  scheduledAt: string
+  serviceNames: string[]
+  durationMinutes: number
+}
+
+export type StaffBookingCalendar = {
+  date: string
+  appointmentCount: number
+  totalDurationMinutes: number
+  items: StaffBookingCalendarItem[]
+}
+
 export type StaffWorkOrderDetail = {
   id: string
   /** Line-level actions are addressed per business, so the screen needs it. */
@@ -58,6 +93,7 @@ export type StaffWorkOrderDetail = {
   stationNumber: number | null
   beeper: string | null
   customerNotes: string | null
+  completionNote: string | null
   serviceTotal: number
   canStartService: boolean
   canCompleteService: boolean
@@ -70,7 +106,11 @@ const STAFF_WORK_ORDER_ACTION = {
   completeService: 'complete-service',
 } as const
 
+const STAFF_WORK_ORDER_SERVICE_CATALOG = 'service-catalog'
+const STAFF_WORK_ORDER_MY_SERVICE_LINES = 'my-service-lines'
+
 const PENDING_ACCEPTANCE_COUNT_PATH = `${STAFF_WORK_ORDERS_API_PATH}/pending-acceptance-count`
+const BOOKING_CALENDAR_PATH = `${STAFF_WORK_ORDERS_API_PATH}/calendar`
 
 const LIST_QUERY_PARAM = {
   businessId: 'businessId',
@@ -144,6 +184,7 @@ function normalizeListItem(dto: StaffWorkOrderListItemApiDto): StaffWorkOrderLis
 function normalizeItem(dto: StaffWorkOrderItemApiDto): StaffWorkOrderItem {
   return {
     id: readText(dto, 'id', 'Id'),
+    posServiceId: readOptionalText(dto, 'posServiceId', 'PosServiceId'),
     serviceName: readText(dto, 'serviceName', 'ServiceName'),
     unitPrice: readNumber(dto, 'unitPrice', 'UnitPrice'),
     lineTotal: readNumber(dto, 'lineTotal', 'LineTotal'),
@@ -174,10 +215,31 @@ function normalizeDetail(dto: StaffWorkOrderDetailApiDto | null): StaffWorkOrder
     stationNumber: readOptionalNumber(dto, 'stationNumber', 'StationNumber'),
     beeper: readOptionalText(dto, 'beeper', 'Beeper'),
     customerNotes: readOptionalText(dto, 'customerNotes', 'CustomerNotes'),
+    completionNote:
+      readOptionalText(dto, 'completionNote', 'CompletionNote')
+      ?? readOptionalText(dto, 'completeNote', 'CompleteNote'),
     serviceTotal: readNumber(dto, 'serviceTotal', 'ServiceTotal'),
     canStartService: readFlag(dto, 'canStartService', 'CanStartService'),
     canCompleteService: readFlag(dto, 'canCompleteService', 'CanCompleteService'),
     items: Array.isArray(items) ? items.map(normalizeItem) : [],
+  }
+}
+
+function normalizeCatalogItem(dto: StaffWorkOrderCatalogItemApiDto): StaffWorkOrderCatalogItem | null {
+  const id = readText(dto, 'id', 'Id')
+  if (!id) return null
+  const categories = readValue<{ id?: string; name?: string }[]>(dto, 'categories', 'Categories') ?? []
+  return {
+    id,
+    name: readText(dto, 'name', 'Name'),
+    price: readNumber(dto, 'price', 'Price'),
+    durationMinutes: readNumber(dto, 'durationMinutes', 'DurationMinutes'),
+    categories: (Array.isArray(categories) ? categories : [])
+      .map((category) => ({
+        id: readText(category, 'id', 'Id'),
+        name: readText(category, 'name', 'Name'),
+      }))
+      .filter((category) => Boolean(category.id)),
   }
 }
 
@@ -190,6 +252,43 @@ function buildListParams(query: StaffWorkOrdersListQuery): Record<string, string
     params[LIST_QUERY_PARAM.status] = query.status
   }
   return params
+}
+
+function normalizeCalendarItem(
+  dto: StaffBookingCalendarItemApiDto,
+): StaffBookingCalendarItem | null {
+  const id = readText(dto, 'id', 'Id')
+  const scheduledAt = readText(dto, 'scheduledAt', 'ScheduledAt')
+  // A calendar row without a schedule cannot be placed on the day — drop it rather than
+  // render it at an invented time.
+  if (!id || !scheduledAt) return null
+  return {
+    id,
+    orderNumber: readText(dto, 'orderNumber', 'OrderNumber'),
+    customerName: readText(dto, 'customerName', 'CustomerName'),
+    status: toPosOrderStatus(readText(dto, 'status', 'Status')),
+    lineStatus: readText(dto, 'myLineStatus', 'MyLineStatus'),
+    scheduledAt,
+    serviceNames: readTextList(dto, 'myServiceNames', 'MyServiceNames'),
+    durationMinutes: readNumber(dto, 'myDurationMinutes', 'MyDurationMinutes'),
+  }
+}
+
+function normalizeCalendar(
+  dto: StaffBookingCalendarApiDto | null,
+  fallbackDate: string,
+): StaffBookingCalendar {
+  const rawItems = readValue<StaffBookingCalendarItemApiDto[]>(dto ?? {}, 'items', 'Items') ?? []
+  const items = (Array.isArray(rawItems) ? rawItems : [])
+    .map(normalizeCalendarItem)
+    .filter((item): item is StaffBookingCalendarItem => item != null)
+  return {
+    date: readText(dto ?? {}, 'date', 'Date') || fallbackDate,
+    // Recount locally: a row dropped above must not leave the header claiming it.
+    appointmentCount: items.length,
+    totalDurationMinutes: items.reduce((sum, item) => sum + item.durationMinutes, 0),
+    items,
+  }
 }
 
 function workOrderDetailPath(orderId: string): string {
@@ -209,6 +308,17 @@ function createStaffWorkOrdersRepository(client: HttpClient = httpClient) {
         .filter((item): item is StaffWorkOrderListItem => item != null)
     },
 
+    // "My Calendar" — appointments only, already narrowed server-side to this technician's lines.
+    async getBookingCalendar(query: StaffBookingCalendarQuery): Promise<StaffBookingCalendar> {
+      const res = await client.get<StaffBookingCalendarApiDto>(BOOKING_CALENDAR_PATH, {
+        params: {
+          [LIST_QUERY_PARAM.businessId]: query.businessId,
+          [LIST_QUERY_PARAM.date]: query.date,
+        },
+      })
+      return normalizeCalendar(res, query.date)
+    },
+
     // Polled from the app shell, so a failure must read as "no badge" rather than break the shell.
     async getPendingAcceptanceCount(): Promise<number> {
       const res = await client.get<number>(PENDING_ACCEPTANCE_COUNT_PATH)
@@ -217,6 +327,30 @@ function createStaffWorkOrdersRepository(client: HttpClient = httpClient) {
 
     async getWorkOrderDetail(orderId: string): Promise<StaffWorkOrderDetail | null> {
       const res = await client.get<StaffWorkOrderDetailApiDto>(workOrderDetailPath(orderId))
+      return normalizeDetail(res)
+    },
+
+    // Already narrowed server-side to what this technician is qualified for, so anything listed
+    // here is something the save will accept.
+    async getMyServiceCatalog(orderId: string): Promise<StaffWorkOrderCatalogItem[]> {
+      const res = await client.get<StaffWorkOrderCatalogItemApiDto[]>(
+        `${workOrderDetailPath(orderId)}/${STAFF_WORK_ORDER_SERVICE_CATALOG}`,
+      )
+      if (!Array.isArray(res)) return []
+      return res
+        .map(normalizeCatalogItem)
+        .filter((item): item is StaffWorkOrderCatalogItem => item != null)
+    },
+
+    // One call for the whole basket: the customer approves once, so the change lands once.
+    async saveMyServiceLines(
+      orderId: string,
+      payload: SaveStaffWorkOrderServiceLinesPayload,
+    ): Promise<StaffWorkOrderDetail | null> {
+      const res = await client.put<StaffWorkOrderDetailApiDto>(
+        `${workOrderDetailPath(orderId)}/${STAFF_WORK_ORDER_MY_SERVICE_LINES}`,
+        payload,
+      )
       return normalizeDetail(res)
     },
 

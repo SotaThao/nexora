@@ -1505,6 +1505,7 @@ export default function PosFrontDeskView({
                       {t(tk('orderListNoServiceFlag'))}
                     </span>
                   ) : null}
+                  {renderServiceProgress(order.serviceLines)}
                 </>
               )
 

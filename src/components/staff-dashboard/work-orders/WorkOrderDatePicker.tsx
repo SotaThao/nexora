@@ -19,6 +19,8 @@ interface WorkOrderDatePickerProps {
   todayIso: string
   language: string
   onChange: (iso: string) => void
+  calendarOpen?: boolean
+  onCalendarOpenChange?: (open: boolean) => void
 }
 
 export default function WorkOrderDatePicker({
@@ -26,10 +28,18 @@ export default function WorkOrderDatePicker({
   todayIso,
   language,
   onChange,
+  calendarOpen,
+  onCalendarOpenChange,
 }: WorkOrderDatePickerProps) {
   const { t } = useTranslation()
   const rootRef = useRef<HTMLDivElement>(null)
-  const [open, setOpen] = useState(false)
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const open = calendarOpen ?? uncontrolledOpen
+  const setOpen = (next: boolean | ((prev: boolean) => boolean)) => {
+    const resolved = typeof next === 'function' ? next(open) : next
+    onCalendarOpenChange?.(resolved)
+    if (calendarOpen === undefined) setUncontrolledOpen(resolved)
+  }
   const selected = parseLocalIso(value)
   const [viewYear, setViewYear] = useState(selected.year)
   const [viewMonth, setViewMonth] = useState(selected.month)
@@ -89,7 +99,7 @@ export default function WorkOrderDatePicker({
           aria-label={t(WORK_ORDERS_I18N.prevDay)}
           onClick={() => onChange(addLocalDateIso(value, -WORK_ORDER_DATE_STEP.day))}
         >
-          <ChevronLeft className={WORK_ORDERS_LAYOUT_CLASS.iconMd} aria-hidden="true" />
+          <ChevronLeft className={WORK_ORDERS_LAYOUT_CLASS.dateNavChevron} aria-hidden="true" />
         </button>
         <button
           type="button"
@@ -108,9 +118,16 @@ export default function WorkOrderDatePicker({
           aria-label={t(WORK_ORDERS_I18N.nextDay)}
           onClick={() => onChange(addLocalDateIso(value, WORK_ORDER_DATE_STEP.day))}
         >
-          <ChevronRight className={WORK_ORDERS_LAYOUT_CLASS.iconMd} aria-hidden="true" />
+          <ChevronRight className={WORK_ORDERS_LAYOUT_CLASS.dateNavChevron} aria-hidden="true" />
         </button>
       </div>
+      <button
+        type="button"
+        className={WORK_ORDERS_LAYOUT_CLASS.dateToday}
+        onClick={() => onChange(todayIso)}
+      >
+        {t(WORK_ORDERS_I18N.today)}
+      </button>
 
       {open ? (
         <div
@@ -121,7 +138,7 @@ export default function WorkOrderDatePicker({
           <div className={WORK_ORDERS_LAYOUT_CLASS.calendarNav}>
             <button
               type="button"
-              className={WORK_ORDERS_LAYOUT_CLASS.dateNavButton}
+              className={WORK_ORDERS_LAYOUT_CLASS.calendarNavButton}
               aria-label={t(WORK_ORDERS_I18N.prevMonth)}
               onClick={() => shiftViewMonth(-WORK_ORDER_DATE_STEP.month)}
             >
@@ -130,7 +147,7 @@ export default function WorkOrderDatePicker({
             <span className={WORK_ORDERS_LAYOUT_CLASS.calendarMonth}>{monthLabel}</span>
             <button
               type="button"
-              className={WORK_ORDERS_LAYOUT_CLASS.dateNavButton}
+              className={WORK_ORDERS_LAYOUT_CLASS.calendarNavButton}
               aria-label={t(WORK_ORDERS_I18N.nextMonth)}
               onClick={() => shiftViewMonth(WORK_ORDER_DATE_STEP.month)}
             >

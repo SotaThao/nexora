@@ -1164,8 +1164,8 @@ export default function PosOrderWorkspace({
 
   const runComplete = () => {
     if (!order) return
-    const submittedReceiptMode = receiptChoice
     if (!startTicketAction(TicketBusySurface.Complete)) return
+    const submittedReceiptMode = receiptChoice
     completeOrder.mutate(
       {
         orderId,
@@ -2178,6 +2178,7 @@ export default function PosOrderWorkspace({
       isPaid={isPaidReceiptPreview}
     />
   ) : null
+
   const showCheckoutSuccess = Boolean(order && (
     completedPayment || (mode === 'success' && isPaid)
   ))

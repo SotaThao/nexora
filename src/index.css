@@ -420,6 +420,11 @@ body:not(.homepage-active):not(.public-booking-active) input.vlinkpay-address-in
   }
 }
 
+/* Staff work-order inputs — beat the 16px mobile/iOS floor so typed text stays compact. */
+body:not(.homepage-active):not(.public-booking-active) input.nexora-work-order-input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]) {
+  font-size: 12px !important;
+}
+
 /* Keyboard focus visibility for buttons and links */
 body:not(.homepage-active):not(.public-booking-active) button:focus-visible,
 body:not(.homepage-active):not(.public-booking-active) a:focus-visible {

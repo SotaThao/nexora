@@ -438,7 +438,7 @@ export interface StaffBusinessLink {
   touchPointsMissing?: boolean
   /** Business owner userProfileId — peer for staff-initiated community chat. */
   ownerUserProfileId?: string | null
-  /** IANA timezone of the salon (e.g. America/Chicago). Work Orders "today" uses this. */
+  /** IANA timezone of the salon (e.g. America/Chicago). */
   timeZone?: string | null
 }
 

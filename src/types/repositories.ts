@@ -311,6 +311,8 @@ export interface StaffWorkOrderListItemApiDto {
 
 export interface StaffWorkOrderItemApiDto {
   id?: string
+  /** Null on a custom (off-menu) line. */
+  posServiceId?: string | null
   serviceName?: string
   unitPrice?: number
   lineTotal?: number
@@ -338,10 +340,36 @@ export interface StaffWorkOrderDetailApiDto {
   stationNumber?: number | null
   beeper?: string | null
   customerNotes?: string | null
+  completionNote?: string | null
   serviceTotal?: number
   canStartService?: boolean
   canCompleteService?: boolean
   items?: StaffWorkOrderItemApiDto[]
+}
+
+export interface StaffBookingCalendarItemApiDto {
+  id?: string
+  orderNumber?: string
+  customerName?: string
+  status?: string
+  /** See PosOrderItemStatus — the caller's own lines, least advanced one. */
+  myLineStatus?: string | null
+  /** ISO with the salon's own offset — render the offset, never convert to browser local. */
+  scheduledAt?: string
+  myServiceNames?: string[]
+  myDurationMinutes?: number
+}
+
+export interface StaffBookingCalendarApiDto {
+  date?: string
+  appointmentCount?: number
+  totalDurationMinutes?: number
+  items?: StaffBookingCalendarItemApiDto[]
+}
+
+export interface StaffBookingCalendarQuery {
+  businessId: string
+  date: string
 }
 
 export interface StaffWorkOrdersListQuery {
@@ -352,6 +380,31 @@ export interface StaffWorkOrdersListQuery {
 
 export interface CompleteStaffWorkOrderServicePayload {
   note?: string | null
+}
+
+/** One line as the technician's screen has it after editing. No id means a new line. */
+export interface SaveStaffWorkOrderServiceLinePayload {
+  id?: string | null
+  posServiceId?: string | null
+  customServiceName?: string | null
+  price?: number | null
+  durationMinutes?: number | null
+  note?: string | null
+}
+
+export interface SaveStaffWorkOrderServiceLinesPayload {
+  customerPhoneLast4: string | null
+  lines: SaveStaffWorkOrderServiceLinePayload[]
+}
+
+export interface StaffWorkOrderCatalogItemApiDto {
+  id?: string
+  name?: string
+  price?: number
+  durationMinutes?: number
+  description?: string | null
+  photoUrl?: string | null
+  categories?: { id?: string; name?: string }[]
 }
 
 export interface CompletedOrdersPage {
@@ -1001,6 +1054,7 @@ export interface AssignableStaffApiDto {
 export interface PosOrderSettingsApiDto {
   requireStaffAcceptance: boolean
   warnOnServiceLineStatusMismatch: boolean
+  allowStaffManageOwnServiceLines: boolean
 }
 
 export interface PosBookingSettingsApiDto {
