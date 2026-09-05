@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from 'react-router-dom'
 import { useNotification } from '../../../contexts/NotificationContext'
 import {
   getPublicBookingSubmitErrorCode,
+  getPublicBookingSubmitErrorDetail,
   useCreatePublicOnlineBooking,
   usePublicBookingPageData,
 } from '../../../data/hooks/usePublicVoiceBooking'
@@ -351,10 +352,17 @@ export default function PublicBookingPage() {
     window.scrollTo?.({ top: 0, behavior: 'smooth' })
   }
 
+  // Localized copy wins when we have a line for the code; otherwise show the message the
+  // backend actually returned (a business rule we have no copy for yet is still far more
+  // useful than "something went wrong"), and only then the generic fallback.
   const resolveSubmitErrorMessage = (error) => {
     const code = getPublicBookingSubmitErrorCode(error)
     const copyKey = PUBLIC_BOOKING_SUBMIT_ERROR_COPY[code]
-    return (copyKey && copy[copyKey]) || copy.unexpectedError
+    return (
+      (copyKey && copy[copyKey])
+      || getPublicBookingSubmitErrorDetail(error)
+      || copy.unexpectedError
+    )
   }
 
   const submitBooking = async () => {

@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { getApiErrorCode } from '../../types/domain'
+import { getApiErrorCode, isApiError } from '../../types/domain'
 import { qk } from '../queryKeys'
 import {
   VoiceLeadSource,
@@ -41,4 +41,9 @@ export function useCreatePublicOnlineBooking() {
 
 export function getPublicBookingSubmitErrorCode(error: unknown): string {
   return getApiErrorCode(error, 'unknown_error')
+}
+
+/** The backend's own message (errorDetail/detail/title), for codes with no localized copy. */
+export function getPublicBookingSubmitErrorDetail(error: unknown): string {
+  return isApiError(error) ? String(error.message ?? '').trim() : ''
 }
