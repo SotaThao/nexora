@@ -468,6 +468,14 @@ export default function PosFrontDeskView({
       || activeTab === PosFrontDeskTab.Booking,
     refetchInterval: false,
   })
+  // The roster above deliberately does not poll, so a station card would never notice a reply.
+  // The beep feed is its own polled query, which is what keeps the station pill live here.
+  const { data: turnBoardBeeps = [] } = useMerchantBeepFeed(businessId, todayTurnWindow, {
+    enabled: activeTab === PosFrontDeskTab.TurnBoard,
+  })
+  const turnBoardBeepByStaffId = new Map(
+    [...turnBoardBeeps].reverse().map((beep) => [beep.posStaffProfileId, beep]),
+  )
   const canReadNextTurnReport = activeTab === PosFrontDeskTab.TurnBoard && Boolean(access?.canViewReport)
   const todayServiceAmountReportQuery = usePosReport(
     canReadNextTurnReport
@@ -479,14 +487,6 @@ export default function PosFrontDeskView({
         }
       : null,
     { enabled: canReadNextTurnReport },
-  )
-  // The roster above deliberately does not poll, so a station card would never notice a reply.
-  // The beep feed is its own polled query, which is what keeps the station pill live here.
-  const { data: turnBoardBeeps = [] } = useMerchantBeepFeed(businessId, todayTurnWindow, {
-    enabled: activeTab === PosFrontDeskTab.TurnBoard,
-  })
-  const turnBoardBeepByStaffId = new Map(
-    [...turnBoardBeeps].reverse().map((beep) => [beep.posStaffProfileId, beep]),
   )
   // Today’s Turns needs the services completed during the same local calendar day. The
   // completed-orders endpoint supplies the ticket IDs; each detail response supplies the
@@ -1091,90 +1091,6 @@ export default function PosFrontDeskView({
             )
           })}
         </div>
-      </section>
-    )
-  }
-
-  const renderReportPanel = () => {
-    const payroll = weeklyPayrollQuery.data
-    const rows = payroll?.staff ?? []
-
-    if (weeklyPayrollQuery.isPending && weeklyPayrollQuery.fetchStatus !== 'idle') {
-      return (
-        <div className="py-6">
-          <SkeletonList count={3} lines={2} />
-        </div>
-      )
-    }
-
-    if (weeklyPayrollQuery.isError) {
-      return (
-        <div className="py-10 text-center text-xs text-nexoraMuted">
-          {t(tk('reportError'))}
-        </div>
-      )
-    }
-
-    return (
-      <section className="space-y-3" aria-label={t(tk('reportTitle'))} data-testid="report-panel">
-        <div className="flex flex-wrap items-end justify-between gap-2">
-          <div>
-            <h2 className="text-sm font-bold text-nexoraText">{t(tk('reportTitle'))}</h2>
-            <p className="mt-0.5 text-xs text-nexoraMuted">{t(tk('reportThisWeek'))}</p>
-          </div>
-          {payroll ? (
-            <span className="rounded-full bg-violet-50 px-3 py-1.5 text-[11px] font-bold tabular-nums text-violet-700">
-              {formatReportDate(payroll.weekStart, currentLanguage)} — {formatReportDate(payroll.weekEnd, currentLanguage)}
-            </span>
-          ) : null}
-        </div>
-
-        {rows.length === 0 ? (
-          <div className="py-10 text-center text-xs text-nexoraMuted">
-            {t(tk('reportEmpty'))}
-          </div>
-        ) : (
-          <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
-            <table className="w-full min-w-[720px] table-fixed text-left text-xs">
-              <thead>
-                <tr className={POS_TABLE_HEADER_ROW_CLASS}>
-                  <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('reportColumnTechnician'))}</th>
-                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('reportColumnHours'))}</th>
-                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('reportColumnService'))}</th>
-                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('reportColumnCommission'))}</th>
-                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('reportColumnTip'))}</th>
-                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('reportColumnTechTakes'))}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.businessStaffLinkId} className="border-t border-nexoraBorder/70 transition-colors even:bg-violet-50/15 hover:bg-violet-50/40">
-                    <td className="px-4 py-3 font-bold text-nexoraText">
-                      <span className="inline-flex max-w-full rounded-full bg-cyan-100/70 px-2.5 py-1 text-cyan-800">
-                        <span className="truncate">{row.displayName}</span>
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">
-                      <span className="rounded-full bg-sky-50 px-2.5 py-1 font-semibold text-sky-700">{row.hours.toFixed(1)}h</span>
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">
-                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-700">{formatCurrency(row.sales)}</span>
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">
-                      <span className="rounded-full bg-violet-50 px-2.5 py-1 font-semibold text-violet-700">{formatCurrency(row.commission)}</span>
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">
-                      <span className="rounded-full bg-amber-50 px-2.5 py-1 font-semibold text-amber-700">{formatCurrency(row.tips)}</span>
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums font-bold text-nexoraText">
-                      <span className="rounded-full bg-nexoraBrandSoft px-2.5 py-1 text-nexoraBrandDark">{formatCurrency(row.takeHome)}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </section>
     )
   }
