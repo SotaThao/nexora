@@ -82,34 +82,33 @@ export default function PosReportDetailModal({
   }
 
   const modal = (
-    <div className="pos-report-detail-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-3 sm:p-5">
+    <div className="pos-report-detail-backdrop pos-invoice-modal-backdrop">
       <div
-        className="pos-report-detail-modal nexora-modal-card flex w-[80mm] max-w-[calc(100vw-1.5rem)] flex-col bg-white"
+        className="pos-report-detail-modal pos-invoice-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="pos-report-detail-title"
       >
-        <div className="pos-report-detail-header relative shrink-0 border-b border-dashed border-slate-400 pb-3 text-center font-mono text-black">
-          <div className="px-7">
-            <h3 id="pos-report-detail-title" className="text-base font-black uppercase tracking-wide text-black">
-              {detail ? displayName : t(`${TK}.title`)}
-            </h3>
-            <p className="mt-1 text-xs font-semibold text-black">
-              {params.mode === PosReportMode.Daily ? t(`${TK}.dailyTitle`) : t(`${TK}.weeklyTitle`)}
+        <div className="pos-report-detail-toolbar pos-invoice-modal-header shrink-0">
+          <div className="min-w-0">
+            <p className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+              {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewLabel')}
             </p>
-            {periodLabel ? <p className="mt-0.5 text-xs font-bold text-black">{periodLabel}</p> : null}
+            <h2 id="pos-report-detail-title" className="text-lg font-black text-nexoraText">
+              {t(`${TK}.title`)}
+            </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label={t(`${TK}.close`)}
-            className="pos-report-detail-close absolute right-0 top-0 rounded-lg p-1.5 text-nexoraMuted hover:bg-nexoraCanvas hover:text-nexoraText"
+            className="pos-report-detail-close inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder text-nexoraText hover:border-nexoraBrand"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
 
-        <div className="pos-report-detail-body mt-3 min-h-0 flex-1 overflow-y-auto font-mono">
+        <div className="pos-report-detail-body pos-invoice-modal-body">
           {detailQuery.isLoading ? (
             <div className="py-8"><SkeletonList count={4} lines={2} /></div>
           ) : detailQuery.isError || !detail ? (
@@ -117,16 +116,23 @@ export default function PosReportDetailModal({
               {t(`${TK}.loadError`)}
             </div>
           ) : (
-            <div className="pos-report-detail-print space-y-3 text-xs text-black" data-testid="pos-report-detail-print">
+            <article className="pos-report-detail-print mx-auto w-[80mm] max-w-full space-y-3 bg-white p-6 font-mono text-xs text-black shadow-nexora-card" data-testid="pos-report-detail-print">
+              <div className="pos-report-detail-header border-b border-dashed border-slate-400 pb-3 text-center">
+                <h3 className="break-words text-base font-black uppercase tracking-wide">{displayName}</h3>
+                <p className="mt-1 text-xs font-semibold">
+                  {params.mode === PosReportMode.Daily ? t(`${TK}.dailyTitle`) : t(`${TK}.weeklyTitle`)}
+                </p>
+                {periodLabel ? <p className="mt-0.5 text-xs font-bold">{periodLabel}</p> : null}
+              </div>
               {params.mode === PosReportMode.Daily
                 ? <DailyDetail detail={detail} />
                 : <WeeklyDetail detail={detail} />}
               <DetailTotals detail={detail} />
-            </div>
+            </article>
           )}
         </div>
 
-        <div className="pos-report-detail-actions mt-4 shrink-0 border-t border-nexoraBorder pt-3">
+        <div className="pos-report-detail-actions shrink-0 border-t border-nexoraBorder bg-white px-4 py-3.5">
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
