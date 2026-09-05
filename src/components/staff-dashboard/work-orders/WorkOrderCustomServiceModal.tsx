@@ -2,15 +2,16 @@ import { useState } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { WORK_ORDERS_I18N, WORK_ORDERS_LAYOUT_CLASS } from './constants'
 import {
-  WORK_ORDER_CUSTOM_SERVICE_MAX_PRICE,
   canSubmitCustomWorkOrderService,
+  clampWorkOrderDurationInput,
   clampWorkOrderPriceInput,
   isValidCustomWorkOrderService,
+  type WorkOrderCustomServiceInput,
 } from './workOrderServiceCatalog'
 import WorkOrderModalFrame from './WorkOrderModalFrame'
 
 interface WorkOrderCustomServiceModalProps {
-  onConfirm: (input: { name: string; price: number }) => void
+  onConfirm: (input: WorkOrderCustomServiceInput) => void
   onClose: () => void
 }
 
@@ -21,13 +22,15 @@ export default function WorkOrderCustomServiceModal({
   const { t } = useTranslation()
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
+  const [durationMinutes, setDurationMinutes] = useState('')
   const [showError, setShowError] = useState(false)
 
-  const parsed = {
+  const parsed: WorkOrderCustomServiceInput = {
     name: name.trim(),
     price: Number(price),
+    durationMinutes: durationMinutes.trim() ? Number(durationMinutes) : 0,
   }
-  const canSubmit = canSubmitCustomWorkOrderService({ name, price })
+  const canSubmit = canSubmitCustomWorkOrderService({ name, price, durationMinutes })
 
   const handleConfirm = () => {
     if (!canSubmit || !isValidCustomWorkOrderService(parsed)) {
@@ -68,6 +71,8 @@ export default function WorkOrderCustomServiceModal({
           <input
             id="work-order-custom-name"
             type="text"
+            autoComplete="off"
+            maxLength={200}
             value={name}
             placeholder={t(WORK_ORDERS_I18N.customNamePlaceholder)}
             className={WORK_ORDERS_LAYOUT_CLASS.customInput}
@@ -83,16 +88,32 @@ export default function WorkOrderCustomServiceModal({
           </label>
           <input
             id="work-order-custom-price"
-            type="number"
-            min="0"
-            max={WORK_ORDER_CUSTOM_SERVICE_MAX_PRICE}
-            step="0.01"
+            type="text"
             inputMode="decimal"
+            autoComplete="off"
             value={price}
             placeholder={t(WORK_ORDERS_I18N.customPricePlaceholder)}
             className={WORK_ORDERS_LAYOUT_CLASS.customInput}
             onChange={(event) => {
               setPrice(clampWorkOrderPriceInput(event.target.value))
+              setShowError(false)
+            }}
+          />
+        </div>
+        <div>
+          <label htmlFor="work-order-custom-duration" className={WORK_ORDERS_LAYOUT_CLASS.customLabel}>
+            {t(WORK_ORDERS_I18N.customDurationLabel)}
+          </label>
+          <input
+            id="work-order-custom-duration"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            value={durationMinutes}
+            placeholder={t(WORK_ORDERS_I18N.customDurationPlaceholder)}
+            className={WORK_ORDERS_LAYOUT_CLASS.customInput}
+            onChange={(event) => {
+              setDurationMinutes(clampWorkOrderDurationInput(event.target.value))
               setShowError(false)
             }}
           />

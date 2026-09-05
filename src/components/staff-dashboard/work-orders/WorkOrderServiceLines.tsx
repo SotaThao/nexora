@@ -41,9 +41,9 @@ const LINE_STATUS_BADGE_CLASS: Record<string, string> = {
 }
 
 const LINE_ACTION_PRIMARY_CLASS =
-  'inline-flex h-9 items-center gap-1.5 rounded-lg bg-nexoraBrand px-3 text-[11px] font-extrabold text-white disabled:opacity-60'
+  'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-3 text-[11px] font-extrabold text-white disabled:opacity-60'
 const LINE_ACTION_SECONDARY_CLASS =
-  'inline-flex h-9 items-center gap-1.5 rounded-lg border border-nexoraBorder px-3 text-[11px] font-extrabold text-nexoraText disabled:opacity-60'
+  'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder px-3 text-[11px] font-extrabold text-nexoraText disabled:opacity-60'
 
 interface WorkOrderServiceLinesProps {
   items: WorkOrderEditableLine[]
@@ -100,7 +100,7 @@ export default function WorkOrderServiceLines({
               <span className={WORK_ORDERS_LAYOUT_CLASS.textLeft}>{t(WORK_ORDERS_I18N.colService)}</span>
               <span className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadCellEnd}>{t(WORK_ORDERS_I18N.colPrice)}</span>
               <span className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadCellEnd}>{t(WORK_ORDERS_I18N.colTime)}</span>
-              {canEdit ? <span className="hidden md:block" aria-hidden="true" /> : null}
+              {canEdit ? <span aria-hidden="true" /> : null}
             </div>
             {items.map((line, index) => (
               <WorkOrderServiceLineRow
@@ -151,12 +151,12 @@ function WorkOrderServiceLineRow({
   onRemoveService: () => void
 }) {
   const { t } = useTranslation()
-  const canAct = Boolean(actions) && Boolean(line.isMine) && !line.isAddOn
+  const canAct = Boolean(actions) && Boolean(line.isMine) && !line.isAddOn && !line.pendingRemoval
   const isPending = (kind: LineStatusActionKind) =>
     actions?.pendingLineId === line.id && actions.pendingKind === kind
 
   return (
-    <div className={workOrderServiceRowClass(canEdit)}>
+    <div className={workOrderServiceRowClass(canEdit, Boolean(line.pendingRemoval))}>
       <div className={WORK_ORDERS_LAYOUT_CLASS.serviceNameCell}>
         {line.isAddOn ? (
           <p className={WORK_ORDERS_LAYOUT_CLASS.serviceAddOnName}>
@@ -168,12 +168,54 @@ function WorkOrderServiceLineRow({
           </p>
         ) : (
           <div className={WORK_ORDERS_LAYOUT_CLASS.serviceNameRow}>
-            <p className={WORK_ORDERS_LAYOUT_CLASS.serviceName}>
+            <p className={`${WORK_ORDERS_LAYOUT_CLASS.serviceName}${line.pendingRemoval ? ' line-through' : ''}`}>
               {workOrderTextOrPlaceholder(line.serviceName)}
             </p>
-            {line.approval ? <WorkOrderApprovalPill approval={line.approval} /> : null}
+            {line.pendingRemoval ? (
+              <span className={WORK_ORDER_APPROVAL_PILL_CLASS.pending}>
+                {t(WORK_ORDERS_I18N.approvalRemovedLabel)}
+              </span>
+            ) : line.approval ? (
+              <WorkOrderApprovalPill approval={line.approval} />
+            ) : null}
           </div>
         )}
+      </div>
+      <div className={`${WORK_ORDERS_LAYOUT_CLASS.serviceNumCell} ${WORK_ORDERS_LAYOUT_CLASS.servicePrice}`}>
+        {formatWorkOrderMoney(line.unitPrice)}
+      </div>
+      <div className={`${WORK_ORDERS_LAYOUT_CLASS.serviceNumCell} ${WORK_ORDERS_LAYOUT_CLASS.serviceDuration}`}>
+        {formatWorkOrderDurationMinutes(line.durationMinutes, t)}
+      </div>
+      {canEdit ? (
+        <div className={WORK_ORDERS_LAYOUT_CLASS.serviceActionCell}>
+          {line.isAddOn ? null : (
+            <span className={WORK_ORDERS_LAYOUT_CLASS.serviceActionGroup}>
+              <button
+                type="button"
+                className={WORK_ORDERS_LAYOUT_CLASS.serviceChangeButton}
+                aria-label={`${t(WORK_ORDERS_I18N.changeService)} ${workOrderTextOrPlaceholder(line.serviceName)}`}
+                disabled={Boolean(line.pendingRemoval)}
+                onClick={onChangeService}
+              >
+                {t(WORK_ORDERS_I18N.changeServiceAction)}
+              </button>
+              {onRemoveService ? (
+                <button
+                  type="button"
+                  className={WORK_ORDERS_LAYOUT_CLASS.serviceRemoveButton}
+                  aria-label={`${t(WORK_ORDERS_I18N.removeService)} ${workOrderTextOrPlaceholder(line.serviceName)}`}
+                  disabled={Boolean(line.pendingRemoval)}
+                  onClick={onRemoveService}
+                >
+                  {t(WORK_ORDERS_I18N.removeService)}
+                </button>
+              ) : null}
+            </span>
+          )}
+        </div>
+      ) : null}
+      <div className={WORK_ORDERS_LAYOUT_CLASS.serviceMeta}>
         <p className={WORK_ORDERS_LAYOUT_CLASS.serviceTech}>
           {workOrderAssignedTechnicianLabel(line.technicianName, t)}
         </p>
@@ -241,38 +283,6 @@ function WorkOrderServiceLineRow({
           </div>
         ) : null}
       </div>
-      <div className={`${WORK_ORDERS_LAYOUT_CLASS.serviceNumCell} ${WORK_ORDERS_LAYOUT_CLASS.servicePrice}`}>
-        {formatWorkOrderMoney(line.unitPrice)}
-      </div>
-      <div className={`${WORK_ORDERS_LAYOUT_CLASS.serviceNumCell} ${WORK_ORDERS_LAYOUT_CLASS.serviceDuration}`}>
-        {formatWorkOrderDurationMinutes(line.durationMinutes, t)}
-      </div>
-      {canEdit ? (
-        <div className={WORK_ORDERS_LAYOUT_CLASS.serviceActionCell}>
-          {line.isAddOn ? null : (
-            <span className={WORK_ORDERS_LAYOUT_CLASS.serviceActionGroup}>
-              <button
-                type="button"
-                className={WORK_ORDERS_LAYOUT_CLASS.serviceChangeButton}
-                aria-label={`${t(WORK_ORDERS_I18N.changeService)} ${workOrderTextOrPlaceholder(line.serviceName)}`}
-                onClick={onChangeService}
-              >
-                {t(WORK_ORDERS_I18N.changeServiceAction)}
-              </button>
-              {onRemoveService ? (
-                <button
-                  type="button"
-                  className={WORK_ORDERS_LAYOUT_CLASS.serviceRemoveButton}
-                  aria-label={`${t(WORK_ORDERS_I18N.removeService)} ${workOrderTextOrPlaceholder(line.serviceName)}`}
-                  onClick={onRemoveService}
-                >
-                  {t(WORK_ORDERS_I18N.removeService)}
-                </button>
-              ) : null}
-            </span>
-          )}
-        </div>
-      ) : null}
     </div>
   )
 }

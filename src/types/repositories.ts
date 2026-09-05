@@ -385,6 +385,7 @@ export interface SaveStaffWorkOrderServiceLinePayload {
   posServiceId?: string | null
   customServiceName?: string | null
   price?: number | null
+  durationMinutes?: number | null
   note?: string | null
 }
 

@@ -9,8 +9,6 @@ import {
 } from './workOrderServiceCatalog'
 import { formatWorkOrderMoney, workOrderTextOrPlaceholder } from './workOrderTickets'
 
-const VERIFICATION_DIGITS = 4
-
 interface WorkOrderCustomerApprovalProps {
   services: WorkOrderEditableLine[]
   removedServices: WorkOrderEditableLine[]
@@ -30,9 +28,6 @@ export default function WorkOrderCustomerApproval({
 }: WorkOrderCustomerApprovalProps) {
   const { t } = useTranslation()
   const [code, setCode] = useState('')
-  const canApprove = code.length === WORK_ORDER_APPROVAL_CODE_LENGTH
-
-  if (services.length === 0 && removedServices.length === 0) return null
 
   return (
     <section className={WORK_ORDERS_LAYOUT_CLASS.approvalCard}>
@@ -74,8 +69,12 @@ export default function WorkOrderCustomerApproval({
         <input
           type="text"
           inputMode="numeric"
-          autoComplete="off"
-          maxLength={VERIFICATION_DIGITS}
+          name="work-order-customer-last4"
+          autoComplete="one-time-code"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          maxLength={WORK_ORDER_APPROVAL_CODE_LENGTH}
           value={code}
           disabled={isSaving}
           aria-label={t(WORK_ORDERS_I18N.approvalCodeAria)}
@@ -88,8 +87,12 @@ export default function WorkOrderCustomerApproval({
         <button
           type="button"
           className={WORK_ORDERS_LAYOUT_CLASS.approvalSubmit}
-          disabled={isSaving || code.length !== VERIFICATION_DIGITS}
-          onClick={() => onApprove(code)}
+          disabled={isSaving || code.length !== WORK_ORDER_APPROVAL_CODE_LENGTH}
+          onClick={() => {
+            const submitted = code
+            setCode('')
+            onApprove(submitted)
+          }}
         >
           {isSaving ? (
             <Loader2 className={`${WORK_ORDERS_LAYOUT_CLASS.iconSm} animate-spin`} aria-hidden="true" />

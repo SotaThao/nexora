@@ -4,7 +4,7 @@ const STAFF_DASHBOARD_MAIN_WIDTH = {
   default: 'max-w-3xl',
   medium: 'w-full max-w-5xl',
   wide: 'w-full max-w-6xl xl:max-w-7xl',
-  workOrders: 'w-full max-w-[480px]',
+  workOrders: 'w-full max-w-[560px] md:max-w-[640px]',
 } as const
 
 const STAFF_DASHBOARD_MAIN_PADDING = {

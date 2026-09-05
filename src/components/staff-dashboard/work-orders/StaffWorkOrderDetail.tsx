@@ -4,7 +4,7 @@ import { qk } from '../../../data/queryKeys'
 import { BadgeCheck, Check, CheckCircle2, ChevronLeft, LayoutGrid, NotebookPen, Play, Radio } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { getErrorI18nKey } from '../../../data/errorCodes'
+import { getErrorI18nKey, getErrorMessage } from '../../../data/errorCodes'
 import {
   useCompleteStaffWorkOrderService,
   useSaveMyWorkOrderServiceLines,
@@ -45,18 +45,15 @@ import {
   applyWorkOrderLineStatus,
   applyWorkOrderStartedLinesCompleted,
   canEditWorkOrderServices,
-  markWorkOrderLinePending,
-  matchWorkOrderCatalogServiceByName,
-  mergeWorkOrderLinesFromServer,
   removeWorkOrderServiceLine,
   replaceWorkOrderCatalogService,
   toSaveWorkOrderServiceLinesPayload,
   toWorkOrderEditableLines,
-  setWorkOrderPendingApproval,
   workOrderEditableServiceTotal,
   WORK_ORDER_TICKET_FOOTER_ACTION,
   workOrderTicketFooterAction,
   workOrderPendingServiceLines,
+  workOrderRemovedServiceLines,
   type WorkOrderCatalogService,
   type WorkOrderEditableLine,
   type WorkOrderPickerMode,
@@ -108,9 +105,6 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
   const [seededStamp, setSeededStamp] = useState('')
   const [picker, setPicker] = useState<{ mode: WorkOrderPickerMode; lineKey?: string } | null>(null)
   const [isCustomOpen, setIsCustomOpen] = useState(false)
-  // Removed lines are kept aside rather than dropped: the customer approves the whole basket at
-  // once, and until they do, the row still has to be shown as a pending change.
-  const [removedLines, setRemovedLines] = useState<WorkOrderEditableLine[]>([])
   const [approvalError, setApprovalError] = useState<string | null>(null)
   const [completedSession, setCompletedSession] = useState<{ orderId: string; note: string | null } | null>(null)
   const ticket = detailQuery.data ?? null
@@ -151,11 +145,22 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
 
   if (detailQuery.isPending) return <WorkOrderDetailSkeleton />
 
+  const ticketStamp = ticket
+    ? `${ticket.status}:${ticket.items.map((item) => `${item.id}:${item.lineStatus}`).join(',')}`
+    : ''
+  const hasPendingLineEdits = lines.some((line) => (
+    Boolean(line.pendingRemoval) || line.approval === WORK_ORDER_SERVICE_APPROVAL.pending
+  ))
+
   if (ticket && seededOrderId !== ticket.id) {
     setSeededOrderId(ticket.id)
+    setSeededStamp(ticketStamp)
     setLines(toWorkOrderEditableLines(ticket.items))
-    setRemovedLines([])
     setApprovalError(null)
+  } else if (ticket && seededStamp !== ticketStamp && !hasPendingLineEdits) {
+    // After ticket/line start-complete, refetch must redraw badges even when the order id is unchanged.
+    setSeededStamp(ticketStamp)
+    setLines(toWorkOrderEditableLines(ticket.items))
   }
 
   const displayStatus = completedSession?.orderId === orderId
@@ -232,16 +237,14 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
         // response, so a popup would only add a dismiss step between the technician and the chair.
         onSuccess: (saved) => {
           if (saved) setLines(toWorkOrderEditableLines(saved.items))
-          setRemovedLines([])
         },
-        onError: (err) => setApprovalError(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR')))),
+        onError: (err) => setApprovalError(getErrorMessage(err, t)),
       },
     )
   }
 
   const handleDiscardChanges = () => {
     setLines(ticket ? toWorkOrderEditableLines(ticket.items) : [])
-    setRemovedLines([])
     setApprovalError(null)
   }
   
@@ -264,6 +267,31 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
     setLines((current) => applyWorkOrderStartedLinesCompleted(current))
     setCompletedSession({ orderId, note })
     setIsCompleteModalOpen(false)
+    // Keep the open detail in sync before/while the list+detail refetch lands — otherwise a
+    // reload of the same ticket still reads the previous InService payload from cache briefly.
+    queryClient.setQueryData(
+      qk.staffWorkOrderDetail(orderId),
+      (current: WorkOrderDetail | null | undefined) => (
+        current
+          ? {
+              ...current,
+              status: PosOrderStatus.Completed,
+              canStartService: false,
+              canCompleteService: false,
+              completionNote: note ?? current.completionNote,
+              items: current.items.map((item) => (
+                item.isAddOn
+                  ? item
+                  : {
+                      ...item,
+                      lineStatus: PosOrderItemStatus.Completed,
+                      completedAt: item.completedAt ?? new Date().toISOString(),
+                    }
+              )),
+            }
+          : current
+      ),
+    )
     await refreshWorkOrder()
   }
 
@@ -285,20 +313,15 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
         isMutating={isMutating}
         onRetry={() => void detailQuery.refetch()}
         onBack={onBack}
-        onStart={() => void runAction(() => startService.mutateAsync(), WORK_ORDERS_I18N.startServiceSuccess)}
+        onStart={() => void handleStartTicket()}
         onComplete={() => setIsCompleteModalOpen(true)}
         onAddService={() => setPicker({ mode: WORK_ORDER_PICKER_MODE.add })}
         onAddCustomService={() => setIsCustomOpen(true)}
         onChangeService={(key) => setPicker({ mode: WORK_ORDER_PICKER_MODE.edit, lineKey: key })}
         onRemoveService={(key) => {
-          const target = lines.find((line) => line.key === key)
           setLines((current) => removeWorkOrderServiceLine(current, key))
-          // A line that was never saved leaves nothing to approve — only rows the ticket already
-          // has count as a pending removal.
-          if (target?.id) setRemovedLines((current) => [...current, target])
           setApprovalError(null)
         }}
-        removedLines={removedLines}
         isSaving={saveServiceLines.isPending}
         approvalError={approvalError}
         onApprovePending={handleApproveChanges}
@@ -413,7 +436,6 @@ function WorkOrderDetailBody({
   onAddCustomService,
   onChangeService,
   onRemoveService,
-  removedLines,
   isSaving,
   approvalError,
   onApprovePending,
@@ -436,7 +458,6 @@ function WorkOrderDetailBody({
   onAddCustomService: () => void
   onChangeService: (key: string) => void
   onRemoveService: (key: string) => void
-  removedLines: WorkOrderEditableLine[]
   isSaving: boolean
   approvalError: string | null
   onApprovePending: (customerPhoneLast4: string) => void
@@ -483,6 +504,7 @@ function WorkOrderDetailBody({
   const isCompleted = isWorkOrderCompletedStatus(status)
   const canEdit = canEditWorkOrderServices(status)
   const pendingServices = workOrderPendingServiceLines(lines)
+  const removedLines = workOrderRemovedServiceLines(lines)
   const customerNotes = ticket.customerNotes?.trim() ?? ''
   const notesCard = customerNotes ? (
     <aside className={WORK_ORDERS_LAYOUT_CLASS.notesCard}>
@@ -512,7 +534,7 @@ function WorkOrderDetailBody({
   const showStart = !isCompleted && ticket.canStartService
   const showComplete = !isCompleted && ticket.status === PosOrderStatus.InService && ticket.canCompleteService
   const actions = (
-    <div>
+    <div className={WORK_ORDERS_LAYOUT_CLASS.detailActions}>
       {showStart ? (
         <WorkOrderPrimaryAction
           disabled={isMutating || !canStartWorkOrderNow(ticket, todayIso)}
@@ -579,7 +601,7 @@ function WorkOrderDetailBody({
         actions={lineActions}
       />
 
-      {isCompleted ? null : (
+      {!isCompleted && (pendingServices.length > 0 || removedLines.length > 0) ? (
         <WorkOrderCustomerApproval
           services={pendingServices}
           removedServices={removedLines}
@@ -588,7 +610,7 @@ function WorkOrderDetailBody({
           onApprove={onApprovePending}
           onCancel={onCancelPending}
         />
-      )}
+      ) : null}
 
       {isCompleted ? completedNotes : actions}
       {notesCard}

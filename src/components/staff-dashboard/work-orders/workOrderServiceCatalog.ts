@@ -38,11 +38,12 @@ export type WorkOrderEditableLine = {
   isAddOn: boolean
   technicianName: string | null
   approval: WorkOrderServiceApproval | null
+  /** Saved line waiting for customer approval before it is actually deleted. */
+  pendingRemoval?: boolean
   lineStatus?: string
   isMine?: boolean
 }
 
-export const WORK_ORDER_CUSTOM_SERVICE_DEFAULT_DURATION = 30
 export const WORK_ORDER_CUSTOM_SERVICE_MAX_DURATION = 10000
 export const WORK_ORDER_CUSTOM_SERVICE_MAX_PRICE = 10000
 export const WORK_ORDER_APPROVAL_CODE_LENGTH = 4
@@ -93,6 +94,7 @@ function nextLocalLineKey(): string {
 }
 
 function countsTowardTotal(line: WorkOrderEditableLine): boolean {
+  if (line.pendingRemoval) return false
   if (line.approval === WORK_ORDER_SERVICE_APPROVAL.pending) return false
   if (line.approval === WORK_ORDER_SERVICE_APPROVAL.rejected) return false
   return true
@@ -132,7 +134,9 @@ export function applyWorkOrderLineStatus(
 
 export function applyWorkOrderAssignedLinesStarted(lines: WorkOrderEditableLine[]): WorkOrderEditableLine[] {
   return lines.map((line) => (
-    isParentServiceLine(line) && line.lineStatus === PosOrderItemStatus.Assigned
+    isParentServiceLine(line)
+      && (line.lineStatus === PosOrderItemStatus.Assigned
+        || line.lineStatus === PosOrderItemStatus.PendingAcceptance)
       ? { ...line, lineStatus: PosOrderItemStatus.Started }
       : line
   ))
@@ -140,7 +144,7 @@ export function applyWorkOrderAssignedLinesStarted(lines: WorkOrderEditableLine[
 
 export function applyWorkOrderStartedLinesCompleted(lines: WorkOrderEditableLine[]): WorkOrderEditableLine[] {
   return lines.map((line) => (
-    isParentServiceLine(line) && line.lineStatus === PosOrderItemStatus.Started
+    isParentServiceLine(line) && line.lineStatus !== PosOrderItemStatus.Completed
       ? { ...line, lineStatus: PosOrderItemStatus.Completed }
       : line
   ))
@@ -162,7 +166,7 @@ export function mergeWorkOrderLinesFromServer(
   const merged = fromServer.map((line) => {
     const prev = (line.id ? currentById.get(line.id) : undefined) ?? currentByKey.get(line.key)
     if (!prev) return line
-    if (prev.approval === WORK_ORDER_SERVICE_APPROVAL.pending) {
+    if (prev.pendingRemoval || prev.approval === WORK_ORDER_SERVICE_APPROVAL.pending) {
       return {
         ...prev,
         id: line.id,
@@ -186,8 +190,15 @@ export function workOrderEditableServiceTotal(lines: WorkOrderEditableLine[]): n
 
 export function workOrderPendingServiceLines(lines: WorkOrderEditableLine[]): WorkOrderEditableLine[] {
   return lines.filter(
-    (line) => !line.isAddOn && line.approval === WORK_ORDER_SERVICE_APPROVAL.pending,
+    (line) =>
+      !line.isAddOn
+      && !line.pendingRemoval
+      && line.approval === WORK_ORDER_SERVICE_APPROVAL.pending,
   )
+}
+
+export function workOrderRemovedServiceLines(lines: WorkOrderEditableLine[]): WorkOrderEditableLine[] {
+  return lines.filter((line) => !line.isAddOn && Boolean(line.pendingRemoval))
 }
 
 export const WORK_ORDER_TICKET_FOOTER_ACTION = {
@@ -258,6 +269,33 @@ export function workOrderTicketFooterAction(
   if (workOrderHasAssignedService(lines)) return WORK_ORDER_TICKET_FOOTER_ACTION.start
   if (workOrderHasInServiceService(lines)) return WORK_ORDER_TICKET_FOOTER_ACTION.complete
   return null
+}
+
+export function workOrderCatalogOptionKey(categoryId: string, serviceId: string): string {
+  return `${categoryId}:${serviceId}`
+}
+
+export function findWorkOrderCatalogOption(
+  categories: WorkOrderCatalogCategory[],
+  optionKey: string,
+): WorkOrderCatalogService | undefined {
+  if (!optionKey) return undefined
+  for (const category of categories) {
+    const match = category.services.find(
+      (service) => workOrderCatalogOptionKey(category.id, service.id) === optionKey,
+    )
+    if (match) return match
+  }
+  return undefined
+}
+
+export function firstWorkOrderCatalogOptionKey(
+  categories: WorkOrderCatalogCategory[],
+  serviceId: string,
+): string {
+  if (!serviceId) return ''
+  const category = categories.find((item) => item.services.some((service) => service.id === serviceId))
+  return category ? workOrderCatalogOptionKey(category.id, serviceId) : ''
 }
 
 export function flattenWorkOrderCatalog(
@@ -345,9 +383,22 @@ export function replaceWorkOrderCatalogService(
   })
 }
 
+export type WorkOrderCustomServiceInput = {
+  name: string
+  price: number
+  durationMinutes: number
+}
+
+function isOptionalCustomDuration(minutes: number): boolean {
+  if (!Number.isFinite(minutes) || minutes === 0) return true
+  return Number.isInteger(minutes)
+    && minutes > 0
+    && minutes <= WORK_ORDER_CUSTOM_SERVICE_MAX_DURATION
+}
+
 export function addWorkOrderCustomService(
   lines: WorkOrderEditableLine[],
-  input: { name: string; price: number },
+  input: WorkOrderCustomServiceInput,
 ): WorkOrderEditableLine[] {
   return [
     ...lines,
@@ -356,8 +407,7 @@ export function addWorkOrderCustomService(
       posServiceId: null,
       serviceName: input.name,
       unitPrice: input.price,
-      // No duration is stored for an off-menu line, so the row shows a placeholder instead of "0m".
-      durationMinutes: 0,
+      durationMinutes: input.durationMinutes,
       isAddOn: false,
       technicianName: null,
       approval: WORK_ORDER_SERVICE_APPROVAL.pending,
@@ -369,7 +419,13 @@ export function removeWorkOrderServiceLine(
   lines: WorkOrderEditableLine[],
   key: string,
 ): WorkOrderEditableLine[] {
-  return lines.filter((line) => line.key !== key)
+  return lines.flatMap((line) => {
+    if (line.key !== key || line.isAddOn) return [line]
+    // A line that was never saved is only a local add — dropping it undoes that add.
+    if (!line.id) return []
+    if (line.pendingRemoval) return [line]
+    return [{ ...line, pendingRemoval: true }]
+  })
 }
 
 export function markWorkOrderLinePending(
@@ -399,11 +455,16 @@ export function toSaveWorkOrderServiceLinesPayload(
   lines: WorkOrderEditableLine[],
 ): SaveStaffWorkOrderServiceLinePayload[] {
   return lines
-    .filter((line) => !line.isAddOn && line.isMine !== false)
+    .filter((line) => !line.isAddOn && line.isMine !== false && !line.pendingRemoval)
     .map((line) => (
       line.posServiceId
         ? { id: line.id ?? null, posServiceId: line.posServiceId }
-        : { id: line.id ?? null, customServiceName: line.serviceName, price: line.unitPrice }
+        : {
+            id: line.id ?? null,
+            customServiceName: line.serviceName,
+            price: line.unitPrice,
+            ...(line.durationMinutes > 0 ? { durationMinutes: line.durationMinutes } : {}),
+          }
     ))
 }
 
@@ -420,14 +481,29 @@ export function clampWorkOrderPriceInput(raw: string): string {
   return `${wholeCapped}.${fractionParts.join('').slice(0, 2)}`
 }
 
-export function isValidCustomWorkOrderService(input: { name: string; price: number }): boolean {
+export function clampWorkOrderDurationInput(raw: string): string {
+  const digits = raw.replace(/\D/g, '').replace(/^0+(?=\d)/, '')
+  if (!digits) return ''
+  return digits.slice(0, String(WORK_ORDER_CUSTOM_SERVICE_MAX_DURATION).length)
+}
+
+export function isValidCustomWorkOrderService(input: WorkOrderCustomServiceInput): boolean {
   return Boolean(input.name.trim())
     && Number.isFinite(input.price)
     && input.price > 0
     && input.price <= WORK_ORDER_CUSTOM_SERVICE_MAX_PRICE
+    && isOptionalCustomDuration(input.durationMinutes)
 }
 
-export function canSubmitCustomWorkOrderService(raw: { name: string; price: string }): boolean {
+export function canSubmitCustomWorkOrderService(raw: {
+  name: string
+  price: string
+  durationMinutes: string
+}): boolean {
   if (!raw.name.trim() || !raw.price.trim()) return false
-  return isValidCustomWorkOrderService({ name: raw.name, price: Number(raw.price) })
+  return isValidCustomWorkOrderService({
+    name: raw.name,
+    price: Number(raw.price),
+    durationMinutes: raw.durationMinutes.trim() ? Number(raw.durationMinutes) : 0,
+  })
 }

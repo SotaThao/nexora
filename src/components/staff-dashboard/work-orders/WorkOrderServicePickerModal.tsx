@@ -10,6 +10,9 @@ import {
 import {
   WORK_ORDER_PICKER_MODE,
   filterWorkOrderCatalogCategories,
+  findWorkOrderCatalogOption,
+  firstWorkOrderCatalogOptionKey,
+  workOrderCatalogOptionKey,
   type WorkOrderCatalogCategory,
   type WorkOrderCatalogService,
   type WorkOrderPickerMode,
@@ -37,11 +40,12 @@ export default function WorkOrderServicePickerModal({
   const { t } = useTranslation()
   const isEdit = mode === WORK_ORDER_PICKER_MODE.edit
   const [query, setQuery] = useState('')
-  const [selectedId, setSelectedId] = useState(initialServiceId)
+  const [selectedKey, setSelectedKey] = useState('')
   const categories = useMemo(() => filterWorkOrderCatalogCategories(query, catalog), [query, catalog])
+  const activeKey = selectedKey || firstWorkOrderCatalogOptionKey(catalog, initialServiceId)
   const selected = useMemo(
-    () => categories.flatMap((category) => category.services).find((service) => service.id === selectedId),
-    [categories, selectedId],
+    () => findWorkOrderCatalogOption(catalog, activeKey),
+    [activeKey, catalog],
   )
 
   return (
@@ -99,14 +103,15 @@ export default function WorkOrderServicePickerModal({
               <h3 className={WORK_ORDERS_LAYOUT_CLASS.pickerCategory}>{category.name}</h3>
               <div className={WORK_ORDERS_LAYOUT_CLASS.pickerOptions}>
                 {category.services.map((service) => {
-                  const isSelected = service.id === selectedId
+                  const optionKey = workOrderCatalogOptionKey(category.id, service.id)
+                  const isSelected = optionKey === activeKey
                   return (
                     <button
-                      key={service.id}
+                      key={optionKey}
                       type="button"
                       aria-pressed={isSelected}
                       className={workOrderPickerOptionClass(isSelected)}
-                      onClick={() => setSelectedId(service.id)}
+                      onClick={() => setSelectedKey(optionKey)}
                     >
                       <span className={workOrderPickerRadioClass(isSelected)} aria-hidden="true" />
                       <span>

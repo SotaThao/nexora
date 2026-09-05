@@ -310,7 +310,7 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   detailPage:
     'overflow-hidden rounded-[17px] border border-nexoraBorder bg-white shadow-[0_10px_26px_rgba(15,23,42,0.06)]',
   detailHeader:
-    'flex items-center justify-between gap-3 border-b border-nexoraRule px-[18px] py-[15px]',
+    'flex items-center justify-between gap-3 border-b border-nexoraRule px-5 py-4',
   detailHeadMain: 'flex min-w-0 items-center gap-2.5',
   detailBack:
     'grid h-[30px] w-[30px] shrink-0 place-items-center rounded-lg border-0 bg-transparent text-nexoraMuted transition hover:bg-nexoraCanvas',
@@ -319,7 +319,7 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   detailTitle: 'text-[15px] font-black leading-5 text-nexoraText',
   detailCode: 'mt-[3px] text-[11px] font-bold tracking-[0.03em] text-nexoraSubtle',
   detailBadge: 'inline-flex min-h-6 shrink-0 items-center rounded-full px-[9px] text-[11px] font-extrabold whitespace-nowrap',
-  detailBody: 'px-[18px] pb-5 pt-[17px]',
+  detailBody: 'px-5 pb-6 pt-5',
   detailEmpty:
     'hidden min-h-[420px] flex-col items-center justify-center px-10 py-10 text-center text-nexoraSubtle lg:flex',
   detailEmptyIcon: 'mb-3 h-[34px] w-[34px] text-[#b4bdd0]',
@@ -346,16 +346,17 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   serviceHeadCell: 'text-[11px] font-extrabold text-nexoraSubtle',
   serviceHeadCellEnd: 'text-right text-[11px] font-extrabold text-nexoraSubtle',
   serviceTableHead:
-    'grid grid-cols-[minmax(0,1fr)_60px_52px] gap-x-2 py-2 text-[11px] font-extrabold text-nexoraSubtle md:grid-cols-[minmax(0,1fr)_60px_52px_auto]',
+    'grid grid-cols-[minmax(0,1fr)_72px_56px_auto] items-center gap-x-3 py-2 text-[11px] font-extrabold text-nexoraSubtle',
   serviceTableHeadRead:
-    'grid grid-cols-[minmax(0,1fr)_60px_52px] gap-x-2 py-2 text-[11px] font-extrabold text-nexoraSubtle',
+    'grid grid-cols-[minmax(0,1fr)_72px_56px] items-center gap-x-3 py-2 text-[11px] font-extrabold text-nexoraSubtle',
   serviceRow:
-    'grid grid-cols-[minmax(0,1fr)_60px_52px] items-start gap-x-2 gap-y-2 border-b border-nexoraRule py-3',
+    'grid grid-cols-[minmax(0,1fr)_72px_56px] items-center gap-x-3 gap-y-1.5 border-b border-nexoraRule py-3',
   serviceRowEdit:
-    'grid grid-cols-[minmax(0,1fr)_60px_52px] items-start gap-x-2 gap-y-2 border-b border-nexoraRule py-3 md:grid-cols-[minmax(0,1fr)_60px_52px_auto] md:items-center',
+    'grid grid-cols-[minmax(0,1fr)_72px_56px_auto] items-center gap-x-3 gap-y-1.5 border-b border-nexoraRule py-3',
   serviceNameCell: 'min-w-0',
-  serviceNumCell: 'pt-0.5 text-right tabular-nums whitespace-nowrap',
-  serviceActionCell: 'col-span-3 flex justify-end md:col-span-1 md:pl-2',
+  serviceMeta: 'col-span-full min-w-0',
+  serviceNumCell: 'self-center text-right tabular-nums whitespace-nowrap',
+  serviceActionCell: 'flex items-center justify-end self-center pl-1',
   servicePrice: 'text-[11px] font-extrabold text-nexoraText',
   serviceDuration: 'text-[11px] font-bold text-nexoraMuted',
   serviceNameRow: 'flex min-w-0 items-center gap-[5px]',
@@ -363,19 +364,19 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   serviceAddOnIcon: 'h-3.5 w-3.5 shrink-0 text-nexoraBrand',
   serviceActionGroup: 'inline-flex flex-wrap items-center justify-end gap-1',
   serviceChangeButton:
-    'inline-flex min-h-[30px] items-center justify-center rounded-lg border border-[#c9cafa] bg-[#f6f6ff] px-2.5 text-[11px] font-extrabold whitespace-nowrap text-nexoraBrand transition hover:border-nexoraBrand hover:bg-[#ececff]',
+    'inline-flex min-h-[30px] items-center justify-center rounded-lg border border-[#c9cafa] bg-[#f6f6ff] px-2.5 text-[11px] font-extrabold whitespace-nowrap text-nexoraBrand transition hover:border-nexoraBrand hover:bg-[#ececff] disabled:cursor-not-allowed disabled:opacity-50',
   serviceRemoveButton:
-    'inline-flex min-h-[30px] items-center justify-center rounded-lg border border-[#f3c9cd] bg-[#fff7f7] px-2.5 text-[11px] font-extrabold whitespace-nowrap text-[#c9434f] transition hover:border-[#e57d86] hover:bg-[#ffeded]',
+    'inline-flex min-h-[30px] items-center justify-center rounded-lg border border-[#f3c9cd] bg-[#fff7f7] px-2.5 text-[11px] font-extrabold whitespace-nowrap text-[#c9434f] transition hover:border-[#e57d86] hover:bg-[#ffeded] disabled:cursor-not-allowed disabled:opacity-50',
   approvalPill: 'inline-flex h-[19px] shrink-0 items-center rounded-full px-[7px] text-[10px] font-extrabold uppercase leading-none whitespace-nowrap',
   approvalPillPending: 'bg-[#FFF3D6] text-[#AD5A00]',
   approvalPillApproved: 'bg-[#E5F9F0] text-[#008655]',
   approvalPillRejected: 'bg-[#FEECEC] text-[#D42D2D]',
   modalCardWide: 'nexora-modal-card w-full max-w-lg rounded-b-none p-0 sm:rounded-2xl',
-  modalSubtitle: 'mt-1 text-xs font-semibold text-nexoraSubtle',
+  modalSubtitle: 'mt-1 text-xs font-semibold leading-relaxed text-nexoraSubtle sm:text-sm',
   pickerSearchWrap: 'relative block',
   pickerSearchIcon: 'pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nexoraSubtle',
   pickerSearchInput:
-    'h-11 w-full rounded-[10px] border border-nexoraBorder bg-nexoraCanvas py-0 pl-9 pr-3 text-sm text-nexoraText outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand',
+    'nexora-work-order-input h-11 w-full rounded-[10px] border border-nexoraBorder bg-nexoraCanvas py-0 pl-9 pr-3 text-xs text-nexoraText outline-none placeholder:text-xs placeholder:text-nexoraSubtle focus:border-nexoraBrand',
   pickerList: 'mt-3 max-h-[min(52vh,27rem)] space-y-4 overflow-y-auto pr-0.5',
   pickerCategory: 'mb-1.5 text-[10px] font-extrabold uppercase tracking-wide text-nexoraSubtle',
   pickerOptions: 'space-y-1.5',
@@ -390,10 +391,10 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   pickerEmpty: 'px-3 py-8 text-center text-xs font-medium text-nexoraSubtle',
   customFields: 'grid grid-cols-1 gap-3 sm:grid-cols-2',
   customFieldFull: 'sm:col-span-2',
-  customLabel: 'mb-1.5 block text-xs font-extrabold text-nexoraText',
+  customLabel: 'mb-1.5 block text-[11px] font-extrabold text-nexoraText sm:text-xs',
   customInput:
-    'h-11 w-full rounded-[10px] border border-nexoraBorder bg-white px-3 text-sm text-nexoraText outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand',
-  fieldError: 'mt-2 text-xs font-bold text-nexoraDanger',
+    'nexora-work-order-input h-11 w-full rounded-[10px] border border-nexoraBorder bg-white px-3 text-xs text-nexoraText outline-none placeholder:text-xs placeholder:text-nexoraSubtle focus:border-nexoraBrand',
+  fieldError: 'mt-2 text-[11px] font-bold text-nexoraDanger sm:text-xs',
   approvalCard: 'mt-4 rounded-[13px] border border-[#F4B826] bg-[#FFFBEB] px-3.5 py-3.5 text-[#8D380C]',
   approvalHead: 'flex items-center justify-between gap-2.5',
   approvalTitle: 'inline-flex items-center gap-1.5 text-sm font-black',
@@ -406,22 +407,22 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   approvalHelp: 'mt-1.5 text-[11px] font-bold leading-snug text-nexoraMuted',
   approvalForm: 'mt-2 grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_7.5rem]',
   approvalInput:
-    'h-11 w-full rounded-[11px] border border-nexoraBorder bg-white px-3 text-center text-base font-extrabold tracking-[0.22em] text-nexoraText outline-none placeholder:text-sm placeholder:tracking-[0.18em] placeholder:text-nexoraSubtle focus:border-nexoraBrand',
+    'nexora-work-order-input h-11 w-full rounded-[11px] border border-nexoraBorder bg-white px-3 text-center text-xs font-extrabold tracking-[0.22em] text-nexoraText outline-none placeholder:text-xs placeholder:tracking-[0.18em] placeholder:text-nexoraSubtle focus:border-nexoraBrand',
   approvalSubmit:
     'inline-flex h-11 items-center justify-center gap-1.5 rounded-[11px] bg-nexoraBrand px-3 text-[11px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50',
   serviceTotalRow: 'flex items-center justify-between border-b border-nexoraRule py-3.5',
   serviceTotalLabel: 'text-xs font-semibold text-nexoraMuted',
   serviceTotalValue: 'text-sm font-black tabular-nums text-nexoraText',
-  detailActions: 'mt-4 flex flex-wrap gap-2',
+  detailActions: 'mt-6 flex w-full flex-col gap-2',
   primaryAction:
-    'order-first inline-flex min-h-[46px] flex-1 basis-full items-center justify-center gap-[7px] rounded-[10px] border border-transparent bg-[linear-gradient(100deg,#315cff,#6c32ef)] px-3.5 text-xs font-extrabold text-white shadow-[0_10px_24px_rgba(70,72,216,0.22)] transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:h-[18px] [&_svg]:w-[18px] [&_svg]:shrink-0',
+    'inline-flex h-12 w-full items-center justify-center gap-[7px] rounded-[10px] border border-transparent bg-[linear-gradient(100deg,#315cff,#6c32ef)] px-3.5 text-xs font-extrabold text-white shadow-[0_10px_24px_rgba(70,72,216,0.22)] transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:h-[18px] [&_svg]:w-[18px] [&_svg]:shrink-0',
   primaryActionGlyph: 'h-[18px] w-[18px] shrink-0',
   modalOverlay:
     'fixed inset-0 z-[60] flex items-end justify-center bg-nexoraText/55 p-0 backdrop-blur-sm sm:items-center sm:p-4',
   modalCard: 'nexora-modal-card w-full max-w-md rounded-b-none p-0 sm:rounded-2xl',
   modalHeader: 'flex shrink-0 items-start justify-between gap-3 border-b border-nexoraRule px-5 py-4',
   modalKicker: 'text-xs font-semibold text-nexoraBrand',
-  modalTitle: 'mt-0.5 text-lg font-extrabold text-nexoraText sm:text-xl',
+  modalTitle: 'mt-0.5 text-base font-extrabold leading-snug text-nexoraText sm:text-lg lg:text-xl',
   modalClose:
     'grid h-9 w-9 shrink-0 place-items-center rounded-full text-nexoraMuted transition hover:bg-nexoraCanvas hover:text-nexoraText',
   modalBody: 'flex-1 space-y-4 overflow-y-auto px-5 py-5',
@@ -442,9 +443,9 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   modalFooter:
     'flex shrink-0 gap-3 border-t border-nexoraRule px-5 py-4',
   modalCancel:
-    'inline-flex h-12 flex-1 items-center justify-center rounded-xl border border-nexoraBorder bg-white px-4 text-sm font-bold text-nexoraText transition hover:bg-nexoraCanvas disabled:opacity-60',
+    'inline-flex h-11 flex-1 items-center justify-center rounded-xl border border-nexoraBorder bg-white px-3 text-[13px] font-bold text-nexoraText transition hover:bg-nexoraCanvas disabled:opacity-60 sm:h-12 sm:px-4 sm:text-sm',
   modalConfirm:
-    'inline-flex h-12 flex-[1.4] items-center justify-center gap-2 rounded-xl bg-nexoraBrand px-4 text-sm font-extrabold text-white transition hover:bg-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-50',
+    'inline-flex h-11 flex-[1.4] items-center justify-center gap-2 rounded-xl bg-nexoraBrand px-3 text-[13px] font-extrabold text-white transition hover:bg-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-50 sm:h-12 sm:px-4 sm:text-sm',
   modalConfirmIcon: 'grid h-5 w-5 place-items-center rounded-full bg-white/20',
   notesCard:
     'mt-4 flex items-start gap-[9px] rounded-[11px] border border-[#f3c98e] bg-[#fff8ef] px-3.5 py-[13px] text-[11px] font-semibold leading-normal text-[#596178]',
@@ -616,8 +617,9 @@ export function workOrderFilterCountClass(tab: WorkOrderTicketFilter) {
   return `${WORK_ORDERS_LAYOUT_CLASS.statusCount} ${WORK_ORDER_FILTER_TAB_STYLE[tab].count}`
 }
 
-export function workOrderServiceRowClass(canEdit: boolean) {
-  return canEdit ? WORK_ORDERS_LAYOUT_CLASS.serviceRowEdit : WORK_ORDERS_LAYOUT_CLASS.serviceRow
+export function workOrderServiceRowClass(canEdit: boolean, pendingRemoval = false) {
+  const base = canEdit ? WORK_ORDERS_LAYOUT_CLASS.serviceRowEdit : WORK_ORDERS_LAYOUT_CLASS.serviceRow
+  return pendingRemoval ? `${base} opacity-60` : base
 }
 
 export function workOrderServiceTableHeadClass(canEdit: boolean) {
