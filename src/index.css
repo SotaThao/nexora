@@ -866,6 +866,21 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
+.pos-ticket-print-page {
+  width: min(100%, 80mm);
+}
+
+.pos-ticket-print-page + .pos-ticket-print-page {
+  margin-top: 16px;
+}
+
+@media print {
+  .pos-ticket-print-page + .pos-ticket-print-page {
+    break-before: page;
+    page-break-before: always;
+  }
+}
+
 .pos-receipt-business {
   display: grid;
   gap: 1px;

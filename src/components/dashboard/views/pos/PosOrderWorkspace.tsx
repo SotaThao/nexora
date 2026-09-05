@@ -10,7 +10,7 @@
 // Creating an order is no longer done here: the Check-in tab renders the shared check-in
 // page (PosCheckInTab / CheckInSurface), the same one the customer kiosk runs.
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, Loader2, Package } from 'lucide-react'
+import { ArrowLeft, Loader2, Package, Printer, ClipboardCheck } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getErrorMessage } from '../../../../data/errorCodes'
@@ -404,6 +404,7 @@ export default function PosOrderWorkspace({
   // opted into per checkout rather than sent unless someone remembers to turn it off.
   const [receiptChoice, setReceiptChoice] = useState<PosReceiptMode>('none')
   const [printPreviewOpen, setPrintPreviewOpen] = useState(false)
+  const [ticketPreviewOpen, setTicketPreviewOpen] = useState(false)
   const [tipSplitInputs, setTipSplitInputs] = useState<Record<string, string>>({})
   const initializedWorkspaceRef = useRef<string | null>(null)
   const initializedOrderIdRef = useRef<string | null>(null)
@@ -1195,8 +1196,8 @@ export default function PosOrderWorkspace({
                                 )}
                               </div>
 
-                              <div className="col-span-2 overflow-x-auto pt-1">
-                                <div className="flex min-w-max items-center gap-1.5">
+                              <div className="col-span-2 min-w-0 pt-1">
+                                <div className="flex flex-wrap items-center gap-1.5">
                                   {canMutateLine ? (
                                     <button
                                       type="button"
@@ -1434,6 +1435,17 @@ export default function PosOrderWorkspace({
 
             {!showPaymentSection ? (
               <div className="flex gap-2">
+                {mode === 'edit' ? (
+                  <button
+                    type="button"
+                    onClick={() => setTicketPreviewOpen(true)}
+                    disabled={isBusy || serviceLineCount === 0}
+                    className="inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-nexoraSurface px-3 text-xs font-semibold text-nexoraMuted transition-colors hover:border-nexoraBrand/30 hover:bg-nexoraBrandSoft/40 hover:text-nexoraBrandDark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand/30 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Printer className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {t('components.dashboard.views.pos.PosOrderWorkspace.printTicketAction')}
+                  </button>
+                ) : null}
                 {order?.status === PosOrderStatus.Waiting && hasServiceLines ? (
                   <button
                     type="button"
@@ -1444,12 +1456,15 @@ export default function PosOrderWorkspace({
                         ? t('components.dashboard.views.pos.PosOrderWorkspace.assignTechnicianFirst')
                         : undefined
                     }
-                    className="h-11 flex-1 rounded-lg border border-nexoraBorder text-sm font-bold text-nexoraText hover:border-nexoraBrand disabled:opacity-60"
+                    className="inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-nexoraBrand/25 bg-nexoraBrandSoft/60 px-3 text-xs font-semibold text-nexoraBrandDark transition-colors hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand/30 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {startOrderService.isPending ? (
                       <Loader2 className="mx-auto h-4 w-4 animate-spin" />
                     ) : (
-                      t('components.dashboard.views.pos.PosOrderWorkspace.startServiceButton')
+                      <>
+                        <ClipboardCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        {t('components.dashboard.views.pos.PosOrderWorkspace.startServiceButton')}
+                      </>
                     )}
                   </button>
                 ) : null}
@@ -1900,16 +1915,17 @@ export default function PosOrderWorkspace({
     ]
   })
 
-  const printableServiceGroups = visibleLines.reduce<Array<{ technician: string; lines: DisplayServiceLine[] }>>(
+  const printableServiceGroups = visibleLines.reduce<Array<{ id: string; technician: string; lines: DisplayServiceLine[] }>>(
     (groups, line) => {
       if (line.itemType !== 'Service') return groups
 
       const technician = line.technicianName?.trim() || t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel')
-      const group = groups.find((entry) => entry.technician === technician)
+      const id = line.posStaffProfileId || 'unassigned'
+      const group = groups.find((entry) => entry.id === id)
       if (group) {
         group.lines.push(line)
       } else {
-        groups.push({ technician, lines: [line] })
+        groups.push({ id, technician, lines: [line] })
       }
       return groups
     },
@@ -1921,11 +1937,12 @@ export default function PosOrderWorkspace({
   const isPaidReceiptPreview = isPaid || Boolean(completedPayment)
   const printableReceiptGroups: PosReceiptPrintGroup[] = [
     ...printableServiceGroups.map((group) => ({
-      id: `technician-${group.technician}`,
+      id: `technician-${group.id}`,
       label: group.technician,
       lines: group.lines.map((line) => ({
         id: line.key,
         name: line.serviceName,
+        note: line.note,
         amount: lineTotal(line),
         discountLabel: line.discountAmount > 0
           ? formatDiscountPriceBadge(line.discountType, line.discountValue, line.discountAmount)
@@ -1952,14 +1969,17 @@ export default function PosOrderWorkspace({
   ]
   const printableReceipt = order ? (
     <PosReceiptPrintPreview
-      open={printPreviewOpen}
-      onClose={() => setPrintPreviewOpen(false)}
+      open={printPreviewOpen || ticketPreviewOpen}
+      ticketMode={ticketPreviewOpen}
+      customerName={order.customerName}
+      orderNote={noteInput}
+      onClose={() => { setPrintPreviewOpen(false); setTicketPreviewOpen(false) }}
       orderNumber={order.orderNumber}
       businessName={businessName}
       businessAddress={businessAddress}
       businessPhone={businessPhone}
       completedAt={order.completedAt}
-      groups={printableReceiptGroups}
+      groups={ticketPreviewOpen ? printableReceiptGroups.filter((group) => group.id !== 'products') : printableReceiptGroups}
       tipAmount={order.tipAmount}
       discountAmount={order.discountAmount}
       orderDiscountAmount={order.orderDiscountAmount}
