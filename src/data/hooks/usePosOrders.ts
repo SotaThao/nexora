@@ -198,14 +198,57 @@ export function useStartOrderService(businessId?: string) {
 
 // Technician picker filtered by skill for one service — includes busy staff (isBusy flag)
 // so the manager can still assign them as an explicit override.
-export function useAssignableStaffForService(businessId?: string, posServiceId?: string) {
+export function useAssignableStaffForService(
+  businessId?: string,
+  posServiceId?: string,
+  scheduledAt?: string,
+) {
   const { isAuthenticated } = useSessionRole()
   return useQuery<AssignableStaffApiDto[]>({
-    queryKey: qk.merchantPosAssignableStaff(businessId, posServiceId),
-    queryFn: () => posOrdersRepository.getAssignableStaffForService(businessId as string, posServiceId as string),
+    queryKey: qk.merchantPosAssignableStaff(businessId, posServiceId, scheduledAt),
+    queryFn: () => posOrdersRepository.getAssignableStaffForService(
+      businessId as string,
+      posServiceId as string,
+      scheduledAt,
+    ),
     enabled: isAuthenticated && Boolean(businessId) && Boolean(posServiceId),
     retry: false,
   })
+}
+
+// Accept / decline / start one service line. All three invalidate the same boards: declining
+// hands the line back to the floor, and starting can flip the whole ticket to In Service.
+function useServiceLineAction(
+  businessId: string | undefined,
+  action: (businessId: string, orderId: string, serviceLineId: string) => Promise<boolean>,
+) {
+  const queryClient = useQueryClient()
+  return useMutation<boolean, Error, { orderId: string; serviceLineId: string }>({
+    mutationFn: ({ orderId, serviceLineId }) =>
+      unlessOptimisticId(
+        serviceLineId,
+        () => action(businessId as string, orderId, serviceLineId),
+        false,
+      ),
+    onSuccess: (_result, { orderId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
+    },
+  })
+}
+
+export function useAcceptServiceLine(businessId?: string) {
+  return useServiceLineAction(businessId, posOrdersRepository.acceptServiceLine)
+}
+
+export function useRejectServiceLine(businessId?: string) {
+  return useServiceLineAction(businessId, posOrdersRepository.rejectServiceLine)
+}
+
+export function useStartServiceLine(businessId?: string) {
+  return useServiceLineAction(businessId, posOrdersRepository.startServiceLine)
 }
 
 // US-026 — frees the assigned staff on this line immediately, independent of the
@@ -222,6 +265,8 @@ export function useMarkServiceLineDone(businessId?: string) {
     onSuccess: (_result, { orderId }) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
     },
   })
 }

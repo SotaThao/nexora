@@ -98,11 +98,11 @@ export default function PosReportPeriodPicker({ selection, businessTimeZone, onC
 
   return (
     <div
-      className="grid w-fit max-w-full grid-cols-[max-content_max-content] items-start gap-x-2 gap-y-2 overflow-x-auto pb-1"
+      className="flex min-w-0 max-w-full flex-col items-start gap-2 pb-1"
       data-testid="report-period-picker"
     >
       <div
-        className="contents"
+        className="flex max-w-full flex-wrap items-start gap-2"
         role="toolbar"
         aria-label={t(`${TK}.controlsLabel`)}
       >
@@ -173,7 +173,7 @@ export default function PosReportPeriodPicker({ selection, businessTimeZone, onC
       </div>
 
       <div
-        className="col-span-2 row-start-2 w-full max-w-xl rounded-lg bg-violet-50 px-3 py-2"
+        className="w-full max-w-xl rounded-lg bg-violet-50 px-3 py-2"
         role="status"
         aria-live="polite"
       >

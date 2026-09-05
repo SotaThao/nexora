@@ -2,6 +2,7 @@
 import {
   LayoutDashboard,
   Calculator,
+  CalendarDays,
   QrCode,
   CircleDollarSign,
   Star,
@@ -17,8 +18,11 @@ import {
 // Bottom-nav / sidebar items. Icons align with merchant dashboard MENU_ITEMS.
 // 'taxiq' carries `children` (Tax IQ sub-nav) — StaffSidebar renders it as an
 // expandable group, mirroring the Owner Dashboard's MENU_ITEMS.taxiq pattern.
+export const STAFF_CALENDAR_SCREEN = 'calendar' as const
+
 const STAFF_ALL_MENU_ITEMS = [
   { id: 'home', icon: LayoutDashboard, labelKey: 'staff_dashboard.nav.home' },
+  { id: STAFF_CALENDAR_SCREEN, icon: CalendarDays, labelKey: 'staff_dashboard.nav.my_calendar' },
   { id: 'tips', icon: CircleDollarSign, labelKey: 'staff_dashboard.nav.tips' },
   { id: 'payments', icon: ReceiptText, labelKey: 'staff_dashboard.nav.payments' },
   { id: 'pay', icon: BarChart3, labelKey: 'staff_dashboard.nav.pay' },
@@ -51,6 +55,8 @@ export const STAFF_WORKSPACE_MENU_ITEM = {
   labelKey: 'staff_dashboard.nav.my_workspace',
 }
 
+export const STAFF_WORK_ORDERS_SCREEN = 'work-orders' as const
+
 export const STAFF_WORKSPACE_SUBMENU = [
   {
     id: 'my_qr',
@@ -80,7 +86,7 @@ export const STAFF_WORKSPACE_SUBMENU = [
   },
 ]
 
-export const STAFF_WORKSPACE_SCREEN_IDS = ['qr', 'payments', 'reviews', 'tips', 'earnings', 'salons', 'taxiq']
+export const STAFF_WORKSPACE_SCREEN_IDS = ['qr', 'payments', 'reviews', 'tips', 'earnings', 'salons', STAFF_WORK_ORDERS_SCREEN, 'taxiq']
 
 export function isStaffWorkspaceSubActive(
   activeScreen: string,
@@ -93,7 +99,8 @@ export function isStaffWorkspaceSubActive(
 
   if (item.id === 'report') return isSalonReportRoute
   if (item.id === 'my_salons') {
-    return activeScreen === 'salons' && !isSalonReportRoute
+    return (activeScreen === 'salons' && !isSalonReportRoute)
+      || activeScreen === STAFF_WORK_ORDERS_SCREEN
   }
 
   if (activeScreen !== item.screen) return false
@@ -120,7 +127,7 @@ export function isStaffWorkspaceRouteActive(
   activeScreen: string,
   tabParam: string | null,
 ): boolean {
-  if (activeScreen === 'earnings' || activeScreen === 'salons') return true
+  if (activeScreen === 'earnings' || activeScreen === 'salons' || activeScreen === STAFF_WORK_ORDERS_SCREEN) return true
   return STAFF_WORKSPACE_SUBMENU.some((item) =>
     isStaffWorkspaceSubActive(activeScreen, tabParam, item),
   )
@@ -179,7 +186,7 @@ export function isStaffBottomNavItemActive(
   return true
 }
 
-export const STAFF_SCREENS = ['home', 'qr', 'tips', 'reviews', 'pay', 'payments', 'earnings', 'salons', 'profile', 'notifications', 'taxiq']
+export const STAFF_SCREENS = ['home', 'qr', 'tips', 'reviews', 'pay', 'payments', 'earnings', 'salons', STAFF_WORK_ORDERS_SCREEN, STAFF_CALENDAR_SCREEN, 'profile', 'notifications', 'taxiq']
 
 // Maps a Staff Tax IQ sidebar sub-item id -> the StaffTaxYear.enabledModules entry
 // that must be present for it to show. Sub-items absent from this table (income,

@@ -37,7 +37,8 @@ import {
   TaxIqForm1099NecRoute, TaxIqTipLedgerRoute, TaxIqFormsReportsRoute, TaxIqTaxEstimateRoute,
   PosSalonSettingsRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
   PosPromotionsRoute,
-  PosStaffProfileRoute, PosFrontDeskRoute, PosReportsRoute, PosDevicesRoute, PosPublicCheckInRoute
+  PosStaffProfileRoute, PosFrontDeskRoute, PosReportsRoute, PosDevicesRoute, PosPublicCheckInRoute,
+  PosPrinterSetupRoute,
 } from "../components/dashboard/routes";
 import { DASHBOARD_MENU_ID, DASHBOARD_SETTINGS_TAB, BOOKING_HUB_PATH, BOOKING_HUB_LEGACY_PATH_SEGMENT, buildDashboardReportsPath, DASHBOARD_REPORTS_TAB } from "../components/dashboard/constants";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
@@ -51,6 +52,7 @@ import PosOnboardingLayout from "./PosOnboardingLayout";
 import RootRedirect from "./RootRedirect";
 import { VoiceCallPlanRoute } from "../data/voiceTrial/domain";
 import { PUBLIC_BOOKING_ROUTE } from "../components/public/booking/constants";
+import { ONEQR_ROUTE } from "../constants/oneQr";
 
 const SetupWizard = lazyWithRetry(() => import("../components/SetupWizard"));
 const DashboardOwnerShell = lazyWithRetry(
@@ -126,6 +128,12 @@ const StaffClockScan = lazyWithRetry(
 const StaffFrontDesk = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffFrontDesk"),
 );
+const StaffWorkOrders = lazyWithRetry(
+  () => import("../components/staff-dashboard/work-orders/StaffWorkOrders"),
+);
+const StaffMyCalendar = lazyWithRetry(
+  () => import("../components/staff-dashboard/calendar/StaffMyCalendar"),
+);
 const ForgotPassword = lazyWithRetry(
   () => import("../components/ForgotPassword"),
 );
@@ -135,6 +143,9 @@ const ResetPassword = lazyWithRetry(
 const LoginScreen = lazyWithRetry(() => import("./LoginScreen"));
 const QrRedirectPage = lazyWithRetry(
   () => import("../components/public/QrRedirectPage"),
+);
+const OneQrLandingPage = lazyWithRetry(
+  () => import("../components/public/oneqr/OneQrLandingPage"),
 );
 const PrivacyPolicyPage = lazyWithRetry(
   () => import("../components/legal/PrivacyPolicyPage"),
@@ -325,6 +336,7 @@ export default function AppRouter() {
           <Route path="/merchant/payments/:paymentId" element={<PaymentsRedirect />} />
           <Route path="/qr/:code" element={<QrRedirectPage />} />
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
+          <Route path={ONEQR_ROUTE.path} element={<OneQrLandingPage />} />
           <Route path={PUBLIC_BOOKING_ROUTE.path} element={<PublicBookingPage />} />
           <Route path="/booking/:businessSlug" element={<PublicPosBookingPage />} />
           <Route path="/booking/manage/:manageToken" element={<ManageBookingPage />} />
@@ -426,6 +438,7 @@ export default function AppRouter() {
               <Route path={`${DASHBOARD_MENU_ID.pos}/promotions`} element={<PosPromotionsRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/staff`} element={<PosStaffProfileRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/devices`} element={<PosDevicesRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/printer`} element={<PosPrinterSetupRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/public-checkin`} element={<PosPublicCheckInRoute />} />
             </Route>
             <Route path={DASHBOARD_MENU_ID.touchpoints} element={<TouchpointsRoute />} />
@@ -474,6 +487,8 @@ export default function AppRouter() {
             <Route path="salons" element={<StaffMySalons />} />
             <Route path="salons/report" element={<StaffSalonReport />} />
             <Route path="salons/:businessId/front-desk" element={<StaffFrontDesk />} />
+            <Route path="work-orders/:salonId?/:ticketId?" element={<StaffWorkOrders />} />
+            <Route path="calendar" element={<StaffMyCalendar />} />
             {/* Landing page for the rotating clock-in QR — salon id and token arrive as ?b=&t= */}
             <Route path="clock-scan" element={<StaffClockScan />} />
             <Route path="profile" element={<StaffProfile />} />

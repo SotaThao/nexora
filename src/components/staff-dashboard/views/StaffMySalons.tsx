@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ChevronDown, Loader2, X } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { ChevronDown, ClipboardList, Loader2, MapPin, X } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import {
@@ -40,10 +40,17 @@ import { useStaffCommunityChatUnreadByPeerId } from '../../staff/useStaffCommuni
 import type { StaffChatMemberLike } from '../../staff/staffCommunityChatUtils'
 import {
   getSalonChatMemberByBusinessId,
-  SALON_CARD_PADDING_CLASS,
   SALON_CHAT_START_HINT_PLACEMENT,
 } from '../utils/staffSalonChat'
 import type { WorkSkillCategory, WorkSkillService } from '../../../data/repositories/staffSelf'
+import { STAFF_SALONS_PATH } from '../staffSalonPaths'
+import { staffWorkOrdersPath } from '../work-orders/constants'
+
+const SALON_ACTION_BTN_BASE =
+  'inline-flex h-[38px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-[10px] px-3.5 text-[13px] font-bold transition disabled:cursor-not-allowed disabled:opacity-60'
+const SALON_ACTION_BTN_DANGER = `${SALON_ACTION_BTN_BASE} border border-nexoraDanger bg-white text-nexoraDanger hover:bg-nexoraDanger/5`
+const SALON_ACTION_BTN_BRAND = `${SALON_ACTION_BTN_BASE} border border-nexoraBrand bg-white text-nexoraBrand hover:bg-nexoraBrand/5`
+const SALON_ACTION_BTN_SOLID = `${SALON_ACTION_BTN_BASE} border border-transparent bg-nexoraBrand text-white shadow-sm hover:bg-nexoraBrand/90`
 
 function getSalonStatusHelp(
   statusLabel: string,
@@ -120,7 +127,7 @@ function SkillTreeSkeleton() {
       {[1, 2, 3].map((i) => (
         <div key={i} className="rounded-[10px] border border-nexoraBorder/50 bg-white p-2.5">
           <div className="h-3 w-1/3 rounded bg-nexoraBorder/40" />
-          <div className="mt-2 grid grid-cols-2 gap-1.5">
+          <div className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
             {[1, 2, 3, 4].map((j) => (
               <div key={j} className="h-[34px] rounded-[9px] bg-nexoraBorder/30" />
             ))}
@@ -245,12 +252,11 @@ function EditWorkSkillModal({
 
   return (
     <div
-      className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/55 p-5"
+      className="fixed inset-0 z-[1000] flex items-end justify-center bg-slate-900/55 p-0 sm:items-center sm:p-5"
       role="presentation"
     >
       <div
-        className="flex w-full max-w-[420px] flex-col rounded-[20px] bg-white shadow-2xl"
-        style={{ maxHeight: 'calc(100vh - 40px)' }}
+        className="nexora-modal-card flex w-full max-w-[420px] flex-col rounded-t-2xl bg-white shadow-2xl sm:rounded-[20px]"
         role="dialog"
         aria-modal="true"
         aria-label={`${t('staff_salons.edit_work_skill')} — ${salonName}`}
@@ -271,7 +277,7 @@ function EditWorkSkillModal({
         <div className="mx-6 my-4 h-px bg-nexoraBorder/60" />
 
         {/* Skill tree */}
-        <div className="flex-1 overflow-y-auto px-6" style={{ maxHeight: 340 }}>
+        <div className="flex-1 overflow-y-auto px-6">
           {isLoading ? (
             <SkillTreeSkeleton />
           ) : isError ? (
@@ -430,6 +436,7 @@ function SalonCard({
   showChatStartHint?: boolean
   onChatStartHintDismiss?: () => void
 }) {
+  const [isSkillModalOpen, setIsSkillModalOpen] = useState(false)
   const statusLabel = resolveStaffBusinessLinkStatusLabel(business)
   const status = getSalonDisplayStatus(business, t)
   const statusHelp = getSalonStatusHelp(statusLabel, t)
@@ -438,107 +445,134 @@ function SalonCard({
   const initials = business.logoUrl ? null : getSalonInitials(business.businessName)
   const isActive = statusLabel.trim().toLowerCase() === STAFF_BUSINESS_LINK_STATUS.active
   const nicknameValue = business.nicknameAtBusiness?.trim() ?? ''
-  const nicknameDisplayValue = nicknameValue || t('staff_salons.nickname_not_set')
+  const nicknameDisplayValue = nicknameValue || originalName || t('staff_salons.nickname_not_set')
   const canUnlink = isActive && typeof onUnlink === 'function'
 
   return (
-    <div className={`w-full rounded-2xl border border-nexoraBorder/80 bg-white text-left shadow-sm transition hover:border-nexoraBrand/20 hover:shadow-md ${showChatStartHint ? SALON_CARD_PADDING_CLASS.withChatStartHint : SALON_CARD_PADDING_CLASS.default}`}>
-      <div className="flex w-full gap-3 text-left">
+    <div
+      className={`w-full overflow-hidden rounded-2xl border border-nexoraBorder/80 bg-white text-left shadow-sm transition hover:border-nexoraBrand/20 hover:shadow-md ${
+        showChatStartHint ? 'pb-10' : ''
+      }`}
+    >
+      <div className="flex gap-3 px-5 pb-4 pt-5">
         {business.logoUrl ? (
           <img
             src={business.logoUrl}
             alt=""
-            className="h-12 w-12 shrink-0 rounded-full object-cover"
+            width={56}
+            height={56}
+            className="h-14 w-14 shrink-0 rounded-full object-cover"
           />
         ) : (
           <span
-            className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-xs font-extrabold ${getSalonAvatarClass(index)}`}
+            className={`grid h-14 w-14 shrink-0 place-items-center rounded-full text-sm font-extrabold ${getSalonAvatarClass(index)}`}
           >
             {initials}
           </span>
         )}
 
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="truncate text-sm font-extrabold uppercase tracking-wide text-nexoraText">
+        <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="truncate text-base font-extrabold text-nexoraText">
               {business.businessName}
             </h3>
-            <span className="flex shrink-0 items-center gap-1">
-              <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${status.className}`}>
-                {status.label}
-              </span>
-              <Tooltip
-                content={statusHelp}
-                ariaLabel={t('staff_salons.status_help_aria')}
-                align="end"
-                placement="top"
-              />
-            </span>
-          </div>
-          {location ? (
-            <p className="truncate text-xs font-medium text-nexoraMuted">{location}</p>
-          ) : null}
-          <div className="flex items-center justify-between gap-2 pt-0.5">
-            {canUnlink ? (
-              <button
-                type="button"
-                onClick={() => onUnlink?.()}
-                disabled={isUnlinking}
-                className="shrink-0 rounded-lg border border-nexoraDanger/25 bg-white px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-nexoraDanger transition hover:bg-nexoraDanger/5 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {t('staff_salons.unlink_button')}
-              </button>
-            ) : (
-              <span />
-            )}
+            {location ? (
+              <p className="mt-1 flex min-w-0 items-center gap-1 text-xs font-medium text-nexoraMuted">
+                <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span className="truncate">{location}</span>
+              </p>
+            ) : null}
             {timeline ? (
-              <p className="text-right text-[11px] font-semibold text-nexoraMuted">{timeline}</p>
+              <p className="mt-1 text-xs font-medium text-nexoraMuted">{timeline}</p>
             ) : null}
           </div>
+          <span className="flex shrink-0 items-center gap-1">
+            <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${status.className}`}>
+              {status.label}
+            </span>
+            <Tooltip
+              content={statusHelp}
+              ariaLabel={t('staff_salons.status_help_aria')}
+              align="end"
+              placement="top"
+            />
+          </span>
         </div>
       </div>
 
       {isActive ? (
-        <div className="mt-2 flex min-w-0 items-center gap-2">
-          <div className="flex min-w-0 flex-1 items-center gap-2 py-1">
-            <span className="shrink-0 rounded-full border border-dashed border-nexoraLavender bg-nexoraBrandSoft px-2 py-0.5 text-[10px] font-extrabold uppercase text-nexoraBrand">
-              {t('staff_salons.nickname_badge')}
-            </span>
-            <span
-              className={`min-w-0 flex-1 truncate text-xs text-nexoraText ${nicknameValue ? 'font-semibold' : 'italic text-nexoraMuted'}`}
-              title={nicknameDisplayValue}
-              aria-label={nicknameDisplayValue}
-            >
-              {nicknameDisplayValue}
-            </span>
-          </div>
-          <div className="flex shrink-0 items-center gap-1">
-            {chatMember ? (
-              <StaffCommunityChatActionButton
-                member={chatMember}
-                unreadCount={chatUnreadCount}
-                showStartHint={showChatStartHint}
-                onStartHintDismiss={onChatStartHintDismiss}
-                manageLabelKey={STAFF_CHAT_I18N.salonManage}
-                manageUnreadLabelKey={STAFF_CHAT_I18N.salonManageUnread}
-                hintPlacement={SALON_CHAT_START_HINT_PLACEMENT}
+        <>
+          <div className="mx-5 h-px bg-nexoraBorder/80" />
+          <div className="flex flex-col gap-3 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 items-center gap-2 lg:mr-4">
+              <p
+                className={`min-w-0 truncate text-sm text-nexoraText ${nicknameValue ? 'font-semibold' : 'italic text-nexoraMuted'}`}
+                title={nicknameDisplayValue}
+              >
+                {t('staff_salons.nickname_value', { name: nicknameDisplayValue })}
+              </p>
+              {chatMember ? (
+                <StaffCommunityChatActionButton
+                  member={chatMember}
+                  unreadCount={chatUnreadCount}
+                  showStartHint={showChatStartHint}
+                  onStartHintDismiss={onChatStartHintDismiss}
+                  manageLabelKey={STAFF_CHAT_I18N.salonManage}
+                  manageUnreadLabelKey={STAFF_CHAT_I18N.salonManageUnread}
+                  hintPlacement={SALON_CHAT_START_HINT_PLACEMENT}
+                />
+              ) : null}
+            </div>
+            <div className="flex flex-wrap items-center gap-2 lg:shrink-0 lg:flex-nowrap lg:justify-end">
+              {canUnlink ? (
+                <button
+                  type="button"
+                  onClick={() => onUnlink?.()}
+                  disabled={isUnlinking}
+                  className={SALON_ACTION_BTN_DANGER}
+                >
+                  {t('staff_salons.unlink_button')}
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => setIsSkillModalOpen(true)}
+                className={SALON_ACTION_BTN_BRAND}
+              >
+                {t('staff_salons.edit_work_skill')}
+              </button>
+              <NicknameEditor
+                value={business.nicknameAtBusiness}
+                originalName={originalName}
+                triggerLabel={t('staff_salons.edit_nickname')}
+                fieldLabel={t('staff_salons.nickname_badge')}
+                helperText={t('staff_salons.nickname_helper_staff')}
+                onRefresh={onRefreshNickname}
+                onSave={onSaveNickname}
+                triggerVariant="outline-brand"
+                containerClassName="shrink-0"
+                stopPropagation
               />
-            ) : null}
-            <NicknameEditor
-              value={business.nicknameAtBusiness}
-              originalName={originalName}
-              triggerLabel={t('staff_salons.nickname_edit_action')}
-              fieldLabel={t('staff_salons.nickname_badge')}
-              helperText={t('staff_salons.nickname_helper_staff')}
-              onRefresh={onRefreshNickname}
-              onSave={onSaveNickname}
-              triggerVariant="icon"
-              containerClassName="shrink-0"
-              stopPropagation
-            />
+              <Link
+                to={staffWorkOrdersPath(business.businessId)}
+                state={{ from: STAFF_SALONS_PATH }}
+                className={SALON_ACTION_BTN_SOLID}
+              >
+                <ClipboardList className="h-4 w-4" aria-hidden="true" />
+                {t('staff_salons.open_work_orders')}
+              </Link>
+            </div>
           </div>
-        </div>
+        </>
       ) : null}
+
+      <EditWorkSkillModal
+        open={isSkillModalOpen}
+        onClose={() => setIsSkillModalOpen(false)}
+        businessId={business.businessId}
+        salonName={business.businessName}
+        t={t}
+      />
     </div>
   )
 }
@@ -612,8 +646,8 @@ export default function StaffMySalons() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-xl font-extrabold text-nexoraText">{t('staff_salons.title')}</h2>
-        <p className="mt-1 text-xs leading-relaxed text-nexoraMuted">{t('staff_salons.subtitle')}</p>
+        <h2 className="text-2xl font-extrabold text-nexoraText">{t('staff_salons.title')}</h2>
+        <p className="mt-1 text-sm text-nexoraMuted">{t('staff_salons.subtitle')}</p>
       </div>
 
       {pendingLinkRequests.length > 0 && (
@@ -646,7 +680,7 @@ export default function StaffMySalons() {
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {salons.map((business, index) => {
             const chatMember = salonChatMemberById[business.businessId] ?? null
             return (

@@ -75,7 +75,7 @@ export default function TechnicianPickerGrid({
   const cardClass = (isSelected: boolean) =>
     `${autoWrap ? 'min-w-0 w-auto max-w-full flex-none ' : ''}${compact
       ? 'flex min-h-11 flex-col items-start gap-0.5 rounded-lg border px-3 py-2 text-left'
-      : 'flex flex-col items-center gap-1 rounded-xl border p-3 text-center'} ${
+      : 'flex flex-col items-center justify-center gap-1 rounded-xl border p-3 text-center'} ${
       isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder hover:border-nexoraBrand'
     }`
 

@@ -185,8 +185,14 @@ export const qk = {
   // POS iPad redesign, Ticket 2 — Check-in "returning customer" lookup by phone.
   merchantPosCustomerLookup: (businessId?: string, phone?: string) =>
     ['merchantSettings', 'posCustomerLookup', businessId ?? '', phone ?? ''],
+  // POS receipt printing (US-047) - device-scoped, deliberately without a businessId: the printer
+  // is attached to this iPad, so these are not business settings and must not be keyed as such.
+  posPrinterProfile: () => ['posDevice', 'printerProfile'],
+  posReceiptSettings: () => ['posDevice', 'receiptSettings'],
   // POS Booking — per-business settings (Ticket 2)
   merchantPosBookingSettings: (businessId?: string) => ['merchantSettings', 'posBookingSettings', businessId ?? ''],
+  merchantPosOrderSettings: (businessId?: string) => ['merchantSettings', 'posOrderSettings', businessId ?? ''],
+  staffPosPendingAcceptanceCount: () => ['staff', 'posPendingAcceptanceCount'],
   // POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filtered.
   // `filters` is only appended when explicitly passed — omitting it (e.g. from an
   // invalidateQueries call after Complete/edit) yields a short prefix that matches every
@@ -241,6 +247,34 @@ export const qk = {
     if (dayKey) key.push(dayKey)
     return key
   },
+  // Two-way beep feed. Same optional-dayKey shape as the roster/log keys above so the shared
+  // businessId prefix invalidates whichever local day is on screen.
+  merchantPosBeepFeed: (businessId?: string, dayKey?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posBeepFeed', businessId ?? '']
+    if (dayKey) key.push(dayKey)
+    return key
+  },
+  // Scoped by the caller's token, not by business — a tech linked to two salons polls one list.
+  staffActiveBeeps: () => ['staffBeeps', 'active'],
+  // Staff Work Orders — list/detail plus start/complete. No polling. Prefix
+  // `staffWorkOrdersRoot` invalidates every list/detail combination. `filter` is
+  // only appended when passed so invalidateQueries({ queryKey: qk.staffWorkOrders(businessId) })
+  // still prefixes every date/status combination currently on screen.
+  staffWorkOrdersRoot: () => ['staffWorkOrders'] as const,
+  staffWorkOrders: (businessId?: string, date?: string, filter?: string) => {
+    const key: unknown[] = ['staffWorkOrders', 'list', businessId ?? '']
+    if (date) key.push(date)
+    if (filter) key.push(filter)
+    return key
+  },
+  staffWorkOrderDetail: (orderId?: string) => ['staffWorkOrders', 'detail', orderId ?? ''],
+  // Under the same root so starting/completing a service also refreshes My Calendar.
+  staffBookingCalendar: (businessId?: string, date?: string) =>
+    ['staffWorkOrders', 'calendar', businessId ?? '', date ?? ''],
+  // Under the same root so one invalidation after a save refreshes the picker too — a service the
+  // owner just retired must stop being offered.
+  staffWorkOrderServiceCatalog: (orderId?: string) =>
+    ['staffWorkOrders', 'serviceCatalog', orderId ?? ''],
   staffClockScanPreview: (businessId?: string, token?: string) =>
     ['staffClockScanPreview', businessId ?? '', token ?? ''],
   // POS Merchant Ops — Checkout (US-14 / US-025, refactored to Order in US-026)
@@ -257,8 +291,10 @@ export const qk = {
     ['merchantSettings', 'posCheckoutServiceCatalog', businessId ?? ''],
   merchantPosCheckoutProductCatalog: (businessId?: string) =>
     ['merchantSettings', 'posCheckoutProductCatalog', businessId ?? ''],
-  merchantPosAssignableStaff: (businessId?: string, posServiceId?: string) =>
-    ['merchantSettings', 'posAssignableStaff', businessId ?? '', posServiceId ?? ''],
+  // scheduledAt is part of the key: the eligible technicians for a booking depend on the
+  // slot (each technician's own weekly working hours are checked server-side).
+  merchantPosAssignableStaff: (businessId?: string, posServiceId?: string, scheduledAt?: string) =>
+    ['merchantSettings', 'posAssignableStaff', businessId ?? '', posServiceId ?? '', scheduledAt ?? ''],
   // Add-on picker — keyed by the service LINE, not the service: the options are scoped to the
   // line the picker was opened from.
   merchantPosServiceLineAddOnOptions: (businessId?: string, orderId?: string, serviceLineId?: string) =>
@@ -287,6 +323,30 @@ export const qk = {
 
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],
+
+  // Merchant OneQR (one master QR per business)
+  merchantOneQr: ()            => ['merchantOneQr'],
+  // Deliberately NOT nested under `merchantOneQr`: the module catalog is static
+  // registry data, not part of the business's OneQR record. Nesting it would
+  // make every save/toggle invalidation refetch it for no reason.
+  merchantOneQrModuleCatalog: () => ['merchantOneQrModuleCatalog'],
+
+  // Public OneQR landing. `authMode` sits in the key because the same slug
+  // renders a different audience once a session exists — signing in/out must
+  // refetch rather than reuse the anonymous Customer view.
+  publicOneQrLanding: (
+    businessSlug?: string | null,
+    sessionId?: string | null,
+    authMode?: string | null,
+    // Raw `?as=` value — each requested view is a distinct server response.
+    viewAs?: string | null,
+  ) => [
+    'publicOneQrLanding',
+    businessSlug ?? '',
+    sessionId ?? '',
+    authMode ?? '',
+    viewAs ?? '',
+  ],
 
   // Merchant Physical Cards (QR/NFC hardware)
   merchantPhysicalCards: (filters = EMPTY) => ['merchantPhysicalCards', filters],

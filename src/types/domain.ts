@@ -332,9 +332,23 @@ export interface QrTouchPointRef {
   businessSlug: string
 }
 
+/**
+ * A physical card points at exactly one destination: a TouchPoint or a OneQR.
+ * Mirrors `QrOneQrDto`.
+ */
+export interface QrOneQrRef {
+  id: string
+  name: string
+  isActive: boolean
+  businessId: string
+  businessName: string
+  businessSlug: string
+}
+
 export interface ResolveQrCodePayload {
   status: string
   touchPoint: QrTouchPointRef | null
+  oneQr: QrOneQrRef | null
 }
 
 export type PhysicalCardPage = PaginatedResponse<PhysicalCardRecord>
@@ -424,6 +438,8 @@ export interface StaffBusinessLink {
   touchPointsMissing?: boolean
   /** Business owner userProfileId — peer for staff-initiated community chat. */
   ownerUserProfileId?: string | null
+  /** IANA timezone of the salon (e.g. America/Chicago). */
+  timeZone?: string | null
 }
 
 export interface StaffBusinessTipQr {
@@ -927,3 +943,84 @@ export function asRecord(value: unknown): Record<string, unknown> {
   }
   return {}
 }
+
+/* ── POS receipt printing (US-047) ────────────────────────────────────────────────────────────
+ *
+ * A receipt is rendered twice — as JSX for the on-screen preview, and as a standalone HTML
+ * document for the Star PassPRNT companion app. Two independent renderers of the same receipt
+ * drift, and the failure mode is silent: the preview looks right while the paper is missing a
+ * line. So both consume one already-resolved document.
+ *
+ * "Resolved" is the point: every string here is translated and formatted, every amount is a plain
+ * number. Nothing downstream needs `t`, a locale, or the order query — which is also what lets a
+ * document be persisted with a print job and replayed for copy 2 after a full app remount.
+ *
+ * These live in domain types rather than beside the builder because the print-job repository
+ * stores one, and a repository importing from `components/` would invert the data boundary.
+ */
+
+export interface PosReceiptRow {
+  id: string
+  /** `group` is a technician (or Products) heading; `addOn` renders indented under its line. */
+  kind: 'group' | 'line' | 'addOn'
+  label: string
+  /** Absent on group headings. */
+  amount?: number
+  /** Pre-formatted badge, e.g. "-20%" — already localized. */
+  discountLabel?: string
+}
+
+export interface PosReceiptTotalRow {
+  id: string
+  label: string
+  amount: number
+  /** Render as a deduction, e.g. "-$5.00". */
+  negative?: boolean
+  /** The Total line. */
+  emphasis?: boolean
+}
+
+/** Static receipt copy, resolved once so the pure builders stay free of `t`. */
+export interface PosReceiptLabels {
+  ticket: string
+  customer: string
+  phone: string
+  paidWith: string
+  thankYou: string
+  noLines: string
+}
+
+export interface PosReceiptDocument {
+  /** Bumped when the persisted shape changes; a stored job of another version is discarded. */
+  version: 1
+  orderNumber: string
+  customerName: string
+  customerPhone: string
+  completedAtLabel: string
+  businessName: string
+  businessAddress: string
+  businessPhone: string
+  rows: PosReceiptRow[]
+  totals: PosReceiptTotalRow[]
+  /** Empty until the order is paid. */
+  paidWithLabel: string
+  isPaid: boolean
+  labels: PosReceiptLabels
+}
+
+/**
+ * Where to send the operator after PassPRNT hands control back. Printing leaves the web app
+ * entirely, so the return leg re-enters through a fresh page load and has to rebuild the screen
+ * the operator left.
+ */
+export type PosPrintRestoreState =
+  | {
+      surface: 'frontDesk'
+      tab: string
+      /** Absent when the print did not come from an open order — a re-print from the completed
+       *  list, whose detail modal is local state with no URL representation to restore. */
+      orderId?: string
+      mode?: 'edit' | 'checkout' | 'success'
+      receiptMode?: string
+    }
+  | { surface: 'printerSetup' }
