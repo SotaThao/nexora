@@ -116,7 +116,7 @@ export default function PosReportDetailModal({
               {t(`${TK}.loadError`)}
             </div>
           ) : (
-            <article className="pos-report-detail-print mx-auto w-[80mm] max-w-full space-y-3 bg-white p-6 font-mono text-xs text-black shadow-nexora-card" data-testid="pos-report-detail-print">
+            <article className="pos-report-detail-print mx-auto w-[80mm] max-w-full space-y-3 bg-white p-6 font-sans text-xs leading-relaxed text-black shadow-nexora-card" data-testid="pos-report-detail-print">
               <div className="pos-report-detail-header border-b border-dashed border-slate-400 pb-3 text-center">
                 <h3 className="break-words text-base font-black uppercase tracking-wide">{displayName}</h3>
                 <p className="mt-1 text-xs font-semibold">
