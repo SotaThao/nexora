@@ -326,7 +326,6 @@ export default function StoreIncomeReportView({ businessId, businessTimeZone }: 
 
       {!reportQuery.isPending && !reportQuery.isError && mode !== PosStoreIncomeReportMode.Day ? (
         <article className="nexora-card overflow-hidden">
-          <header className="flex items-center justify-between gap-3 border-b border-nexoraBorder px-4 py-3"><h3 className="text-sm font-extrabold text-nexoraText">{t(`${TK}.${rowKind === 'month' ? 'monthlyCollection' : 'dailyCollection'}`)}</h3><strong className="text-sm tabular-nums text-nexoraText">{formatMoney(totals?.totalCollected)}</strong></header>
           <div className="max-h-[calc(100dvh-260px)] overflow-auto">
             <table className="w-full text-left text-xs" style={{ minWidth: `${460 + paymentMethods.length * 116}px` }} aria-label={t(`${TK}.table.ariaLabel`)}>
               <thead className="sticky top-0 z-[1] bg-nexoraCanvas/95"><tr className="border-b border-nexoraBorder text-[10px] uppercase tracking-wide text-nexoraMuted"><th className="sticky left-0 bg-nexoraCanvas px-4 py-3">{t(`${TK}.table.${rowKind}`)}</th>{paymentMethods.map((method) => <th key={method} className="px-4 py-3 text-right">{paymentName(method)}</th>)}<th className="px-4 py-3 text-right">{t(`${TK}.table.tipsIncluded`)}</th><th className="sticky right-0 bg-nexoraCanvas px-4 py-3 text-right">{t(`${TK}.table.totalCollected`)}</th></tr></thead>
