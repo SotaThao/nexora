@@ -30,6 +30,7 @@ import type {
   OrderServiceLineApiDto,
   PosReceiptSettings,
 } from '../../../../../types/repositories'
+import { maskReceiptPhone } from './maskReceiptPhone'
 import { formatCustomerPhone } from '../customer/customerFormatters'
 import { formatPosDateTime } from '../posDateTime'
 
@@ -261,11 +262,7 @@ export function buildPosReceiptDocument(
     version: 1,
     orderNumber: order.orderNumber ?? '',
     customerName: order.customerName?.trim() ?? '',
-    // Never the bare national number: since the phone refactor `customerPhone` carries no country
-    // code, so the E.164 field is the only value that formats correctly.
-    customerPhone: order.customerPhone || order.customerPhoneE164
-      ? formatCustomerPhone(order.customerPhone, order.customerPhoneE164)
-      : '',
+    customerPhone: maskReceiptPhone(order.customerPhoneE164 || order.customerPhone),
     completedAtLabel: formatPosDateTime(
       completedAt ?? new Date().toISOString(),
       input.locale ?? 'en',

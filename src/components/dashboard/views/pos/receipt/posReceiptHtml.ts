@@ -9,6 +9,7 @@
  * identical text. Follows `packageHistoryDocuments.ts` — a pure builder taking pre-translated copy
  * and returning a string.
  */
+import { maskReceiptPhone } from './maskReceiptPhone'
 import { RECEIPT_DOTS_PER_MM } from '../../../../../constants/posPrinter'
 import type { PosReceiptDocument, PosReceiptTotalRow } from '../../../../../types/domain'
 
@@ -101,7 +102,7 @@ export function buildPosReceiptHtml(
       ? `<p>${escapeHtml(doc.labels.customer)}: ${escapeHtml(doc.customerName)}</p>`
       : '',
     doc.customerPhone
-      ? `<p>${escapeHtml(doc.labels.phone)}: ${escapeHtml(doc.customerPhone)}</p>`
+      ? `<p>${escapeHtml(doc.labels.phone)}: ${escapeHtml(maskReceiptPhone(doc.customerPhone))}</p>`
       : '',
   ].join('')
 

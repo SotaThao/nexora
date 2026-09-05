@@ -10,6 +10,7 @@
  * Styling stays on the existing `.pos-receipt-*` classes in index.css, which already carry the
  * 80mm @page rules and the force-black print ink.
  */
+import { maskReceiptPhone } from './maskReceiptPhone'
 import { Fragment } from 'react'
 import { formatUsdAmount } from '../../../../../utils/currencyInput'
 import type { PosReceiptDocument, PosReceiptTotalRow } from '../../../../../types/domain'
@@ -57,7 +58,7 @@ export default function PosReceiptPrintDocument({
             ) : null}
             {doc.customerPhone ? (
               <p>
-                {doc.labels.phone}: {doc.customerPhone}
+                {doc.labels.phone}: {maskReceiptPhone(doc.customerPhone)}
               </p>
             ) : null}
           </div>
