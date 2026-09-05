@@ -61,10 +61,13 @@ import type { BookingListItemApiDto, OrderListItemApiDto, TurnBoardStationApiDto
 import { SkeletonList } from '../../../ui/skeleton'
 import { getInitials, joinOrEmpty } from './posDisplay'
 import PosOrderWorkspace from './PosOrderWorkspace'
+import { usePassPrntReturn } from './receipt/usePassPrntReturn'
+import { DASHBOARD_MENU_ID } from '../../constants'
 import {
   readPosWorkspaceFromParams,
   writePosWorkspaceToParams,
   type PosWorkspaceUrlState,
+  type PosReceiptMode,
 } from './posWorkspaceUrl'
 import { PosReportMode } from '../../../../constants/posReportMode'
 import PosReportPanel from './report/PosReportPanel'
@@ -608,6 +611,10 @@ export default function PosFrontDeskView({
   const [updateWorkspace, setUpdateWorkspaceState] = useState<UpdateWorkspaceState | null>(
     () => readPosWorkspaceFromParams(searchParams),
   )
+  // Set when PassPRNT reports a failed receipt print, so the workspace can open the preview and
+  // let the operator print through the browser instead of leaving the customer waiting.
+  const [printFallbackOrderId, setPrintFallbackOrderId] = useState<string | null>(null)
+
   const setUpdateWorkspace = useCallback((workspace: UpdateWorkspaceState | null, nextTab?: PosFrontDeskTab) => {
     setUpdateWorkspaceState(workspace)
     if (nextTab) setActiveTabState(nextTab)
@@ -616,6 +623,37 @@ export default function PosFrontDeskView({
       { replace: true },
     )
   }, [setSearchParams])
+
+  // A receipt print leaves the app for PassPRNT and returns here on a fresh page load. The
+  // restore path is the workspace URL state this view already owns, so no new params are needed.
+  usePassPrntReturn({
+    surface: 'frontDesk',
+    backPath: `/dashboard/${DASHBOARD_MENU_ID.pos}`,
+    onPrintFailed: useCallback((job) => setPrintFallbackOrderId(job.jobId), []),
+    onRestore: useCallback(
+      (restore) => {
+        if (restore.surface !== 'frontDesk') return
+        const tab = restore.tab as PosFrontDeskTab
+        // A re-print from the Completed list carries no order: its detail modal is local state
+        // with no URL representation, so the honest restore is the tab it was opened from.
+        if (!restore.orderId) {
+          setUpdateWorkspace(null, tab)
+          return
+        }
+        setUpdateWorkspace(
+          {
+            orderId: restore.orderId,
+            // Preserve where the operator actually was: printing an unpaid invoice returns to
+            // checkout, printing a paid receipt returns to the success screen.
+            mode: restore.mode ?? 'success',
+            receiptMode: restore.receiptMode as PosReceiptMode,
+          },
+          tab,
+        )
+      },
+      [setUpdateWorkspace],
+    ),
+  })
 
   useEffect(() => {
     const workspaceFromUrl = readPosWorkspaceFromParams(searchParams)
@@ -1397,6 +1435,9 @@ export default function PosFrontDeskView({
           businessPhone={businessPhone}
           businessTimeZone={reportBusinessTimeZone}
           canViewReport={Boolean(access?.canViewReport)}
+          receiptPrintTab={activeTab}
+          printFallbackOrderId={printFallbackOrderId}
+          onPrintFallbackHandled={() => setPrintFallbackOrderId(null)}
           onPaymentCompleted={(completedOrderId, receiptMode) => {
             setUpdateWorkspace({ orderId: completedOrderId, mode: 'success', receiptMode })
           }}

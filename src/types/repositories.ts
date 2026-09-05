@@ -3,11 +3,14 @@ import type { LooseObject } from './domain'
 import type { PosCheckInLayout } from '../constants/posCheckInLayout'
 import type { PosOrderStatus } from '../constants/posOrderStatus'
 import type { PosCheckoutPaymentMethodType } from '../constants/posCheckoutPaymentMethod'
+import type { PosPrintTransportType } from '../constants/posPrinter'
 import type {
   MerchantSetup,
   NotificationRecord,
   PaginatedResponse,
   PaymentMethodDto,
+  PosPrintRestoreState,
+  PosReceiptDocument,
   ReviewRecord,
   StaffAccountView,
   StaffBusinessLink,
@@ -1234,7 +1237,12 @@ export interface CompleteOrderResultApiDto {
   servicesSubtotal: number
   productsSubtotal: number
   tipAmount: number
+  /** Sum of the per-line discounts. */
   discountAmount: number
+  /** Order-level discount (promotion or manual), separate from the per-line ones. Present on
+   *  CompleteOrderResultDto in the live spec; it was missing here, so a receipt printed straight
+   *  from the completion response could not show a promotion and would not add up. */
+  orderDiscountAmount: number
   salesTaxAmount: number
   totalAmount: number
   status: string
@@ -2084,6 +2092,8 @@ export type {
   MerchantSetup,
   NotificationRecord,
   PaginatedResponse,
+  PosPrintRestoreState,
+  PosReceiptDocument,
   PaymentMethodDto,
   ReviewRecord,
   StaffAccountView,
@@ -2096,4 +2106,55 @@ export type {
   TouchpointRecord,
   TransactionRecord,
   UserProfile,
+}
+
+/* ── POS receipt printing — device-local records (US-047) ─────────────────────────────────────
+ *
+ * Not API DTOs: there is no printer endpoint on the backend, and there should not be one for the
+ * connection half — the printer is physically attached to a single iPad. These are persisted by
+ * `posPrinterSettings.ts` through `storage.ts` and are the only device-scoped records in the app
+ * besides the paired-device token.
+ */
+
+export interface PosPrinterProfile {
+  transport: PosPrintTransportType
+  /** Printer dots — see RECEIPT_PAPER_WIDTH_DOTS. */
+  paperWidthDots: number
+  /** ISO timestamp of the last test print, or null when never tested. */
+  lastTestAt: string | null
+  /** The PassPRNT code that test returned; null when never tested. */
+  lastTestCode: string | null
+}
+
+export interface PosReceiptSettings {
+  /** Include retail product lines on the receipt. */
+  printProducts: boolean
+  /** Group services in a consistent order rather than ticket order. */
+  sortServices: boolean
+  /** Receipts printed after a card payment, 0..3. */
+  cardCopies: number
+  /** Receipts printed for cash and every other method, 0..3. */
+  otherCopies: number
+}
+
+/**
+ * A print in flight. PassPRNT prints one document per invocation and each invocation leaves the
+ * web app, so a multi-copy print is a queue that has to survive a full page load: the callback
+ * comes back into a freshly mounted app.
+ *
+ * The resolved document is stored rather than rebuilt so copy 2 is identical to copy 1 even when
+ * the order query cache is cold after the remount.
+ */
+export interface PosPendingPrintJob {
+  jobId: string
+  kind: 'receipt' | 'testPrint'
+  /** ISO timestamp — a job with no callback past PASSPRNT_JOB_STALE_MS never started. */
+  createdAt: string
+  copiesTotal: number
+  copiesDone: number
+  /** Capped at 1 per copy, so a looping callback can never spin. */
+  firedAttempts: number
+  /** Null for a test print, which builds its own sample. */
+  document: PosReceiptDocument | null
+  restore: PosPrintRestoreState | null
 }

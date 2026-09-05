@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Trạng thái** | Draft |
+| **Trạng thái** | Integrated (chưa Tested — cần iPad thật) |
 | **Ngày tạo** | 2026-09-04 |
 | **Epic / Domain** | POS Checkout — Receipt Printing |
 | **OpenSpec change** | `openspec/changes/add-pos-receipt-printing` |
@@ -212,4 +212,70 @@ Cấu hình máy in + receipt settings **không** đi qua API — lưu per-devic
 
 ## Ghi chú phiên thực thi
 
-(Bug phát hiện, quyết định, deviation so với plan — điền trong khi integrate)
+**Phiên 2026-09-05 — implement Phase 1-7 (trừ verify trên thiết bị thật).**
+
+Đã build: constants + repository per-device + hook, `PosReceiptDocument` dùng chung cho cả
+preview và HTML PassPRNT, hai transport, print queue qua reload, trang `/dashboard/pos/printer`,
+auto-print sau Complete, và bill có thêm Subtotal / Sales tax / tên khách / số điện thoại.
+
+**Deviation so với plan:**
+
+- `PosReceiptDocument` và các type liên quan đặt ở `src/types/domain.ts`, không phải cạnh builder
+  trong `views/pos/receipt/`. Lý do: repository lưu document cùng print job, mà repository import
+  ngược lên `components/` là vi phạm data boundary của AGENTS.md.
+- Thêm `orderDiscountAmount` vào `CompleteOrderResultApiDto`. Field này **có** trên Swagger live
+  nhưng thiếu trong type FE, nên bill in thẳng từ response Complete không hiện được promotion và
+  tổng không cộng đúng.
+
+**Ba bug bị test bắt trong lúc làm, đều đã sửa:**
+
+1. `clampReceiptCopies` dùng `Number(value)` nên `null` thành `0` — một giá trị hỏng trong storage
+   sẽ âm thầm thành "không in bản nào" thay vì rơi về mặc định.
+2. `PosReceiptSettingsCard` seed form từ query trong `useEffect`; vì card render ngay với giá trị
+   mặc định trong lúc đọc storage, một thao tác trong khoảng đó bị effect ghi đè và mất luôn.
+   Đã thêm cờ "đã chạm vào form".
+3. HTML gửi PassPRNT tách badge giảm giá bằng khoảng trắng còn JSX dùng margin — test chống lệch
+   bắt được ngay lần chạy đầu. Đã đổi HTML sang margin để nội dung text hai bên giống hệt.
+
+**Kết quả kiểm tra:** `pnpm typecheck` 72 lỗi = đúng baseline, không lỗi mới trong file đã sửa.
+243 test pass; 7 test file fail đều là OneQR (thiếu `src/data/repositories/publicOneQr.ts` trên
+branch này) — baseline có sẵn, không liên quan. `vite build` xanh.
+
+**Lưu ý môi trường:** `node_modules/pdfjs-dist` không được hoist dù `.npmrc` có
+`public-hoist-pattern[]=pdfjs-dist`, làm build fail ở `react-pdf`. `pnpm install --force` không
+dựng lại link; đã tạo symlink thủ công trong `node_modules` để build chạy. Không ảnh hưởng repo.
+
+**Rà soát liên kết với luồng in bill cũ (cùng phiên) — phát hiện 3 lỗi tích hợp, đã sửa:**
+
+1. `printSurface` của `usePosReceiptPrint` không được render ở `PosOrderWorkspace`. Print CSS ẩn
+   `#root`, nên auto-print trên transport browser (mặc định) sẽ **in ra giấy trắng**. Đã render ở
+   cả hai nhánh return, và ở `PosCompletedOrdersPanel`.
+2. Nút Print thủ công bỏ qua transport đã chọn: chọn PassPRNT xong bấm "Print receipt" vẫn ra hộp
+   thoại trình duyệt, tức auto-print đi máy in Star còn nút bên cạnh làm việc khác. Đã truyền
+   `onPrint` cho cả hai call site (chỉ khi transport là PassPRNT — trên browser modal tự in DOM của
+   nó, đi qua hook sẽ render receipt hai lần và in cả hai).
+3. Hook xoá portal ngay sau `window.print()`. Chỗ này chạy được khi lời gọi block, nhưng iOS Safari
+   không block đáng tin và cũng không fire `afterprint` đáng tin — receipt bị unmount sớm một tick
+   sẽ in ra trang trắng mà không có dấu hiệu gì trong app. Đã giữ DOM tới khi `afterprint` về, kèm
+   timer dự phòng 3s.
+
+Kèm theo: `PosPrintRestoreState` nới ra để mang `mode` và cho phép thiếu `orderId`; handler
+`onRestore` ở `PosFrontDeskView` trước đó hardcode `mode: "success"` và sẽ dựng workspace rỗng khi
+restore từ re-print (vốn không có order). Thêm `printSurfaceLinking.test.tsx` khoá cả ba lỗi.
+**Danh sách máy in và reconnect (rà soát cùng phiên):**
+
+- **Không có UI danh sách máy in đã kết nối, và không làm được.** Việc dò tìm/ghép nối nằm trong app
+  PassPRNT; web không có API đọc danh sách máy in Bluetooth/LAN, cũng không biết máy nào đang được
+  chọn. Panel "kết quả test lần cuối" là thứ thay thế — tín hiệu duy nhất web nhận được là mã kết
+  quả của một lần in đã chạy.
+- **Không có cơ chế reconnect riêng, và về bản chất không cần.** Mỗi lần gọi PassPRNT là nó tự mở
+  kết nối tới máy in, nên "reconnect" chính là "in lại"; web app không giữ kết nối nào.
+- **Không auto-retry khi lỗi** (có chủ ý): máy in tắt hoặc hết giấy sẽ fail y hệt lần sau, retry
+  vòng lặp trên phần cứng tệ hơn là báo cho nhân viên.
+- **Đã bổ sung đường thoát (task 6.5):** receipt print lỗi → `onPrintFailed` đưa job về surface →
+  preview tự mở cho đúng order đó, và nút Print trong đó dùng `window.print()` thay vì PassPRNT vừa
+  lỗi. Chỉ lần in đó fallback — transport của thiết bị giữ nguyên, vì salon vẫn muốn máy in Star cho
+  lần sau. Test print lỗi thì không mở preview (màn setup đã báo trong panel last-test).
+**Chưa verify (cần thiết bị thật, không thay được bằng test):** `back` = https URL của SPA có quay
+về đúng route không; round-trip in nhiều bản; wording bước 2 của card PassPRNT so với UI thật;
+khổ giấy 80mm in ra; hành vi khi tắt máy in giữa job. Xem task 4.6 / 5.11 / 6.1 / 8.4-8.6.

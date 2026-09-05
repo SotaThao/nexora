@@ -63,6 +63,7 @@ import PosFrontDeskView from '../views/pos/PosFrontDeskView'
 import PosReportsView from '../views/pos/report/PosReportsView'
 import { formatBusinessAddress } from '../views/pos/posDisplay'
 import PosDevicesView from '../views/pos/devices/PosDevicesView'
+import PosPrinterSetupView from '../views/pos/printer/PosPrinterSetupView'
 import PosPublicCheckInView from '../views/pos/PosPublicCheckInView'
 import ResponsiveStaffRoute from './ResponsiveStaffRoute'
 import {
@@ -482,6 +483,22 @@ export function PosReportsRoute() {
     )
   }
   return <PosReportsView businessId={businessId} businessTimeZone={businessTimeZone} />
+}
+
+// POS > Printer. Device-scoped configuration (which printer this iPad talks to, how many
+// copies it prints), so it is not gated on verificationStatus/KYB — same reasoning as the
+// other POS catalog routes. Business identity is forwarded so a test print shows the real
+// salon header rather than a blank one.
+export function PosPrinterSetupRoute() {
+  const { data: merchantSetupData } = useMerchantSetup()
+  const businessInfo = merchantSetupData?.businessInfo
+  return (
+    <PosPrinterSetupView
+      businessName={businessInfo?.name}
+      businessAddress={formatBusinessAddress(businessInfo ?? {})}
+      businessPhone={businessInfo?.phone}
+    />
+  )
 }
 
 // Check-In Devices (POS Self Check-In) — pairing and managing the tablets customers use to check
