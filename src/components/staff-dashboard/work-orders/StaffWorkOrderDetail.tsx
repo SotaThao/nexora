@@ -52,6 +52,7 @@ import {
   workOrderEditableServiceTotal,
   WORK_ORDER_TICKET_FOOTER_ACTION,
   workOrderTicketFooterAction,
+  workOrderCallerWorkDone,
   workOrderPendingServiceLines,
   workOrderRemovedServiceLines,
   type WorkOrderCatalogService,
@@ -265,17 +266,14 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
     setLines(nextLines)
     setCompletedSession({ orderId, note })
     setIsCompleteModalOpen(false)
-    const ticketFullyDone = nextLines
-      .filter((line) => !line.isAddOn)
-      .every((line) => line.lineStatus === PosOrderItemStatus.Completed)
-    // Keep the open detail in sync before/while the list+detail refetch lands.
+    // Keep the open detail in sync before/while the list+detail refetch lands. The order status is
+    // deliberately untouched: only the front desk checkout closes a ticket.
     queryClient.setQueryData(
       qk.staffWorkOrderDetail(orderId),
       (current: WorkOrderDetail | null | undefined) => (
         current
           ? {
               ...current,
-              status: ticketFullyDone ? PosOrderStatus.Completed : current.status,
               canStartService: false,
               canCompleteService: false,
               completionNote: note ?? current.completionNote,
@@ -502,6 +500,9 @@ function WorkOrderDetailBody({
   const todayIso = formatDateIsoInTimeZone(new Date(), timeZone)
   const status = displayStatus ?? ticket.status
   const isCompleted = isWorkOrderCompletedStatus(status)
+  // The ticket stays In Service until the front desk checks out, so the technician's wrap-up view
+  // follows their own service lines rather than the order status.
+  const isCallerWorkDone = isCompleted || workOrderCallerWorkDone(lines)
   const canEdit = canEditWorkOrderServices(status)
   const pendingServices = workOrderPendingServiceLines(lines)
   const removedLines = workOrderRemovedServiceLines(lines)
@@ -516,7 +517,7 @@ function WorkOrderDetailBody({
       </span>
     </aside>
   ) : null
-  const completedNotes = isCompleted ? (
+  const completedNotes = isCallerWorkDone ? (
     <aside className={WORK_ORDERS_LAYOUT_CLASS.completedNote}>
       <strong className={WORK_ORDERS_LAYOUT_CLASS.completedNoteTitle}>
         <BadgeCheck className={WORK_ORDERS_LAYOUT_CLASS.completedNoteIcon} aria-hidden="true" />
@@ -531,7 +532,7 @@ function WorkOrderDetailBody({
       </p>
     </aside>
   ) : null
-  const footerAction = isCompleted ? null : workOrderTicketFooterAction(lines)
+  const footerAction = isCallerWorkDone ? null : workOrderTicketFooterAction(lines)
   const showStart = footerAction === WORK_ORDER_TICKET_FOOTER_ACTION.start
   const showComplete = footerAction === WORK_ORDER_TICKET_FOOTER_ACTION.complete
   const actions = (
@@ -613,7 +614,7 @@ function WorkOrderDetailBody({
         />
       ) : null}
 
-      {isCompleted ? completedNotes : actions}
+      {isCallerWorkDone ? completedNotes : actions}
       {notesCard}
       </div>
     </>

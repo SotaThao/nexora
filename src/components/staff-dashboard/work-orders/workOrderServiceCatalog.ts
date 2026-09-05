@@ -228,6 +228,16 @@ export function workOrderHasInServiceService(lines: WorkOrderEditableLine[]): bo
   return callerParentLineHasStatus(lines, PosOrderItemStatus.Started)
 }
 
+/**
+ * This technician has finished every service of theirs on the ticket. The ticket itself stays
+ * In Service until the front desk checks out, so their wrap-up view cannot key off order status.
+ */
+export function workOrderCallerWorkDone(lines: WorkOrderEditableLine[]): boolean {
+  const callerLines = lines.filter(isCallerParentServiceLine)
+  return callerLines.length > 0
+    && callerLines.every((line) => line.lineStatus === PosOrderItemStatus.Completed)
+}
+
 // find something, not a statement about where a service "really" belongs. Anything with no category
 // still has to be reachable, hence the trailing bucket.
 export function buildWorkOrderCatalogCategories(
