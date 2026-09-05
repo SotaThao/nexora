@@ -116,6 +116,43 @@ export function createPosOrdersRepository(client: HttpClient = httpClient) {
       )
     },
 
+    // Accept / decline / start one service line. Callable by the front desk OR by the technician
+    // the line is assigned to — the backend resolves which of the two is calling. All three are
+    // idempotent forwards: a line already further along answers 200 without changing anything,
+    // because the board these buttons sit on is up to 15s stale.
+    async acceptServiceLine(businessId: string, orderId: string, serviceLineId: string): Promise<boolean> {
+      return unlessOptimisticId(
+        serviceLineId,
+        () =>
+          client.post<boolean>(
+            `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/accept`,
+          ),
+        false,
+      )
+    },
+
+    async rejectServiceLine(businessId: string, orderId: string, serviceLineId: string): Promise<boolean> {
+      return unlessOptimisticId(
+        serviceLineId,
+        () =>
+          client.post<boolean>(
+            `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/reject`,
+          ),
+        false,
+      )
+    },
+
+    async startServiceLine(businessId: string, orderId: string, serviceLineId: string): Promise<boolean> {
+      return unlessOptimisticId(
+        serviceLineId,
+        () =>
+          client.post<boolean>(
+            `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/start`,
+          ),
+        false,
+      )
+    },
+
     // Frees the assigned staff on this line immediately, independent of the rest of the
     // order (US-026) — callable by the staff member themselves or a manager/cashier.
     async markServiceLineDone(businessId: string, orderId: string, serviceLineId: string): Promise<boolean> {

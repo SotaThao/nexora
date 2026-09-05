@@ -177,6 +177,18 @@ export interface PosAccessApiDto {
 }
 
 // POS Merchant Ops — Check-in & Waitlist (US-12, refactored to Order in US-026)
+/**
+ * Service progress of one ticket, so a board does not have to be opened to read it.
+ * Counts parent service lines only — an add-on has no lifecycle of its own.
+ */
+export interface PosServiceLineRollupApiDto {
+  serviceLineCount: number
+  completedServiceLineCount: number
+  pendingAcceptanceCount: number
+  /** Technicians who have not yet accepted their line on this ticket. */
+  pendingAcceptanceTechnicianNames: string[]
+}
+
 export interface PosWaitlistOrderApiDto {
   id: string
   orderNumber: string
@@ -184,6 +196,7 @@ export interface PosWaitlistOrderApiDto {
   checkedInAt: string
   waitMinutes: number
   serviceNames: string[]
+  serviceLines: PosServiceLineRollupApiDto
 }
 
 // US-17 — Order Workspace (Create mode) sends the whole draft (service + product lines,
@@ -249,6 +262,7 @@ export interface OrderListItemApiDto {
   // flag.
   hasUnassignedService: boolean
   hasNoServiceLine: boolean
+  serviceLines: PosServiceLineRollupApiDto
 }
 
 // POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filterable.
@@ -279,6 +293,65 @@ export interface CompletedOrdersListQuery {
   dateTo?: string
   customerName?: string
   customerPhone?: string
+}
+
+// Staff Work Orders (technician read-only view) — GET /api/v1/staff/pos/work-orders
+export interface StaffWorkOrderListItemApiDto {
+  id?: string
+  orderNumber?: string
+  customerName?: string
+  status?: string
+  checkedInAt?: string
+  scheduledAt?: string | null
+  serviceNames?: string[]
+  technicianNames?: string[]
+  stationNumber?: number | null
+  beeper?: string | null
+}
+
+export interface StaffWorkOrderItemApiDto {
+  id?: string
+  serviceName?: string
+  unitPrice?: number
+  lineTotal?: number
+  durationMinutes?: number
+  isAddOn?: boolean
+  note?: string | null
+  technicianName?: string | null
+  posStaffProfileId?: string | null
+  /** See PosOrderItemStatus — drives the Accept/Decline/Start/Complete buttons. */
+  lineStatus?: string | null
+  isMine?: boolean
+  acceptedAt?: string | null
+  startedAt?: string | null
+  completedAt?: string | null
+}
+
+export interface StaffWorkOrderDetailApiDto {
+  id?: string
+  businessId?: string
+  orderNumber?: string
+  customerName?: string
+  status?: string
+  checkedInAt?: string
+  scheduledAt?: string | null
+  stationNumber?: number | null
+  beeper?: string | null
+  customerNotes?: string | null
+  serviceTotal?: number
+  canStartService?: boolean
+  canCompleteService?: boolean
+  items?: StaffWorkOrderItemApiDto[]
+}
+
+export interface StaffWorkOrdersListQuery {
+  businessId: string
+  date: string
+  status?: PosOrderStatus[]
+}
+
+export interface CompleteStaffWorkOrderServicePayload {
+  note?: string | null
 }
 
 export interface CompletedOrdersPage {
@@ -382,6 +455,14 @@ export interface TurnBoardStationApiDto {
   currentCustomerPhone?: string | null
   currentServiceNames: string[]
   assignedAt?: string | null
+  /** See PosOrderItemStatus — the lifecycle of this technician's own line on the ticket above. */
+  currentLineStatus?: string | null
+  /** Lines across the whole salon still waiting for THIS technician to accept. */
+  pendingAcceptanceCount?: number
+  // Not in the live contract yet (BE is adding it) — optional so today's response (neither field
+  // present) reads as "not local staff", not as a false positive block on every station's Beep.
+  isLocalStaff?: boolean
+  email?: string | null
 }
 
 // POS Front Desk — Time Clock tab
@@ -469,6 +550,10 @@ export interface CheckInTechnicianApiDto {
   photoUrl: string | null
   serviceIds: string[]
   isBusy: boolean
+  // Not in the live contract yet (BE is adding it) — optional so today's response (neither field
+  // present) reads as "not local staff", not as a false positive block on every technician's Beep.
+  isLocalStaff?: boolean
+  email?: string | null
 }
 
 export interface CheckInActiveVisitApiDto {
@@ -533,6 +618,10 @@ export interface TimeClockRosterRowApiDto {
   // Open shift started before today — forgot to clock out, nightly job has not run yet.
   hasForgottenEntry: boolean
   forgottenEntryClockInAt?: string | null
+  // Not in the live contract yet (BE is adding it) — optional so today's response (neither field
+  // present) reads as "not local staff", not as a false positive block on every row's Beep.
+  isLocalStaff?: boolean
+  email?: string | null
 }
 
 export interface TimeClockRosterApiDto {
@@ -556,6 +645,76 @@ export interface BeepStaffResultApiDto {
   beepedAt: string
   // False when the tech has no account to notify — the front desk still needs to know.
   delivered: boolean
+}
+
+// Two-way beep. The salon-side feed (GET .../time-clock/beeps) is the single source of truth for
+// beep state on the front desk: the roster is one row per staff member and cannot carry three
+// calls to the same tech, each with its own reply.
+export interface PosBeepApiDto {
+  beepId: string
+  posStaffProfileId: string
+  staffDisplayName: string
+  staffPhotoUrl?: string | null
+  // False for a tech added for payout only — explains a beep that will never be answered.
+  hasAppAccount: boolean
+  message?: string | null
+  beepedAt: string
+  // PosStaffBeepStatus. Effective value: Expired is computed server-side, never stored.
+  status: string
+  respondedAt?: string | null
+  delayMinutes?: number | null
+  responseNote?: string | null
+  resolvedAt?: string | null
+  resolvedByDisplayName?: string | null
+  nudgeCount: number
+  lastNudgedAt?: string | null
+  sentByDisplayName?: string | null
+  expiresAt: string
+  nextNudgeAllowedAt: string
+  // Server-computed so the front desk never re-implements the rules.
+  canNudge: boolean
+  canResolve: boolean
+}
+
+// The tech's own view. Spans every salon they are linked to, so businessName says which front desk
+// is calling.
+export interface ActiveStaffBeepApiDto {
+  beepId: string
+  businessId: string
+  businessName: string
+  businessStaffLinkId: string
+  posStaffProfileId: string
+  message?: string | null
+  beepedAt: string
+  expiresAt: string
+  status: string
+  respondedAt?: string | null
+  delayMinutes?: number | null
+  responseNote?: string | null
+  nudgeCount: number
+  lastNudgedAt?: string | null
+}
+
+export interface ActiveStaffBeepsApiDto {
+  // Owned by the server so the Busy chips cannot drift from the validator.
+  allowedDelayMinutes: number[]
+  beeps: ActiveStaffBeepApiDto[]
+}
+
+export interface RespondToBeepRequest {
+  // PosStaffBeepResponse
+  response: string
+  // Required for Busy, must be omitted otherwise.
+  delayMinutes?: number
+  note?: string
+}
+
+export interface StaffBeepResponseResultApiDto {
+  beepId: string
+  status: string
+  respondedAt?: string | null
+  delayMinutes?: number | null
+  responseNote?: string | null
 }
 
 export interface ClockScanPreviewApiDto {
@@ -610,6 +769,10 @@ export interface OrderServiceLineApiDto {
   assignedPosStaffProfileId?: string | null
   technicianName?: string | null
   note?: string | null
+  /** See PosOrderItemStatus — Unassigned/PendingAcceptance/Assigned/Started/Completed. */
+  lineStatus: string
+  acceptedAt?: string | null
+  startedAt?: string | null
   completedAt?: string | null
   /** Extras sold against this service, in the order they were rung up. */
   addOns: OrderServiceAddOnLineApiDto[]
@@ -834,6 +997,12 @@ export interface AssignableStaffApiDto {
 // POS Booking — per-business booking rules (Ticket 2). Owner-configurable; Staff can
 // read/write too when their PosRole grants the Operations permission, same access rule
 // as Orders (see IPosOperationsAccessService, backend).
+/** Salon-wide rules for how a ticket's service lines move through their own lifecycle. */
+export interface PosOrderSettingsApiDto {
+  requireStaffAcceptance: boolean
+  warnOnServiceLineStatusMismatch: boolean
+}
+
 export interface PosBookingSettingsApiDto {
   autoConfirmEnabled: boolean
   minLeadTimeMinutes: number

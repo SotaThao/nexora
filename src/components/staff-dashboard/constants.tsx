@@ -51,6 +51,8 @@ export const STAFF_WORKSPACE_MENU_ITEM = {
   labelKey: 'staff_dashboard.nav.my_workspace',
 }
 
+export const STAFF_WORK_ORDERS_SCREEN = 'work-orders' as const
+
 export const STAFF_WORKSPACE_SUBMENU = [
   {
     id: 'my_qr',
@@ -74,13 +76,18 @@ export const STAFF_WORKSPACE_SUBMENU = [
     labelKey: 'staff_dashboard.nav.my_salons',
   },
   {
+    id: 'work_orders',
+    screen: STAFF_WORK_ORDERS_SCREEN,
+    labelKey: 'staff_dashboard.nav.work_orders',
+  },
+  {
     id: 'report',
     screen: 'salons/report',
     labelKey: 'staff_dashboard.nav.report',
   },
 ]
 
-export const STAFF_WORKSPACE_SCREEN_IDS = ['qr', 'payments', 'reviews', 'tips', 'earnings', 'salons', 'taxiq']
+export const STAFF_WORKSPACE_SCREEN_IDS = ['qr', 'payments', 'reviews', 'tips', 'earnings', 'salons', STAFF_WORK_ORDERS_SCREEN, 'taxiq']
 
 export function isStaffWorkspaceSubActive(
   activeScreen: string,
@@ -120,7 +127,7 @@ export function isStaffWorkspaceRouteActive(
   activeScreen: string,
   tabParam: string | null,
 ): boolean {
-  if (activeScreen === 'earnings' || activeScreen === 'salons') return true
+  if (activeScreen === 'earnings' || activeScreen === 'salons' || activeScreen === STAFF_WORK_ORDERS_SCREEN) return true
   return STAFF_WORKSPACE_SUBMENU.some((item) =>
     isStaffWorkspaceSubActive(activeScreen, tabParam, item),
   )
@@ -179,7 +186,7 @@ export function isStaffBottomNavItemActive(
   return true
 }
 
-export const STAFF_SCREENS = ['home', 'qr', 'tips', 'reviews', 'pay', 'payments', 'earnings', 'salons', 'profile', 'notifications', 'taxiq']
+export const STAFF_SCREENS = ['home', 'qr', 'tips', 'reviews', 'pay', 'payments', 'earnings', 'salons', STAFF_WORK_ORDERS_SCREEN, 'profile', 'notifications', 'taxiq']
 
 // Maps a Staff Tax IQ sidebar sub-item id -> the StaffTaxYear.enabledModules entry
 // that must be present for it to show. Sub-items absent from this table (income,

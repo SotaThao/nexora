@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { AlertCircle, Wallet, ArrowRight, Settings, UserRound, X } from 'lucide-react'
 import { StaffAccountProvider } from '../../contexts/StaffAccountContext'
 
+import StaffBeepAlert from './StaffBeepAlert'
 import StaffSidebar from './layout/StaffSidebar'
 import StaffHeader from './layout/StaffHeader'
 import StaffBottomNav from './layout/StaffBottomNav'
@@ -250,6 +251,9 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
         </div>
 
         <StaffBottomNav activeScreen={activeScreen} onNavigate={handleNavigate} />
+
+        {/* Shell-level so an incoming beep reaches the tech on whatever staff screen they are on. */}
+        <StaffBeepAlert />
       </div>
     </StaffAccountProvider>
   )

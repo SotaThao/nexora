@@ -2,6 +2,7 @@ import SubscriptionPaymentModal from '../../modals/SubscriptionPaymentModal'
 import type {
   PurchasableSubscriptionPlan,
   SubscriptionBillingCycle,
+  SubscriptionPackage,
 } from '../../../../data/repositories/subscriptionPayments'
 import type { UserSubscription } from '../../../../types/domain'
 
@@ -11,6 +12,10 @@ type TipPlatformCheckoutModalProps = {
   paymentPlanPrice: number
   billingCycle?: SubscriptionBillingCycle
   currentSubscription?: UserSubscription | null
+  /** Billing-cycle length (months) of the current subscription — from my-packages. */
+  currentPeriodInMonths?: number | null
+  /** Catalog rows, used to resolve the current plan's price for the credit estimate. */
+  catalogPackages?: SubscriptionPackage[]
   onClose: () => void
 }
 
@@ -21,6 +26,8 @@ export default function TipPlatformCheckoutModal({
   paymentPlanPrice,
   billingCycle,
   currentSubscription,
+  currentPeriodInMonths,
+  catalogPackages,
   onClose,
 }: TipPlatformCheckoutModalProps) {
   if (!paymentPlan || !selectedPackage) return null
@@ -34,6 +41,8 @@ export default function TipPlatformCheckoutModal({
         price={paymentPlanPrice}
         billingCycle={billingCycle}
         currentSubscription={currentSubscription}
+        currentPeriodInMonths={currentPeriodInMonths}
+        catalogPackages={catalogPackages}
         onClose={onClose}
         onSuccess={onClose}
       />

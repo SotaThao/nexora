@@ -41,6 +41,8 @@ import { useBookingList, useCheckInBookingFromList } from '../../../../data/hook
 import { useCheckInTechnicians } from '../../../../data/hooks/usePosCheckIn'
 import { useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
 import { useBeepStaff, useTimeClockRoster } from '../../../../data/hooks/usePosTimeClock'
+import { useMerchantBeepFeed } from '../../../../data/hooks/usePosBeep'
+import { cannotReceiveBeep } from '../../../../constants/posStaffBeep'
 import { formatDatePart, formatLocalDateIso } from '../../../../utils/localDate'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
 import {
@@ -57,7 +59,13 @@ import {
   POS_FRONT_DESK_TABS,
   PosFrontDeskTab,
 } from '../../../../constants/posFrontDesk'
-import type { BookingListItemApiDto, OrderListItemApiDto, TurnBoardStationApiDto } from '../../../../types/repositories'
+import type {
+  BookingListItemApiDto,
+  OrderListItemApiDto,
+  PosServiceLineRollupApiDto,
+  PosBeepApiDto,
+  TurnBoardStationApiDto,
+} from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
 import { getInitials, joinOrEmpty } from './posDisplay'
 import PosOrderWorkspace from './PosOrderWorkspace'
@@ -84,6 +92,8 @@ import { formatBookingWallClockTime, resolveBookingWallClockParts } from './book
 import CustomerTab from './customer/CustomerTab'
 import { formatCustomerPhone } from './customer/customerFormatters'
 import TimeClockTab from './timeclock/TimeClockTab'
+import { beepCooldownUntil, useCooldownSeconds } from './timeclock/beepCooldown'
+import BeepInteractions from './timeclock/BeepInteractions'
 import BeepMessageModal from './timeclock/BeepMessageModal'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { formatCurrency } from '../../utils'
@@ -128,6 +138,35 @@ const renderServiceChips = (serviceNames: string[]) =>
   ) : (
     <span className="text-[11px] text-nexoraMuted">—</span>
   )
+
+// Service progress of a ticket, read straight off the board. The front desk spends most of its
+// time on this list rather than inside a ticket, so "2/3 done · waiting on Anna" has to be here or
+// the line statuses may as well not exist.
+const ServiceProgressChips = ({ rollup }: { rollup?: PosServiceLineRollupApiDto }) => {
+  const { t } = useTranslation()
+  if (!rollup || rollup.serviceLineCount === 0) return null
+  return (
+    <>
+      <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase text-slate-600">
+        {t('components.dashboard.views.pos.serviceLineStatus.progress', {
+          done: rollup.completedServiceLineCount,
+          total: rollup.serviceLineCount,
+        })}
+      </span>
+      {rollup.pendingAcceptanceCount > 0 ? (
+        <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase text-amber-700">
+          {t('components.dashboard.views.pos.serviceLineStatus.waitingOn', {
+            names: rollup.pendingAcceptanceTechnicianNames.join(', '),
+          })}
+        </span>
+      ) : null}
+    </>
+  )
+}
+
+const renderServiceProgress = (rollup?: PosServiceLineRollupApiDto) => (
+  <ServiceProgressChips rollup={rollup} />
+)
 
 const renderTechnicianChip = (technicianNames: string[]) => (
   <span className="inline-flex max-w-full rounded-full bg-cyan-100/70 px-2.5 py-1 text-[11px] font-extrabold text-cyan-800">
@@ -429,6 +468,14 @@ export default function PosFrontDeskView({
       || activeTab === PosFrontDeskTab.Booking,
     refetchInterval: false,
   })
+  // The roster above deliberately does not poll, so a station card would never notice a reply.
+  // The beep feed is its own polled query, which is what keeps the station pill live here.
+  const { data: turnBoardBeeps = [] } = useMerchantBeepFeed(businessId, todayTurnWindow, {
+    enabled: activeTab === PosFrontDeskTab.TurnBoard,
+  })
+  const turnBoardBeepByStaffId = new Map(
+    [...turnBoardBeeps].reverse().map((beep) => [beep.posStaffProfileId, beep]),
+  )
   const canReadNextTurnReport = activeTab === PosFrontDeskTab.TurnBoard && Boolean(access?.canViewReport)
   const todayServiceAmountReportQuery = usePosReport(
     canReadNextTurnReport
@@ -916,17 +963,20 @@ export default function PosFrontDeskView({
               ) : null}
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => openBeepModal(station)}
-            disabled={beepStaff.isPending}
-            aria-label={t(tk('beepAria'), { name: station.displayName })}
-            className="flex h-9 shrink-0 items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 text-[11px] font-extrabold text-amber-700 transition-colors hover:border-amber-300 hover:bg-amber-100 disabled:opacity-60"
-          >
-            {isBeeping ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Bell className="h-3.5 w-3.5" />}
-            {isBeeping ? t(tk('beepPending')) : t(tk('beep'))}
-          </button>
+          <StationBeepButton
+            station={station}
+            beep={turnBoardBeepByStaffId.get(station.posStaffProfileId)}
+            isPending={beepStaff.isPending}
+            isBeeping={isBeeping}
+            onOpen={openBeepModal}
+          />
         </div>
+
+        <BeepInteractions
+          businessId={businessId}
+          beep={turnBoardBeepByStaffId.get(station.posStaffProfileId)}
+          staffName={station.displayName}
+        />
 
         {station.currentStatus === PosOrderStatus.InService && (
           <div className="space-y-2 rounded-xl bg-nexoraCanvas/70 p-3">
@@ -1041,90 +1091,6 @@ export default function PosFrontDeskView({
             )
           })}
         </div>
-      </section>
-    )
-  }
-
-  const renderReportPanel = () => {
-    const payroll = weeklyPayrollQuery.data
-    const rows = payroll?.staff ?? []
-
-    if (weeklyPayrollQuery.isPending && weeklyPayrollQuery.fetchStatus !== 'idle') {
-      return (
-        <div className="py-6">
-          <SkeletonList count={3} lines={2} />
-        </div>
-      )
-    }
-
-    if (weeklyPayrollQuery.isError) {
-      return (
-        <div className="py-10 text-center text-xs text-nexoraMuted">
-          {t(tk('reportError'))}
-        </div>
-      )
-    }
-
-    return (
-      <section className="space-y-3" aria-label={t(tk('reportTitle'))} data-testid="report-panel">
-        <div className="flex flex-wrap items-end justify-between gap-2">
-          <div>
-            <h2 className="text-sm font-bold text-nexoraText">{t(tk('reportTitle'))}</h2>
-            <p className="mt-0.5 text-xs text-nexoraMuted">{t(tk('reportThisWeek'))}</p>
-          </div>
-          {payroll ? (
-            <span className="rounded-full bg-violet-50 px-3 py-1.5 text-[11px] font-bold tabular-nums text-violet-700">
-              {formatReportDate(payroll.weekStart, currentLanguage)} — {formatReportDate(payroll.weekEnd, currentLanguage)}
-            </span>
-          ) : null}
-        </div>
-
-        {rows.length === 0 ? (
-          <div className="py-10 text-center text-xs text-nexoraMuted">
-            {t(tk('reportEmpty'))}
-          </div>
-        ) : (
-          <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
-            <table className="w-full min-w-[720px] table-fixed text-left text-xs">
-              <thead>
-                <tr className={POS_TABLE_HEADER_ROW_CLASS}>
-                  <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('reportColumnTechnician'))}</th>
-                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('reportColumnHours'))}</th>
-                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('reportColumnService'))}</th>
-                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('reportColumnCommission'))}</th>
-                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('reportColumnTip'))}</th>
-                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('reportColumnTechTakes'))}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.businessStaffLinkId} className="border-t border-nexoraBorder/70 transition-colors even:bg-violet-50/15 hover:bg-violet-50/40">
-                    <td className="px-4 py-3 font-bold text-nexoraText">
-                      <span className="inline-flex max-w-full rounded-full bg-cyan-100/70 px-2.5 py-1 text-cyan-800">
-                        <span className="truncate">{row.displayName}</span>
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">
-                      <span className="rounded-full bg-sky-50 px-2.5 py-1 font-semibold text-sky-700">{row.hours.toFixed(1)}h</span>
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">
-                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-700">{formatCurrency(row.sales)}</span>
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">
-                      <span className="rounded-full bg-violet-50 px-2.5 py-1 font-semibold text-violet-700">{formatCurrency(row.commission)}</span>
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">
-                      <span className="rounded-full bg-amber-50 px-2.5 py-1 font-semibold text-amber-700">{formatCurrency(row.tips)}</span>
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums font-bold text-nexoraText">
-                      <span className="rounded-full bg-nexoraBrandSoft px-2.5 py-1 text-nexoraBrandDark">{formatCurrency(row.takeHome)}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </section>
     )
   }
@@ -1829,5 +1795,53 @@ export default function PosFrontDeskView({
         }}
       />
     </div>
+  )
+}
+
+// Split out from renderStationCard so `useCooldownSeconds` (a hook) is called once per actual
+// component instance instead of once per plain-function call inside `turnBoard.map(renderStationCard)`
+// — calling a hook from a function invoked a variable number of times per render breaks the Rules
+// of Hooks.
+function StationBeepButton({
+  station,
+  beep,
+  isPending,
+  isBeeping,
+  onOpen,
+}: {
+  station: TurnBoardStationApiDto
+  beep: PosBeepApiDto | undefined
+  isPending: boolean
+  isBeeping: boolean
+  onOpen: (station: TurnBoardStationApiDto) => void
+}) {
+  const { t } = useTranslation()
+  // A re-beep on a tech who already has an open call is a nudge on that same row server-side, so it
+  // shares the Nudge button's rate limit — same cooldown data, same countdown behaviour.
+  const cooldownUntil = beepCooldownUntil(beep)
+  const secondsLeft = useCooldownSeconds(cooldownUntil)
+  const onCooldown = secondsLeft > 0
+  // Local staff / no email on file — no app to ring, so sending would always be undelivered. The
+  // turn-board station carries its own isLocalStaff/email (unlike the roster, which has neither and
+  // falls back to the check-in technician list).
+  const blockedLocal = cannotReceiveBeep(station)
+
+  return (
+    <span title={blockedLocal ? t(tk('beepLocalStaffTooltip')) : undefined} className="inline-flex">
+      <button
+        type="button"
+        onClick={() => onOpen(station)}
+        disabled={isPending || onCooldown || blockedLocal}
+        aria-label={t(tk('beepAria'), { name: station.displayName })}
+        className="flex h-9 shrink-0 items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 text-[11px] font-extrabold text-amber-700 transition-colors hover:border-amber-300 hover:bg-amber-100 disabled:opacity-60"
+      >
+        {isBeeping ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Bell className="h-3.5 w-3.5" />}
+        {isBeeping
+          ? t(tk('beepPending'))
+          : onCooldown
+            ? t(tk('beepCooldown'), { seconds: secondsLeft })
+            : t(tk('beep'))}
+      </button>
+    </span>
   )
 }

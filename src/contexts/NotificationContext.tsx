@@ -17,11 +17,29 @@ interface ToastItem {
   type: ToastType;
 }
 
+interface SnackItem extends ToastItem {
+  duration: number;
+}
+
 interface ConfirmState {
   message: string;
   title: string;
   resolve: (val: boolean) => void;
 }
+
+const SNACK_TYPE_CLASS: Record<ToastType, string> = {
+  success: "border-emerald-100 bg-emerald-50 text-emerald-800",
+  error: "border-rose-100 bg-rose-50 text-rose-800",
+  warning: "border-amber-100 bg-amber-50 text-amber-800",
+  info: "border-indigo-100 bg-indigo-50 text-indigo-800",
+};
+
+const SNACK_ICON_CLASS: Record<ToastType, string> = {
+  success: "text-emerald-600",
+  error: "text-rose-600",
+  warning: "text-amber-600",
+  info: "text-indigo-600",
+};
 
 const NotificationContext = createContext<NotificationContextValue | null>(
   null,
@@ -34,7 +52,9 @@ interface NotificationProviderProps {
 export function NotificationProvider({ children }: NotificationProviderProps) {
   const [toastQueue, setToastQueue] = useState<ToastItem[]>([]);
   const [activeToast, setActiveToast] = useState<ToastItem | null>(null);
+  const [snacks, setSnacks] = useState<SnackItem[]>([]);
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
+  const snackTimersRef = useRef<number[]>([]);
   const { t } = useTranslation();
 
   // Toast messages are shown one at a time as a blocking popup; queue holds the rest.
@@ -44,12 +64,29 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     setToastQueue((prev) => prev.slice(1));
   }, [activeToast, toastQueue]);
 
+  useEffect(() => {
+    const timers = snackTimersRef.current;
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
+  }, []);
+
+  const dismissSnack = useCallback((id: number) => {
+    setSnacks((prev) => prev.filter((item) => item.id !== id));
+  }, []);
+
   const showToast = useCallback<NotificationContextValue["showToast"]>(
-    (message, type = "success") => {
+    (message, type = "success", duration) => {
       const id = Date.now() + Math.random();
+      if (typeof duration === "number" && duration > 0) {
+        setSnacks((prev) => [...prev, { id, message, type, duration }]);
+        const timer = window.setTimeout(() => dismissSnack(id), duration);
+        snackTimersRef.current.push(timer);
+        return;
+      }
       setToastQueue((prev) => [...prev, { id, message, type }]);
     },
-    [],
+    [dismissSnack],
   );
 
   const dismissToast = useCallback(() => {
@@ -134,6 +171,42 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   return (
     <NotificationContext.Provider value={{ showToast, showConfirm }}>
       {children}
+
+      {snacks.length > 0 ? (
+        <div className="pointer-events-none fixed right-3 top-3 z-[99999] flex w-[min(22rem,calc(100%-1.5rem))] flex-col gap-2 sm:right-5 sm:top-5">
+          {snacks.map((snack) => {
+            const SnackIcon =
+              {
+                success: CheckCircle2,
+                error: XCircle,
+                warning: AlertTriangle,
+                info: Info,
+              }[snack.type] || Info;
+            return (
+              <div
+                key={snack.id}
+                role="status"
+                className={`pointer-events-auto flex items-start gap-2.5 rounded-xl border px-3.5 py-3 shadow-lg ${SNACK_TYPE_CLASS[snack.type]}`}
+              >
+                <SnackIcon
+                  className={`mt-0.5 h-4 w-4 shrink-0 ${SNACK_ICON_CLASS[snack.type]}`}
+                  aria-hidden="true"
+                />
+                <p className="min-w-0 flex-1 text-xs font-semibold leading-relaxed">
+                  {snack.message}
+                </p>
+                <button
+                  type="button"
+                  className="shrink-0 rounded-md px-1 text-[10px] font-extrabold uppercase tracking-wide opacity-70 hover:opacity-100"
+                  onClick={() => dismissSnack(snack.id)}
+                >
+                  {t("common.close") || "Close"}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
 
       {/* Notification popup — blocks interaction until dismissed, one at a time via toastQueue */}
       {activeToast && (

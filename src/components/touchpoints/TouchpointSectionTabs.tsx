@@ -2,6 +2,7 @@ import type { KeyboardEvent } from 'react'
 import {
   CreditCard,
   HandCoins,
+  ScanLine,
   Share2,
   UserPlus,
   type LucideIcon,
@@ -19,6 +20,11 @@ type SectionDefinition = {
 }
 
 const SECTIONS: SectionDefinition[] = [
+  {
+    id: TOUCHPOINT_SECTION.oneQr,
+    labelKey: 'one_qr',
+    Icon: ScanLine,
+  },
   {
     id: TOUCHPOINT_SECTION.tip,
     labelKey: 'tip',
