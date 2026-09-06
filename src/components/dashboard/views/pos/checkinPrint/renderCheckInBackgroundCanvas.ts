@@ -119,7 +119,7 @@ export function fitCheckInBrandingName(name: string, width: number, height: numb
 
 function drawBranding(context: CanvasRenderingContext2D, bounds: {x:number;y:number;width:number;height:number}, branding?: BackgroundBranding) {
   if (!branding) return
-  const name = branding.name?.normalize('NFC').trim() ?? ''
+  const name = branding.name?.normalize('NFC').trim().toUpperCase() ?? ''
   const { logo } = branding
   const area = branding.area ?? { x: .2, y: .065, width: .6, height: .105 }
   const left = bounds.x + bounds.width * area.x

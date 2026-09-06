@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { CHECK_IN_FONT_FAMILIES } from './CheckInPrintPreview'
+import type { CHECK_IN_FONT_FAMILIES } from './CheckInPrintPreview'
 import { CHECK_IN_DESIGN_SIZES } from './checkInPrintCatalog'
 import { renderCheckInBackgroundCanvas } from './renderCheckInBackgroundCanvas'
 import type { CheckInPrintDocument, DesignSizeId, PrintAssets } from './checkInPrintTypes'
@@ -57,7 +57,7 @@ export function useCheckInBackgroundPrint(template: CheckInBackgroundTemplate | 
           if (controller.signal.aborted) return
         }
         const result = await renderCheckInBackgroundCanvas({ background: image, qrUrl, qrBox: template.qrBox, ...dimensions, signal: controller.signal,
-          branding: { name: branding.name, logo, area: template.brandingArea, color: template.brandingColor, fontFamily: CHECK_IN_FONT_FAMILIES[template.brandingFont ?? 'bodyBold'] },
+          branding: { name: branding.name, logo, area: template.brandingArea, color: template.brandingColor, fontFamily: '"Times New Roman", Times, serif' },
         })
         if (controller.signal.aborted) return
         const composedImage = new Image()

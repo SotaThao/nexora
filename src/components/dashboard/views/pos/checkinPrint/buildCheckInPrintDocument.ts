@@ -51,7 +51,7 @@ export function buildCheckInPrintDocument(config: CheckInPrintConfig, business: 
       nodes.push({ kind: 'text', runs: wrapped.map((text, i) => ({ text, x: wide ? textX : (w - assets.measureText(font, text, size)) / 2, baselineY: y + size + i * size * 1.32, fontId: font, fontSize: size, color })) })
     } }
   }
-  const name = block(business.name, 'bodyBold', 13 * scale, 3, 'businessName')
+  const name = block(business.name.normalize('NFC').toUpperCase(), 'bodyBold', 13 * scale, 3, 'businessName')
   const displayHeadline = config.templateId !== 'simple' && !wide && config.language === 'en' && !config.headlineEdited && config.headline === copy.headline ? config.headline.replace(/ HERE$/, '\nHERE') : config.headline
   const headline = block(displayHeadline, ['classic-gold', 'modern-navy', 'wide-counter'].includes(config.templateId) ? 'heading' : 'bodyBold', (displayHeadline.includes('\nHERE') ? 25 : 21) * scale, config.language === 'bilingual' ? 4 : 2, 'headline', config.templateId === 'modern-navy' || wide ? palette.accent : palette.foreground)
   function instructionPanel() {
