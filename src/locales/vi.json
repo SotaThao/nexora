@@ -10546,7 +10546,8 @@
       "classic-gold": "Classic Gold",
       "modern-navy": "Modern Navy",
       "minimal-clean": "Minimal Clean",
-      "wide-counter": "Wide Counter"
+      "wide-counter": "Wide Counter",
+      "soft-sage": "Soft Sage"
     },
     "sizes": {
       "card-4x6": "Thẻ 4 × 6 inch",
@@ -10567,7 +10568,8 @@
     "customCopy": "Nội dung tùy chỉnh được giữ khi đổi ngôn ngữ.",
     "resetCopy": "Dùng nội dung mặc định",
     "palette": "Bảng màu",
-    "palettes": { "ink": "Mực đen", "gold": "Vàng", "navy": "Xanh navy", "forest": "Xanh rừng" },
+    "palettes": {
+      "sage": "Sage", "ink": "Mực đen", "gold": "Vàng", "navy": "Xanh navy", "forest": "Xanh rừng" },
     "showHours": "Giờ mở cửa",
     "showUrl": "Liên kết check-in",
     "showInstructions": "Hướng dẫn",

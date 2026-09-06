@@ -26,6 +26,19 @@ export function createCheckInPrintDecoration(template: TemplateId, width: number
     rect(width - inset - width * .19, height - inset - 1.1, width * .19, 1.1)
   }
 
+  if (template === 'soft-sage') {
+    const radius = width * .10
+    const archFrame = (offset: number, fill: string) => {
+      const right = width - offset
+      const bottom = height - offset
+      nodes.push({ kind: 'path', x: 0, y: 0, fill,
+        d: `M ${offset} ${bottom} L ${offset} ${offset + radius} Q ${offset} ${offset} ${offset + radius} ${offset} L ${right - radius} ${offset} Q ${right} ${offset} ${right} ${offset + radius} L ${right} ${bottom} Z` })
+    }
+    archFrame(inset, accent)
+    archFrame(inset + .7, palette.background)
+    rect(width * .42, height - inset - 5, width * .16, 1)
+  }
+
   if (template === 'modern-navy') {
     // Architectural double rules; no simulated marble, brush strokes or clip-art curves.
     frame(inset, .4)

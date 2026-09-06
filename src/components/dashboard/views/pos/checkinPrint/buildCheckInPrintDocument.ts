@@ -53,7 +53,7 @@ export function buildCheckInPrintDocument(config: CheckInPrintConfig, business: 
   }
   const name = block(business.name.normalize('NFC').toUpperCase(), 'bodyBold', 13 * scale, 3, 'businessName')
   const displayHeadline = config.templateId !== 'simple' && !wide && config.language === 'en' && !config.headlineEdited && config.headline === copy.headline ? config.headline.replace(/ HERE$/, '\nHERE') : config.headline
-  const headline = block(displayHeadline, ['classic-gold', 'modern-navy', 'wide-counter'].includes(config.templateId) ? 'heading' : 'bodyBold', (displayHeadline.includes('\nHERE') ? 25 : 21) * scale, config.language === 'bilingual' ? 4 : 2, 'headline', config.templateId === 'modern-navy' || wide ? palette.accent : palette.foreground)
+  const headline = block(displayHeadline, ['classic-gold', 'modern-navy', 'wide-counter', 'soft-sage'].includes(config.templateId) ? 'heading' : 'bodyBold', (displayHeadline.includes('\nHERE') ? 25 : 21) * scale, config.language === 'bilingual' ? 4 : 2, 'headline', config.templateId === 'modern-navy' || wide ? palette.accent : palette.foreground)
   function instructionPanel() {
     if (!config.showInstructions) return null
     if (config.templateId === 'simple' || config.language === 'bilingual') {

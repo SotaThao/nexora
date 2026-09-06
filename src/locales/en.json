@@ -10550,7 +10550,8 @@
       "classic-gold": "Classic Gold",
       "modern-navy": "Modern Navy",
       "minimal-clean": "Minimal Clean",
-      "wide-counter": "Wide Counter"
+      "wide-counter": "Wide Counter",
+      "soft-sage": "Soft Sage"
     },
     "sizes": {
       "card-4x6": "Card 4 × 6 in",
@@ -10571,7 +10572,8 @@
     "customCopy": "Custom text is kept when changing languages.",
     "resetCopy": "Use default text",
     "palette": "Color palette",
-    "palettes": { "ink": "Ink", "gold": "Gold", "navy": "Navy", "forest": "Forest" },
+    "palettes": {
+      "sage": "Sage", "ink": "Ink", "gold": "Gold", "navy": "Navy", "forest": "Forest" },
     "showHours": "Business hours",
     "showUrl": "Check-in link",
     "showInstructions": "Instructions",

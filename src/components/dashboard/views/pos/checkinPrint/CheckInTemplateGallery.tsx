@@ -8,7 +8,7 @@ import type { CheckInPrintConfig, CheckInPrintBusiness, PrintAssets, TemplateId 
 export function CheckInTemplateGallery({ config, business, assets, onSelect }: { config: CheckInPrintConfig; business: CheckInPrintBusiness; assets: PrintAssets | null; onSelect: (id: TemplateId) => void }) {
   const { t } = useTranslation()
   const previews = useMemo(() => CHECK_IN_TEMPLATES.map(template => assets ? buildCheckInPrintDocument({ ...config, templateId: template.id, sizeId: getCompatibleSize(template.id, config.sizeId), paletteId: template.id === config.templateId ? config.paletteId : template.palettes[0].id }, business, assets) : null), [config, business, assets])
-  return <div role="radiogroup" aria-label={t('checkInPrint.templatesLabel')} className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-3">{CHECK_IN_TEMPLATES.map((template, index) => {
+  return <div role="radiogroup" aria-label={t('checkInPrint.templatesLabel')} className="grid grid-cols-3 gap-2">{CHECK_IN_TEMPLATES.map((template, index) => {
     const preview = previews[index]
     return <button type="button" role="radio" aria-checked={config.templateId === template.id} aria-label={t('checkInPrint.templates.' + template.id)} key={template.id} onClick={() => onSelect(template.id)} onKeyDown={event => {
       if (['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(event.key)) {

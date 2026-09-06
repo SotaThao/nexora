@@ -16,6 +16,7 @@ export const CHECK_IN_TEMPLATES: CheckInTemplate[] = [
   { id: 'modern-navy', sizeIds: ['card-4x6', 'letter-portrait'], palettes: [navy, { id: 'forest', background: '#16382e', foreground: '#ffffff', accent: '#dfcb98' }] },
   { id: 'minimal-clean', sizeIds: ['card-4x6', 'letter-portrait'], palettes: [ink, gold] },
   { id: 'wide-counter', sizeIds: ['letter-landscape'], palettes: [navy, ink] },
+  { id: 'soft-sage', sizeIds: ['card-4x6', 'letter-portrait'], palettes: [{ id: 'sage', background: '#fafbf6', foreground: '#263e32', accent: '#6c8872' }, gold] },
 ]
 export function getCompatibleSize(templateId: TemplateId, sizeId: DesignSizeId): DesignSizeId {
   const template = CHECK_IN_TEMPLATES.find(item => item.id === templateId)!

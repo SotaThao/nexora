@@ -3,7 +3,7 @@ import { CHECK_IN_BACKGROUNDS } from './checkInBackgroundCatalog'
 
 export function CheckInBackgroundGallery({ selectedId, onSelect }: { selectedId: string; onSelect: (id: string) => void }) {
   const { t } = useTranslation()
-  return <div role="radiogroup" aria-label={t('checkInPrint.artworkGallery')} className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+  return <div role="radiogroup" aria-label={t('checkInPrint.artworkGallery')} className="grid grid-cols-2 gap-3 sm:grid-cols-4">
     {CHECK_IN_BACKGROUNDS.map((template, index) => <button
       type="button"
       role="radio"

@@ -1,4 +1,4 @@
-export type TemplateId = 'simple' | 'classic-gold' | 'modern-navy' | 'minimal-clean' | 'wide-counter'
+export type TemplateId = 'simple' | 'classic-gold' | 'modern-navy' | 'minimal-clean' | 'wide-counter' | 'soft-sage'
 export type DesignSizeId = 'card-4x6' | 'letter-portrait' | 'letter-landscape'
 export type PrintLanguage = 'en' | 'vi' | 'bilingual'
 export interface CheckInPrintConfig {
