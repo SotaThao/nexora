@@ -534,6 +534,7 @@ export function PosPublicCheckInRoute() {
       businessId={businessId}
       businessSlug={merchantSetupData?.businessInfo?.slug}
       businessName={merchantSetupData?.businessInfo?.name}
+      businessLogo={merchantSetupData?.businessInfo?.logo}
     />
   )
 }

@@ -10523,5 +10523,90 @@
         "submitButton": "Tiếp tục"
       }
     }
+  },
+  "checkInPrint": {
+    "artworkNameTooLong": "Tên tiệm không vừa mẫu ảnh này. Tắt Hiển thị tên tiệm hoặc dùng Bố cục tùy chỉnh.",
+    "hideSalonName": "Ẩn tên tiệm",
+    "showSalonLogo": "Hiển thị logo tiệm",
+    "showSalonName": "Hiển thị tên tiệm",
+    "artworkMissingLogo": "Tiệm chưa có logo. Mẫu ảnh sẽ không có logo; bạn vẫn có thể hiển thị tên tiệm.",
+    "artworkMissingName": "Chưa có tên tiệm. Mẫu ảnh sẽ tiếp tục không có tên tiệm.",
+    "artworkLogoError": "Không tải được logo tiệm. Thử lại hoặc tắt Hiển thị logo tiệm.",
+    "artworkFontError": "Không tải được phông chữ cho thông tin tiệm. Thử lại hoặc tắt hiển thị logo và tên tiệm.",
+    "layoutSource": "Nguồn thiết kế",
+    "artworkMode": "Mẫu ảnh có sẵn",
+    "customMode": "Bố cục tùy chỉnh",
+    "artworkGallery": "Chọn mẫu ảnh",
+    "artworkFixed": "Chữ và màu sắc trong mẫu ảnh được giữ nguyên; mã QR check-in của tiệm được thêm tự động.",
+    "artworkLoading": "Đang chuẩn bị mẫu ảnh và mã QR check-in của tiệm…",
+    "artworkError": "Không chuẩn bị được mẫu ảnh. Vui lòng thử lại.",
+    "backgrounds": {"modern-minimal-light": "Tối giản sáng hiện đại", "dark-luxury": "Sang trọng tối màu", "elegant-floral": "Hoa thanh lịch", "modern-dark-glow": "Ánh sáng tối hiện đại", "clean-friendly": "Gọn gàng thân thiện", "premium-portrait": "Mẫu dọc cao cấp", "minimal-line-art": "Nét vẽ tối giản", "bold-vivid": "Rực rỡ nổi bật"},
+    "templates": {
+      "simple": "Simple",
+      "classic-gold": "Classic Gold",
+      "modern-navy": "Modern Navy",
+      "minimal-clean": "Minimal Clean",
+      "wide-counter": "Wide Counter",
+      "soft-sage": "Soft Sage"
+    },
+    "sizes": {
+      "card-4x6": "Thẻ 4 × 6 inch",
+      "letter-portrait": "Letter dọc",
+      "letter-landscape": "Letter ngang"
+    },
+    "languages": {
+      "en": "English",
+      "vi": "Tiếng Việt",
+      "bilingual": "English + Tiếng Việt"
+    },
+    "templatesLabel": "Chọn mẫu",
+    "selected": "Đã chọn",
+    "size": "Kích thước thiết kế",
+    "language": "Ngôn ngữ bản in",
+    "headline": "Tiêu đề",
+    "closing": "Lời chào / cảm ơn",
+    "customCopy": "Nội dung tùy chỉnh được giữ khi đổi ngôn ngữ.",
+    "resetCopy": "Dùng nội dung mặc định",
+    "palette": "Bảng màu",
+    "palettes": {
+      "sage": "Sage", "ink": "Mực đen", "gold": "Vàng", "navy": "Xanh navy", "forest": "Xanh rừng" },
+    "showHours": "Giờ mở cửa",
+    "showUrl": "Liên kết check-in",
+    "showInstructions": "Hướng dẫn",
+    "preview": "Xem trước trực tiếp",
+    "previewUnavailable": "Không có bản xem trước",
+    "loading": "Đang chuẩn bị phông chữ và logo…",
+    "hoursUnavailable": "Phiên này chưa có dữ liệu giờ mở cửa. Tiếp tục không có giờ mở cửa hoặc tải dữ liệu bằng tài khoản chủ tiệm.",
+    "hoursLoading": "Đang tải giờ mở cửa trước khi xuất…",
+    "hoursError": "Không tải được giờ mở cửa. Thử lại hoặc tiếp tục không có giờ mở cửa.",
+    "withoutHours": "Tiếp tục không có giờ mở cửa",
+    "fontError": "Không tải được phông chữ. Vui lòng thử lại trước khi xuất.",
+    "logoError": "Không tải được logo tiệm. Thử lại hoặc tiếp tục không có logo.",
+    "retry": "Thử lại",
+    "withoutLogo": "Tiếp tục không có logo",
+    "noLogo": "Không có logo: bản thiết kế hiển thị tên tiệm.",
+    "print": "In",
+    "pdf": "Tải PDF",
+    "qr": "Tải mã QR PNG",
+    "working": "Đang chuẩn bị…",
+    "cancelPrint": "Kết thúc phiên in",
+    "printHint": "Chọn khổ giấy và tỷ lệ trong hộp thoại in. Chọn 100% để in đúng kích thước và tắt đầu trang/chân trang. Lề máy in có thể tạo viền trắng.",
+    "exportError": "Không xuất được thiết kế. Vui lòng thử lại.",
+    "issues": {
+      "textOverflow": "Nội dung không vừa. Rút gọn nội dung tùy chỉnh hoặc chọn thiết kế lớn hơn. Tên tiệm quá dài cũng có thể vượt bố cục.",
+      "assetFailed": "Không tải được tài nguyên thiết kế. Vui lòng thử lại.",
+      "invalidUrl": "Liên kết check-in không hợp lệ.",
+      "unsupportedSize": "Chọn kích thước thiết kế được hỗ trợ."
+    },
+    "printCopy": {
+      "headline": "QUÉT MÃ CHECK-IN",
+      "closingText": "Cảm ơn quý khách!",
+      "instructions": [
+        "Quét mã QR",
+        "Nhập số điện thoại",
+        "Làm theo bước check-in"
+      ],
+      "hoursLabel": "Giờ mở cửa"
+    }
   }
 }

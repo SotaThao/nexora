@@ -9,10 +9,12 @@ export default function PosPublicCheckInView({
   businessId,
   businessSlug,
   businessName,
+  businessLogo,
 }: {
   businessId?: string
   businessSlug?: string
   businessName?: string
+  businessLogo?: string | null
 }) {
   const { t } = useTranslation()
 
@@ -29,6 +31,7 @@ export default function PosPublicCheckInView({
         businessId={businessId}
         businessSlug={businessSlug}
         businessName={businessName}
+        businessLogo={businessLogo}
       />
     </div>
   )
