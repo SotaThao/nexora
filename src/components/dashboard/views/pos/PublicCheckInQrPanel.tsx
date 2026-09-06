@@ -40,7 +40,8 @@ function PublicCheckInQrEditor({ businessId, businessSlug, businessName, busines
   const [backgroundId, setBackgroundId] = useState<string>(CHECK_IN_BACKGROUNDS[0].id)
   const [showArtworkLogo, setShowArtworkLogo] = useState(false)
   const [showArtworkName, setShowArtworkName] = useState(false)
-  const backgroundSize = 'card-4x6' as const
+  // Supplied artwork is 2550 × 3300 px at 300 DPI: preserve its native Letter page.
+  const backgroundSize = 'letter-portrait' as const
   const [config, setConfig] = useState(() => createDefaultCheckInPrintConfig())
   const [withoutLogo, setWithoutLogo] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
