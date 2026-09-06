@@ -120,7 +120,8 @@ export function buildCheckInPrintDocument(config: CheckInPrintConfig, business: 
   headline.draw(y); y += headline.height + gap
   const footer = [instruction,hours,closing,url].filter((item): item is NonNullable<typeof item> => !!item && item.height > 0)
   const footerHeight = footer.reduce((sum,item)=>sum+item.height+gap,0)
-  const qrSize = wide ? 290 : Math.min(small?154:300, h - margin - y - footerHeight - gap)
+  const qrFooterGap = gap + (instruction ? 6 * scale : 0)
+  const qrSize = wide ? 290 : Math.min(small?154:300, h - margin - y - footerHeight - qrFooterGap)
   if (qrSize < (small ? 108 : 180) || (wide && y + footerHeight > h - margin)) issues.push({code:'textOverflow',field:'layout'})
   let qr
   try { qr = QRCode.create(business.checkInUrl,{errorCorrectionLevel:'M'}) }
@@ -141,7 +142,7 @@ export function buildCheckInPrintDocument(config: CheckInPrintConfig, business: 
     d+=`M${x} ${yy}h${moduleSize}v${moduleSize}h${-moduleSize}z `
   }
   nodes.push({kind:'path',d,x:qrX,y:qrY,fill:'#000000'})
-  if (!wide) y+=qrSize+gap
+  if (!wide) y+=qrSize+qrFooterGap
   else y+=12*scale
   for(const item of footer){item.draw(y);y+=item.height+gap}
   // Center the composition in the available safe area, including the left column of the counter sign.
