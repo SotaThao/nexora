@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef } from 'react'
+import { Fragment } from 'react'
 import { createPortal } from 'react-dom'
 import { Printer, X } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
@@ -23,6 +23,8 @@ export interface PosTicketPrintGroup {
 interface PosTicketPrintPreviewProps {
   open: boolean
   onClose: () => void
+  onPrint: () => void
+  isPrinting?: boolean
   orderNumber: string
   completedAt?: string | null
   groups: PosTicketPrintGroup[]
@@ -33,6 +35,8 @@ interface PosTicketPrintPreviewProps {
 export default function PosTicketPrintPreview({
   open,
   onClose,
+  onPrint,
+  isPrinting = false,
   orderNumber,
   completedAt,
   groups,
@@ -40,32 +44,7 @@ export default function PosTicketPrintPreview({
   orderNote,
 }: PosTicketPrintPreviewProps) {
   const { t, currentLanguage } = useTranslation()
-  const printCleanupRef = useRef<(() => void) | null>(null)
-
-  useEffect(() => () => printCleanupRef.current?.(), [])
-
   if (!open || typeof document === 'undefined') return null
-
-  const handlePrintDocument = () => {
-    if (typeof window === 'undefined' || typeof window.print !== 'function') return
-
-    printCleanupRef.current?.()
-    document.body.classList.add('printing-pos-invoice')
-
-    const cleanup = () => {
-      window.removeEventListener('afterprint', cleanup)
-      document.body.classList.remove('printing-pos-invoice')
-      if (printCleanupRef.current === cleanup) printCleanupRef.current = null
-    }
-
-    printCleanupRef.current = cleanup
-    window.addEventListener('afterprint', cleanup, { once: true })
-    try {
-      window.print()
-    } catch {
-      cleanup()
-    }
-  }
 
   const pages = groups.map((group) => [group])
   const lineCount = groups.reduce((count, group) => count + group.lines.length, 0)
@@ -185,7 +164,8 @@ export default function PosTicketPrintPreview({
           </button>
           <button
             type="button"
-            onClick={handlePrintDocument}
+            onClick={onPrint}
+            disabled={isPrinting || lineCount === 0}
             className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark"
           >
             <Printer className="h-4 w-4" aria-hidden="true" />

@@ -44,6 +44,7 @@ export interface PosPrintRequest {
   /** Path the PassPRNT callback should return to. No query string; see passprntTransport. */
   backPath: string
   kind?: 'receipt' | 'testPrint'
+  browserOnly?: boolean
 }
 
 /** Release the button if afterprint is missing, but keep the printable DOM alive. */
@@ -123,7 +124,7 @@ export function usePosReceiptPrint() {
       printingRef.current = true
       setIsPrinting(true)
 
-      if (transport === PosPrintTransport.Browser) {
+      if (transport === PosPrintTransport.Browser || request.browserOnly) {
         printViaBrowser(doc, request.copies)
         return
       }

@@ -28,6 +28,7 @@ export default function PosReceiptPrintDocument({
   doc: PosReceiptDocument
   className?: string
 }) {
+  if (doc.pages?.length) return <>{doc.pages.map((page, index) => <PosReceiptPrintDocument key={index} doc={page} className={`${index < doc.pages!.length - 1 ? 'pos-receipt-print--page-break' : ''} ${className ?? ''}`} />)}</>
   const hasLines = doc.rows.length > 0
   const hasBusiness = Boolean(doc.businessName || doc.businessAddress || doc.businessPhone)
   const hasCustomer = Boolean(doc.customerName || doc.customerPhone)
@@ -97,6 +98,10 @@ export default function PosReceiptPrintDocument({
         )}
       </section>
 
+      {doc.footerNotes && <section className="mt-3 border-t border-dashed border-nexoraBorder pt-2 text-[11px]">
+        <h3 className="font-bold uppercase">{doc.footerNotes.heading}</h3>
+        {doc.footerNotes.lines.map((note, index) => <p key={index} className="whitespace-pre-wrap break-words">{note}</p>)}
+      </section>}
       <dl className="pos-receipt-totals">
         {doc.totals.map((row) => (
           <div key={row.id} className={row.emphasis ? 'pos-receipt-total' : undefined}>

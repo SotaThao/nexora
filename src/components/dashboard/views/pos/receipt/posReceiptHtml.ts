@@ -43,8 +43,9 @@ const TOTAL_ROW_HEIGHT_PX = 34
 const CHROME_HEIGHT_PX = 320
 
 export function estimatePosReceiptHeightPx(doc: PosReceiptDocument): number {
+  if (doc.pages?.length) return doc.pages.reduce((sum, page) => sum + estimatePosReceiptHeightPx(page), 0)
   return (
-    CHROME_HEIGHT_PX + doc.rows.length * ROW_HEIGHT_PX + doc.totals.length * TOTAL_ROW_HEIGHT_PX
+    CHROME_HEIGHT_PX + doc.rows.length * ROW_HEIGHT_PX + doc.totals.length * TOTAL_ROW_HEIGHT_PX + (doc.footerNotes?.lines.reduce((sum, note) => sum + Math.ceil(note.length / 30) * ROW_HEIGHT_PX, ROW_HEIGHT_PX) ?? 0)
   )
 }
 
@@ -88,6 +89,12 @@ export function buildPosReceiptHtml(
   doc: PosReceiptDocument,
   options: { widthDots: number },
 ): string {
+  if (doc.pages?.length) {
+    const pages = doc.pages.map(page => buildPosReceiptHtml(page, options))
+    const start = pages[0].indexOf('<body>') + '<body>'.length
+    const content = pages.map((page, index) => `<section style="${index ? 'break-before:page;page-break-before:always;padding-top:24px;' : ''}">${page.slice(page.indexOf('<body>') + 6, page.lastIndexOf('</body>'))}</section>`).join('')
+    return pages[0].slice(0, start) + content + '</body></html>'
+  }
   const businessBlock = [
     doc.businessName ? `<h1>${escapeHtml(doc.businessName)}</h1>` : '',
     doc.businessAddress ? `<p>${escapeHtml(doc.businessAddress)}</p>` : '',
@@ -144,6 +151,7 @@ export function buildPosReceiptHtml(
     `</div><hr>` +
     `<div class="lines">${rowsMarkup(doc)}</div><hr>` +
     `<div class="totals">${totalsMarkup(doc)}</div>` +
+    (doc.footerNotes ? `<section style="margin-top:12px;border-top:2px dashed #000;padding-top:8px;overflow-wrap:anywhere"><strong>${escapeHtml(doc.footerNotes.heading)}</strong>${doc.footerNotes.lines.map(note => `<p style="white-space:pre-wrap">${escapeHtml(note)}</p>`).join('')}</section>` : '') +
     paidBlock +
     `<p class="thanks">${escapeHtml(doc.labels.thankYou)}</p>` +
     `</body></html>`

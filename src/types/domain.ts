@@ -991,6 +991,9 @@ export interface PosReceiptLabels {
 }
 
 export interface PosReceiptDocument {
+  /** Separate technician tickets, retained for browser printing and PassPRNT retries. */
+  pages?: PosReceiptDocument[]
+  footerNotes?: { heading: string; lines: string[] }
   /** Bumped when the persisted shape changes; a stored job of another version is discarded. */
   version: 1
   orderNumber: string
