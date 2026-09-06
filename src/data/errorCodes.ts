@@ -603,20 +603,22 @@ export function getErrorI18nKey(errorCode) {
  * - Otherwise, falls back to the raw message the backend returned (errorDetail[].message,
  *   or the RFC 7807 detail/title) so an unmapped error code still shows something useful
  *   instead of the generic "unknown error" text.
- * - Only falls back to the generic translation when the backend gave no message at all.
+ * - Only falls back to a generic message when the backend gave no message at all —
+ *   `fallbackMessage` when the caller has screen-specific copy, else the generic translation.
  *
  * @param {unknown} err
  * @param {(key: string) => string} t
  * @param {string} [fallbackCode]
+ * @param {string} [fallbackMessage]
  * @returns {string}
  */
-export function getErrorMessage(err, t, fallbackCode = 'ERROR') {
+export function getErrorMessage(err, t, fallbackCode = 'ERROR', fallbackMessage = '') {
   const errorCode = getApiErrorCode(err, fallbackCode)
   const mappedKey = errorCodeToI18nKey[errorCode]
   if (mappedKey) return t(mappedKey)
 
   const rawMessage = isApiError(err) ? err.message : ''
-  return rawMessage || t('errors.unknown_error')
+  return rawMessage || fallbackMessage || t('errors.unknown_error')
 }
 
 export default errorCodeToI18nKey

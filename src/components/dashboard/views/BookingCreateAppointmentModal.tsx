@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { getErrorI18nKey } from '../../../data/errorCodes'
+import { getErrorMessage } from '../../../data/errorCodes'
 import {
   useCreateMerchantVoiceBooking,
   useMerchantVoiceServiceCategories,
@@ -22,7 +22,6 @@ import {
   formatServicePrice,
   toStartTimeApi,
 } from '../../../data/repositories/publicVoiceBooking'
-import { getApiErrorCode } from '../../../types/domain'
 import { toTwelveHourLangTag } from '../../../constants/timeFormat'
 import CountryCodeSelect, {
   formatNationalNumber,
@@ -399,12 +398,11 @@ export default function BookingCreateAppointmentModal({
       })
       onClose()
     } catch (err) {
-      const code = getApiErrorCode(err)
-      const message = code
-        ? t(getErrorI18nKey(code))
-        : (err instanceof Error && err.message
-          ? err.message
-          : t(`${BOOKING_CREATE_TK}.errorGeneric`))
+      // Localized copy for a mapped code, else the backend's own message — booking
+      // availability rules (POS_BOOKING_STAFF_OUTSIDE_SCHEDULE and friends) arrive here and
+      // deserve their real text. The old `code ? ... : err.message` chain could never reach
+      // err.message, because getApiErrorCode always returns a fallback code.
+      const message = getErrorMessage(err, t, 'ERROR', t(`${BOOKING_CREATE_TK}.errorGeneric`))
       setSubmitError(message)
       showToast(message, 'error')
     }

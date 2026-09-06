@@ -166,6 +166,17 @@ const COPY_BY_LANG = {
     staffNotFound: 'That technician is no longer available. Please choose another.',
     tooManyRequests: 'Too many requests. Please wait a moment and try again.',
     validationError: 'Some booking details are invalid. Please check and try again.',
+    staffNotActive: 'That technician is not available. Please choose another.',
+    staffOutsideSchedule:
+      'The selected technician is not scheduled to work at this time.',
+    slotConflict:
+      'This technician already has a booking that overlaps with the selected time.',
+    outsideBusinessHours: "The selected time is outside the salon's operating hours.",
+    businessClosedOnDate: 'The salon is closed on this date. Please choose another date.',
+    leadTimeViolation: 'This booking is too soon — please pick a later time.',
+    advanceLimitExceeded:
+      'This booking is too far in advance — please pick a closer date.',
+    phoneAlreadyActive: 'This phone number already has an active booking.',
     unexpectedError: 'Something went wrong. Please try again.',
     emptyServices: 'No services are available for booking right now.',
     emptyStaff: 'No technicians are available right now.',
@@ -268,6 +279,16 @@ const COPY_BY_LANG = {
     staffNotFound: 'Chuyên viên này không còn khả dụng. Vui lòng chọn lại.',
     tooManyRequests: 'Bạn thao tác quá nhanh. Vui lòng chờ một chút rồi thử lại.',
     validationError: 'Thông tin đặt lịch chưa hợp lệ. Vui lòng kiểm tra lại.',
+    staffNotActive: 'Kỹ thuật viên này hiện không nhận lịch. Vui lòng chọn người khác.',
+    staffOutsideSchedule:
+      'Kỹ thuật viên đã chọn không có lịch làm việc vào thời gian này.',
+    slotConflict: 'Kỹ thuật viên này đã có lịch hẹn trùng với thời gian đã chọn.',
+    outsideBusinessHours: 'Thời gian đã chọn nằm ngoài giờ hoạt động của salon.',
+    businessClosedOnDate: 'Salon đóng cửa vào ngày này. Vui lòng chọn ngày khác.',
+    leadTimeViolation: 'Lịch hẹn này quá gấp — vui lòng chọn thời gian trễ hơn.',
+    advanceLimitExceeded:
+      'Lịch hẹn này đặt trước quá xa — vui lòng chọn ngày gần hơn.',
+    phoneAlreadyActive: 'Số điện thoại này đã có một lịch hẹn đang hoạt động.',
     unexpectedError: 'Đã xảy ra lỗi. Vui lòng thử lại.',
     emptyServices: 'Hiện chưa có dịch vụ nào để đặt lịch.',
     emptyStaff: 'Hiện chưa có chuyên viên nào để chọn.',
@@ -302,6 +323,9 @@ export const PUBLIC_BOOKING_STEP = {
   success: 3,
 }
 
+// Submit runs BookingAvailabilityService on the backend, so every POS_BOOKING_* rule it
+// enforces can come back here — each needs its own bilingual line, otherwise the page falls
+// back to the raw backend message (English only) or, with no message, to unexpectedError.
 export const PUBLIC_BOOKING_SUBMIT_ERROR_COPY = {
   VOICE_TENANT_NOT_FOUND: 'businessNotFound',
   VOICE_TENANT_SERVICE_NOT_FOUND: 'serviceNotFound',
@@ -309,4 +333,14 @@ export const PUBLIC_BOOKING_SUBMIT_ERROR_COPY = {
   COMMON_VALIDATION_ERROR: 'validationError',
   COMMON_BAD_REQUEST: 'validationError',
   COMMON_RATE_LIMIT_EXCEEDED: 'tooManyRequests',
+  POS_BOOKING_SERVICE_INVALID: 'serviceNotFound',
+  POS_STAFF_PROFILE_NOT_FOUND: 'staffNotFound',
+  POS_STAFF_STATUS_NOT_ACTIVE: 'staffNotActive',
+  POS_BOOKING_STAFF_OUTSIDE_SCHEDULE: 'staffOutsideSchedule',
+  POS_BOOKING_SLOT_CONFLICT: 'slotConflict',
+  POS_BOOKING_OUTSIDE_BUSINESS_HOURS: 'outsideBusinessHours',
+  POS_BOOKING_BUSINESS_CLOSED_ON_DATE: 'businessClosedOnDate',
+  POS_BOOKING_LEAD_TIME_VIOLATION: 'leadTimeViolation',
+  POS_BOOKING_ADVANCE_LIMIT_EXCEEDED: 'advanceLimitExceeded',
+  POS_BOOKING_PHONE_ALREADY_ACTIVE: 'phoneAlreadyActive',
 }

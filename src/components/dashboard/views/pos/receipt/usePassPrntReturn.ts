@@ -8,7 +8,7 @@
  *
  * - A job is advanced only when a callback code is present. A manual reload carries none, so it
  *   can never reprint.
- * - The handled job id is recorded in a ref before anything else, and the callback params are
+ * - The handled callback URL is recorded in a ref before anything else, and the callback params are
  *   stripped with a history replace, so a double render or a back-button press is a no-op.
  * - Each copy is fired at most once (`firedAttempts`), so even a callback loop cannot spin.
  * - A failure clears the job outright. There is no automatic retry: a printer that is off or out
@@ -82,7 +82,9 @@ export function usePassPrntReturn({ surface, backPath, onRestore, onPrintFailed 
       return
     }
 
-    const callbackKey = `${job?.jobId ?? 'none'}:${job?.copiesDone ?? 0}:${callback.code}`
+    // The persisted job advances below. Keying this guard on copiesDone would turn an
+    // effect replay for the same URL into a second acknowledgement and duplicate print.
+    const callbackKey = searchParams.toString()
     if (handledRef.current === callbackKey) return
     handledRef.current = callbackKey
 
