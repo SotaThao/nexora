@@ -20,8 +20,8 @@ export function CheckInBackgroundGallery({ selectedId, onSelect }: { selectedId:
       }}
       className={`min-w-0 rounded-xl border-2 p-2 text-xs ${selectedId === template.id ? 'border-nexoraBrand bg-nexoraCanvas' : 'border-nexoraBorder bg-white'}`}
     >
-      <img src={template.thumbnailUrl ?? template.imageUrl} loading="lazy" decoding="async" alt="" className="h-40 w-full rounded object-contain" />
-      <span className="mt-2 block font-bold">{t('checkInPrint.backgrounds.' + template.id)}</span>
+      <img src={template.thumbnailUrl ?? template.imageUrl} loading="lazy" decoding="async" alt="" className="h-auto max-h-32 w-full rounded object-contain" />
+      <span className="mt-1 block font-bold">{t('checkInPrint.backgrounds.' + template.id)}</span>
       {selectedId === template.id && <span className="block text-nexoraBrand">{t('checkInPrint.selected')}</span>}
     </button>)}
   </div>
