@@ -8,6 +8,7 @@ export interface CheckInBackgroundTemplate {
   id: string
   imageUrl: string
   thumbnailUrl?: string
+  brandingArea?: { x: number; y: number; width: number; height: number }
   brandingColor?: string
   brandingFont?: keyof typeof CHECK_IN_FONT_FAMILIES
   /** The interior placeholder area, relative to the original image dimensions. */
@@ -56,7 +57,7 @@ export function useCheckInBackgroundPrint(template: CheckInBackgroundTemplate | 
           if (controller.signal.aborted) return
         }
         const result = await renderCheckInBackgroundCanvas({ background: image, qrUrl, qrBox: template.qrBox, ...dimensions, signal: controller.signal,
-          branding: { name: branding.name, logo, color: template.brandingColor, fontFamily: CHECK_IN_FONT_FAMILIES[template.brandingFont ?? 'bodyBold'] },
+          branding: { name: branding.name, logo, area: template.brandingArea, color: template.brandingColor, fontFamily: CHECK_IN_FONT_FAMILIES[template.brandingFont ?? 'bodyBold'] },
         })
         if (controller.signal.aborted) return
         const composedImage = new Image()

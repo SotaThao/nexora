@@ -20,6 +20,7 @@ export interface BackgroundBranding {
   logo?: HTMLImageElement
   color?: string
   fontFamily?: string
+  area?: BackgroundQrBox
 }
 export interface BackgroundCanvasInput {
   background: HTMLImageElement
@@ -120,23 +121,28 @@ function drawBranding(context: CanvasRenderingContext2D, bounds: {x:number;y:num
   if (!branding) return
   const name = branding.name?.normalize('NFC').trim() ?? ''
   const { logo } = branding
+  const area = branding.area ?? { x: .2, y: .065, width: .6, height: .105 }
+  const left = bounds.x + bounds.width * area.x
+  const top = bounds.y + bounds.height * area.y
+  const width = bounds.width * area.width
+  const height = bounds.height * area.height
+  const centerX = left + width / 2
   if (logo) {
-    const top = name ? .045 : .052
-    const height = bounds.height * (name ? .05 : .08)
-    const width = bounds.width * .76
-    const scale = Math.min(width / logo.naturalWidth, height / logo.naturalHeight)
+    const logoSlotHeight = height * (name ? .44 : .85)
+    const logoSlotWidth = width * .65
+    const scale = Math.min(logoSlotWidth / logo.naturalWidth, logoSlotHeight / logo.naturalHeight)
     const logoWidth = logo.naturalWidth * scale
     const logoHeight = logo.naturalHeight * scale
-    context.drawImage(logo, bounds.x + (bounds.width - logoWidth) / 2, bounds.y + bounds.height * top + (height - logoHeight) / 2, logoWidth, logoHeight)
+    context.drawImage(logo, centerX - logoWidth / 2, top + (name ? 0 : (height - logoSlotHeight) / 2) + (logoSlotHeight - logoHeight) / 2, logoWidth, logoHeight)
   }
   if (!name) return
   context.save()
   try {
     const family = branding.fontFamily || 'sans-serif'
-    const top = logo ? .10 : .09
-    const slotHeight = bounds.height * (logo ? .045 : .05)
-    const slotWidth = bounds.width * .78
-    const fit = fitCheckInBrandingName(name, slotWidth, slotHeight, bounds.width * .03, bounds.width * .018, (text, size) => {
+    const nameTop = top + (logo ? height * .53 : 0)
+    const slotHeight = height * (logo ? .47 : 1)
+    const slotWidth = width
+    const fit = fitCheckInBrandingName(name, slotWidth, slotHeight, bounds.width * .034, bounds.width * .018, (text, size) => {
       context.font = `${size}px ${family}`
       return context.measureText(text).width
     })
@@ -150,8 +156,8 @@ function drawBranding(context: CanvasRenderingContext2D, bounds: {x:number;y:num
     const lineHeight = Math.max(fit.fontSize * 1.25, ascent + descent)
     const inkHeight = (fit.lines.length - 1) * lineHeight + ascent + descent
     if (inkHeight > slotHeight) throw new CheckInBrandingOverflowError()
-    const baseline = bounds.y + bounds.height * top + (slotHeight - inkHeight) / 2 + ascent
-    fit.lines.forEach((line, index) => context.fillText(line, bounds.x + bounds.width / 2, baseline + index * lineHeight))
+    const baseline = nameTop + (slotHeight - inkHeight) / 2 + ascent
+    fit.lines.forEach((line, index) => context.fillText(line, centerX, baseline + index * lineHeight))
   } finally { context.restore() }
 }
 

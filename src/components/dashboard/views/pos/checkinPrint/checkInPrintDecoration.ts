@@ -18,21 +18,10 @@ export function createCheckInPrintDecoration(template: TemplateId, width: number
     rect(offset, offset, weight, height - offset * 2, fill)
     rect(width - offset - weight, offset, weight, height - offset * 2, fill)
   }
-  const diagonal = (x: number, y: number, length: number, mirror: boolean, fill: string) => {
-    const direction = mirror ? -1 : 1
-    nodes.push({ kind: 'path', x, y, fill,
-      d: `M 0 0 L ${direction * length} 0 L 0 ${direction * length} Z` })
-  }
-
   if (template === 'classic-gold') {
     // An ivory invitation-style frame. Foil accents stay at the trim, away from text.
     frame(inset, rule)
     frame(inset + 3, .25)
-    const corner = width * .10
-    diagonal(0, 0, corner, false, accent)
-    diagonal(width, height, corner, true, accent)
-    diagonal(0, 0, corner * .79, false, palette.background)
-    diagonal(width, height, corner * .79, true, palette.background)
     rect(inset, inset, width * .19, 1.1)
     rect(width - inset - width * .19, height - inset - 1.1, width * .19, 1.1)
   }
