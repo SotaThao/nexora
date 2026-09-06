@@ -10,7 +10,6 @@
  * and returning a string.
  */
 import { maskReceiptPhone } from './maskReceiptPhone'
-import { RECEIPT_DOTS_PER_MM } from '../../../../../constants/posPrinter'
 import type { PosReceiptDocument, PosReceiptTotalRow } from '../../../../../types/domain'
 
 /**
@@ -89,8 +88,6 @@ export function buildPosReceiptHtml(
   doc: PosReceiptDocument,
   options: { widthDots: number },
 ): string {
-  const widthMm = options.widthDots / RECEIPT_DOTS_PER_MM
-
   const businessBlock = [
     doc.businessName ? `<h1>${escapeHtml(doc.businessName)}</h1>` : '',
     doc.businessAddress ? `<p>${escapeHtml(doc.businessAddress)}</p>` : '',
@@ -118,7 +115,9 @@ export function buildPosReceiptHtml(
     `<meta name="format-detection" content="telephone=no">` +
     `<title>${escapeHtml(doc.labels.ticket)} ${escapeHtml(doc.orderNumber)}</title><style>` +
     `*{margin:0;padding:0;box-sizing:border-box;}` +
-    `body{width:${widthMm}mm;padding:2mm 3mm;background:#fff;color:#000;` +
+    // Match the raster canvas passed as PassPRNT's `size`. CSS mm resolve at 96 dpi,
+    // so converting printer dots to mm here shrinks the receipt to less than half-width.
+    `body{width:${options.widthDots}px;padding:16px 24px;background:#fff;color:#000;` +
     `font-family:-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:22px;line-height:1.35;}` +
     `.ticket{display:inline-block;background:#000;color:#fff;padding:2px 10px;font-size:24px;font-weight:700;}` +
     `.head{text-align:center;padding-bottom:8px;}` +

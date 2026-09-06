@@ -22,6 +22,7 @@ import { usePosPrinterProfile } from '../../../../../data/hooks/usePosPrinterSet
 import posPrinterSettingsRepository from '../../../../../data/repositories/posPrinterSettings'
 import {
   PASSPRNT_MAX_RECEIPT_HEIGHT_PX,
+  PASSPRNT_JOB_STALE_MS,
   POS_PRINTER_I18N_PREFIX,
   PosPrintTransport,
 } from '../../../../../constants/posPrinter'
@@ -30,6 +31,7 @@ import type { PosPrintRestoreState, PosReceiptDocument } from '../../../../../ty
 import { logger } from '../../../../../utils/logger'
 import PosReceiptPrintDocument from './PosReceiptPrintDocument'
 import { printDomWithBodyClass } from './browserPrintTransport'
+import type { BrowserPrintHandle } from './browserPrintTransport'
 import { buildPassPrntBackUrl, buildPassPrntUrl, firePassPrnt } from './passprntTransport'
 import { buildPosReceiptHtml, estimatePosReceiptHeightPx } from './posReceiptHtml'
 import { POS_INVOICE_PRINT_BODY_CLASS } from '../PosReceiptPrintPreview'
@@ -44,8 +46,8 @@ export interface PosPrintRequest {
   kind?: 'receipt' | 'testPrint'
 }
 
-/** Fallback teardown when afterprint never arrives — see the effect below. */
-const BROWSER_PRINT_TEARDOWN_MS = 3000
+/** Release the button if afterprint is missing, but keep the printable DOM alive. */
+const BROWSER_PRINT_UNLOCK_MS = 3000
 
 interface PendingBrowserPrint {
   doc: PosReceiptDocument
@@ -59,6 +61,9 @@ export function usePosReceiptPrint() {
   const [pendingBrowserPrint, setPendingBrowserPrint] = useState<PendingBrowserPrint | null>(null)
   const [isPrinting, setIsPrinting] = useState(false)
   const printingRef = useRef(false)
+  const passPrntCleanupRef = useRef<(() => void) | null>(null)
+
+  useEffect(() => () => passPrntCleanupRef.current?.(), [])
 
   const transport: PosPrintTransportType = profile?.transport ?? PosPrintTransport.Browser
 
@@ -71,32 +76,37 @@ export function usePosReceiptPrint() {
   // The receipt has to stay in the DOM until printing is genuinely finished. Clearing it on the
   // line after window.print() happens to work where the call blocks, but iOS Safari does not
   // reliably block and does not reliably fire afterprint either — and a receipt unmounted a tick
-  // too early prints as a blank page, with nothing in the app to indicate why. So: tear down on
-  // afterprint when it arrives, and on a timer when it does not.
+  // too early prints as a blank page. Only afterprint tears down the document; the fallback
+  // timer unlocks the button while retaining the document until completion or replacement.
   useEffect(() => {
     if (!pendingBrowserPrint) return undefined
 
-    const handle = printDomWithBodyClass(POS_INVOICE_PRINT_BODY_CLASS)
+    let handle: BrowserPrintHandle | undefined
+    let timer: number | undefined
     let torn = false
+    const unlock = () => {
+      printingRef.current = false
+      setIsPrinting(false)
+    }
     const teardown = () => {
       if (torn) return
       torn = true
       window.removeEventListener('afterprint', teardown)
       window.clearTimeout(timer)
-      handle.cancel()
+      handle?.cancel()
       setPendingBrowserPrint(null)
-      printingRef.current = false
-      setIsPrinting(false)
+      unlock()
     }
 
-    window.addEventListener("afterprint", teardown, { once: true })
-    const timer = window.setTimeout(teardown, BROWSER_PRINT_TEARDOWN_MS)
+    // Blocking browsers may dispatch afterprint before window.print returns.
+    window.addEventListener('afterprint', teardown, { once: true })
+    handle = printDomWithBodyClass(POS_INVOICE_PRINT_BODY_CLASS)
+    if (!torn) timer = window.setTimeout(unlock, BROWSER_PRINT_UNLOCK_MS)
 
     return () => {
       window.removeEventListener("afterprint", teardown)
       window.clearTimeout(timer)
-      handle.cancel()
-      printingRef.current = false
+      handle?.cancel()
     }
   }, [pendingBrowserPrint])
 
@@ -149,7 +159,43 @@ export function usePosReceiptPrint() {
         restore: request.restore,
       })
 
-      firePassPrnt(built.url)
+      // iOS can resume this same page (including from the back/forward cache). A URL
+      // scheme launch does not unmount React, so the local lock needs its own lifecycle.
+      passPrntCleanupRef.current?.()
+      let leftPage = false
+      const cleanup = () => {
+        window.clearTimeout(timer)
+        document.removeEventListener('visibilitychange', visibilityChanged)
+        window.removeEventListener('pagehide', pageHidden)
+        window.removeEventListener('pageshow', pageShown)
+      }
+      const unlock = () => {
+        cleanup()
+        printingRef.current = false
+        setIsPrinting(false)
+      }
+      const pageHidden = () => { leftPage = true }
+      const pageShown = () => { if (leftPage) unlock() }
+      const visibilityChanged = () => {
+        if (document.visibilityState === 'hidden') pageHidden()
+        else pageShown()
+      }
+      const timer = window.setTimeout(() => {
+        if (leftPage || document.visibilityState === 'hidden') return
+        unlock()
+        showToast(t(`${POS_PRINTER_I18N_PREFIX}.printNotStarted`), 'error')
+      }, PASSPRNT_JOB_STALE_MS)
+      document.addEventListener('visibilitychange', visibilityChanged)
+      window.addEventListener('pagehide', pageHidden)
+      window.addEventListener('pageshow', pageShown)
+      passPrntCleanupRef.current = cleanup
+      try {
+        firePassPrnt(built.url)
+      } catch (error) {
+        unlock()
+        logger.error('[usePosReceiptPrint] could not open PassPRNT', error)
+        showToast(t(`${POS_PRINTER_I18N_PREFIX}.printNotStarted`), 'error')
+      }
     },
     [transport, profile?.paperWidthDots, printViaBrowser, showToast, t],
   )
