@@ -182,6 +182,9 @@ export const qk = {
   merchantPosWaitlist: (businessId?: string) => ['merchantSettings', 'posWaitlist', businessId ?? ''],
   // POS Merchant Ops — Order List tab (US-17), Waiting + InService combined.
   merchantPosOrderList: (businessId?: string) => ['merchantSettings', 'posOrderList', businessId ?? ''],
+  // Order mutations invalidate the list prefix, so the next-turn balance refreshes with it.
+  merchantPosNextTurnBalance: (businessId: string | undefined, day: string, timeZone: string) =>
+    ['merchantSettings', 'posOrderList', businessId ?? '', 'nextTurnBalance', day, timeZone],
   // POS iPad redesign, Ticket 2 — Check-in "returning customer" lookup by phone.
   merchantPosCustomerLookup: (businessId?: string, phone?: string) =>
     ['merchantSettings', 'posCustomerLookup', businessId ?? '', phone ?? ''],
