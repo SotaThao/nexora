@@ -60,7 +60,7 @@ export function buildCheckInPrintDocument(config: CheckInPrintConfig, business: 
       return block(copy.instructions.map((text, i) => `${i + 1}. ${text}`).join('\n'), 'body', 8 * scale, config.language === 'bilingual' ? 6 : 4, 'instructions')
     }
     const fontSize = 7 * scale
-    const diameter = 18 * scale
+    const diameter = 22 * scale
     const columnWidth = textWidth / 3
     const wrapped = copy.instructions.map((text, i) => lines(`${i + 1}. ${text}`, 'body', fontSize, wide ? textWidth - diameter - 9 * scale : columnWidth - 5 * scale))
     const rowHeight = Math.max(diameter, ...wrapped.map(value => value.length * fontSize * 1.32)) + 7 * scale
@@ -73,17 +73,25 @@ export function buildCheckInPrintDocument(config: CheckInPrintConfig, business: 
       wrapped.forEach((textLines, index) => {
         const centerX = wide ? textX + diameter / 2 : textX + columnWidth * (index + .5)
         const centerY = y + diameter / 2 + (wide ? index * rowHeight : 0)
-        const unit = diameter / 20
+        const unit = diameter / 26
         const iconColor = palette.foreground
+        // A subtle tinted medallion and fine accent rim, shared by SVG and PDF.
+        const badgeFill = '#' + [1, 3, 5].map(offset => {
+          const base = parseInt(palette.background.slice(offset, offset + 2), 16)
+          const accent = parseInt(palette.accent.slice(offset, offset + 2), 16)
+          return Math.round(base * .9 + accent * .1).toString(16).padStart(2, '0')
+        }).join('')
+        circle(centerX, centerY, diameter / 2, palette.accent)
+        circle(centerX, centerY, diameter / 2 - .5 * scale, badgeFill)
         if (index === 0) {
           rect(centerX - 6 * unit, centerY - 4 * unit, 12 * unit, 8 * unit, iconColor)
           rect(centerX - 3 * unit, centerY - 6 * unit, 5 * unit, 3 * unit, iconColor)
-          circle(centerX, centerY, 3 * unit, palette.background)
+          circle(centerX, centerY, 3 * unit, badgeFill)
           circle(centerX, centerY, 1.8 * unit, iconColor)
         } else if (index === 1) {
           rect(centerX - 4 * unit, centerY - 6 * unit, 8 * unit, 12 * unit, iconColor)
-          rect(centerX - 2.7 * unit, centerY - 4.5 * unit, 5.4 * unit, 7 * unit, palette.background)
-          circle(centerX, centerY + 4.2 * unit, .8 * unit, palette.background)
+          rect(centerX - 2.7 * unit, centerY - 4.5 * unit, 5.4 * unit, 7 * unit, badgeFill)
+          circle(centerX, centerY + 4.2 * unit, .8 * unit, badgeFill)
         } else {
           for (let row = 0; row < 3; row++) {
             rect(centerX - 5 * unit, centerY + (row * 3.5 - 4.5) * unit, 2 * unit, 2 * unit, iconColor)
