@@ -10527,5 +10527,72 @@
         "submitButton": "Continue"
       }
     }
+  },
+  "checkInPrint": {
+    "templates": {
+      "simple": "Simple",
+      "classic-gold": "Classic Gold",
+      "modern-navy": "Modern Navy",
+      "minimal-clean": "Minimal Clean",
+      "wide-counter": "Wide Counter"
+    },
+    "sizes": {
+      "card-4x6": "Card 4 × 6 in",
+      "letter-portrait": "Letter portrait",
+      "letter-landscape": "Letter landscape"
+    },
+    "languages": {
+      "en": "English",
+      "vi": "Tiếng Việt",
+      "bilingual": "English + Tiếng Việt"
+    },
+    "templatesLabel": "Choose a template",
+    "selected": "Selected",
+    "size": "Design size",
+    "language": "Print language",
+    "headline": "Headline",
+    "closing": "Closing message",
+    "customCopy": "Custom text is kept when changing languages.",
+    "resetCopy": "Use default text",
+    "palette": "Color palette",
+    "palettes": { "ink": "Ink", "gold": "Gold", "navy": "Navy", "forest": "Forest" },
+    "showHours": "Business hours",
+    "showUrl": "Check-in link",
+    "showInstructions": "Instructions",
+    "preview": "Live preview",
+    "previewUnavailable": "Preview unavailable",
+    "loading": "Preparing fonts and logo…",
+    "hoursUnavailable": "Business hours are unavailable for this session. Continue without hours or load them using an owner account.",
+    "hoursLoading": "Loading business hours before export…",
+    "hoursError": "Business hours could not load. Retry or continue without hours.",
+    "withoutHours": "Continue without hours",
+    "fontError": "Fonts could not load. Retry before exporting.",
+    "logoError": "The business logo could not load. Retry or continue without it.",
+    "retry": "Retry",
+    "withoutLogo": "Continue without logo",
+    "noLogo": "No logo: the design displays your business name.",
+    "print": "Print",
+    "pdf": "Download PDF",
+    "qr": "Download QR PNG",
+    "working": "Preparing…",
+    "cancelPrint": "Finish print session",
+    "printHint": "Choose paper and scale in the print dialog. Use 100% for actual size and turn off headers and footers. Printer margins may leave a white border.",
+    "exportError": "Could not export this design. Please retry.",
+    "issues": {
+      "textOverflow": "Text does not fit. Shorten your custom text or choose a larger design. A very long business name may also exceed the layout.",
+      "assetFailed": "Design assets are unavailable. Please retry.",
+      "invalidUrl": "The check-in link is invalid.",
+      "unsupportedSize": "Choose a supported design size."
+    },
+    "printCopy": {
+      "headline": "CHECK IN HERE",
+      "closingText": "Thank you for visiting!",
+      "instructions": [
+        "Scan QR",
+        "Enter your phone",
+        "Follow the check-in steps"
+      ],
+      "hoursLabel": "Hours"
+    }
   }
 }
