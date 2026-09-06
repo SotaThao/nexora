@@ -46,8 +46,8 @@ import ServiceLineMismatchWarningModal, {
   type ServiceLineMismatchKind,
 } from './modals/ServiceLineMismatchWarningModal'
 import { useCheckInTechnicians } from '../../../../data/hooks/usePosCheckIn'
+import { usePosNextTurnBalance } from '../../../../data/hooks/usePosNextTurnBalance'
 import { useTimeClockRoster } from '../../../../data/hooks/usePosTimeClock'
-import { usePosReport } from '../../../../data/hooks/usePosReport'
 import { usePublicBusinessPaymentMethods } from '../../../../data/hooks/usePublicTouch'
 import { SHOW_SERVICE_ADD_ONS } from '../../../../constants/posFeatureVisibility'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
@@ -56,7 +56,6 @@ import {
   isLineAtOrPast,
   posOrderItemStatusLabelKey,
 } from '../../../../constants/posOrderItemStatus'
-import { PosReportMode } from '../../../../constants/posReportMode'
 import { isLineBusySurface, TicketBusySurface } from '../../../../constants/posTicketAction'
 import {
   formatUsdAmount,
@@ -417,18 +416,13 @@ export default function PosOrderWorkspace({
   const technicianTurnWindow = getLocalDayWindow()
   const technicianTurnRosterQuery = useTimeClockRoster(businessId, technicianTurnWindow, {
     enabled: technicianTarget !== null,
-    refetchInterval: false,
+    refetchInterval: 15000,
   })
-  const technicianServiceAmountReportQuery = usePosReport(
-    technicianTarget !== null && canViewReport
-      ? {
-          businessId,
-          timeZone: businessTimeZone,
-          mode: PosReportMode.Daily,
-          dates: [reportTodayIso(businessTimeZone)],
-        }
-      : null,
-    { enabled: technicianTarget !== null && canViewReport },
+  const technicianNextTurnBalanceQuery = usePosNextTurnBalance(
+    businessId,
+    reportTodayIso(businessTimeZone || 'America/Chicago'),
+    businessTimeZone,
+    technicianTarget !== null && canViewReport,
   )
   const [noteDraft, setNoteDraft] = useState('')
   // Chosen technician shown immediately so the row never flashes the previous name while
@@ -679,17 +673,14 @@ export default function PosOrderWorkspace({
     const turnsByTechnicianId = new Map(
       rosterRows.map((row) => [row.posStaffProfileId, row.turnsToday]),
     )
-    const serviceAmountsByTechnicianId = new Map(
-      (technicianServiceAmountReportQuery.data?.rows ?? []).map((row) => [
-        row.posStaffProfileId,
-        row.serviceAmount,
-      ]),
-    )
-    const nextTurnTechnician = technicianServiceAmountReportQuery.data
+    const serviceAmountsByTechnicianId = technicianNextTurnBalanceQuery.data?.completedAmounts ?? new Map<string, number>()
+    const nextTurnTechnician = technicianNextTurnBalanceQuery.data
+      && !technicianNextTurnBalanceQuery.isFetching && !technicianNextTurnBalanceQuery.isError
       ? selectNextTurnTechnician(
           rosterRows,
           eligibleTechnicianIds,
           serviceAmountsByTechnicianId,
+          technicianNextTurnBalanceQuery.data,
         )
       : undefined
 
