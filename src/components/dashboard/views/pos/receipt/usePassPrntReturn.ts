@@ -73,7 +73,6 @@ export function usePassPrntReturn({ surface, backPath, onRestore, onPrintFailed 
     const job = posPrinterSettingsRepository.getPendingPrintJob()
 
     if (!callback) {
-      handledRef.current = null
       // No result in the URL. If a job has been sitting here since before the staleness window,
       // the companion app never took it — most often because it is not installed.
       if (job && Date.now() - new Date(job.createdAt).getTime() > PASSPRNT_JOB_STALE_MS) {
