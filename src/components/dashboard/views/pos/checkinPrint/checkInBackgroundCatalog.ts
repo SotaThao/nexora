@@ -4,8 +4,7 @@ import type { CheckInBackgroundTemplate } from './useCheckInBackgroundPrint'
 function artwork(id: string, x: number, y: number, width: number, height: number, brandingColor: string, brandingFont: CheckInBackgroundTemplate['brandingFont']): CheckInBackgroundTemplate {
   return {
     id,
-    imageUrl: `${import.meta.env.BASE_URL}images/checkin-templates/${id}.png`,
-    thumbnailUrl: `${import.meta.env.BASE_URL}images/checkin-templates/${id}-thumb.webp`,
+    imageUrl: `${import.meta.env.BASE_URL}images/checkin-templates/${id}.jpg`,
     brandingColor, brandingFont,
     brandingArea: id === 'modern-dark-glow'
       ? { x: .2, y: .05, width: .6, height: .095 }
