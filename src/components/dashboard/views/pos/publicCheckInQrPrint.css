@@ -1,0 +1,52 @@
+.pos-checkin-qr-print {
+  display: none;
+}
+
+@media print {
+  @page pos-checkin-qr {
+    size: portrait;
+    margin: 0.5in;
+  }
+
+  html body.printing-checkin-qr {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    page: pos-checkin-qr;
+  }
+
+  /* Isolate this card from the dashboard and any retained receipt print portal. */
+  html body.printing-checkin-qr > :not(.pos-checkin-qr-print) {
+    display: none !important;
+  }
+
+  html body.printing-checkin-qr > .pos-checkin-qr-print {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.16in;
+    width: 4in;
+    height: 6in;
+    padding: 0.3in 0.35in;
+    margin: 0 auto;
+    box-sizing: border-box;
+    background: #fff;
+    color: #0b1220;
+    text-align: center;
+    font-family: system-ui, -apple-system, sans-serif;
+    page: pos-checkin-qr;
+    break-inside: avoid;
+  }
+
+  .pos-checkin-qr-print p { margin: 0; overflow-wrap: anywhere; }
+  .checkin-print-mark { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .checkin-print-mark img { width: 26pt; height: 26pt; }
+  .checkin-print-mark span { font-size: 11pt; font-weight: 900; letter-spacing: 0.5px; }
+  .checkin-print-qr { width: 2.35in; height: 2.35in; padding: 0.1in; box-sizing: border-box; flex-shrink: 0; }
+  .checkin-print-scan { font-size: 10pt; font-weight: 800; line-height: 1.35; text-transform: uppercase; }
+  .checkin-print-hours { font-size: 8pt; font-weight: 600; line-height: 1.4; }
+  .checkin-print-url { max-width: 100%; font-size: 8pt; line-height: 1.4; font-family: ui-monospace, monospace; }
+}
