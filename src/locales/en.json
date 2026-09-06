@@ -10529,6 +10529,22 @@
     }
   },
   "checkInPrint": {
+    "artworkNameTooLong": "Salon name does not fit this artwork. Turn off Show salon name or use Custom layout.",
+    "hideSalonName": "Hide salon name",
+    "showSalonLogo": "Show salon logo",
+    "showSalonName": "Show salon name",
+    "artworkMissingLogo": "No salon logo is available. The artwork will continue without a logo; you can still show the salon name.",
+    "artworkMissingName": "No salon name is available. The artwork will continue without a name.",
+    "artworkLogoError": "The salon logo could not load. Retry or turn off Show salon logo.",
+    "artworkFontError": "The branding font could not load. Retry or turn off the salon logo and name.",
+    "layoutSource": "Layout source",
+    "artworkMode": "Artwork templates",
+    "customMode": "Custom layout",
+    "artworkGallery": "Choose artwork",
+    "artworkFixed": "Artwork text and colors are fixed; your salon check-in QR is added automatically.",
+    "artworkLoading": "Preparing artwork and your check-in QR…",
+    "artworkError": "Could not prepare this artwork. Please retry.",
+    "backgrounds": {"modern-minimal-light": "Modern Minimal Light", "dark-luxury": "Dark Luxury", "elegant-floral": "Elegant Floral", "modern-dark-glow": "Modern Dark Glow", "clean-friendly": "Clean Friendly", "premium-portrait": "Premium Portrait", "minimal-line-art": "Minimal Line Art", "bold-vivid": "Bold Vivid"},
     "templates": {
       "simple": "Simple",
       "classic-gold": "Classic Gold",

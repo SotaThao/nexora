@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { CHECK_IN_FONT_FAMILIES } from './CheckInPrintPreview'
 import type { PrintAssets, TextRun } from './checkInPrintTypes'
 const FONT_FILES = {body:'NotoSans-Regular.ttf',bodyBold:'NotoSans-Bold.ttf',heading:'NotoSerif-Regular.ttf'}
@@ -23,11 +23,13 @@ async function loadFonts(): Promise<LoadedFonts> {
   return fontPromise
 }
 interface AssetState {status:'loading'|'ready'|'error';assets:PrintAssets|null;error:'font'|'logo'|null;source:string|null}
-export function useCheckInPrintAssets(logoUrl: string | null) {
+export function useCheckInPrintAssets(logoUrl: string | null, enabled = true) {
   const [attempt,setAttempt]=useState(0)
+  const liveAssets = useRef<PrintAssets | null>(null)
   const [state,setState]=useState<AssetState>({status:'loading',assets:null,error:null,source:logoUrl})
   const retry=useCallback(()=>setAttempt(value=>value+1),[])
   useEffect(()=>{
+    if (!enabled) return
     let cancelled=false;let objectUrl:string|undefined
     const controller=new AbortController()
     setState({status:'loading',assets:null,error:null,source:logoUrl})
@@ -54,11 +56,15 @@ export function useCheckInPrintAssets(logoUrl: string | null) {
           if(cancelled)return
           images.logo={bytes,mimeType,objectUrl}
         }
-        if(!cancelled)setState({status:'ready',assets:{...fonts,images},error:null,source:logoUrl})
+        if(!cancelled){
+          const assets = {...fonts,images}
+          liveAssets.current = assets
+          setState({status:'ready',assets,error:null,source:logoUrl})
+        }
       }catch {if(objectUrl){URL.revokeObjectURL(objectUrl);objectUrl=undefined}if(!cancelled)setState({status:'error',assets:null,error:stage,source:logoUrl})}
     })()
-    return()=>{cancelled=true;controller.abort();if(objectUrl)URL.revokeObjectURL(objectUrl)}
-  },[logoUrl,attempt])
+    return()=>{cancelled=true;liveAssets.current=null;controller.abort();if(objectUrl)URL.revokeObjectURL(objectUrl)}
+  },[logoUrl,attempt,enabled])
   // Never expose the prior business logo between render and the next effect.
-  return state.source===logoUrl?{...state,retry}:{status:'loading' as const,assets:null,error:null,retry}
+  return enabled && state.source===logoUrl && (state.status !== 'ready' || state.assets === liveAssets.current)?{...state,retry}:{status:'loading' as const,assets:null,error:null,retry}
 }

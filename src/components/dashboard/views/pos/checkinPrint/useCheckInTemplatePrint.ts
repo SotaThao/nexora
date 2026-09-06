@@ -15,7 +15,7 @@ export function useCheckInTemplatePrint() {
   const print = (document: CheckInPrintDocument, assets: PrintAssets) => {
     if (job) return
     const landscape = document.widthPt > document.heightPt
-    flushSync(() => setJob({ document, assets, landscape, widthPt: landscape ? 792 : 612, heightPt: landscape ? 612 : 792 }))
+    flushSync(() => setJob({ document, assets, landscape, widthPt: document.widthPt, heightPt: document.heightPt }))
     handle.current = printDomWithBodyClass('printing-checkin-qr')
     if (!window.document.body.classList.contains('printing-checkin-qr')) cleanup()
   }

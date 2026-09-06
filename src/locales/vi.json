@@ -10525,6 +10525,22 @@
     }
   },
   "checkInPrint": {
+    "artworkNameTooLong": "Tên tiệm không vừa mẫu ảnh này. Tắt Hiển thị tên tiệm hoặc dùng Bố cục tùy chỉnh.",
+    "hideSalonName": "Ẩn tên tiệm",
+    "showSalonLogo": "Hiển thị logo tiệm",
+    "showSalonName": "Hiển thị tên tiệm",
+    "artworkMissingLogo": "Tiệm chưa có logo. Mẫu ảnh sẽ không có logo; bạn vẫn có thể hiển thị tên tiệm.",
+    "artworkMissingName": "Chưa có tên tiệm. Mẫu ảnh sẽ tiếp tục không có tên tiệm.",
+    "artworkLogoError": "Không tải được logo tiệm. Thử lại hoặc tắt Hiển thị logo tiệm.",
+    "artworkFontError": "Không tải được phông chữ cho thông tin tiệm. Thử lại hoặc tắt hiển thị logo và tên tiệm.",
+    "layoutSource": "Nguồn thiết kế",
+    "artworkMode": "Mẫu ảnh có sẵn",
+    "customMode": "Bố cục tùy chỉnh",
+    "artworkGallery": "Chọn mẫu ảnh",
+    "artworkFixed": "Chữ và màu sắc trong mẫu ảnh được giữ nguyên; mã QR check-in của tiệm được thêm tự động.",
+    "artworkLoading": "Đang chuẩn bị mẫu ảnh và mã QR check-in của tiệm…",
+    "artworkError": "Không chuẩn bị được mẫu ảnh. Vui lòng thử lại.",
+    "backgrounds": {"modern-minimal-light": "Tối giản sáng hiện đại", "dark-luxury": "Sang trọng tối màu", "elegant-floral": "Hoa thanh lịch", "modern-dark-glow": "Ánh sáng tối hiện đại", "clean-friendly": "Gọn gàng thân thiện", "premium-portrait": "Mẫu dọc cao cấp", "minimal-line-art": "Nét vẽ tối giản", "bold-vivid": "Rực rỡ nổi bật"},
     "templates": {
       "simple": "Simple",
       "classic-gold": "Classic Gold",
