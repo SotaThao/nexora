@@ -142,11 +142,11 @@ function drawBranding(context: CanvasRenderingContext2D, bounds: {x:number;y:num
     const nameTop = top + (logo ? height * .53 : 0)
     const slotHeight = height * (logo ? .47 : 1)
     const slotWidth = width
-    const fit = fitCheckInBrandingName(name, slotWidth, slotHeight, bounds.width * .034, bounds.width * .018, (text, size) => {
-      context.font = `${size}px ${family}`
+    const fit = fitCheckInBrandingName(name, slotWidth, slotHeight, bounds.width * (logo ? .043 : .052), bounds.width * .018, (text, size) => {
+      context.font = `600 ${size}px ${family}`
       return context.measureText(text).width
     })
-    context.font = `${fit.fontSize}px ${family}`
+    context.font = `600 ${fit.fontSize}px ${family}`
     context.fillStyle = branding.color || '#0b1220'
     context.textAlign = 'center'
     context.textBaseline = 'alphabetic'
