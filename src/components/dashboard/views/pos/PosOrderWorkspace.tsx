@@ -99,6 +99,7 @@ import PosReceivePaymentPanel from './PosReceivePaymentPanel'
 import PosRemoveConfirmAction from './PosRemoveConfirmAction'
 import PosCheckoutSuccessView, { type PosCheckoutReceiptItem } from './PosCheckoutSuccessView'
 import PosReceiptPrintPreview from './PosReceiptPrintPreview'
+import { buildPosTicketDocument } from './receipt/posTicketDocument'
 import PosTicketPrintPreview, { type PosTicketPrintGroup } from './PosTicketPrintPreview'
 import { buildPosReceiptDocument, resolveReceiptCopies } from './receipt/posReceiptDocument'
 import {
@@ -317,7 +318,7 @@ export default function PosOrderWorkspace({
   // Device-local receipt options (what to print, how many copies). Read here rather than at
   // print time so the document is already shaped correctly for the preview the operator sees.
   const { data: receiptSettings } = usePosReceiptSettings()
-  const { print: printReceipt, printSurface, transport: printTransport } = usePosReceiptPrint()
+  const { print: printReceipt, printSurface, isPrinting: isReceiptPrinting, transport: printTransport } = usePosReceiptPrint()
   // Set in the completion callback, acted on one commit later — see the effect below.
   const [autoPrintIntent, setAutoPrintIntent] = useState<{
     orderId: string
@@ -471,6 +472,8 @@ export default function PosOrderWorkspace({
   const [receiptChoice, setReceiptChoice] = useState<PosReceiptMode>('none')
   const [printPreviewOpen, setPrintPreviewOpen] = useState(false)
   const [ticketPreviewOpen, setTicketPreviewOpen] = useState(false)
+  const [ticketBrowserFallback, setTicketBrowserFallback] = useState(false)
+  useEffect(() => setTicketBrowserFallback(false), [orderId])
   const [tipSplitInputs, setTipSplitInputs] = useState<Record<string, string>>({})
   const initializedWorkspaceRef = useRef<string | null>(null)
   const initializedOrderIdRef = useRef<string | null>(null)
@@ -2224,6 +2227,14 @@ export default function PosOrderWorkspace({
   const printableTicket = order ? (
     <PosTicketPrintPreview
       open={ticketPreviewOpen}
+      isPrinting={isReceiptPrinting}
+      onPrint={() => {
+        const doc = buildPosTicketDocument({ orderNumber: order.orderNumber, completedAtLabel: formatPosDateTime(order.completedAt ?? new Date().toISOString(), currentLanguage), customerName: order.customerName, orderNote: noteInput, groups: printableReceiptGroups,
+          noteLabel: t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteTitle'), customerLabel: t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewCustomer') })
+        setTicketPreviewOpen(false)
+        printReceipt(doc, { jobId: orderId, copies: 1, backPath: POS_FRONT_DESK_ROUTE_PATH, browserOnly: ticketBrowserFallback,
+          restore: { surface: 'frontDesk', tab: receiptPrintTab, orderId, mode: 'edit' } })
+      }}
       customerName={order.customerName}
       orderNote={noteInput}
       onClose={() => setTicketPreviewOpen(false)}
@@ -2299,9 +2310,10 @@ export default function PosOrderWorkspace({
   const isPrintFallback = Boolean(printFallbackOrderId) && printFallbackOrderId === orderId
   useEffect(() => {
     if (!isPrintFallback) return
-    setPrintPreviewOpen(true)
+    if (mode === 'edit') { setTicketBrowserFallback(true); setTicketPreviewOpen(true) }
+    else setPrintPreviewOpen(true)
     onPrintFallbackHandled?.()
-  }, [isPrintFallback, onPrintFallbackHandled])
+  }, [isPrintFallback, onPrintFallbackHandled, mode])
 
   const handleManualPrint =
     receiptDocument && printTransport === PosPrintTransport.PassPrnt && !isPrintFallback
