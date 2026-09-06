@@ -74,17 +74,16 @@ export function buildCheckInPrintDocument(config: CheckInPrintConfig, business: 
         const centerX = wide ? textX + diameter / 2 : textX + columnWidth * (index + .5)
         const centerY = y + diameter / 2 + (wide ? index * rowHeight : 0)
         const unit = diameter / 20
-        const iconColor = palette.background
-        circle(centerX, centerY, diameter / 2, palette.accent)
+        const iconColor = palette.foreground
         if (index === 0) {
           rect(centerX - 6 * unit, centerY - 4 * unit, 12 * unit, 8 * unit, iconColor)
           rect(centerX - 3 * unit, centerY - 6 * unit, 5 * unit, 3 * unit, iconColor)
-          circle(centerX, centerY, 3 * unit, palette.accent)
+          circle(centerX, centerY, 3 * unit, palette.background)
           circle(centerX, centerY, 1.8 * unit, iconColor)
         } else if (index === 1) {
           rect(centerX - 4 * unit, centerY - 6 * unit, 8 * unit, 12 * unit, iconColor)
-          rect(centerX - 2.7 * unit, centerY - 4.5 * unit, 5.4 * unit, 7 * unit, palette.accent)
-          circle(centerX, centerY + 4.2 * unit, .8 * unit, palette.accent)
+          rect(centerX - 2.7 * unit, centerY - 4.5 * unit, 5.4 * unit, 7 * unit, palette.background)
+          circle(centerX, centerY + 4.2 * unit, .8 * unit, palette.background)
         } else {
           for (let row = 0; row < 3; row++) {
             rect(centerX - 5 * unit, centerY + (row * 3.5 - 4.5) * unit, 2 * unit, 2 * unit, iconColor)
@@ -123,7 +122,7 @@ export function buildCheckInPrintDocument(config: CheckInPrintConfig, business: 
   const qrY = wide ? (h-qrSize)/2 : y
   if (config.templateId !== 'simple' && config.templateId !== 'minimal-clean') {
     rect(qrX-3,qrY-3,qrSize+6,qrSize+6,palette.accent)
-    rect(qrX-2,qrY-2,qrSize+4,qrSize+4,'#ffffff')
+    rect(qrX-2.5,qrY-2.5,qrSize+5,qrSize+5,'#ffffff')
   }
   rect(qrX,qrY,qrSize,qrSize,'#ffffff')
   const moduleSize = qrSize / (qr.modules.size+8)
