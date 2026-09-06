@@ -19,7 +19,7 @@ export function CheckInTemplateGallery({ config, business, assets, onSelect }: {
       }
     }} className={`min-w-0 rounded-xl border-2 p-2 text-xs ${config.templateId === template.id ? 'border-nexoraBrand bg-nexoraCanvas' : 'border-nexoraBorder bg-white'}`}>
       <span className="flex h-28 items-center justify-center overflow-hidden rounded bg-nexoraCanvas" aria-hidden="true">{preview?.ok && assets ? <CheckInPrintPreview document={preview.document} assets={assets} className="h-full w-full" /> : <span>{t('checkInPrint.previewUnavailable')}</span>}</span>
-      <span className="mt-2 block font-bold">{t('checkInPrint.templates.' + template.id)}</span>{config.templateId === template.id && <span className="block text-nexoraBrand">{t('checkInPrint.selected')}</span>}
+      <span className="mt-2 block font-bold">{t('checkInPrint.templates.' + template.id)}</span>
     </button>
   })}</div>
 }

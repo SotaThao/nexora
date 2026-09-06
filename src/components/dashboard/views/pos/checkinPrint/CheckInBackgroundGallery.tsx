@@ -22,7 +22,6 @@ export function CheckInBackgroundGallery({ selectedId, onSelect }: { selectedId:
     >
       <img src={template.thumbnailUrl ?? template.imageUrl} loading="lazy" decoding="async" alt="" className="h-auto max-h-32 w-full rounded object-contain" />
       <span className="mt-1 block font-bold">{t('checkInPrint.backgrounds.' + template.id)}</span>
-      {selectedId === template.id && <span className="block text-nexoraBrand">{t('checkInPrint.selected')}</span>}
     </button>)}
   </div>
 }
