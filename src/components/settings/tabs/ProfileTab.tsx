@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { buildAffiliateReferralUrl, getProfileReferralCode } from '../../../utils/affiliateReferral'
@@ -156,16 +156,35 @@ export default function ProfileTab({
   }, [referralCode, referralUrl, t])
 
   const locationMapSource = isEditingAddress ? addressForm : profile
+  const locationMapContainerRef = useRef<HTMLDivElement>(null)
+  const [locationMapScale, setLocationMapScale] = useState(1)
+  useEffect(() => {
+    const container = locationMapContainerRef.current
+    if (!container) return
+    // Google hides the place details (including ratings) in narrow embeds.
+    const resize = () => {
+      if (container.clientWidth > 0) {
+        setLocationMapScale(Math.min(1, container.clientWidth / 400))
+      }
+    }
+    resize()
+    const observer = new ResizeObserver(resize)
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [])
   const locationMapQuery = useMemo(
-    () =>
-      formatAddressForMap({
+    () => {
+      const address = formatAddressForMap({
         street: locationMapSource.street,
         city: locationMapSource.city,
         state: locationMapSource.state,
         zipCode: locationMapSource.zipCode,
         country: locationMapSource.country,
-      }),
-    [locationMapSource],
+      })
+      if (!address) return ''
+      return [String(profile.businessName || '').trim(), address].filter(Boolean).join(', ')
+    },
+    [locationMapSource, profile.businessName],
   )
   const locationMapEmbedUrl = useMemo(
     () => buildGoogleMapsEmbedUrl(locationMapQuery),
@@ -879,13 +898,19 @@ export default function ProfileTab({
                   {t('components.settings.tabs.ProfileTab.locationMap')}
                 </h4>
               </div>
-              <div className="min-h-[220px] flex-1 w-full rounded-lg border border-slate-200 overflow-hidden bg-slate-100">
+              <div ref={locationMapContainerRef} className="relative min-h-[300px] flex-1 w-full rounded-lg border border-slate-200 overflow-hidden bg-slate-100">
                 {locationMapEmbedUrl ? (
                   <iframe
                     key={locationMapQuery}
                     title="Business Location Map"
                     src={locationMapEmbedUrl}
-                    className="w-full h-full border-0 grayscale-[10%]"
+                    className="absolute left-0 top-0 border-0 origin-top-left"
+                    style={{
+                      width: `${100 / locationMapScale}%`,
+                      height: `${100 / locationMapScale}%`,
+                      transform: `scale(${locationMapScale})`,
+                    }}
+                    referrerPolicy="strict-origin-when-cross-origin"
                     allowFullScreen
                     loading="lazy"
                   />
