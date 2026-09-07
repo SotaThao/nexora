@@ -8,6 +8,8 @@ export interface CheckInBackgroundTemplate {
   id: string
   imageUrl: string
   thumbnailUrl?: string
+  qrScale?: number
+  pageSize?: { widthPt: number; heightPt: number }
   brandingArea?: { x: number; y: number; width: number; height: number }
   brandingColor?: string
   brandingFont?: keyof typeof CHECK_IN_FONT_FAMILIES
@@ -47,7 +49,7 @@ export function useCheckInBackgroundPrint(template: CheckInBackgroundTemplate | 
         image.src = template.imageUrl
         await image.decode()
         if (controller.signal.aborted) return
-        const dimensions = CHECK_IN_DESIGN_SIZES[sizeId]
+        const dimensions = template.pageSize ?? CHECK_IN_DESIGN_SIZES[sizeId]
         let logo: HTMLImageElement | undefined
         if (branding.logoUrl) {
           if (!logoAsset) throw new Error('Selected salon logo is unavailable')
@@ -56,7 +58,7 @@ export function useCheckInBackgroundPrint(template: CheckInBackgroundTemplate | 
           await logo.decode()
           if (controller.signal.aborted) return
         }
-        const result = await renderCheckInBackgroundCanvas({ background: image, qrUrl, qrBox: template.qrBox, ...dimensions, signal: controller.signal,
+        const result = await renderCheckInBackgroundCanvas({ background: image, qrUrl, qrBox: template.qrBox, qrScale: template.qrScale, ...dimensions, signal: controller.signal,
           branding: { name: branding.name, logo, area: template.brandingArea, color: template.brandingColor, fontFamily: '"Times New Roman", Times, serif' },
         })
         if (controller.signal.aborted) return

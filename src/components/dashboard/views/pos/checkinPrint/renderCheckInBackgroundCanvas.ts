@@ -14,6 +14,7 @@ interface BackgroundLayoutInput {
   widthPt: number
   heightPt: number
   dpi?: number
+  qrScale?: number
 }
 export interface BackgroundBranding {
   name?: string
@@ -29,6 +30,7 @@ export interface BackgroundCanvasInput {
   widthPt: number
   heightPt: number
   dpi?: number
+  qrScale?: number
   signal?: AbortSignal
   branding?: BackgroundBranding
 }
@@ -63,7 +65,7 @@ export function computeCheckInBackgroundLayout(input: BackgroundLayoutInput, mod
   const boxHeight = qrBox.height * background.height
   // A one-inch minimum prevents technically valid but impractically small printed QR codes.
   if (Math.min(boxWidth, boxHeight) < dpi) throw new Error('QR box must be at least one inch square on the page')
-  const modulePx = Math.floor(Math.min(boxWidth, boxHeight) / (moduleCount + 8))
+  const modulePx = Math.floor(Math.min(boxWidth, boxHeight) * (input.qrScale ?? 1) / (moduleCount + 8))
   if (modulePx < 2) throw new Error('QR destination is too dense for this print region')
   const qrSizePx = modulePx * (moduleCount + 8)
   return {
@@ -170,7 +172,7 @@ export async function renderCheckInBackgroundCanvas(input: BackgroundCanvasInput
   const qr = QRCode.create(qrUrl, { errorCorrectionLevel: 'M' })
   await decodeBackground(background, signal)
   if (input.branding?.logo) await decodeBackground(input.branding.logo, signal)
-  const layout = computeCheckInBackgroundLayout({ naturalWidth: background.naturalWidth, naturalHeight: background.naturalHeight, qrBox, widthPt, heightPt, dpi }, qr.modules.size)
+  const layout = computeCheckInBackgroundLayout({ naturalWidth: background.naturalWidth, naturalHeight: background.naturalHeight, qrBox, widthPt, heightPt, dpi, qrScale: input.qrScale }, qr.modules.size)
   const canvas = document.createElement('canvas')
   canvas.width = layout.widthPx
   canvas.height = layout.heightPx
