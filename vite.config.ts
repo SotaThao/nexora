@@ -23,18 +23,7 @@ export default defineConfig({
     dedupe: ['react', 'react-dom', 'react/jsx-runtime'],
   },
   optimizeDeps: {
-    entries: ['index.html'],
-    holdUntilCrawlEnd: false,
-    include: [
-      'react',
-      'react-dom',
-      'react/jsx-runtime',
-      'react-router-dom',
-      '@tanstack/react-query',
-      'lucide-react',
-      'react-loading-skeleton',
-    ],
-    exclude: ['pdfjs-dist', 'react-pdf'],
+    include: ['react', 'react-dom', 'react/jsx-runtime', 'react-loading-skeleton'],
   },
   envPrefix: ['VITE_', 'SUPABASE_', 'NEXT_PUBLIC_'],
   build: {
@@ -50,25 +39,6 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    // Keep the watcher inside this app. Cursor's workspace is the parent Nexora folder
-    // (FE + backend); without this, chokidar can pick up backend/docs noise and the
-    // Vite transform cache grows until Node OOM (~4GB, "heap out of memory").
-    watch: {
-      ignored: [
-        '**/node_modules/**',
-        '**/.git/**',
-        '**/dist/**',
-        '**/coverage/**',
-        '**/openspec/**',
-        '**/docs/**',
-        '**/.cursor/**',
-        '**/.vite/**',
-      ],
-    },
-    fs: {
-      strict: true,
-      allow: ['.'],
-    },
   },
   test: {
     globals: true,

@@ -1,17 +1,15 @@
 import { useMemo } from 'react'
 import { Navigate, useNavigate, useOutletContext, useParams } from 'react-router-dom'
-import lazyWithRetry from '../../../app/lazyWithRetry'
 import { useMerchantStaff, useMerchantStaffByCode } from '../../../data/hooks/useMerchantStaff'
 import { enrichStaffMemberChatIdentity } from '../../staff/staffCommunityChatUtils'
+import StaffDetailView from '../../StaffDetailView'
 import { SkeletonList } from '../../ui/skeleton'
 import { normaliseMember } from '../hooks/useStaffManagement'
+import StaffView from '../views/StaffView'
 import {
   buildStaffRoutePath,
   type StaffRouteFamily,
 } from './staffRoutePaths'
-
-const StaffDetailView = lazyWithRetry(() => import('../../StaffDetailView'))
-const StaffView = lazyWithRetry(() => import('../views/StaffView'))
 
 function staffMemberMatchesRouteKey(member: {
   id?: string | null
