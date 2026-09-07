@@ -54,6 +54,8 @@ import { VoiceCallPlanRoute } from "../data/voiceTrial/domain";
 import { PUBLIC_BOOKING_ROUTE } from "../components/public/booking/constants";
 import { ONEQR_ROUTE } from "../constants/oneQr";
 
+const OneQrArtworkPage = lazyWithRetry(() => import("../components/touchpoints/oneqr/OneQrArtworkPage"));
+
 const SetupWizard = lazyWithRetry(() => import("../components/SetupWizard"));
 const DashboardOwnerShell = lazyWithRetry(
   () => import("../components/dashboard/layout/DashboardOwnerShell"),
@@ -442,6 +444,7 @@ export default function AppRouter() {
               <Route path={`${DASHBOARD_MENU_ID.pos}/public-checkin`} element={<PosPublicCheckInRoute />} />
             </Route>
             <Route path={DASHBOARD_MENU_ID.touchpoints} element={<TouchpointsRoute />} />
+            <Route path="touchpoints/oneqr/artwork" element={<OneQrArtworkPage />} />
             <Route path={DASHBOARD_MENU_ID.analytics} element={<AnalyticsRoute />} />
             <Route path={DASHBOARD_MENU_ID.settings} element={<SettingsRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.settings}/:tab`} element={<SettingsRoute />} />
