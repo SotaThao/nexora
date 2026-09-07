@@ -316,6 +316,7 @@
       "picker_none_assignable": "You are not set up to perform any service yet. Ask the salon owner to update your services.",
       "picker_confirm_add": "Add service",
       "picker_confirm_add_count": "Add services ({{count}})",
+      "picker_confirm_add_count_one": "Add service ({{count}})",
       "picker_confirm_edit": "Update service",
       "picker_close": "Close service picker",
       "custom_title": "Add custom service",

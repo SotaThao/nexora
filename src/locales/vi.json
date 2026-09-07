@@ -326,6 +326,7 @@
       "picker_none_assignable": "Bạn chưa được thiết lập làm dịch vụ nào. Nhờ chủ salon cập nhật danh sách dịch vụ của bạn.",
       "picker_confirm_add": "Thêm dịch vụ",
       "picker_confirm_add_count": "Thêm dịch vụ ({{count}})",
+      "picker_confirm_add_count_one": "Thêm dịch vụ ({{count}})",
       "picker_confirm_edit": "Cập nhật dịch vụ",
       "picker_close": "Đóng chọn dịch vụ",
       "custom_title": "Thêm dịch vụ tùy chỉnh",

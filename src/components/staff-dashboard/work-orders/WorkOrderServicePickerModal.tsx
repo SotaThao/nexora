@@ -79,9 +79,10 @@ export default function WorkOrderServicePickerModal({
           >
             {isEdit
               ? t(WORK_ORDERS_I18N.pickerConfirmEdit)
-              : selectedCount > 0
-                ? t(WORK_ORDERS_I18N.pickerConfirmAddCount, { count: selectedCount })
-                : t(WORK_ORDERS_I18N.pickerConfirmAdd)}
+              : t(
+                  pickerConfirmAddKey(selectedCount),
+                  selectedCount > 0 ? { count: selectedCount } : undefined,
+                )}
           </button>
         </>
       )}
@@ -139,6 +140,7 @@ export default function WorkOrderServicePickerModal({
                 id={panelId}
                 role="region"
                 aria-hidden={!isOpen}
+                ref={(node) => setPickerPanelInert(node, isOpen)}
                 className={`${WORK_ORDERS_LAYOUT_CLASS.pickerCategoryPanel} ${isOpen ? WORK_ORDERS_LAYOUT_CLASS.pickerCategoryPanelOpen : ''}`}
               >
                 <div className={`${WORK_ORDERS_LAYOUT_CLASS.pickerCategoryPanelInner} ${isOpen ? WORK_ORDERS_LAYOUT_CLASS.pickerCategoryPanelInnerOpen : ''}`}>
@@ -150,9 +152,11 @@ export default function WorkOrderServicePickerModal({
                     <button
                       key={optionKey}
                       type="button"
+                      tabIndex={isOpen ? undefined : -1}
                       aria-pressed={isSelected}
                       className={workOrderPickerOptionClass(isSelected)}
                       onClick={() => {
+                        if (!isOpen) return
                         if (isEdit) {
                           setSelectedKeys([optionKey])
                         } else {
@@ -199,4 +203,16 @@ function pickerEmptyKey(isLoading: boolean, catalogSize: number, query: string):
   if (isLoading) return WORK_ORDERS_I18N.pickerLoading
   if (catalogSize === 0) return WORK_ORDERS_I18N.pickerNoneAssignable
   return query.trim() ? WORK_ORDERS_I18N.pickerEmpty : WORK_ORDERS_I18N.pickerNoneAssignable
+}
+
+function pickerConfirmAddKey(selectedCount: number): string {
+  if (selectedCount <= 0) return WORK_ORDERS_I18N.pickerConfirmAdd
+  if (selectedCount === 1) return WORK_ORDERS_I18N.pickerConfirmAddCountOne
+  return WORK_ORDERS_I18N.pickerConfirmAddCount
+}
+
+function setPickerPanelInert(node: HTMLDivElement | null, isOpen: boolean) {
+  if (!node) return
+  if (isOpen) node.removeAttribute('inert')
+  else node.setAttribute('inert', '')
 }

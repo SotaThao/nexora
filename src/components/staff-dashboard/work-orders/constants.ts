@@ -103,6 +103,7 @@ export const WORK_ORDERS_I18N = {
   pickerNoneAssignable: 'staff_dashboard.work_orders.picker_none_assignable',
   pickerConfirmAdd: 'staff_dashboard.work_orders.picker_confirm_add',
   pickerConfirmAddCount: 'staff_dashboard.work_orders.picker_confirm_add_count',
+  pickerConfirmAddCountOne: 'staff_dashboard.work_orders.picker_confirm_add_count_one',
   pickerConfirmEdit: 'staff_dashboard.work_orders.picker_confirm_edit',
   pickerClose: 'staff_dashboard.work_orders.picker_close',
   customTitle: 'staff_dashboard.work_orders.custom_title',
