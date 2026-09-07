@@ -4346,7 +4346,37 @@
             "viewDetailLineDiscount": "Discount ${{amount}} · {{bearer}} absorbs",
             "viewDetailOrderDiscount": "Discount all services",
             "columnOrder": "Order",
-            "columnGuest": "Guest"
+            "columnGuest": "Guest",
+            "viewDetailChangeTechnician": "Change technician"
+          },
+          "ReassignTechnicianModal": {
+            "title": "Change technician",
+            "subtitle": "{{serviceName}} — currently credited to {{technicianName}}",
+            "unassigned": "no technician",
+            "close": "Close",
+            "technicianLabel": "New technician",
+            "technicianPlaceholder": "Select a technician",
+            "loadingTechnicians": "Loading technicians…",
+            "noTechnicians": "No other technician is available at this salon.",
+            "reasonLabel": "Reason (required)",
+            "reasonPlaceholder": "Why is this service being credited to someone else?",
+            "moneyNotice": "Service revenue, the tip for this service and any discount cost move to the new technician. Weekly pay and reports update immediately.",
+            "payrollPaidWarning": "Payroll for {{weekStart}} – {{weekEnd}} has already been paid to {{staffNames}}. Confirming still changes the figures for that week — settle the difference directly.",
+            "confirmButton": "Confirm change",
+            "savingButton": "Saving…",
+            "cancelButton": "Cancel",
+            "genericError": "Could not change the technician. Please try again."
+          },
+          "ServiceLineReassignmentHistory": {
+            "show": "Reassignment history",
+            "hide": "Hide history",
+            "loading": "Loading history…",
+            "empty": "This service has never been reassigned.",
+            "movedLine": "{{from}} → {{to}}",
+            "metaLine": "{{dateTime}} by {{actor}}",
+            "tipMoved": "Tip moved: ${{amount}}",
+            "unknownTechnician": "Unknown technician",
+            "unknownActor": "Unknown user"
           },
           "CustomerTab": {
             "searchLabel": "Search",

@@ -177,6 +177,9 @@ export interface PosAccessApiDto {
   // Gated on its own `view_pos_report` permission, not on the Operations area — the report exposes
   // every technician's earnings, so operating the front desk does not imply reading it.
   canViewReport?: boolean
+  // Reassigning the technician on a completed ticket moves earnings between two people, so it has
+  // its own `reassign_completed_order_staff` permission rather than riding on Operations.
+  canReassignCompletedOrderStaff?: boolean
 }
 
 // POS Merchant Ops — Check-in & Waitlist (US-12, refactored to Order in US-026)
@@ -1048,6 +1051,34 @@ export interface AssignableStaffApiDto {
   displayName: string
   photoUrl?: string | null
   isBusy: boolean
+}
+
+// Technician picker for reassigning a completed ticket. Wider than AssignableStaffApiDto on
+// purpose — the work is already done, so neither the skill list nor clock-in state narrows it —
+// and there is no isBusy: nobody is busy with work that finished days ago.
+export interface ReassignableStaffApiDto {
+  posStaffProfileId: string
+  displayName: string
+  photoUrl?: string | null
+}
+
+// Pre-confirmation warning: the salon week this ticket falls into, plus whichever of the two
+// technicians has already been paid for it. An empty list is the normal answer.
+export interface ReassignPayrollWarningApiDto {
+  weekStart: string
+  weekEnd: string
+  alreadyPaidStaff: { posStaffProfileId: string; displayName: string }[]
+}
+
+// One hand-over in a service line's history. Technicians are never notified when their earnings
+// move, so this is what the salon shows them.
+export interface ServiceLineReassignmentApiDto {
+  reassignedAt: string
+  reassignedByName?: string | null
+  fromStaffName?: string | null
+  toStaffName?: string | null
+  tipMovedAmount: number
+  reason?: string | null
 }
 
 // POS Booking — per-business booking rules (Ticket 2). Owner-configurable; Staff can

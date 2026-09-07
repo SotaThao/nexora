@@ -18,6 +18,9 @@ import type {
   OrderListItemApiDto,
   PosCheckInResultApiDto,
   PosWaitlistOrderApiDto,
+  ReassignableStaffApiDto,
+  ReassignPayrollWarningApiDto,
+  ServiceLineReassignmentApiDto,
 } from '../../types/repositories'
 
 // A US phone number needs at least this many digits before a lookup round-trip is worth
@@ -267,6 +270,97 @@ export function useMarkServiceLineDone(businessId?: string) {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
+    },
+  })
+}
+
+// Reassigning the technician on a COMPLETED ticket (Reassign Technician on Completed Visits).
+// Only offered when usePosAccess reports canReassignCompletedOrderStaff.
+export function useReassignableStaff(businessId?: string, orderId?: string, serviceLineId?: string) {
+  const { isAuthenticated } = useSessionRole()
+  return useQuery<ReassignableStaffApiDto[]>({
+    queryKey: qk.merchantPosReassignableStaff(businessId, orderId, serviceLineId),
+    queryFn: () => posOrdersRepository.getReassignableStaff(
+      businessId as string,
+      orderId as string,
+      serviceLineId as string,
+    ),
+    enabled: isAuthenticated && Boolean(businessId) && Boolean(orderId) && Boolean(serviceLineId),
+    retry: false,
+  })
+}
+
+// Asked when the dialog opens and again after a technician is picked. Never cached across visits:
+// a payout made since the dialog was last open would otherwise go unmentioned.
+export function useReassignPayrollWarning(
+  businessId?: string,
+  orderId?: string,
+  serviceLineId?: string,
+  newPosStaffProfileId?: string,
+) {
+  const { isAuthenticated } = useSessionRole()
+  return useQuery<ReassignPayrollWarningApiDto | null>({
+    queryKey: qk.merchantPosReassignPayrollWarning(businessId, orderId, serviceLineId, newPosStaffProfileId),
+    queryFn: () => posOrdersRepository.getReassignPayrollWarning(
+      businessId as string,
+      orderId as string,
+      serviceLineId as string,
+      newPosStaffProfileId,
+    ),
+    enabled: isAuthenticated && Boolean(businessId) && Boolean(orderId) && Boolean(serviceLineId),
+    staleTime: 0,
+    gcTime: 0,
+    retry: false,
+  })
+}
+
+export function useServiceLineReassignmentHistory(
+  businessId?: string,
+  orderId?: string,
+  serviceLineId?: string,
+) {
+  const { isAuthenticated } = useSessionRole()
+  return useQuery<ServiceLineReassignmentApiDto[]>({
+    queryKey: qk.merchantPosServiceLineReassignments(businessId, orderId, serviceLineId),
+    queryFn: () => posOrdersRepository.getServiceLineReassignmentHistory(
+      businessId as string,
+      orderId as string,
+      serviceLineId as string,
+    ),
+    enabled: isAuthenticated && Boolean(businessId) && Boolean(orderId) && Boolean(serviceLineId),
+    retry: false,
+  })
+}
+
+export function useReassignCompletedOrderServiceLineStaff(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<
+    boolean,
+    Error,
+    { orderId: string; serviceLineId: string; newPosStaffProfileId: string; reason: string }
+  >({
+    mutationFn: ({ orderId, serviceLineId, newPosStaffProfileId, reason }) =>
+      posOrdersRepository.reassignCompletedOrderServiceLineStaff(
+        businessId as string,
+        orderId,
+        serviceLineId,
+        newPosStaffProfileId,
+        reason,
+      ),
+    onSuccess: (_result, { orderId, serviceLineId }) => {
+      // Pay and reports are derived from the line's assignment, so everything that reads earnings
+      // for that week is now stale — including screens the manager may already have open.
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosCompletedOrders(businessId) })
+      queryClient.invalidateQueries({
+        queryKey: qk.merchantPosServiceLineReassignments(businessId, orderId, serviceLineId),
+      })
+      queryClient.invalidateQueries({
+        queryKey: qk.merchantPosReassignableStaff(businessId, orderId, serviceLineId),
+      })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosWeeklyPayroll(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosReport(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosStoreIncomeReport(businessId) })
     },
   })
 }

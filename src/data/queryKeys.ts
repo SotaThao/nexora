@@ -298,6 +298,27 @@ export const qk = {
   // slot (each technician's own weekly working hours are checked server-side).
   merchantPosAssignableStaff: (businessId?: string, posServiceId?: string, scheduledAt?: string) =>
     ['merchantSettings', 'posAssignableStaff', businessId ?? '', posServiceId ?? '', scheduledAt ?? ''],
+  // Reassigning a COMPLETED ticket. Keyed by the service LINE (not the service) because both the
+  // option list and the warning depend on who is credited on that specific line today.
+  merchantPosReassignableStaff: (businessId?: string, orderId?: string, serviceLineId?: string) =>
+    ['merchantSettings', 'posReassignableStaff', businessId ?? '', orderId ?? '', serviceLineId ?? ''],
+  // newPosStaffProfileId is part of the key: "has this week been paid?" has a different answer once
+  // a receiving technician is chosen, and serving the pre-selection answer would hide a real warning.
+  merchantPosReassignPayrollWarning: (
+    businessId?: string,
+    orderId?: string,
+    serviceLineId?: string,
+    newPosStaffProfileId?: string,
+  ) => [
+    'merchantSettings',
+    'posReassignPayrollWarning',
+    businessId ?? '',
+    orderId ?? '',
+    serviceLineId ?? '',
+    newPosStaffProfileId ?? '',
+  ],
+  merchantPosServiceLineReassignments: (businessId?: string, orderId?: string, serviceLineId?: string) =>
+    ['merchantSettings', 'posServiceLineReassignments', businessId ?? '', orderId ?? '', serviceLineId ?? ''],
   // Add-on picker — keyed by the service LINE, not the service: the options are scoped to the
   // line the picker was opened from.
   merchantPosServiceLineAddOnOptions: (businessId?: string, orderId?: string, serviceLineId?: string) =>
