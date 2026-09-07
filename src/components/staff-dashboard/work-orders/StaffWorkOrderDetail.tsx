@@ -388,13 +388,14 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
               ? lines.find((line) => line.key === picker.lineKey)?.posServiceId ?? ''
               : ''
           }
-          onConfirm={(service: WorkOrderCatalogService) => {
+          onConfirm={(services: WorkOrderCatalogService[]) => {
             setApprovalError(null)
-            setLines((current) => (
-              picker.mode === WORK_ORDER_PICKER_MODE.edit && picker.lineKey
-                ? replaceWorkOrderCatalogService(current, picker.lineKey, service)
-                : addWorkOrderCatalogService(current, service)
-            ))
+            setLines((current) => {
+              if (picker.mode === WORK_ORDER_PICKER_MODE.edit && picker.lineKey) {
+                return replaceWorkOrderCatalogService(current, picker.lineKey, services[0])
+              }
+              return services.reduce(addWorkOrderCatalogService, current)
+            })
             setPicker(null)
           }}
           onClose={() => setPicker(null)}

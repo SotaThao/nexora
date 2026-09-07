@@ -46,7 +46,6 @@ export default function WorkOrderModalFrame({
     <div
       style={overlayStyle}
       className={WORK_ORDERS_LAYOUT_CLASS.modalOverlay}
-      onClick={onClose}
     >
       <div
         style={cardStyle}
@@ -54,7 +53,6 @@ export default function WorkOrderModalFrame({
         aria-modal="true"
         aria-labelledby={titleId}
         className={wide ? WORK_ORDERS_LAYOUT_CLASS.modalCardWide : WORK_ORDERS_LAYOUT_CLASS.modalCard}
-        onClick={(event) => event.stopPropagation()}
       >
         <div className={WORK_ORDERS_LAYOUT_CLASS.modalHeader}>
           <div className={WORK_ORDERS_LAYOUT_CLASS.grow}>
