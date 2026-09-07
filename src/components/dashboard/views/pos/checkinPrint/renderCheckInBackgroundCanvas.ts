@@ -14,6 +14,7 @@ interface BackgroundLayoutInput {
   widthPt: number
   heightPt: number
   dpi?: number
+  qrScale?: number
 }
 export interface BackgroundBranding {
   name?: string
@@ -29,6 +30,7 @@ export interface BackgroundCanvasInput {
   widthPt: number
   heightPt: number
   dpi?: number
+  qrScale?: number
   signal?: AbortSignal
   branding?: BackgroundBranding
 }
@@ -40,6 +42,8 @@ export function computeCheckInBackgroundLayout(input: BackgroundLayoutInput, mod
     throw new Error('Invalid background or page dimensions')
   }
   if (dpi > 300 || !Number.isInteger(moduleCount)) throw new Error('Invalid print resolution')
+  const qrScale = input.qrScale ?? 1
+  if (!Number.isFinite(qrScale) || qrScale <= 0) throw new Error('Invalid QR scale')
   if (![qrBox.x, qrBox.y, qrBox.width, qrBox.height].every(Number.isFinite)
       || qrBox.x < 0 || qrBox.y < 0 || qrBox.width <= 0 || qrBox.height <= 0
       || qrBox.x + qrBox.width > 1 || qrBox.y + qrBox.height > 1) {
@@ -63,14 +67,17 @@ export function computeCheckInBackgroundLayout(input: BackgroundLayoutInput, mod
   const boxHeight = qrBox.height * background.height
   // A one-inch minimum prevents technically valid but impractically small printed QR codes.
   if (Math.min(boxWidth, boxHeight) < dpi) throw new Error('QR box must be at least one inch square on the page')
-  const modulePx = Math.floor(Math.min(boxWidth, boxHeight) / (moduleCount + 8))
+  const modulePx = Math.floor(Math.min(boxWidth, boxHeight) * qrScale / (moduleCount + 8))
   if (modulePx < 2) throw new Error('QR destination is too dense for this print region')
   const qrSizePx = modulePx * (moduleCount + 8)
+  const qrX = Math.round(left + (boxWidth - qrSizePx) / 2)
+  const qrY = Math.round(top + (boxHeight - qrSizePx) / 2)
+  if (qrX < 0 || qrY < 0 || qrX + qrSizePx > widthPx || qrY + qrSizePx > heightPx) {
+    throw new Error('Scaled QR must fit within the page')
+  }
   return {
-    widthPx, heightPx, background, modulePx, qrSizePx,
-    qrX: Math.round(left + (boxWidth - qrSizePx) / 2),
-    qrY: Math.round(top + (boxHeight - qrSizePx) / 2),
-    // Expand outward by at most one pixel to erase the original placeholder completely.
+    widthPx, heightPx, background, modulePx, qrSizePx, qrX, qrY,
+    // Clear only the original placeholder to preserve the surrounding artwork frame.
     clearBox: { x: Math.floor(left), y: Math.floor(top), width: Math.ceil(left + boxWidth) - Math.floor(left), height: Math.ceil(top + boxHeight) - Math.floor(top) },
   }
 }
@@ -170,7 +177,7 @@ export async function renderCheckInBackgroundCanvas(input: BackgroundCanvasInput
   const qr = QRCode.create(qrUrl, { errorCorrectionLevel: 'M' })
   await decodeBackground(background, signal)
   if (input.branding?.logo) await decodeBackground(input.branding.logo, signal)
-  const layout = computeCheckInBackgroundLayout({ naturalWidth: background.naturalWidth, naturalHeight: background.naturalHeight, qrBox, widthPt, heightPt, dpi }, qr.modules.size)
+  const layout = computeCheckInBackgroundLayout({ naturalWidth: background.naturalWidth, naturalHeight: background.naturalHeight, qrBox, widthPt, heightPt, dpi, qrScale: input.qrScale }, qr.modules.size)
   const canvas = document.createElement('canvas')
   canvas.width = layout.widthPx
   canvas.height = layout.heightPx

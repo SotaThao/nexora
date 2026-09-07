@@ -1,5 +1,26 @@
 {
   "oneqr": {
+    "artwork": {
+      "png": "Tải PNG",
+      "showHours": "Hiện giờ làm việc",
+      "hoursTitle": "Giờ làm việc",
+      "templates": {
+        "01": "Lá vàng",
+        "02": "Đen ánh vàng",
+        "03": "Hoa anh đào",
+        "04": "Lá xanh",
+        "05": "Ánh sáng neon",
+        "06": "Tối giản cổ điển",
+        "07": "Nét cọ vàng",
+        "08": "Gió biển"
+      },
+      "title": "Xem QR & Tải xuống",
+      "description": "Chọn artwork cho OneQR, sau đó tải xuống hoặc in.",
+      "back": "Quay lại",
+      "fixed": "Nội dung và màu sắc artwork được giữ nguyên. Mã OneQR đã chọn được ghép tự động.",
+      "loading": "Đang tải OneQR…",
+      "error": "Không thể tải OneQR. Vui lòng thử lại."
+    },
       "audience": {
         "customer": "Khách hàng",
         "staff": "Nhân viên",
@@ -10538,6 +10559,7 @@
     }
   },
   "checkInPrint": {
+    "png": "Tải PNG",
     "artworkNameTooLong": "Tên tiệm không vừa mẫu ảnh này. Tắt Hiển thị tên tiệm hoặc dùng Bố cục tùy chỉnh.",
     "hideSalonName": "Ẩn tên tiệm",
     "showSalonLogo": "Hiển thị logo tiệm",
