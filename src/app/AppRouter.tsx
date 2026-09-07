@@ -11,6 +11,7 @@ import {
 import { scrollToPageTop } from "../utils/scrollToPageTop";
 import { searchHasStaffChatStartHint, isStaffChatStartHintOnlySearchChange } from "../components/staff/constants";
 import { useAuth } from "../auth/useAuth";
+import { buildDashboardReportsPath, DASHBOARD_REPORTS_TAB } from "../components/dashboard/constants";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { isDemoToolsEnabled } from "./demoTools";
 import lazyWithRetry from "./lazyWithRetry";
@@ -190,9 +191,11 @@ function InviteRoute() {
 
 function PaymentsRedirect() {
   const { paymentId } = useParams();
-  const search = new URLSearchParams({ tab: "direct_payments" });
-  if (paymentId) search.set("paymentId", paymentId);
-  return <Navigate to={`/dashboard/reports?${search.toString()}`} replace />;
+  const target = buildDashboardReportsPath({
+    tab: DASHBOARD_REPORTS_TAB.directPayments,
+    paymentId: paymentId || undefined,
+  });
+  return <Navigate to={target} replace />;
 }
 
 function StaffFallbackRoute() {

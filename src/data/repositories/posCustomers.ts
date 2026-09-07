@@ -64,11 +64,11 @@ export function createPosCustomersRepository(client: HttpClient = httpClient) {
       return { ...page, items: (page.items ?? []).map(withVisitFlag) }
     },
 
-    async getCustomerDetail(businessId: string, customerId: string): Promise<PosCustomerDetailApiDto> {
+    async getCustomerDetail(businessId: string, customerId: string): Promise<PosCustomerDetailApiDto | null> {
       const res = await client.get<PosCustomerDetailApiDto>(
         `/api/v1/merchant/pos/${businessId}/customers/${customerId}`,
       )
-      return withVisitFlag(res)
+      return res == null ? null : withVisitFlag(res)
     },
 
     async getCustomerOrderHistory(

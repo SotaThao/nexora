@@ -23,7 +23,7 @@ export function usePosCustomerList(businessId?: string, filters: PosCustomerList
 }
 
 export function usePosCustomerDetail(businessId?: string, customerId?: string) {
-  return useQuery<PosCustomerDetailApiDto>({
+  return useQuery<PosCustomerDetailApiDto | null>({
     queryKey: qk.merchantPosCustomerDetail(businessId, customerId),
     queryFn: () => posCustomersRepository.getCustomerDetail(businessId as string, customerId as string),
     enabled: Boolean(businessId) && Boolean(customerId),
