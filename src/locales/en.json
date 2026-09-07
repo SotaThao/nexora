@@ -10550,6 +10550,7 @@
     }
   },
   "checkInPrint": {
+    "png": "Download PNG",
     "artworkNameTooLong": "Salon name does not fit this artwork. Turn off Show salon name or use Custom layout.",
     "hideSalonName": "Hide salon name",
     "showSalonLogo": "Show salon logo",

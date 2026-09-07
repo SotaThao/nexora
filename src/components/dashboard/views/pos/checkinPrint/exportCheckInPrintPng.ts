@@ -1,8 +1,8 @@
-import { CHECK_IN_FONT_FAMILIES } from '../../dashboard/views/pos/checkinPrint/CheckInPrintPreview'
-import type { CheckInPrintDocument, PrintAssets } from '../../dashboard/views/pos/checkinPrint/checkInPrintTypes'
+import { CHECK_IN_FONT_FAMILIES } from './CheckInPrintPreview'
+import type { CheckInPrintDocument, PrintAssets } from './checkInPrintTypes'
 
 /** Render the same immutable document used by preview and PDF at 300 DPI. */
-export async function createOneQrArtworkPng(document: CheckInPrintDocument, assets: PrintAssets): Promise<Blob> {
+export async function createCheckInPrintPng(document: CheckInPrintDocument, assets: PrintAssets): Promise<Blob> {
   const scale = 300 / 72
   const canvas = window.document.createElement('canvas')
   canvas.width = Math.round(document.widthPt * scale)

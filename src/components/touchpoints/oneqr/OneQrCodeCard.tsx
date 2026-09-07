@@ -198,13 +198,13 @@ export default function OneQrCodeCard({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Link
+          {previewAudience === OneQrAudience.Customer && <Link
             to={`/dashboard/touchpoints/oneqr/artwork?as=${toOneQrViewAs(previewAudience)}`}
             className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-nexoraBrand bg-nexoraSurface px-4 text-xs font-bold text-nexoraBrand transition hover:bg-nexoraSurfaceMuted"
           >
             <Eye className="h-4 w-4" aria-hidden />
             {t('oneqr.artwork.title')}
-          </Link>
+          </Link>}
           <a
             href={previewUrl}
             target="_blank"
@@ -226,7 +226,7 @@ export default function OneQrCodeCard({
             )}
             {t(copied ? 'common.copied' : 'oneqr.card.copy_url')}
           </button>
-          <button
+          {previewAudience !== OneQrAudience.Customer && <button
             type="button"
             onClick={handleDownload}
             disabled={isDownloading}
@@ -238,7 +238,7 @@ export default function OneQrCodeCard({
               <Download className="h-4 w-4" aria-hidden />
             )}
             {t('oneqr.card.download')}
-          </button>
+          </button>}
         </div>
       </div>
     </section>

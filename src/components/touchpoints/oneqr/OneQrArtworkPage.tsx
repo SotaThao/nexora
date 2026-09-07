@@ -104,8 +104,8 @@ export function OneQrArtworkEditor({ url, fileSlug, businessName, businessLogo }
         const assetsSnapshot = activeAssets
         let blob: Blob
         if (kind === 'png') {
-          const { createOneQrArtworkPng } = await import('./exportOneQrArtworkPng')
-          blob = await createOneQrArtworkPng(documentSnapshot, assetsSnapshot)
+          const { createCheckInPrintPng } = await import('../../dashboard/views/pos/checkinPrint/exportCheckInPrintPng')
+          blob = await createCheckInPrintPng(documentSnapshot, assetsSnapshot)
         } else {
           const { createCheckInPrintPdf } = await import('../../dashboard/views/pos/checkinPrint/exportCheckInPrintPdf')
           const bytes = await createCheckInPrintPdf(documentSnapshot, assetsSnapshot)

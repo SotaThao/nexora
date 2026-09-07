@@ -10546,6 +10546,7 @@
     }
   },
   "checkInPrint": {
+    "png": "Tải PNG",
     "artworkNameTooLong": "Tên tiệm không vừa mẫu ảnh này. Tắt Hiển thị tên tiệm hoặc dùng Bố cục tùy chỉnh.",
     "hideSalonName": "Ẩn tên tiệm",
     "showSalonLogo": "Hiển thị logo tiệm",
