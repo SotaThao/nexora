@@ -15,6 +15,9 @@ import type {
   OrderListItemApiDto,
   PosCheckInResultApiDto,
   PosWaitlistOrderApiDto,
+  ReassignableStaffApiDto,
+  ReassignPayrollWarningApiDto,
+  ServiceLineReassignmentApiDto,
 } from '../../types/repositories'
 import { mapOrderList } from './mapPosOrderList'
 
@@ -179,6 +182,59 @@ export function createPosOrdersRepository(client: HttpClient = httpClient) {
       const query = scheduledAt ? `?scheduledAt=${encodeURIComponent(scheduledAt)}` : ''
       const res = await client.get<AssignableStaffApiDto[]>(
         `/api/v1/merchant/pos/${businessId}/orders/services/${posServiceId}/assignable-staff${query}`,
+      )
+      return res ?? []
+    },
+
+    // Reassigns one service line of a COMPLETED ticket. Moves revenue, the matching slice of the
+    // tip and any discount cost with it; a reason is mandatory server-side too.
+    async reassignCompletedOrderServiceLineStaff(
+      businessId: string,
+      orderId: string,
+      serviceLineId: string,
+      newPosStaffProfileId: string,
+      reason: string,
+    ): Promise<boolean> {
+      return await client.put<boolean>(
+        `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/reassign-staff`,
+        { newPosStaffProfileId, reason },
+      )
+    },
+
+    async getReassignableStaff(
+      businessId: string,
+      orderId: string,
+      serviceLineId: string,
+    ): Promise<ReassignableStaffApiDto[]> {
+      const res = await client.get<ReassignableStaffApiDto[]>(
+        `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/reassign-staff/options`,
+      )
+      return res ?? []
+    },
+
+    // Re-asked once a technician is picked: the receiving technician may be the one whose week was
+    // already paid, which the first call (with no technician yet) cannot know.
+    async getReassignPayrollWarning(
+      businessId: string,
+      orderId: string,
+      serviceLineId: string,
+      newPosStaffProfileId?: string,
+    ): Promise<ReassignPayrollWarningApiDto | null> {
+      const query = newPosStaffProfileId
+        ? `?newPosStaffProfileId=${encodeURIComponent(newPosStaffProfileId)}`
+        : ''
+      return await client.get<ReassignPayrollWarningApiDto>(
+        `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/reassign-staff/payroll-warning${query}`,
+      )
+    },
+
+    async getServiceLineReassignmentHistory(
+      businessId: string,
+      orderId: string,
+      serviceLineId: string,
+    ): Promise<ServiceLineReassignmentApiDto[]> {
+      const res = await client.get<ServiceLineReassignmentApiDto[]>(
+        `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/reassign-staff/history`,
       )
       return res ?? []
     },

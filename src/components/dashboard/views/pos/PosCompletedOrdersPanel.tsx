@@ -5,10 +5,11 @@
 // since name/phone are meant to be independent filters, not scoped to whatever date range
 // happens to be selected. The date pickers are opt-in for narrowing the range.
 import { useState } from 'react'
-import { Eye, Printer } from 'lucide-react'
+import { Eye, Printer, UserCog } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useCompletedOrders } from '../../../../data/hooks/usePosOrders'
+import { usePosAccess } from '../../../../data/hooks/usePosAccess'
 import { useOrderDetail } from '../../../../data/hooks/usePosCheckout'
 import { qk } from '../../../../data/queryKeys'
 import { SkeletonList } from '../../../ui/skeleton'
@@ -18,6 +19,10 @@ import { formatBookingHubDateTimeParts } from '../bookingHubFormatters'
 import { getPosCheckoutPaymentMethodLabel } from '../../../../constants/posCheckoutPaymentMethod'
 import { PosDiscountBearer } from '../../../../constants/posDiscount'
 import PosReceiptPrintPreview from './PosReceiptPrintPreview'
+import ServiceLineReassignmentHistory from './ServiceLineReassignmentHistory'
+import ReassignTechnicianModal, {
+  type ReassignTechnicianTarget,
+} from './modals/ReassignTechnicianModal'
 import { buildPosReceiptDocument } from './receipt/posReceiptDocument'
 import { usePosReceiptPrint } from './receipt/usePosReceiptPrint'
 import {
@@ -52,6 +57,8 @@ export default function PosCompletedOrdersPanel({
 }) {
   const { t, currentLanguage } = useTranslation()
   const { data: receiptSettings } = usePosReceiptSettings()
+  const { data: posAccess } = usePosAccess(businessId)
+  const [reassignTarget, setReassignTarget] = useState<ReassignTechnicianTarget | null>(null)
   const { print: printReceipt, printSurface, transport: printTransport } = usePosReceiptPrint()
   const formatDateTime = (iso: string | null | undefined) =>
     formatPosDateTime(iso, currentLanguage)
@@ -381,9 +388,31 @@ export default function PosCompletedOrdersPanel({
                                 )}
                               </p>
                             </div>
-                            <p className="text-[11px] font-semibold text-nexoraText">
-                              {line.technicianName || t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailUnassigned')}
-                            </p>
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-[11px] font-semibold text-nexoraText">
+                                {line.technicianName || t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailUnassigned')}
+                              </p>
+                              {/* Moves this service's revenue, tip share and discount cost to another
+                                  technician — hence its own permission, not the Operations one that
+                                  unlocks the rest of the front desk. */}
+                              {posAccess?.canReassignCompletedOrderStaff ? (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setReassignTarget({
+                                      orderId: viewDetail.data!.id,
+                                      serviceLineId: line.id,
+                                      serviceName: line.serviceName,
+                                      currentTechnicianName: line.technicianName,
+                                    })
+                                  }
+                                  className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-nexoraBorder px-2 py-1 text-[10px] font-bold text-nexoraText hover:border-nexoraBrand/60 hover:text-nexoraBrand"
+                                >
+                                  <UserCog className="h-3 w-3" />
+                                  {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailChangeTechnician')}
+                                </button>
+                              ) : null}
+                            </div>
                             {/* Who absorbed the discount stays visible here, where a pay dispute is
                                 actually settled — it is deliberately never on the customer receipt. */}
                             {line.discountAmount > 0 ? (
@@ -407,6 +436,11 @@ export default function PosCompletedOrdersPanel({
                             {line.note ? (
                               <p className="mt-1 rounded bg-nexoraCanvas p-1.5 text-[11px] italic text-nexoraMuted">{line.note}</p>
                             ) : null}
+                            <ServiceLineReassignmentHistory
+                              businessId={businessId}
+                              orderId={viewDetail.data.id}
+                              serviceLineId={line.id}
+                            />
                             {/* Indented under the service: an add-on was performed by this same
                                 technician and counts toward their pay on it. */}
                             {line.addOns?.length ? (
@@ -568,6 +602,11 @@ export default function PosCompletedOrdersPanel({
           }
         />
       ) : null}
+      <ReassignTechnicianModal
+        businessId={businessId}
+        target={reassignTarget}
+        onClose={() => setReassignTarget(null)}
+      />
       {printSurface}
     </div>
   )

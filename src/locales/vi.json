@@ -4370,7 +4370,37 @@
             "viewDetailLineDiscount": "Giảm ${{amount}} · {{bearer}} chịu",
             "viewDetailOrderDiscount": "Giảm giá toàn bộ dịch vụ",
             "columnOrder": "Order",
-            "columnGuest": "Khách"
+            "columnGuest": "Khách",
+            "viewDetailChangeTechnician": "Đổi thợ"
+          },
+          "ReassignTechnicianModal": {
+            "title": "Đổi thợ",
+            "subtitle": "{{serviceName}} — đang ghi nhận cho {{technicianName}}",
+            "unassigned": "chưa có thợ",
+            "close": "Đóng",
+            "technicianLabel": "Thợ mới",
+            "technicianPlaceholder": "Chọn thợ",
+            "loadingTechnicians": "Đang tải danh sách thợ…",
+            "noTechnicians": "Không còn thợ nào khác tại tiệm.",
+            "reasonLabel": "Lý do (bắt buộc)",
+            "reasonPlaceholder": "Vì sao dịch vụ này được ghi nhận cho ngưọi khác?",
+            "moneyNotice": "Doanh thu dịch vụ, phần tip của dịch vụ này và khoản discount thợ gánh sẽ chuyển sang thợ mới. Lương tuần và báo cáo cập nhật ngay.",
+            "payrollPaidWarning": "Lương tuần {{weekStart}} – {{weekEnd}} đã được trả cho {{staffNames}}. Xác nhận vẫn làm thay đổi số liệu của tuần đó — hãy bù trừ trực tiếp với thợ.",
+            "confirmButton": "Xác nhận đổi",
+            "savingButton": "Đang lưu…",
+            "cancelButton": "Huỷ",
+            "genericError": "Không đổi được thợ. Vui lòng thử lại."
+          },
+          "ServiceLineReassignmentHistory": {
+            "show": "Lịch sứ chuyển công",
+            "hide": "Ẩn lịch sứ",
+            "loading": "Đang tải lịch sứ…",
+            "empty": "Dịch vụ này chưa từng được chuyển công.",
+            "movedLine": "{{from}} → {{to}}",
+            "metaLine": "{{dateTime}} bởi {{actor}}",
+            "tipMoved": "Tip đã chuyển: ${{amount}}",
+            "unknownTechnician": "Thợ không xác định",
+            "unknownActor": "Ngưỡi dùng không xác định"
           },
           "CustomerTab": {
             "searchLabel": "Tìm kiếm",
