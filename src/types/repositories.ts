@@ -291,7 +291,8 @@ export interface CompletedOrderListItemApiDto {
   serviceNames: string[]
   technicianNames: string[]
   total: number
-  /** The order-level discount frozen at checkout — always absorbed by the salon. */
+  /** The order-level discount frozen at checkout. Whatever part of it the technicians carried is
+   *  inside staffDiscountTotal, not here. */
   orderDiscountAmount?: number
   appliedPromotionName?: string | null
   paymentMethodType?: string | null
@@ -885,6 +886,8 @@ export interface SetOrderDiscountPayload {
   /** 'Percent' | 'Amount'. Null with no promotionId clears the order-level discount. */
   discountType: string | null
   discountValue: number | null
+  /** 'Salon' | 'Staff' | 'Split' — see PosDiscountBearer. Null falls back to the salon. */
+  discountBearer?: string | null
   discountNote?: string | null
 }
 
@@ -979,6 +982,14 @@ export interface OrderDetailApiDto {
   /** The most an order-level discount can still take off: servicesSubtotal less discountAmount. */
   orderDiscountCap: number
   orderDiscountNote?: string | null
+  /** 'Salon' | 'Staff' | 'Split' — see PosDiscountBearer. Null when no discount is applied. */
+  orderDiscountBearer?: string | null
+  /** What the technicians on this ticket absorb of it in total, spread pro-rata across the
+   *  services they performed. Live while the order is open, frozen once Completed. */
+  orderDiscountStaffShare: number
+  /** False when no technician on the ticket is on commission-style pay, so the salon is the only
+   *  bearer the order-level discount can have. */
+  canAssignOrderDiscountToStaff: boolean
   /** Null when the cashier typed the discount instead of picking a promotion. */
   appliedPromotionId?: string | null
   appliedPromotionName?: string | null

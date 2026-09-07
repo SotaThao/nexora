@@ -72,6 +72,8 @@ export default function ServiceDiscountModal({
   onRemove,
   onClose,
   supplementalContent,
+  onBearerChange,
+  resolveStaffShare,
 }: {
   target: ServiceDiscountTarget | null
   isSaving: boolean
@@ -79,6 +81,12 @@ export default function ServiceDiscountModal({
   onRemove: () => void
   onClose: () => void
   supplementalContent?: ReactNode
+  /** Notified as the bearer is picked, so a caller rendering its own actions inside
+   *  supplementalContent (the promotion list) can submit the choice the operator is looking at. */
+  onBearerChange?: (bearer: PosDiscountBearer) => void
+  /** Overrides the preview of what the technician absorbs. An order-level discount is spread across
+   *  every service line before the bearer applies, so its share is not a function of one amount. */
+  resolveStaffShare?: (amount: number, bearer: PosDiscountBearer) => number
 }) {
   const { t } = useTranslation()
   const [discountType, setDiscountType] = useState<PosServiceDiscountType>(PosServiceDiscountType.Amount)
@@ -116,6 +124,11 @@ export default function ServiceDiscountModal({
   if (!target) return null
 
   const isOrderDiscount = target.scope === 'order'
+  // Same question, different reason: one line's technician is hourly, versus nobody on the whole
+  // ticket being on commission.
+  const bearerLockedHintKey = isOrderDiscount
+    ? 'components.dashboard.views.pos.OrderDiscountSection.discountBearerLockedHint'
+    : `${K}.discountBearerLockedHint`
   const discountCap = target.discountCap ?? target.lineTotal
   const parsedValue = parseDirectPaymentAmountInput(valueInput)
   const hasNumber = valueInput.trim() !== '' && valueInput.trim() !== '.' && Number.isFinite(parsedValue)
@@ -148,8 +161,9 @@ export default function ServiceDiscountModal({
   // floating point, so flooring dollars showed $0.57 for a split the backend stores as $0.58.
   // PosServiceDiscountResolver.ResolveStaffShare runs on decimal and rounds toward zero — matched
   // here by flooring the integer cent count, which is exact.
-  const previewStaffShare =
-    bearer === PosDiscountBearer.Staff
+  const previewStaffShare = resolveStaffShare
+    ? resolveStaffShare(previewAmount, bearer)
+    : bearer === PosDiscountBearer.Staff
       ? previewAmount
       : bearer === PosDiscountBearer.Split
         ? Math.floor(Math.round(previewAmount * 100) / 2) / 100
@@ -294,37 +308,43 @@ export default function ServiceDiscountModal({
             ) : null}
           </div>
 
-          {!isOrderDiscount ? (
-            <div className="space-y-1.5">
-              <span className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-                {t(`${K}.discountBearerLabel`)}
-              </span>
-              <div className="grid grid-cols-3 gap-2">
-                {POS_DISCOUNT_BEARER_OPTIONS.map((option) => {
-                  const isLocked = option !== PosDiscountBearer.Salon && !target.canAssignDiscountToStaff
-                  return (
-                    <button
-                      key={option}
-                      type="button"
-                      disabled={isLocked || isSaving}
-                      title={isLocked ? t(`${K}.discountBearerLockedHint`) : undefined}
-                      onClick={() => setBearer(option)}
-                      className={`h-9 rounded-lg border text-[11px] font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                        bearer === option
-                          ? 'border-nexoraBrand bg-nexoraBrandSoft/60 text-nexoraBrandDark'
-                          : 'border-nexoraBorder bg-white text-nexoraText hover:border-nexoraBrand/50'
-                      }`}
-                    >
-                      {t(`${K}.discountBearer${option}`)}
-                    </button>
-                  )
-                })}
-              </div>
-              {!target.canAssignDiscountToStaff ? (
-                <p className="text-[11px] text-amber-600">{t(`${K}.discountBearerLockedHint`)}</p>
-              ) : null}
+          <div className="space-y-1.5">
+            <span className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+              {t(`${K}.discountBearerLabel`)}
+            </span>
+            <div className="grid grid-cols-3 gap-2">
+              {POS_DISCOUNT_BEARER_OPTIONS.map((option) => {
+                const isLocked = option !== PosDiscountBearer.Salon && !target.canAssignDiscountToStaff
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    disabled={isLocked || isSaving}
+                    aria-pressed={bearer === option}
+                    title={isLocked ? t(bearerLockedHintKey) : undefined}
+                    onClick={() => {
+                      setBearer(option)
+                      onBearerChange?.(option)
+                    }}
+                    className={`h-9 rounded-lg border text-[11px] font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                      bearer === option
+                        ? 'border-nexoraBrand bg-nexoraBrandSoft/60 text-nexoraBrandDark'
+                        : 'border-nexoraBorder bg-white text-nexoraText hover:border-nexoraBrand/50'
+                    }`}
+                  >
+                    {t(`${K}.discountBearer${option}`)}
+                  </button>
+                )
+              })}
             </div>
-          ) : null}
+            {!target.canAssignDiscountToStaff ? (
+              <p className="text-[11px] text-amber-600">{t(bearerLockedHintKey)}</p>
+            ) : isOrderDiscount ? (
+              <p className="text-[11px] text-nexoraMuted">
+                {t('components.dashboard.views.pos.OrderDiscountSection.discountBearerAllocationHint')}
+              </p>
+            ) : null}
+          </div>
 
           <div className="space-y-1.5">
             <label
@@ -360,14 +380,12 @@ export default function ServiceDiscountModal({
                 )}
               </p>
               <p>{t(`${K}.discountPreviewDiscount`, { amount: previewAmount.toFixed(2) })}</p>
-              {!isOrderDiscount ? (
-                <p>
-                  {t(`${K}.discountPreviewSplit`, {
-                    staff: previewStaffShare.toFixed(2),
-                    salon: (previewAmount - previewStaffShare).toFixed(2),
-                  })}
-                </p>
-              ) : null}
+              <p>
+                {t(`${K}.discountPreviewSplit`, {
+                  staff: previewStaffShare.toFixed(2),
+                  salon: (previewAmount - previewStaffShare).toFixed(2),
+                })}
+              </p>
             </div>
           ) : null}
 

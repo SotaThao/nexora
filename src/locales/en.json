@@ -4925,6 +4925,8 @@
             "customMustBePositive": "Enter a value greater than 0, or use Remove to take the discount off.",
             "discountAmountTooHigh": "Discount cannot be higher than the available services total (${{max}}).",
             "discountNotePlaceholder": "e.g. customer loyalty",
+            "discountBearerLockedHint": "No technician on this ticket is on commission pay, so only the salon can absorb this discount.",
+            "discountBearerAllocationHint": "A discount charged to technicians is split between them in proportion to the services they performed. Anyone on hourly or salaried pay is skipped and the salon covers their part.",
             "previewCustomer": "Customer pays ${{amount}} for services after discounts",
             "clearButton": "Remove",
             "appliedAmount": "Taken off this visit: -${{amount}}",
