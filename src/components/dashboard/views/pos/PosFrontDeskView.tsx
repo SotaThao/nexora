@@ -1655,7 +1655,7 @@ export default function PosFrontDeskView({
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-1.5">{renderRowFlags(order)}</div>
-                        <div className="min-w-0">
+                        <div className="flex min-w-0 flex-col items-start gap-1">
                           <p className="pos-customer-name truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
                           <CustomerVisitTag isNewCustomer={order.isNewCustomer} />
                         </div>
@@ -1709,8 +1709,10 @@ export default function PosFrontDeskView({
                         >
                           <td className="px-4 py-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
                           <td className="px-4 py-3">
-                            <p className="pos-customer-name font-bold text-nexoraText">{order.customerName}</p>
-                            <CustomerVisitTag isNewCustomer={order.isNewCustomer} />
+                            <div className="flex min-w-0 flex-col items-start gap-1">
+                              <p className="pos-customer-name font-bold text-nexoraText">{order.customerName}</p>
+                              <CustomerVisitTag isNewCustomer={order.isNewCustomer} />
+                            </div>
                           </td>
                           <td className="whitespace-nowrap px-4 py-3 font-semibold tabular-nums text-nexoraText">
                             {formatPosTime(order.checkedInAt, currentLanguage) || '—'}

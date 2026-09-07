@@ -23,7 +23,18 @@ export default defineConfig({
     dedupe: ['react', 'react-dom', 'react/jsx-runtime'],
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react/jsx-runtime', 'react-loading-skeleton'],
+    entries: ['index.html'],
+    holdUntilCrawlEnd: false,
+    include: [
+      'react',
+      'react-dom',
+      'react/jsx-runtime',
+      'react-router-dom',
+      '@tanstack/react-query',
+      'lucide-react',
+      'react-loading-skeleton',
+    ],
+    exclude: ['pdfjs-dist', 'react-pdf'],
   },
   envPrefix: ['VITE_', 'SUPABASE_', 'NEXT_PUBLIC_'],
   build: {

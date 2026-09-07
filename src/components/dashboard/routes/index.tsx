@@ -1,31 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Navigate, useLocation, useOutletContext, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import lazyWithRetry from '../../../app/lazyWithRetry'
 import { SHOW_HARDWARE_DEVICES } from '../constants'
 
-import Overview from '../overview/Overview'
-import TouchpointsView from '../../TouchpointsView'
 import {
   buildTouchpointsSearch,
   normalizeTouchpointSection,
 } from '../../touchpoints/touchpointSections'
-import ReviewsView from '../views/ReviewsView'
-import TipsView from '../../TipsView'
-import ReportsView from '../views/ReportsView'
-import SettingsView from '../../SettingsView'
-import AnalyticsView from '../../AnalyticsView'
-import SupportView from '../../SupportView'
-import ComingSoon from '../views/ComingSoon'
-import ManagePlanView from '../views/ManagePlanView'
-import BookingHubView from '../views/BookingHubView'
-import AiVoiceSetupGuideView from '../views/AiVoiceSetupGuideView'
-import PackageManagementView from '../views/packageManagement/PackageManagementView'
-import PackageBillingDetailView from '../views/packageManagement/PackageBillingDetailView'
-import TipPlatformCheckoutModal from '../views/packageManagement/TipPlatformCheckoutModal'
 import { useTipPlatformCheckoutFlow } from '../views/packageManagement/useTipPlatformCheckoutFlow'
-import CompleteStoreSetupGateModal from '../modals/CompleteStoreSetupGateModal'
-import NewsLibraryView from '../views/NewsLibraryView'
-import StaffDetailView from '../../StaffDetailView'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
 import {
   buildDashboardSettingsPath,
@@ -36,38 +19,7 @@ import {
 import { SkeletonList } from '../../ui/skeleton'
 import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import { useOwnerTaxYearByBusiness } from '../../../data/hooks/useTaxiqOwnerTaxYear'
-import TaxIqOnboardingWizard from '../views/taxiq/TaxIqOnboardingWizard'
-import TaxIqHomeView from '../views/taxiq/TaxIqHomeView'
-import DeductionCenterView from '../views/taxiq/DeductionCenterView'
-import OwnerIncomeSummaryListView from '../views/taxiq/OwnerIncomeSummaryListView'
-import ReceiptVaultView from '../views/taxiq/ReceiptVaultView'
-import AssetsTrackerView from '../views/taxiq/AssetsTrackerView'
-import YearEndExportView from '../views/taxiq/YearEndExportView'
-import TaxRemindersView from '../views/taxiq/TaxRemindersView'
-import PayoutDisputeCenterView from '../views/taxiq/PayoutDisputeCenterView'
-import CpaAccessSettingsView from '../views/taxiq/CpaAccessSettingsView'
-import EmployerRegistryView from '../views/taxiq/EmployerRegistryView'
-import PayEngineView from '../views/taxiq/PayEngineView'
-import WeeklyPayrollView from '../views/taxiq/WeeklyPayrollView'
-import PayrollRunsView from '../views/taxiq/PayrollRunsView'
-import TaxLedgerView from '../views/taxiq/TaxLedgerView'
-import ExceptionsQueueView from '../views/taxiq/ExceptionsQueueView'
-import DataQualityCenterView from '../views/taxiq/DataQualityCenterView'
-import JurisdictionsView from '../views/taxiq/JurisdictionsView'
-import ShareLinksView from '../views/taxiq/ShareLinksView'
-import Form1099NecView from '../views/taxiq/Form1099NecView'
-import TipLedgerView from '../views/taxiq/TipLedgerView'
-import FormsReportsView from '../views/taxiq/FormsReportsView'
-import TaxEstimateView from '../views/taxiq/TaxEstimateView'
-import PosSalonSettingsView from '../views/pos/PosSalonSettingsView'
-import PosProductsView from '../views/pos/PosProductsView'
-import PosPromotionsView from '../views/pos/PosPromotionsView'
-import PosFrontDeskView from '../views/pos/PosFrontDeskView'
-import PosReportsView from '../views/pos/report/PosReportsView'
 import { formatBusinessAddress } from '../views/pos/posDisplay'
-import PosDevicesView from '../views/pos/devices/PosDevicesView'
-import PosPrinterSetupView from '../views/pos/printer/PosPrinterSetupView'
-import PosPublicCheckInView from '../views/pos/PosPublicCheckInView'
 import ResponsiveStaffRoute from './ResponsiveStaffRoute'
 import {
   StaffDetailRouteContent,
@@ -77,6 +29,56 @@ import { STAFF_ROUTE_FAMILY } from './staffRoutePaths'
 import { POS_FRONT_DESK_TAB_PARAM, PosFrontDeskTab } from '../../../constants/posFrontDesk'
 import { posReportPath, PosReportTab } from '../../../constants/posReports'
 import { posSalonSettingsPath, PosSalonSettingsTab } from '../../../constants/posSalonSettings'
+
+const Overview = lazyWithRetry(() => import('../overview/Overview'))
+const TouchpointsView = lazyWithRetry(() => import('../../TouchpointsView'))
+const ReviewsView = lazyWithRetry(() => import('../views/ReviewsView'))
+const TipsView = lazyWithRetry(() => import('../../TipsView'))
+const ReportsView = lazyWithRetry(() => import('../views/ReportsView'))
+const SettingsView = lazyWithRetry(() => import('../../SettingsView'))
+const AnalyticsView = lazyWithRetry(() => import('../../AnalyticsView'))
+const SupportView = lazyWithRetry(() => import('../../SupportView'))
+const ComingSoon = lazyWithRetry(() => import('../views/ComingSoon'))
+const ManagePlanView = lazyWithRetry(() => import('../views/ManagePlanView'))
+const BookingHubView = lazyWithRetry(() => import('../views/BookingHubView'))
+const AiVoiceSetupGuideView = lazyWithRetry(() => import('../views/AiVoiceSetupGuideView'))
+const PackageManagementView = lazyWithRetry(() => import('../views/packageManagement/PackageManagementView'))
+const PackageBillingDetailView = lazyWithRetry(() => import('../views/packageManagement/PackageBillingDetailView'))
+const TipPlatformCheckoutModal = lazyWithRetry(() => import('../views/packageManagement/TipPlatformCheckoutModal'))
+const CompleteStoreSetupGateModal = lazyWithRetry(() => import('../modals/CompleteStoreSetupGateModal'))
+const NewsLibraryView = lazyWithRetry(() => import('../views/NewsLibraryView'))
+const StaffDetailView = lazyWithRetry(() => import('../../StaffDetailView'))
+const TaxIqOnboardingWizard = lazyWithRetry(() => import('../views/taxiq/TaxIqOnboardingWizard'))
+const TaxIqHomeView = lazyWithRetry(() => import('../views/taxiq/TaxIqHomeView'))
+const DeductionCenterView = lazyWithRetry(() => import('../views/taxiq/DeductionCenterView'))
+const OwnerIncomeSummaryListView = lazyWithRetry(() => import('../views/taxiq/OwnerIncomeSummaryListView'))
+const ReceiptVaultView = lazyWithRetry(() => import('../views/taxiq/ReceiptVaultView'))
+const AssetsTrackerView = lazyWithRetry(() => import('../views/taxiq/AssetsTrackerView'))
+const YearEndExportView = lazyWithRetry(() => import('../views/taxiq/YearEndExportView'))
+const TaxRemindersView = lazyWithRetry(() => import('../views/taxiq/TaxRemindersView'))
+const PayoutDisputeCenterView = lazyWithRetry(() => import('../views/taxiq/PayoutDisputeCenterView'))
+const CpaAccessSettingsView = lazyWithRetry(() => import('../views/taxiq/CpaAccessSettingsView'))
+const EmployerRegistryView = lazyWithRetry(() => import('../views/taxiq/EmployerRegistryView'))
+const PayEngineView = lazyWithRetry(() => import('../views/taxiq/PayEngineView'))
+const WeeklyPayrollView = lazyWithRetry(() => import('../views/taxiq/WeeklyPayrollView'))
+const PayrollRunsView = lazyWithRetry(() => import('../views/taxiq/PayrollRunsView'))
+const TaxLedgerView = lazyWithRetry(() => import('../views/taxiq/TaxLedgerView'))
+const ExceptionsQueueView = lazyWithRetry(() => import('../views/taxiq/ExceptionsQueueView'))
+const DataQualityCenterView = lazyWithRetry(() => import('../views/taxiq/DataQualityCenterView'))
+const JurisdictionsView = lazyWithRetry(() => import('../views/taxiq/JurisdictionsView'))
+const ShareLinksView = lazyWithRetry(() => import('../views/taxiq/ShareLinksView'))
+const Form1099NecView = lazyWithRetry(() => import('../views/taxiq/Form1099NecView'))
+const TipLedgerView = lazyWithRetry(() => import('../views/taxiq/TipLedgerView'))
+const FormsReportsView = lazyWithRetry(() => import('../views/taxiq/FormsReportsView'))
+const TaxEstimateView = lazyWithRetry(() => import('../views/taxiq/TaxEstimateView'))
+const PosSalonSettingsView = lazyWithRetry(() => import('../views/pos/PosSalonSettingsView'))
+const PosProductsView = lazyWithRetry(() => import('../views/pos/PosProductsView'))
+const PosPromotionsView = lazyWithRetry(() => import('../views/pos/PosPromotionsView'))
+const PosFrontDeskView = lazyWithRetry(() => import('../views/pos/PosFrontDeskView'))
+const PosReportsView = lazyWithRetry(() => import('../views/pos/report/PosReportsView'))
+const PosDevicesView = lazyWithRetry(() => import('../views/pos/devices/PosDevicesView'))
+const PosPrinterSetupView = lazyWithRetry(() => import('../views/pos/printer/PosPrinterSetupView'))
+const PosPublicCheckInView = lazyWithRetry(() => import('../views/pos/PosPublicCheckInView'))
 
 export function OverviewRoute() {
   const ctx = useOutletContext<LooseObject>()
