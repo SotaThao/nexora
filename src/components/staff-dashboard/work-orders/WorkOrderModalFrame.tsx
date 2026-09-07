@@ -1,5 +1,5 @@
-import { useEffect, type ReactNode } from 'react'
 import { X } from 'lucide-react'
+import { useEffect, type ReactNode } from 'react'
 import useBodyScrollLock from '../../../hooks/useBodyScrollLock'
 import useVisualViewportRect from '../../../hooks/useVisualViewportRect'
 import { WORK_ORDER_KEYBOARD, WORK_ORDERS_LAYOUT_CLASS } from './constants'
@@ -46,7 +46,6 @@ export default function WorkOrderModalFrame({
     <div
       style={overlayStyle}
       className={WORK_ORDERS_LAYOUT_CLASS.modalOverlay}
-      onClick={onClose}
     >
       <div
         style={cardStyle}

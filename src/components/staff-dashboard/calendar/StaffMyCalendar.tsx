@@ -1,31 +1,31 @@
+import { ArrowLeft, CalendarCheck, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, CalendarCheck, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import type { TFunction } from '../../../types/contexts'
 import { useStaffBookingCalendar } from '../../../data/hooks/useStaffWorkOrders'
-import { staffWorkOrdersPath, type WorkOrderSalon } from '../work-orders/constants'
+import type { TFunction } from '../../../types/contexts'
 import { STAFF_SALONS_PATH } from '../staffSalonPaths'
+import { staffWorkOrdersPath, type WorkOrderSalon } from '../work-orders/constants'
 import { WorkOrderErrorCard } from '../work-orders/WorkOrderQueryFeedback'
 import {
-  calendarAppointmentBarClass,
-  calendarAppointmentCardClass,
-  calendarAppointmentStatusClass,
-  calendarDayClass,
-  STAFF_CALENDAR_I18N,
-  STAFF_CALENDAR_LAYOUT_CLASS,
-  STAFF_CALENDAR_STATUS_I18N,
-  type StaffCalendarAppointment,
-} from './constants'
-import {
-  calendarWeekDays,
-  formatCalendarDuration,
-  formatCalendarTime,
-  formatCalendarWeekday,
-  parseCalendarDateKey,
-  shiftCalendarDate,
-  toCalendarDateKey,
+    calendarWeekDays,
+    formatCalendarDuration,
+    formatCalendarTime,
+    formatCalendarWeekday,
+    parseCalendarDateKey,
+    shiftCalendarDate,
+    toCalendarDateKey,
 } from './calendarUtils'
+import {
+    calendarAppointmentBarClass,
+    calendarAppointmentCardClass,
+    calendarAppointmentStatusClass,
+    calendarDayClass,
+    STAFF_CALENDAR_I18N,
+    STAFF_CALENDAR_LAYOUT_CLASS,
+    STAFF_CALENDAR_STATUS_I18N,
+    type StaffCalendarAppointment,
+} from './constants'
 import StaffMyCalendarSkeleton from './StaffMyCalendarSkeleton'
 import { useStaffCalendarSalon } from './useStaffCalendarSalon'
 
@@ -78,9 +78,29 @@ export default function StaffMyCalendar() {
     <div className={STAFF_CALENDAR_LAYOUT_CLASS.page} data-selected-date={selectedDate}>
       <section className={STAFF_CALENDAR_LAYOUT_CLASS.calendar}>
         <div className={STAFF_CALENDAR_LAYOUT_CLASS.header}>
-          <div>
+          <div className={STAFF_CALENDAR_LAYOUT_CLASS.titleBlock}>
             <div className={STAFF_CALENDAR_LAYOUT_CLASS.kicker}>{t(STAFF_CALENDAR_I18N.kicker)}</div>
-            <h1 className={STAFF_CALENDAR_LAYOUT_CLASS.title}>{t(STAFF_CALENDAR_I18N.title)}</h1>
+            <div className={STAFF_CALENDAR_LAYOUT_CLASS.titleRow}>
+              <h1 className={STAFF_CALENDAR_LAYOUT_CLASS.title}>{t(STAFF_CALENDAR_I18N.title)}</h1>
+              <div className={STAFF_CALENDAR_LAYOUT_CLASS.mobileDateNavigation} aria-label={t(STAFF_CALENDAR_I18N.weekLabel)}>
+                <button
+                  className={STAFF_CALENDAR_LAYOUT_CLASS.dateNavigationButton}
+                  type="button"
+                  aria-label={t(STAFF_CALENDAR_I18N.previousDay)}
+                  onClick={() => setPickedDate(shiftCalendarDate(selectedDate, -1))}
+                >
+                  <ChevronLeft className={STAFF_CALENDAR_LAYOUT_CLASS.dateNavigationIcon} aria-hidden="true" />
+                </button>
+                <button
+                  className={STAFF_CALENDAR_LAYOUT_CLASS.dateNavigationButton}
+                  type="button"
+                  aria-label={t(STAFF_CALENDAR_I18N.nextDay)}
+                  onClick={() => setPickedDate(shiftCalendarDate(selectedDate, 1))}
+                >
+                  <ChevronRight className={STAFF_CALENDAR_LAYOUT_CLASS.dateNavigationIcon} aria-hidden="true" />
+                </button>
+              </div>
+            </div>
           </div>
           <div className={STAFF_CALENDAR_LAYOUT_CLASS.headerActions}>
             {salons.length > 1 ? (
@@ -108,7 +128,7 @@ export default function StaffMyCalendar() {
         <div className={STAFF_CALENDAR_LAYOUT_CLASS.weekShell}>
           <div className={STAFF_CALENDAR_LAYOUT_CLASS.weekNavigation}>
             <button
-              className={STAFF_CALENDAR_LAYOUT_CLASS.dateNavigationButton}
+              className={`${STAFF_CALENDAR_LAYOUT_CLASS.dateNavigationButton} ${STAFF_CALENDAR_LAYOUT_CLASS.desktopDateNavigationButton}`}
               type="button"
               aria-label={t(STAFF_CALENDAR_I18N.previousDay)}
               onClick={() => setPickedDate(shiftCalendarDate(selectedDate, -1))}
@@ -149,7 +169,7 @@ export default function StaffMyCalendar() {
               })}
             </div>
             <button
-              className={STAFF_CALENDAR_LAYOUT_CLASS.dateNavigationButton}
+              className={`${STAFF_CALENDAR_LAYOUT_CLASS.dateNavigationButton} ${STAFF_CALENDAR_LAYOUT_CLASS.desktopDateNavigationButton}`}
               type="button"
               aria-label={t(STAFF_CALENDAR_I18N.nextDay)}
               onClick={() => setPickedDate(shiftCalendarDate(selectedDate, 1))}
@@ -219,18 +239,21 @@ function SalonSelect({
   onChange: (salonId: string) => void
 }) {
   return (
-    <select
-      className={STAFF_CALENDAR_LAYOUT_CLASS.salonSelect}
-      aria-label={label}
-      value={selectedId}
-      onChange={(event) => onChange(event.target.value)}
-    >
-      {salons.map((item) => (
-        <option key={item.id} value={item.id}>
-          {item.name}
-        </option>
-      ))}
-    </select>
+    <div className={STAFF_CALENDAR_LAYOUT_CLASS.salonSelectWrap}>
+      <select
+        className={STAFF_CALENDAR_LAYOUT_CLASS.salonSelect}
+        aria-label={label}
+        value={selectedId}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        {salons.map((item) => (
+          <option key={item.id} value={item.id}>
+            {item.name}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className={STAFF_CALENDAR_LAYOUT_CLASS.salonSelectIcon} aria-hidden="true" />
+    </div>
   )
 }
 
