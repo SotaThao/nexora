@@ -1,5 +1,26 @@
 {
   "oneqr": {
+    "artwork": {
+      "png": "Download PNG",
+      "showHours": "Show business hours",
+      "hoursTitle": "Business Hours",
+      "templates": {
+        "01": "Golden Botanical",
+        "02": "Black & Gold",
+        "03": "Cherry Blossom",
+        "04": "Sage Botanical",
+        "05": "Neon Glow",
+        "06": "Classic Minimal",
+        "07": "Gold Brushstroke",
+        "08": "Ocean Breeze"
+      },
+      "title": "View QR & Download",
+      "description": "Choose artwork for your OneQR, then download or print it.",
+      "back": "Back",
+      "fixed": "Artwork text and colors are fixed. Your selected OneQR is added automatically.",
+      "loading": "Loading your OneQR…",
+      "error": "Unable to load your OneQR. Please try again."
+    },
       "audience": {
         "customer": "Customer",
         "staff": "Staff",
@@ -10542,6 +10563,7 @@
     }
   },
   "checkInPrint": {
+    "png": "Download PNG",
     "artworkNameTooLong": "Salon name does not fit this artwork. Turn off Show salon name or use Custom layout.",
     "hideSalonName": "Hide salon name",
     "showSalonLogo": "Show salon logo",
