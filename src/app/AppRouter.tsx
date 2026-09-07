@@ -15,6 +15,7 @@ import {
   AnalyticsRoute,
   BookingHubRoute,
   FallbackRoute,
+  MarketingRoute,
   OverviewRoute,
   PosServicesRoute,
   SiteEditorRoute,
@@ -156,6 +157,9 @@ const ManualActivityPrototypePage = lazyWithRetry(
 );
 const PublicPosBookingPage = lazyWithRetry(
   () => import("../components/public/PublicBookingPage"),
+);
+const PublicMarketingLandingPreviewPage = lazyWithRetry(
+  () => import("../components/public/PublicMarketingLandingPreviewPage"),
 );
 
 // Bridges the URL (path token / legacy ?flow=staff-invite biz) to the wizard's
@@ -317,11 +321,15 @@ export default function AppRouter() {
           />
           <Route path="/join/:businessSlug" element={<InviteRoute />} />
           <Route path="/staff/invite/:token" element={<InviteRoute />} />
+          <Route
+            path="/marketing/preview/:pageId"
+            element={<PublicMarketingLandingPreviewPage />}
+          />
 
           <Route
             path="/onboarding"
             element={
-              <RequireAuth>
+              <RequireAuth role="owner">
                 <SetupWizard />
               </RequireAuth>
             }
@@ -360,6 +368,7 @@ export default function AppRouter() {
             <Route path="builder" element={<SiteEditorRoute />} />
             <Route path="site/builder" element={<SiteEditorRoute />} />
             <Route path="touchpoints" element={<TouchpointsRoute />} />
+            <Route path="marketing" element={<MarketingRoute />} />
             <Route path="analytics" element={<AnalyticsRoute />} />
             <Route path="settings" element={<SettingsRoute />} />
             <Route path="settings/:tab" element={<SettingsRoute />} />

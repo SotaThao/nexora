@@ -19,6 +19,7 @@ import StaffDetailView from '../../StaffDetailView'
 import { useMerchantStaffByCode } from '../../../data/hooks/useMerchantStaff'
 import { normaliseMember } from '../hooks/useStaffManagement'
 import { SkeletonList } from '../../ui/skeleton'
+import MarketingView from '../views/marketing/MarketingView'
 
 export function OverviewRoute() {
   const ctx = useOutletContext<LooseObject>()
@@ -368,6 +369,11 @@ export function SiteEditorRoute() {
       <SiteEditorView />
     </React.Suspense>
   )
+}
+
+// Marketing demo: AI design, landing pages, and campaign drafts share a local workflow.
+export function MarketingRoute() {
+  return <MarketingView />
 }
 
 export function FallbackRoute() {
