@@ -550,6 +550,21 @@ export const qk = {
   communityNotifications: (filters = EMPTY) => ['community', 'notifications', filters],
   communityNotificationsUnreadCount: () => ['community', 'notifications', 'unreadCount'],
   communityProfile: (profileId: string) => ['community', 'profile', profileId],
+
+  // Marketing demo — session-only landing pages and campaign drafts.
+  marketingLandingPages: () => ['marketingDemo', 'landingPages'] as const,
+  marketingCampaignDrafts: () => ['marketingDemo', 'campaignDrafts'] as const,
+
+  // Marketing — AI Design (Ads) generation, credits, image library.
+  // US-110 Đợt 0: backed by a mock repository (data/repositories/marketingAds.ts);
+  // separate wallet from the Nexora Voice/SMS credit keys above.
+  marketingAdsCreditSummary: () => ['marketingAds', 'creditSummary'] as const,
+  marketingAdsImageQualityCosts: () => ['marketingAds', 'imageQualityCosts'] as const,
+  marketingAdsImagesRoot: () => ['marketingAds', 'images'] as const,
+  marketingAdsImages: (filters = EMPTY) => ['marketingAds', 'images', filters] as const,
+  marketingAdsBannersRoot: () => ['marketingAds', 'banners'] as const,
+  marketingAdsBanners: (status?: string) =>
+    status ? (['marketingAds', 'banners', status] as const) : (['marketingAds', 'banners'] as const),
 }
 
 /** Maps localStorage domain keys → TanStack Query key arrays (storage event bridge). */
