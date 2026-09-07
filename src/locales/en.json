@@ -4553,8 +4553,9 @@
             "loadingAria": "Loading salon settings",
             "durationInvalid": "Service duration must be greater than 0 minutes.",
             "voiceLibrary": {
-              "title": "Voice Library",
-              "subtitle": "Find the voice that feels right for your salon",
+              "title": "Voice library",
+              "subtitle": "Choose a voice that feels natural and on-brand for your customers.",
+              "selectedLabel": "Selected:",
               "search": "Search voices",
               "filterGender": "Filter by gender",
               "gender": {

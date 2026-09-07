@@ -4554,7 +4554,8 @@
             "durationInvalid": "Thời lượng dịch vụ phải lớn hơn 0 phút.",
             "voiceLibrary": {
               "title": "Thư viện giọng nói",
-              "subtitle": "Chọn giọng nói phù hợp với salon của bạn",
+              "subtitle": "Chọn giọng nghe tự nhiên và đúng phong cách với khách hàng của bạn.",
+              "selectedLabel": "Đã chọn:",
               "search": "Tìm kiếm giọng nói",
               "filterGender": "Lọc theo giới tính giọng nói",
               "gender": {

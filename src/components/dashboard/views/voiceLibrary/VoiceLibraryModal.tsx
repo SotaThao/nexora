@@ -32,7 +32,7 @@ export function VoiceLibraryModal({ group, selectedId, refreshing, failed, onRet
   return <dialog ref={dialogRef} className="voice-library-modal" aria-labelledby="voice-library-title"
     onCancel={(event) => { event.preventDefault(); close() }}>
     <header className="voice-library-header">
-      <div><h2 id="voice-library-title">{t(`${VOICE_TK}.title`)}</h2><p>{t(`${VOICE_TK}.subtitle`)} · {group.languageCode}</p></div>
+      <div><h2 id="voice-library-title">{t(`${VOICE_TK}.title`)}</h2><p>{t(`${VOICE_TK}.subtitle`)}</p></div>
       <button type="button" className="voice-library-close" onClick={close} aria-label={t(`${VOICE_TK}.close`)}><X size={20} /></button>
     </header>
     <div className="voice-library-filters">
@@ -54,9 +54,12 @@ export function VoiceLibraryModal({ group, selectedId, refreshing, failed, onRet
         {group.voices.length > 0 && <button type="button" onClick={() => { setSearch(''); setGender('') }}>{t(`${VOICE_TK}.clear`)}</button>}
       </div>}
     </div>
-    <footer className="voice-library-footer"><span><strong>{t(`${VOICE_TK}.selected`, { name: group.voices.find((voice) => voice.id === pendingVoiceId)?.displayName || t(`${VOICE_TK}.noneSelected`) })}</strong><br />{t(`${VOICE_TK}.saveHint`)}</span><div>
-      <button type="button" className="booking-secondary-button" onClick={close}>{t(`${VOICE_TK}.cancel`)}</button>
-      <button type="button" className="booking-primary-button" disabled={!canConfirm} onClick={() => { player.stop(); onConfirm(pendingVoiceId) }}>{t(`${VOICE_TK}.useVoice`)}</button>
-    </div></footer>
+    <footer className="voice-library-footer">
+      <span className="voice-library-selected">{t(`${VOICE_TK}.selectedLabel`)} <strong>{group.voices.find((voice) => voice.id === pendingVoiceId)?.displayName || t(`${VOICE_TK}.noneSelected`)}</strong></span>
+      <div>
+        <button type="button" className="booking-secondary-button" onClick={close}>{t(`${VOICE_TK}.cancel`)}</button>
+        <button type="button" className="booking-primary-button" disabled={!canConfirm} onClick={() => { player.stop(); onConfirm(pendingVoiceId) }}>{t(`${VOICE_TK}.useVoice`)}</button>
+      </div>
+    </footer>
   </dialog>
 }
