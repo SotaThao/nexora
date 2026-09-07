@@ -4019,7 +4019,9 @@
             "assignTechnicianFirst": "Assign a technician to every service first.",
             "addServiceFirst": "Add at least one service first.",
             "orderListColumnOrder": "Order",
-            "orderListColumnGuest": "Guest"
+            "orderListColumnGuest": "Guest",
+            "newCustomerTag": "New Customer",
+            "returningCustomerTag": "Returning Customer"
           },
           "BookingTab": {
             "metricBadge": "Bookings",

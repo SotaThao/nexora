@@ -16,6 +16,7 @@ import type {
   PosCheckInResultApiDto,
   PosWaitlistOrderApiDto,
 } from '../../types/repositories'
+import { mapOrderList } from './mapPosOrderList'
 
 type HttpClient = typeof httpClient
 
@@ -50,10 +51,10 @@ export function createPosOrdersRepository(client: HttpClient = httpClient) {
 
     // Order List tab (US-17) — Waiting + InService combined.
     async getOrderList(businessId: string): Promise<OrderListItemApiDto[]> {
-      const res = await client.get<OrderListItemApiDto[]>(
+      const res = await client.get<unknown>(
         `/api/v1/merchant/pos/${businessId}/orders`,
       )
-      return res ?? []
+      return mapOrderList(res)
     },
 
     // Completed Orders panel (US-17 follow-up) — paginated, filterable by CompletedAt
