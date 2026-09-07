@@ -75,15 +75,10 @@ export function computeCheckInBackgroundLayout(input: BackgroundLayoutInput, mod
   if (qrX < 0 || qrY < 0 || qrX + qrSizePx > widthPx || qrY + qrSizePx > heightPx) {
     throw new Error('Scaled QR must fit within the page')
   }
-  // Erase the original placeholder and keep the entire scaled QR, including
-  // its four-module quiet zone, white before painting only the black modules.
-  const clearX = Math.min(Math.floor(left), qrX)
-  const clearY = Math.min(Math.floor(top), qrY)
-  const clearRight = Math.max(Math.ceil(left + boxWidth), qrX + qrSizePx)
-  const clearBottom = Math.max(Math.ceil(top + boxHeight), qrY + qrSizePx)
   return {
     widthPx, heightPx, background, modulePx, qrSizePx, qrX, qrY,
-    clearBox: { x: clearX, y: clearY, width: clearRight - clearX, height: clearBottom - clearY },
+    // Clear only the original placeholder to preserve the surrounding artwork frame.
+    clearBox: { x: Math.floor(left), y: Math.floor(top), width: Math.ceil(left + boxWidth) - Math.floor(left), height: Math.ceil(top + boxHeight) - Math.floor(top) },
   }
 }
 
