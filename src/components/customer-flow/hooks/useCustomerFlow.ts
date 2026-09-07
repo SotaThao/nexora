@@ -802,8 +802,11 @@ export default function useCustomerFlow() {
     setSelectedWalletObj((current) => withWalletCryptoSymbol(current, null))
   }, [])
 
+  const isConfirmingTip = confirmTipMutation.isPending || confirmMultiStaffTipMutation.isPending
+
   /** Confirms that customer completed external wallet payment. */
   const handleConfirmTip = async () => {
+    if (isConfirmingTip) return
     if (currentTipId) {
       try {
         if (selectedStaffMembers.length > 1) {
@@ -821,6 +824,7 @@ export default function useCustomerFlow() {
 
   /** Records that customer skipped tipping and navigates to review. */
   const handleSkipTip = async () => {
+    if (skipTipMutation.isPending) return
     try {
       const member = selectedStaffMembers[0]
       await skipTipMutation.mutateAsync({
@@ -832,6 +836,7 @@ export default function useCustomerFlow() {
 
   /** Submits customer feedback review. */
   const handleSubmitFeedback = async () => {
+    if (createReviewMutationApi.isPending) return
     const cleanComment = sanitizePlainText(comment)
     try {
       const member = selectedStaffMembers[0]
@@ -854,6 +859,7 @@ export default function useCustomerFlow() {
    * @param {'google'|'yelp'} platform
    */
   const handleTrackExternalReview = async (platform) => {
+    if (trackGoogleMutation.isPending || trackYelpMutation.isPending) return
     if (currentReviewId) {
       try {
         if (platform === 'google') await trackGoogleMutation.mutateAsync(currentReviewId)
@@ -880,6 +886,7 @@ export default function useCustomerFlow() {
     isProcessing, setIsProcessing, selectedWalletObj, setSelectedWalletObj,
     selectedCryptoSymbol,
     tipRefNumber, setTipRefNumber, currentTipId, currentReviewId,
+    isConfirmingTip, isSubmittingReview: createReviewMutationApi.isPending,
     handleTagToggle, handleRatingChange, handleToggleStaff,
     handlePay, handleConfirmTip, handleSkipTip, handleSubmitFeedback,
     handleTrackExternalReview, paymentLinkData, tipPaymentMethodsData,
