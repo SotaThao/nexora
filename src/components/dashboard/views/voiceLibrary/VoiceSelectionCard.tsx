@@ -1,10 +1,18 @@
 import { useState } from 'react'
+import { SlidersHorizontal } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { VoiceSelectionState } from '../../../../constants/voiceCatalog'
 import { useMerchantVoiceOptions } from '../../../../data/hooks/useMerchantVoiceOptions'
 import type { MerchantVoiceConfigLanguage } from '../../../../data/repositories/merchantVoice'
 import { VoiceLibraryModal } from './VoiceLibraryModal'
-import { voiceInitials, VOICE_TK } from './VoiceLibraryItem'
+import { VOICE_TK } from './VoiceLibraryItem'
+
+function VoiceWaveIcon() {
+  return <svg className="voice-library-avatar-icon" viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="12" cy="12" r="8.25" fill="none" stroke="currentColor" strokeWidth="1.6" />
+    <path d="M8 10.2v3.6M10.7 8v8M13.3 9.2v5.6M16 10.6v2.8" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+  </svg>
+}
 
 export function VoiceSelectionCard({ language, drafts, disabled, onConfirm, onOpen }: {
   language: MerchantVoiceConfigLanguage; drafts: Record<string, string>; disabled: boolean
@@ -27,15 +35,24 @@ export function VoiceSelectionCard({ language, drafts, disabled, onConfirm, onOp
       const state = unsaved ? 'unsaved' : item.selectionState === VoiceSelectionState.Assigned ? 'active' : item.selectionState === VoiceSelectionState.Fallback ? 'fallback' : 'default'
       const description = currentLanguage === 'vi' ? voice?.descriptionVi || voice?.descriptionEn : voice?.descriptionEn || voice?.descriptionVi
       return <section className="voice-selection-card" key={item.languageCode} aria-label={t(`${VOICE_TK}.cardLabel`, { language: item.languageCode })}>
-        <span className="voice-library-avatar" aria-hidden="true">{voiceInitials(voice?.displayName || '?')}</span>
+        <span className="voice-library-avatar" aria-hidden="true"><VoiceWaveIcon /></span>
         <div className="voice-library-copy">
-          <div className="voice-library-name">{voice?.displayName || t(`${VOICE_TK}.systemVoice`)} <span className={`voice-library-badge is-${state}`}>{t(`${VOICE_TK}.${state}`)}</span></div>
-          <div className="voice-library-gender">{item.languageCode}{voice && ` · ${t(`${VOICE_TK}.gender.${voice.gender}`)}`}</div>
-          <p className="voice-library-description">{description}</p>
+          <div className="voice-library-heading">
+            <span className="voice-library-name">{voice?.displayName || t(`${VOICE_TK}.systemVoice`)}</span>
+            <span className={`voice-library-badge is-${state}`}>{t(`${VOICE_TK}.${state}`)}</span>
+          </div>
+          <div className="voice-library-meta">
+            {voice && <span className="voice-library-gender">{t(`${VOICE_TK}.gender.${voice.gender}`)}</span>}
+            {voice && description && <span className="voice-library-meta-separator" aria-hidden="true">·</span>}
+            {description && <p className="voice-library-description">{description}</p>}
+          </div>
           {unsaved && !draftVoice && <p role="alert">{t(`${VOICE_TK}.draftUnavailable`)}</p>}
           {!item.canSelect && <p>{t(`${VOICE_TK}.unavailable`)}</p>}
         </div>
-        <button type="button" className="booking-secondary-button" disabled={disabled || !item.canSelect || options.isFetching || options.isError} onClick={() => { onOpen(); setOpenLanguage(item.languageCode); retry() }}>{t(`${VOICE_TK}.change`)}</button>
+        <button type="button" className="booking-secondary-button" disabled={disabled || !item.canSelect || options.isFetching || options.isError} onClick={() => { onOpen(); setOpenLanguage(item.languageCode); retry() }}>
+          <SlidersHorizontal size={16} aria-hidden="true" />
+          {t(`${VOICE_TK}.change`)}
+        </button>
       </section>
     })}
     {group && <VoiceLibraryModal key={openLanguage} group={group} selectedId={drafts[group.languageCode] ?? group.effectiveVoice?.id ?? null}

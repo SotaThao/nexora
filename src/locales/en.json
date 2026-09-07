@@ -4431,6 +4431,8 @@
             "voiceTitle": "AI Voice",
             "voiceSub": "Set the language and greeting the AI reads when it picks up.",
             "aiLanguage": "AI language",
+            "voiceFieldLabel": "Voice",
+            "voiceFieldHint": "Preview each voice before choosing the one that best represents your salon.",
             "greetingScript": "Greeting",
             "firstCallSmsLabel": "First-call SMS",
             "firstCallSmsHelp": "AI automatically sends this SMS to a customer when they call the salon for the first time. Turn on to enable automatic sending; turn off to disable it.",

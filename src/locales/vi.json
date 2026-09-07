@@ -4431,6 +4431,8 @@
             "voiceTitle": "AI Voice",
             "voiceSub": "Chọn ngôn ngữ và câu chào AI đọc khi bắt máy.",
             "aiLanguage": "Ngôn ngữ AI",
+            "voiceFieldLabel": "Giọng nói",
+            "voiceFieldHint": "Nghe thử từng giọng trước khi chọn giọng phù hợp nhất với tiệm của bạn.",
             "greetingScript": "Câu chào",
             "firstCallSmsLabel": "SMS sau cuộc gọi đầu",
             "firstCallSmsHelp": "AI tự gửi SMS này cho khách khi họ gọi tiệm lần đầu. Bật để gửi tự động; tắt để dừng.",

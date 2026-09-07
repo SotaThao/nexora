@@ -15207,17 +15207,96 @@ body.booking-appointment-panel-modal-open {
 }
 
 /* Merchant voice catalog: native dialog supplies focus containment and Escape handling. */
-.voice-selection-cards { display: grid; gap: 12px; margin-top: 16px; }
-.voice-selection-card { display: flex; align-items: center; gap: 16px; padding: 20px; border: 1px solid var(--nexora-border); border-radius: 16px; background: var(--nexora-surface); }
+.voice-selection-cards { display: grid; gap: 12px; }
+.voice-selection-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border: 1px solid color-mix(in srgb, var(--nexora-brand) 16%, var(--nexora-border));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--nexora-brand) 4%, var(--nexora-surface));
+  box-shadow: var(--nexora-card-shadow);
+}
 .voice-library-avatar { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; background: var(--nexora-surface-muted); color: var(--nexora-brand); font-weight: 700; }
+.voice-selection-card .voice-library-avatar {
+  width: 48px;
+  height: 48px;
+  color: #fff;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--nexora-brand-dark) 55%, var(--nexora-text)) 0%, var(--nexora-brand) 52%, var(--nexora-electric) 100%);
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--nexora-brand) 32%, transparent);
+}
+.voice-library-avatar-icon { width: 22px; height: 22px; display: block; }
 .voice-library-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 4px; overflow-wrap: anywhere; }
+.voice-selection-card .voice-library-heading { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .voice-library-name { font-size: 16px; font-weight: 700; color: var(--nexora-text); }
+.voice-selection-card .voice-library-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.3;
+}
 .voice-library-gender, .voice-library-description { font-size: 13px; font-weight: 400; color: var(--nexora-muted); }
 .voice-library-description { display: block; margin: 0; line-height: 1.5; }
 .voice-library-gender { margin-left: 4px; }
+.voice-selection-card .voice-library-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--nexora-muted);
+}
+.voice-selection-card .voice-library-gender { margin-left: 0; flex-shrink: 0; font-size: 12px; }
+.voice-selection-card .voice-library-meta-separator { flex-shrink: 0; }
+.voice-selection-card .voice-library-description {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.4;
+}
 .voice-library-badge { display: inline-block; margin-left: 8px; padding: 3px 8px; border-radius: 999px; background: var(--nexora-surface-muted); color: var(--nexora-muted); font-size: 11px; font-weight: 600; }
+.voice-selection-card .voice-library-badge {
+  flex-shrink: 0;
+  margin-left: 0;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
 .voice-library-badge.is-active { color: var(--nexora-success); }
+.voice-selection-card .voice-library-badge.is-active {
+  background: color-mix(in srgb, var(--nexora-success) 16%, white);
+  color: var(--nexora-success);
+}
 .voice-library-badge.is-unsaved, .voice-library-badge.is-fallback { color: var(--nexora-brand); }
+.voice-selection-card .voice-library-badge.is-unsaved,
+.voice-selection-card .voice-library-badge.is-fallback {
+  background: color-mix(in srgb, var(--nexora-brand) 12%, white);
+}
+.voice-selection-card .voice-library-badge.is-default {
+  background: var(--nexora-surface-muted);
+}
+.voice-selection-card > .booking-secondary-button {
+  flex-shrink: 0;
+  min-height: 44px;
+  font-weight: 700;
+}
+.voice-selection-card > .booking-secondary-button:focus-visible {
+  outline: 2px solid var(--nexora-brand);
+  outline-offset: 2px;
+}
 .voice-library-modal { width: min(760px, calc(100% - 24px)); max-height: 90vh; max-height: 90dvh; padding: 0; border: 1px solid var(--nexora-border); border-radius: 20px; background: var(--nexora-surface); color: var(--nexora-text); box-shadow: var(--nexora-soft-shadow); }
 .voice-library-modal[open] { display: flex; flex-direction: column; }
 .voice-library-modal::backdrop { background: color-mix(in srgb, var(--nexora-text) 45%, transparent); }
@@ -15243,8 +15322,12 @@ body.booking-appointment-panel-modal-open {
 .voice-library-empty { text-align: center; padding: 32px 12px; color: var(--nexora-muted); }
 .voice-library-modal button:disabled { opacity: .5; cursor: not-allowed; }
 @media (max-width: 600px) {
-  .voice-selection-card { flex-wrap: wrap; padding: 16px; gap: 12px; }
+  .voice-selection-card { flex-wrap: wrap; padding: 16px; gap: 12px; min-height: 0; }
   .voice-selection-card > button { width: 100%; }
+  .voice-selection-card .voice-library-heading { flex-wrap: wrap; }
+  .voice-selection-card .voice-library-name { white-space: normal; }
+  .voice-selection-card .voice-library-meta { flex-wrap: wrap; }
+  .voice-selection-card .voice-library-description { white-space: normal; overflow: visible; }
   .voice-library-header { padding: 16px; }
   .voice-library-filters { padding: 0 16px 12px; }
   .voice-library-list { padding: 0 16px 12px; }

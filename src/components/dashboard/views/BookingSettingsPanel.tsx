@@ -3685,20 +3685,26 @@ export default function BookingSettingsPanel() {
               <div className="settings-language-status">
                 {t(`${TK}.languageStatus.${language}`)}
               </div>
-              {voiceEnabled && <VoiceSelectionCard key={language} language={mapUiLanguageToConfigLanguage(language)}
-                drafts={draftVoiceSelections} disabled={isSavingSettings || updateConfigMutation.isPending}
-                onOpen={() => { stopBookingPreview(); setIsPreviewPlaying(false); }}
-                onConfirm={(code, id) => {
-                  markConfigDirty();
-                  voiceLanguageScopeRef.current.languages = [...new Set([...(voiceLanguageScopeRef.current.languages || []), code])];
-                  setDraftVoiceSelections((current) => {
-                    const next = { ...current };
-                    if (configData?.voiceSelections?.some((saved) => saved.languageCode === code && saved.voiceTtsVoiceId === id)) delete next[code];
-                    else next[code] = id;
-                    return next;
-                  });
-                }} /> }
             </div>
+            {voiceEnabled && (
+              <div className="settings-field settings-span-full">
+                <span className="settings-label">{t(`${TK}.voiceFieldLabel`)}</span>
+                <VoiceSelectionCard key={language} language={mapUiLanguageToConfigLanguage(language)}
+                  drafts={draftVoiceSelections} disabled={isSavingSettings || updateConfigMutation.isPending}
+                  onOpen={() => { stopBookingPreview(); setIsPreviewPlaying(false); }}
+                  onConfirm={(code, id) => {
+                    markConfigDirty();
+                    voiceLanguageScopeRef.current.languages = [...new Set([...(voiceLanguageScopeRef.current.languages || []), code])];
+                    setDraftVoiceSelections((current) => {
+                      const next = { ...current };
+                      if (configData?.voiceSelections?.some((saved) => saved.languageCode === code && saved.voiceTtsVoiceId === id)) delete next[code];
+                      else next[code] = id;
+                      return next;
+                    });
+                  }} />
+                <div className="settings-language-status">{t(`${TK}.voiceFieldHint`)}</div>
+              </div>
+            )}
             <label
               className="settings-field settings-span-full"
               data-ai-hub-field="greeting"
