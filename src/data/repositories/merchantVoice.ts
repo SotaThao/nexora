@@ -1,3 +1,4 @@
+import { VoiceGender, VoiceSelectionState } from '../../constants/voiceCatalog'
 import httpClient from '../../lib/httpClient'
 import { BOOKING_HUB_PAGE_SIZE, BOOKING_HUB_STATUS_COLLECT_MAX_PAGES, BOOKING_HUB_STATUS_COLLECT_PAGE_SIZE } from '../../constants/pagination'
 import { HOLIDAY_TYPE, type HolidayType } from '../../constants/holiday'
@@ -573,7 +574,80 @@ export interface MerchantVoiceTenantDto {
   isActive: boolean
 }
 
+export interface MerchantVoiceSelectionDto {
+  languageCode: string
+  voiceTtsVoiceId: string
+}
+
+export interface MerchantVoiceOptionDto {
+  id: string | null
+  displayName: string
+  languageCode: string
+  gender: VoiceGender
+  sampleAudioUrl: string | null
+  descriptionEn: string | null
+  descriptionVi: string | null
+  isDefaultForLanguage?: boolean
+}
+
+export interface MerchantVoiceLanguageOptionsDto {
+  languageCode: string
+  selectedVoiceTtsVoiceId: string | null
+  voices: MerchantVoiceOptionDto[]
+  selectionState: VoiceSelectionState
+  effectiveVoice: MerchantVoiceOptionDto | null
+  canSelect: boolean
+  unavailableReason: string | null
+}
+
+export interface MerchantVoiceOptionsDto {
+  languages: MerchantVoiceLanguageOptionsDto[]
+}
+
+function normalizeVoiceSelections(value: unknown): MerchantVoiceSelectionDto[] {
+  if (!Array.isArray(value)) return []
+  return value.filter((row) => row && typeof row.languageCode === 'string' && typeof row.voiceTtsVoiceId === 'string')
+    .map((row) => ({ languageCode: row.languageCode, voiceTtsVoiceId: row.voiceTtsVoiceId }))
+}
+
+export function normalizeVoiceOptions(response: unknown): MerchantVoiceOptionsDto {
+  const body = response as Partial<MerchantVoiceOptionsDto> | null
+  const normalizeVoice = (raw: unknown): MerchantVoiceOptionDto | null => {
+    if (!raw || typeof raw !== 'object') return null
+    const row = raw as Record<string, unknown>
+    const genders = [VoiceGender.Unspecified, VoiceGender.Female, VoiceGender.Male, VoiceGender.Neutral]
+    const gender = typeof row.gender === 'number' ? genders[row.gender] : genders.find((value) => value.toLowerCase() === String(row.gender).toLowerCase())
+    let sampleAudioUrl: string | null = null
+    try {
+      const url = new URL(String(row.sampleAudioUrl))
+      if (url.protocol === 'https:' || url.protocol === 'http:') sampleAudioUrl = url.href
+    } catch { /* Invalid sample URLs are unavailable for preview. */ }
+    return {
+      id: typeof row.id === 'string' ? row.id : null,
+      displayName: String(row.displayName ?? ''),
+      languageCode: String(row.languageCode ?? ''),
+      gender: gender ?? VoiceGender.Unspecified,
+      sampleAudioUrl,
+      descriptionEn: typeof row.descriptionEn === 'string' ? row.descriptionEn : null,
+      descriptionVi: typeof row.descriptionVi === 'string' ? row.descriptionVi : null,
+      isDefaultForLanguage: row.isDefaultForLanguage === true,
+    }
+  }
+  return {
+    languages: Array.isArray(body?.languages) ? body.languages.map((group) => ({
+      languageCode: String(group.languageCode ?? ''),
+      selectedVoiceTtsVoiceId: typeof group.selectedVoiceTtsVoiceId === 'string' ? group.selectedVoiceTtsVoiceId : null,
+      voices: (Array.isArray(group.voices) ? group.voices : []).map(normalizeVoice).filter((voice): voice is MerchantVoiceOptionDto => Boolean(voice?.id)),
+      selectionState: Object.values(VoiceSelectionState).includes(group.selectionState) ? group.selectionState : VoiceSelectionState.SystemDefault,
+      effectiveVoice: normalizeVoice(group.effectiveVoice),
+      canSelect: group.canSelect === true,
+      unavailableReason: typeof group.unavailableReason === 'string' ? group.unavailableReason : null,
+    })) : [],
+  }
+}
+
 export interface MerchantVoiceConfigDto {
+  voiceSelections: MerchantVoiceSelectionDto[]
   id: string
   name: string
   forwardPhoneNumber: string
@@ -590,6 +664,7 @@ export interface MerchantVoiceConfigDto {
   yelpUrl: string
   website: string
   description: string
+  businessFaq: string
   promotion: string
   promoSms: string
   sendSmsPromoEnabled: boolean
@@ -600,6 +675,7 @@ export interface MerchantVoiceConfigDto {
 }
 
 export interface UpdateMerchantVoiceConfigRequest {
+  voiceSelections?: MerchantVoiceSelectionDto[]
   name: string
   forwardPhoneNumber: string
   bookingNotifyPhone: string
@@ -614,6 +690,7 @@ export interface UpdateMerchantVoiceConfigRequest {
   yelpUrl: string | null
   website: string | null
   description: string | null
+  businessFaq: string | null
   promotion: string | null
   promoSms: string | null
   sendSmsPromoEnabled: boolean
@@ -764,12 +841,14 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
       yelpUrl: '',
       website: '',
       description: '',
+      businessFaq: '',
       promotion: '',
       promoSms: '',
       sendSmsPromoEnabled: true,
       timeZone: '',
       language: MerchantVoiceConfigLanguage.EnUS,
       welcomeGreeting: '',
+      voiceSelections: [],
       operatingHours: [],
     }
   }
@@ -823,12 +902,14 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
     yelpUrl: readConfigString(body.yelpUrl),
     website: readConfigString(body.website),
     description: readConfigString(body.description),
+    businessFaq: readConfigString(body.businessFaq),
     promotion: readConfigString(body.promotion),
     promoSms: readConfigString(body.promoSms),
     sendSmsPromoEnabled: readBool(body.sendSmsPromoEnabled, true),
     timeZone: readConfigString(body.timeZone),
     language: String(body.language ?? MerchantVoiceConfigLanguage.EnUS),
     welcomeGreeting,
+    voiceSelections: normalizeVoiceSelections(body.voiceSelections),
     operatingHours,
   }
 }
@@ -1533,6 +1614,14 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
         { headers: MERCHANT_VOICE_HEADERS },
       )
       return normalizeMyTenantResponse(response)
+    },
+
+    async getVoiceOptions(language: MerchantVoiceConfigLanguage): Promise<MerchantVoiceOptionsDto> {
+      const response = await client.get<unknown>(
+        `${MERCHANT_VOICE_BASE}/voice-options?language=${encodeURIComponent(language)}`,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+      return normalizeVoiceOptions(response)
     },
 
     async getConfig(): Promise<MerchantVoiceConfigDto> {

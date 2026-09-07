@@ -493,6 +493,8 @@ export const qk = {
   merchantVoiceStaffById: (id?: string | null) => ['merchantVoice', 'staff', 'detail', id ?? ''],
   merchantVoiceBusinessStaff: (filters = EMPTY) => ['merchantVoice', 'staff', 'businessStaff', filters],
   merchantVoiceConfig: () => ['merchantVoice', 'config'],
+  merchantVoiceOptionsRoot: () => ['merchantVoice', 'voice-options'],
+  merchantVoiceOptions: (accountId: string, businessId: string, language: string) => ['merchantVoice', 'voice-options', accountId, businessId, language],
   merchantVoiceHolidays: () => ['merchantVoice', 'holidays'],
   merchantVoiceHolidaysAffectedCount: (date: string) => ['merchantVoice', 'holidays', 'affected-count', date],
   merchantVoiceServiceCategories: () => ['merchantVoice', 'service-categories'],

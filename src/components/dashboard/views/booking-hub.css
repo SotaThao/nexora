@@ -15205,3 +15205,52 @@ body.booking-appointment-panel-modal-open {
     flex-direction: column;
   }
 }
+
+/* Merchant voice catalog: native dialog supplies focus containment and Escape handling. */
+.voice-selection-cards { display: grid; gap: 12px; margin-top: 16px; }
+.voice-selection-card { display: flex; align-items: center; gap: 16px; padding: 20px; border: 1px solid var(--nexora-border); border-radius: 16px; background: var(--nexora-surface); }
+.voice-library-avatar { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; background: var(--nexora-surface-muted); color: var(--nexora-brand); font-weight: 700; }
+.voice-library-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 4px; overflow-wrap: anywhere; }
+.voice-library-name { font-size: 16px; font-weight: 700; color: var(--nexora-text); }
+.voice-library-gender, .voice-library-description { font-size: 13px; font-weight: 400; color: var(--nexora-muted); }
+.voice-library-description { display: block; margin: 0; line-height: 1.5; }
+.voice-library-gender { margin-left: 4px; }
+.voice-library-badge { display: inline-block; margin-left: 8px; padding: 3px 8px; border-radius: 999px; background: var(--nexora-surface-muted); color: var(--nexora-muted); font-size: 11px; font-weight: 600; }
+.voice-library-badge.is-active { color: var(--nexora-success); }
+.voice-library-badge.is-unsaved, .voice-library-badge.is-fallback { color: var(--nexora-brand); }
+.voice-library-modal { width: min(760px, calc(100% - 24px)); max-height: 90vh; max-height: 90dvh; padding: 0; border: 1px solid var(--nexora-border); border-radius: 20px; background: var(--nexora-surface); color: var(--nexora-text); box-shadow: var(--nexora-soft-shadow); }
+.voice-library-modal[open] { display: flex; flex-direction: column; }
+.voice-library-modal::backdrop { background: color-mix(in srgb, var(--nexora-text) 45%, transparent); }
+.voice-library-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 24px 24px 16px; }
+.voice-library-header h2 { margin: 0; font-size: 24px; font-weight: 700; }
+.voice-library-header p { margin: 8px 0 0; font-size: 14px; color: var(--nexora-muted); }
+.voice-library-close { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex-shrink: 0; border-radius: 8px; }
+.voice-library-close:hover { background: var(--nexora-surface-muted); }
+.voice-library-filters { display: flex; gap: 12px; padding: 0 24px 16px; }
+.voice-library-search { flex: 1; min-width: 0; }
+.voice-library-gender-filter { max-width: 45%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--nexora-border); border-radius: 10px; background: var(--nexora-surface); color: var(--nexora-text); }
+.voice-library-search { display: flex; align-items: center; gap: 10px; padding: 0 12px; border: 1px solid var(--nexora-border); border-radius: 10px; color: var(--nexora-muted); }
+.voice-library-search input { min-width: 0; width: 100%; height: 44px; border: 0; background: transparent; outline-offset: 3px; }
+.voice-library-list { overflow-y: auto; flex: 1; min-height: 0; padding: 0 24px 16px; }
+.voice-library-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; border: 1px solid var(--nexora-border); border-radius: 12px; padding: 16px; }
+.voice-library-row.is-selected { border-color: var(--nexora-brand); background: var(--nexora-surface-muted); }
+.voice-library-choice { display: flex; flex: 1; align-items: center; min-width: 0; gap: 12px; cursor: pointer; }
+.voice-library-choice input { order: 3; accent-color: var(--nexora-brand); width: 18px; height: 18px; flex-shrink: 0; }
+.voice-library-play { flex-shrink: 0; }
+.voice-library-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid var(--nexora-border); padding: 16px 24px; }
+.voice-library-footer > span { font-size: 12px; color: var(--nexora-muted); }
+.voice-library-footer > div { display: flex; flex-shrink: 0; gap: 8px; }
+.voice-library-empty { text-align: center; padding: 32px 12px; color: var(--nexora-muted); }
+.voice-library-modal button:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 600px) {
+  .voice-selection-card { flex-wrap: wrap; padding: 16px; gap: 12px; }
+  .voice-selection-card > button { width: 100%; }
+  .voice-library-header { padding: 16px; }
+  .voice-library-filters { padding: 0 16px 12px; }
+  .voice-library-list { padding: 0 16px 12px; }
+  .voice-library-row { flex-wrap: wrap; padding: 12px; }
+  .voice-library-choice { flex: 1 0 100%; }
+  .voice-library-play { margin-left: auto; }
+  .voice-library-footer { flex-direction: column; align-items: stretch; padding: 16px; gap: 10px; }
+  .voice-library-footer > div > button { flex: 1; }
+}

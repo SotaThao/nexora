@@ -235,9 +235,10 @@ export function useUpdateMerchantVoiceConfig() {
   const queryClient = useQueryClient()
   return useMutation<void, Error, UpdateMerchantVoiceConfigRequest>({
     mutationFn: (body) => merchantVoiceRepository.updateConfig(body),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceConfig() })
-    },
+    onSuccess: () => Promise.all([
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceConfig() }),
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceOptionsRoot() }),
+    ]),
   })
 }
 
