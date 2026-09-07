@@ -4837,6 +4837,8 @@
             "customMustBePositive": "Nhập giá trị lớn hơn 0, hoặc bấm Bỏ giảm giá để xoá giảm giá.",
             "discountAmountTooHigh": "Mức giảm không thể cao hơn tổng dịch vụ còn lại (${{max}}).",
             "discountNotePlaceholder": "vd. ưu đãi khách hàng thân thiết",
+            "discountBearerLockedHint": "Hoá đơn này không có thợ nào ăn commission nên chỉ salon mới chịu được khoản giảm.",
+            "discountBearerAllocationHint": "Khoản giảm tính cho thợ được chia theo tỷ lệ doanh thu dịch vụ từng thợ đã làm. Thợ ăn lương giờ hoặc lương tuần được bỏ qua và salon chịu phần đó.",
             "previewCustomer": "Khách trả ${{amount}} cho dịch vụ sau giảm giá",
             "clearButton": "Bỏ giảm giá",
             "appliedAmount": "Đã giảm cho lượt này: -${{amount}}",
