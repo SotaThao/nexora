@@ -42,6 +42,8 @@ export function computeCheckInBackgroundLayout(input: BackgroundLayoutInput, mod
     throw new Error('Invalid background or page dimensions')
   }
   if (dpi > 300 || !Number.isInteger(moduleCount)) throw new Error('Invalid print resolution')
+  const qrScale = input.qrScale ?? 1
+  if (!Number.isFinite(qrScale) || qrScale <= 0) throw new Error('Invalid QR scale')
   if (![qrBox.x, qrBox.y, qrBox.width, qrBox.height].every(Number.isFinite)
       || qrBox.x < 0 || qrBox.y < 0 || qrBox.width <= 0 || qrBox.height <= 0
       || qrBox.x + qrBox.width > 1 || qrBox.y + qrBox.height > 1) {
@@ -65,15 +67,23 @@ export function computeCheckInBackgroundLayout(input: BackgroundLayoutInput, mod
   const boxHeight = qrBox.height * background.height
   // A one-inch minimum prevents technically valid but impractically small printed QR codes.
   if (Math.min(boxWidth, boxHeight) < dpi) throw new Error('QR box must be at least one inch square on the page')
-  const modulePx = Math.floor(Math.min(boxWidth, boxHeight) * (input.qrScale ?? 1) / (moduleCount + 8))
+  const modulePx = Math.floor(Math.min(boxWidth, boxHeight) * qrScale / (moduleCount + 8))
   if (modulePx < 2) throw new Error('QR destination is too dense for this print region')
   const qrSizePx = modulePx * (moduleCount + 8)
+  const qrX = Math.round(left + (boxWidth - qrSizePx) / 2)
+  const qrY = Math.round(top + (boxHeight - qrSizePx) / 2)
+  if (qrX < 0 || qrY < 0 || qrX + qrSizePx > widthPx || qrY + qrSizePx > heightPx) {
+    throw new Error('Scaled QR must fit within the page')
+  }
+  // Erase the original placeholder and keep the entire scaled QR, including
+  // its four-module quiet zone, white before painting only the black modules.
+  const clearX = Math.min(Math.floor(left), qrX)
+  const clearY = Math.min(Math.floor(top), qrY)
+  const clearRight = Math.max(Math.ceil(left + boxWidth), qrX + qrSizePx)
+  const clearBottom = Math.max(Math.ceil(top + boxHeight), qrY + qrSizePx)
   return {
-    widthPx, heightPx, background, modulePx, qrSizePx,
-    qrX: Math.round(left + (boxWidth - qrSizePx) / 2),
-    qrY: Math.round(top + (boxHeight - qrSizePx) / 2),
-    // Expand outward by at most one pixel to erase the original placeholder completely.
-    clearBox: { x: Math.floor(left), y: Math.floor(top), width: Math.ceil(left + boxWidth) - Math.floor(left), height: Math.ceil(top + boxHeight) - Math.floor(top) },
+    widthPx, heightPx, background, modulePx, qrSizePx, qrX, qrY,
+    clearBox: { x: clearX, y: clearY, width: clearRight - clearX, height: clearBottom - clearY },
   }
 }
 
