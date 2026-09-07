@@ -191,7 +191,8 @@
       "sending": "Sending…",
       "sentOnMyWay": "Front desk knows you are on your way",
       "sentBusy": "Front desk knows — {{minutes}} min",
-      "sentDeclined": "Front desk has been told"
+      "sentDeclined": "Front desk has been told",
+      "noneActive": "That beep is no longer active"
     },
     "brand": {
       "title": "NEXORA",
