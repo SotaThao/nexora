@@ -5,6 +5,7 @@
 // the page must not be able to tell which one it is running on.
 import { useMemo } from 'react'
 import { useCheckoutServiceCatalog, useSetOrderNote } from '../../../data/hooks/usePosCheckout'
+import { logger } from '../../../utils/logger'
 import { useCheckInActiveVisit, useCheckInTechnicians } from '../../../data/hooks/usePosCheckIn'
 import { useCheckInOrder, useCustomerLookupByPhone } from '../../../data/hooks/usePosOrders'
 import { useBookingDetail, useBookingList, useCheckInBookingWithDraft } from '../../../data/hooks/usePosBooking'
@@ -56,6 +57,11 @@ export default function createPosCheckInSource(businessId: string): CheckInSourc
     const checkInOrder = useCheckInOrder(businessId)
     const checkInBooking = useCheckInBookingWithDraft(businessId)
     const setOrderNote = useSetOrderNote(businessId)
+
+    const saveNoteBestEffort = (orderId: string, note: string) =>
+      setOrderNote.mutateAsync({ orderId, note }).catch((error) => {
+        logger.error('Failed to save check-in note on order', orderId, error)
+      })
 
     const catalog = useMemo(
       () =>
@@ -127,7 +133,7 @@ export default function createPosCheckInSource(businessId: string): CheckInSourc
             posStaffProfileId: item.posStaffProfileId ?? undefined,
           })),
         })
-        if (payload.note) await setOrderNote.mutateAsync({ orderId: result.orderId, note: payload.note })
+        if (payload.note) await saveNoteBestEffort(result.orderId, payload.note)
         return result
       },
       submitBooking: async (payload) => {
@@ -140,7 +146,7 @@ export default function createPosCheckInSource(businessId: string): CheckInSourc
             posStaffProfileId: item.posStaffProfileId ?? undefined,
           })),
         })
-        if (payload.note) await setOrderNote.mutateAsync({ orderId: result.orderId, note: payload.note })
+        if (payload.note) await saveNoteBestEffort(result.orderId, payload.note)
         return result
       },
       isSubmitting: checkInOrder.isPending || checkInBooking.isPending || setOrderNote.isPending,
