@@ -113,7 +113,7 @@ function PublicCheckInQrEditor({ businessId, businessSlug, businessName, busines
     <div className="nexora-card min-w-0 p-4 lg:p-6">
       <div className="mb-4 flex items-start gap-3"><QrCode className="h-6 w-6 shrink-0 text-nexoraBrand" /><div><h3 className="font-extrabold text-nexoraText">{t(TK + 'title')}</h3><p className="text-xs text-nexoraMuted">{t(TK + 'description')}</p></div></div>
       {checkInSettings && checkInSettings.publicCheckInEnabled !== true && <div className="mb-4 flex gap-2 rounded-lg border border-nexoraWarning p-3 text-xs"><AlertTriangle className="h-4 w-4 shrink-0" />{t(TK + 'enableNotice')}</div>}
-      <div className="grid min-w-0 gap-6 xl:grid-cols-2">
+      <div className="grid min-w-0 gap-6 md:grid-cols-2">
         <div className="min-w-0 space-y-5">
           <label className="block space-y-1 text-xs font-bold">{text('layoutSource')}<select className={control + ' w-full'} value={mode} onChange={event => setMode(event.target.value as 'artwork' | 'custom')}><option value="artwork">{text('artworkMode')}</option><option value="custom">{text('customMode')}</option></select></label>
           {mode === 'artwork' ? <>

@@ -4,7 +4,7 @@ import { CHECK_IN_BACKGROUNDS } from './checkInBackgroundCatalog'
 
 export function CheckInBackgroundGallery({ selectedId, onSelect, templates = CHECK_IN_BACKGROUNDS, labelPrefix = 'checkInPrint.backgrounds.' }: { selectedId: string; onSelect: (id: string) => void; templates?: CheckInBackgroundTemplate[]; labelPrefix?: string }) {
   const { t } = useTranslation()
-  return <div role="radiogroup" aria-label={t('checkInPrint.artworkGallery')} className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+  return <div role="radiogroup" aria-label={t('checkInPrint.artworkGallery')} className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-2 xl:grid-cols-4">
     {templates.map((template, index) => <button
       type="button"
       role="radio"

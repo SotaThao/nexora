@@ -39,7 +39,6 @@ export default function OneQrArtworkPage() {
     <Link to="/dashboard/touchpoints?tab=stations&section=one-qr" className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-nexoraBrand"><ArrowLeft className="h-4 w-4" aria-hidden />{t('oneqr.artwork.back')}</Link>
     <div><h1 className="text-xl font-black text-nexoraText">{t('oneqr.artwork.title')}</h1><p className="mt-1 text-sm text-nexoraMuted">{t('oneqr.artwork.description')}</p></div>
     {query.isLoading ? <p role="status">{t('oneqr.artwork.loading')}</p> : query.isError || !oneQr ? <div role="alert"><p>{t('oneqr.artwork.error')}</p><button type="button" className={control + ' mt-3'} onClick={() => void query.refetch()}>{t('checkInPrint.retry')}</button></div> : <>
-      <p className="text-sm font-bold text-nexoraText">{oneQr.name} · {t(`oneqr.audience.${toOneQrViewAs(audience)}`)}</p>
       {!oneQr.isActive && <p role="status" className="text-sm text-nexoraWarning">{t('oneqr.status.paused')}</p>}
       {audience !== OneQrAudience.Customer && <p className="text-xs text-nexoraMuted">{t('oneqr.card.role_code_note', { audience: t(`oneqr.audience.${toOneQrViewAs(audience)}`) })}</p>}
       <OneQrArtworkEditor key={`${oneQr.id}:${url}`} url={url} fileSlug={`oneqr-${slugFromUrl(oneQr.url)}-${toOneQrViewAs(audience)}`} businessName={setup?.businessInfo?.name || oneQr.name} businessLogo={setup?.businessInfo?.logo} />
@@ -125,7 +124,7 @@ export function OneQrArtworkEditor({ url, fileSlug, businessName, businessLogo }
     finally { busyRef.current = false; if (mounted.current) setBusy(null) }
   }
   return <>
-    <div className="nexora-card grid min-w-0 gap-6 p-4 lg:p-6 xl:grid-cols-2">
+    <div className="nexora-card grid min-w-0 gap-6 p-4 md:grid-cols-2 lg:p-6">
       <div className="min-w-0 space-y-5">
         <CheckInBackgroundGallery templates={ONEQR_BACKGROUNDS} labelPrefix="oneqr.artwork.templates." selectedId={backgroundId} onSelect={setBackgroundId} />
         <div className="flex flex-wrap gap-4">
