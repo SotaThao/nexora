@@ -68,6 +68,8 @@ import type {
 } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
 import { getInitials, joinOrEmpty } from './posDisplay'
+import { formatCustomerPhone } from './customer/customerFormatters'
+import CustomerVisitTag from './CustomerVisitTag'
 import PosOrderWorkspace from './PosOrderWorkspace'
 import { usePassPrntReturn } from './receipt/usePassPrntReturn'
 import { DASHBOARD_MENU_ID } from '../../constants'
@@ -93,7 +95,6 @@ import NewBookingForm from './booking/NewBookingForm'
 import BookingTab from './booking/BookingTab'
 import { formatBookingWallClockTime, resolveBookingWallClockParts } from './booking/bookingFormatters'
 import CustomerTab from './customer/CustomerTab'
-import { formatCustomerPhone } from './customer/customerFormatters'
 import TimeClockTab from './timeclock/TimeClockTab'
 import { beepCooldownUntil, useCooldownSeconds } from './timeclock/beepCooldown'
 import BeepInteractions from './timeclock/BeepInteractions'
@@ -1654,7 +1655,10 @@ export default function PosFrontDeskView({
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-1.5">{renderRowFlags(order)}</div>
-                        <p className="pos-customer-name truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
+                        <div className="min-w-0">
+                          <p className="pos-customer-name truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
+                          <CustomerVisitTag isNewCustomer={order.isNewCustomer} />
+                        </div>
                         {renderServiceChips(order.serviceNames)}
                         <div>{renderTechnicianChip(order.technicianNames)}</div>
                         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-nexoraBorder pt-2">
@@ -1704,7 +1708,10 @@ export default function PosFrontDeskView({
                           }`}
                         >
                           <td className="px-4 py-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
-                          <td className="pos-customer-name px-4 py-3 font-bold text-nexoraText">{order.customerName}</td>
+                          <td className="px-4 py-3">
+                            <p className="pos-customer-name font-bold text-nexoraText">{order.customerName}</p>
+                            <CustomerVisitTag isNewCustomer={order.isNewCustomer} />
+                          </td>
                           <td className="whitespace-nowrap px-4 py-3 font-semibold tabular-nums text-nexoraText">
                             {formatPosTime(order.checkedInAt, currentLanguage) || '—'}
                           </td>

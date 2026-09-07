@@ -3998,7 +3998,9 @@
             "assignTechnicianFirst": "Cần gán thợ cho tất cả dịch vụ trước.",
             "addServiceFirst": "Cần thêm ít nhất một dịch vụ trước.",
             "orderListColumnOrder": "Order",
-            "orderListColumnGuest": "Khách"
+            "orderListColumnGuest": "Khách",
+            "newCustomerTag": "Khách mới",
+            "returningCustomerTag": "Khách cũ"
           },
           "BookingTab": {
             "metricBadge": "Lịch hẹn",

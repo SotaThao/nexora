@@ -266,6 +266,11 @@ export interface OrderListItemApiDto {
   hasUnassignedService: boolean
   hasNoServiceLine: boolean
   serviceLines: PosServiceLineRollupApiDto
+  /**
+   * True when this guest has never completed a visit at this business.
+   * The current open ticket does not count — that is their first visit in progress.
+   */
+  isNewCustomer: boolean
 }
 
 // POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filterable.
@@ -433,6 +438,8 @@ export interface PosCustomerListItemApiDto {
   totalVisit: number
   lastVisit?: string | null
   createdAt: string
+  /** True when this customer has never completed a POS visit. Bookings alone do not count. */
+  isNewCustomer: boolean
 }
 
 export interface PosCustomerListQuery {
@@ -469,6 +476,8 @@ export interface PosCustomerDetailApiDto {
   totalVisit: number
   lastVisit?: string | null
   createdAt: string
+  /** True when this customer has never completed a POS visit. Bookings alone do not count. */
+  isNewCustomer: boolean
 }
 
 // A history row can be a completed/waiting/in-service order OR a not-yet-checked-in booking
