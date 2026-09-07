@@ -1,10 +1,11 @@
 import type { CheckInBackgroundTemplate } from './useCheckInBackgroundPrint'
 
-/** Interior QR areas measured on the supplied 2550 × 3300 Letter artwork. */
+/** Normalized QR regions use the original 2550 × 3300 Letter reference grid. */
 function artwork(id: string, x: number, y: number, width: number, height: number, brandingColor: string, brandingFont: CheckInBackgroundTemplate['brandingFont']): CheckInBackgroundTemplate {
   return {
     id,
-    imageUrl: `${import.meta.env.BASE_URL}images/checkin-templates/${id}.jpg`,
+    imageUrl: `${import.meta.env.BASE_URL}images/checkin-templates/${id}.webp?v=2`,
+    thumbnailUrl: `${import.meta.env.BASE_URL}images/checkin-templates/${id}-thumb.webp?v=2`,
     brandingColor, brandingFont,
     brandingArea: id === 'modern-dark-glow'
       ? { x: .2, y: .05, width: .6, height: .095 }
