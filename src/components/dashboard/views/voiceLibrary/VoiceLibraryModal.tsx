@@ -55,11 +55,8 @@ export function VoiceLibraryModal({ group, selectedId, refreshing, failed, onRet
       </div>}
     </div>
     <footer className="voice-library-footer">
-      <span className="voice-library-selected">{t(`${VOICE_TK}.selectedLabel`)} <strong>{group.voices.find((voice) => voice.id === pendingVoiceId)?.displayName || t(`${VOICE_TK}.noneSelected`)}</strong></span>
-      <div>
-        <button type="button" className="booking-secondary-button" onClick={close}>{t(`${VOICE_TK}.cancel`)}</button>
-        <button type="button" className="booking-primary-button" disabled={!canConfirm} onClick={() => { player.stop(); onConfirm(pendingVoiceId) }}>{t(`${VOICE_TK}.useVoice`)}</button>
-      </div>
+      <button type="button" className="booking-secondary-button" onClick={close}>{t(`${VOICE_TK}.cancel`)}</button>
+      <button type="button" className="booking-primary-button" disabled={!canConfirm} onClick={() => { player.stop(); onConfirm(pendingVoiceId) }}>{t(`${VOICE_TK}.useVoice`)}</button>
     </footer>
   </dialog>
 }

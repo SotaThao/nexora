@@ -42,7 +42,7 @@ export function VoiceLibraryItem({ voice, selected, playing, loading, onSelect, 
       </span>
       <span className="voice-library-radio" aria-hidden="true">{selected && <Check size={12} strokeWidth={3} />}</span>
     </label>
-    <button type="button" className="booking-secondary-button voice-library-play" onClick={onPlay} disabled={!voice.sampleAudioUrl}
+    <button type="button" className="booking-secondary-button voice-library-play" onClick={() => { onSelect(); onPlay() }} disabled={!voice.sampleAudioUrl}
       aria-label={t(`${VOICE_TK}.${playing ? 'stopName' : 'playName'}`, { name: voice.displayName })}
       title={!voice.sampleAudioUrl ? t(`${VOICE_TK}.noSample`) : undefined}>
       {playing ? <Square size={16} aria-hidden="true" /> : <Play size={16} fill="currentColor" aria-hidden="true" />}

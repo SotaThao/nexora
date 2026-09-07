@@ -15363,15 +15363,12 @@ body.booking-appointment-panel-modal-open {
 .voice-library-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  justify-content: flex-end;
+  gap: 8px;
   border-top: 1px solid var(--nexora-border);
   padding: 14px 24px;
   background: var(--nexora-canvas);
 }
-.voice-library-selected { font-size: 14px; font-weight: 400; color: var(--nexora-text); }
-.voice-library-selected strong { font-weight: 700; }
-.voice-library-footer > div { display: flex; flex-shrink: 0; gap: 8px; }
 .voice-library-modal .voice-library-footer .booking-secondary-button,
 .voice-library-modal .voice-library-footer .booking-primary-button { min-height: 40px; font-size: 13px; font-weight: 700; box-shadow: none; }
 .voice-library-modal .voice-library-footer .booking-secondary-button { color: var(--nexora-text); }
@@ -15393,6 +15390,6 @@ body.booking-appointment-panel-modal-open {
   .voice-library-row { flex-wrap: wrap; padding: 12px; }
   .voice-library-choice { flex: 1 0 100%; }
   .voice-library-play { margin-left: auto; }
-  .voice-library-footer { flex-direction: column; align-items: stretch; padding: 16px; gap: 10px; }
-  .voice-library-footer > div > button { flex: 1; }
+  .voice-library-footer { justify-content: stretch; padding: 16px; }
+  .voice-library-footer > button { flex: 1; }
 }

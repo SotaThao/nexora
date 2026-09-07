@@ -4555,7 +4555,6 @@
             "voiceLibrary": {
               "title": "Thư viện giọng nói",
               "subtitle": "Chọn giọng nghe tự nhiên và đúng phong cách với khách hàng của bạn.",
-              "selectedLabel": "Đã chọn:",
               "search": "Tìm kiếm giọng nói",
               "filterGender": "Lọc theo giới tính giọng nói",
               "gender": {
@@ -4591,9 +4590,7 @@
               "unavailable": "Chưa thể chọn giọng nói cho ngôn ngữ này.",
               "change": "Đổi giọng nói",
               "devicePreview": "Nghe lời chào bằng giọng thiết bị",
-              "allVoices": "Tất cả giọng",
-              "selected": "Đã chọn: {{name}}",
-              "noneSelected": "Chưa chọn"
+              "allVoices": "Tất cả giọng"
             }
           },
           "team": {

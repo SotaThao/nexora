@@ -4555,7 +4555,6 @@
             "voiceLibrary": {
               "title": "Voice library",
               "subtitle": "Choose a voice that feels natural and on-brand for your customers.",
-              "selectedLabel": "Selected:",
               "search": "Search voices",
               "filterGender": "Filter by gender",
               "gender": {
@@ -4591,9 +4590,7 @@
               "unavailable": "Voice selection is unavailable for this language.",
               "change": "Change voice",
               "devicePreview": "Preview greeting with device voice",
-              "allVoices": "All voices",
-              "selected": "Selected: {{name}}",
-              "noneSelected": "None"
+              "allVoices": "All voices"
             }
           },
           "team": {
