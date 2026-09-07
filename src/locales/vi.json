@@ -191,7 +191,8 @@
       "sending": "Đang gửi…",
       "sentOnMyWay": "Lễ tân đã biết bạn đang tới",
       "sentBusy": "Lễ tân đã biết — {{minutes}} phút",
-      "sentDeclined": "Đã báo lễ tân"
+      "sentDeclined": "Đã báo lễ tân",
+      "noneActive": "Lượt gọi này không còn hiệu lực"
     },
     "brand": {
       "title": "NEXORA",

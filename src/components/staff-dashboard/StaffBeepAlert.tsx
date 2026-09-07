@@ -9,6 +9,10 @@
 // a floating bell. Both states are keyed by beepId:nudgeCount, so the front desk ringing again
 // always brings the call back.
 //
+// Because closing hides the only place to answer, the notification row is the way back in: tapping
+// a PosStaffBeep row fires OPEN_STAFF_BEEP_SHEET_EVENT and the listener below restores the sheet.
+// The feed stays history — it holds no beep state of its own and never answers a call.
+//
 // Sound is deliberately absent: browsers block un-gestured audio, so a chime would fail silently on
 // the first beep — the worst possible time. The push notification already carries a sound for when
 // the app is backgrounded, which is where it actually helps. Vibration is best-effort only and is
@@ -30,6 +34,7 @@ import {
 import type { ActiveStaffBeepApiDto } from '../../types/repositories'
 import { parseApiDateTime } from '../dashboard/utils'
 import { useElapsedLabel } from '../../hooks/useElapsedLabel'
+import { OPEN_STAFF_BEEP_SHEET_EVENT } from './openStaffBeepSheet'
 
 const VIBRATE_PATTERN = [200, 100, 200]
 
@@ -110,6 +115,32 @@ export default function StaffBeepAlert() {
       // Unsupported (notably iOS Safari) or blocked — the sheet is the real signal.
     }
   }, [currentKey])
+
+  // Read inside the event listener below, which is registered once — the poll gives `beeps` a new
+  // identity every 10s and re-subscribing on each one would be churn for nothing.
+  const beepsRef = useRef<ActiveStaffBeepApiDto[]>(beeps)
+  useEffect(() => {
+    beepsRef.current = beeps
+  }, [beeps])
+
+  // Tapping the beep notification asks for the sheet back. Every local dismissal is cleared, not
+  // just the tapped call's: the notification carries no reliable beepId, and the sheet shows one
+  // call at a time (oldest unanswered first) anyway, so restoring the queue lands on the same one.
+  useEffect(() => {
+    const handleOpenRequest = () => {
+      setDismissedKeys([])
+      setMinimized(false)
+      setBranch('none')
+      setNote('')
+
+      // Nothing left to restore — the front desk closed the call or it timed out, so it is gone
+      // from /staff/beeps/active and the sheet would silently stay hidden. Say so instead.
+      if (beepsRef.current.length === 0) showToast(t('staff_dashboard.beep.noneActive'))
+    }
+
+    window.addEventListener(OPEN_STAFF_BEEP_SHEET_EVENT, handleOpenRequest)
+    return () => window.removeEventListener(OPEN_STAFF_BEEP_SHEET_EVENT, handleOpenRequest)
+  }, [showToast, t])
 
   if (!current) return null
 

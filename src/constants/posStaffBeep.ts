@@ -77,3 +77,18 @@ export function cannotReceiveBeep(
   if (!technician) return false
   return technician.isLocalStaff === true || technician.email === null
 }
+
+/** NotificationType.PosStaffBeep — the front desk ringing this tech (the feed row for a call). */
+export const POS_STAFF_BEEP_NOTIFICATION_TYPE = 'PosStaffBeep'
+
+function normalizeBeepTypeKey(value: string | null | undefined): string {
+  return String(value ?? '').toLowerCase().replace(/[\s_-]+/g, '')
+}
+
+/**
+ * True only for the call itself, never for `PosStaffBeepResponse` — that one is the front desk's
+ * copy of the tech's answer and has no sheet to reopen.
+ */
+export function isPosStaffBeepNotification(type: string | null | undefined): boolean {
+  return normalizeBeepTypeKey(type) === normalizeBeepTypeKey(POS_STAFF_BEEP_NOTIFICATION_TYPE)
+}
