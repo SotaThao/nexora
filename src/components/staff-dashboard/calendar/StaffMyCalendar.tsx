@@ -1,31 +1,31 @@
-import { ArrowLeft, CalendarCheck, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { ArrowLeft, CalendarCheck, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { useStaffBookingCalendar } from '../../../data/hooks/useStaffWorkOrders'
 import type { TFunction } from '../../../types/contexts'
-import { STAFF_SALONS_PATH } from '../staffSalonPaths'
+import { useStaffBookingCalendar } from '../../../data/hooks/useStaffWorkOrders'
 import { staffWorkOrdersPath, type WorkOrderSalon } from '../work-orders/constants'
+import { STAFF_SALONS_PATH } from '../staffSalonPaths'
 import { WorkOrderErrorCard } from '../work-orders/WorkOrderQueryFeedback'
 import {
-    calendarWeekDays,
-    formatCalendarDuration,
-    formatCalendarTime,
-    formatCalendarWeekday,
-    parseCalendarDateKey,
-    shiftCalendarDate,
-    toCalendarDateKey,
-} from './calendarUtils'
-import {
-    calendarAppointmentBarClass,
-    calendarAppointmentCardClass,
-    calendarAppointmentStatusClass,
-    calendarDayClass,
-    STAFF_CALENDAR_I18N,
-    STAFF_CALENDAR_LAYOUT_CLASS,
-    STAFF_CALENDAR_STATUS_I18N,
-    type StaffCalendarAppointment,
+  calendarAppointmentBarClass,
+  calendarAppointmentCardClass,
+  calendarAppointmentStatusClass,
+  calendarDayClass,
+  STAFF_CALENDAR_I18N,
+  STAFF_CALENDAR_LAYOUT_CLASS,
+  STAFF_CALENDAR_STATUS_I18N,
+  type StaffCalendarAppointment,
 } from './constants'
+import {
+  calendarWeekDays,
+  formatCalendarDuration,
+  formatCalendarTime,
+  formatCalendarWeekday,
+  parseCalendarDateKey,
+  shiftCalendarDate,
+  toCalendarDateKey,
+} from './calendarUtils'
 import StaffMyCalendarSkeleton from './StaffMyCalendarSkeleton'
 import { useStaffCalendarSalon } from './useStaffCalendarSalon'
 

@@ -1,78 +1,78 @@
-import { useQueryClient } from '@tanstack/react-query'
-import { BadgeCheck, CheckCircle2, ChevronLeft, NotebookPen, Play } from 'lucide-react'
 import { useMemo, useRef, useState, type ReactNode } from 'react'
-import { PosOrderItemStatus } from '../../../constants/posOrderItemStatus'
-import { PosOrderStatus } from '../../../constants/posOrderStatus'
+import { useQueryClient } from '@tanstack/react-query'
+import { qk } from '../../../data/queryKeys'
+import { BadgeCheck, CheckCircle2, ChevronLeft, NotebookPen, Play } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { getErrorI18nKey, getErrorMessage } from '../../../data/errorCodes'
 import {
-    useAcceptServiceLine,
-    useMarkServiceLineDone,
-    useRejectServiceLine,
-    useStartServiceLine,
-} from '../../../data/hooks/usePosOrders'
-import {
-    useCompleteStaffWorkOrderService,
-    useSaveMyWorkOrderServiceLines,
-    useStaffWorkOrderDetail,
-    useStaffWorkOrderServiceCatalog,
-    useStartStaffWorkOrderService,
+  useCompleteStaffWorkOrderService,
+  useSaveMyWorkOrderServiceLines,
+  useStaffWorkOrderDetail,
+  useStaffWorkOrderServiceCatalog,
+  useStartStaffWorkOrderService,
 } from '../../../data/hooks/useStaffWorkOrders'
-import { qk } from '../../../data/queryKeys'
 import { getApiErrorCode } from '../../../types/domain'
-import { formatDateIsoInTimeZone } from '../../../utils/localDate'
+import { PosOrderStatus } from '../../../constants/posOrderStatus'
+import { PosOrderItemStatus } from '../../../constants/posOrderItemStatus'
+import {
+  WORK_ORDER_STATUS_BADGE_VARIANT,
+  WORK_ORDER_STATUS_I18N,
+  WORK_ORDER_TOAST_TYPE,
+  WORK_ORDERS_I18N,
+  WORK_ORDERS_LAYOUT_CLASS,
+  workOrderStatusClass,
+  type WorkOrderDetail,
+} from './constants'
 import WorkOrderCompleteServiceModal from './WorkOrderCompleteServiceModal'
 import WorkOrderCustomServiceModal from './WorkOrderCustomServiceModal'
 import WorkOrderCustomerApproval from './WorkOrderCustomerApproval'
-import { WorkOrderErrorCard } from './WorkOrderQueryFeedback'
 import WorkOrderServiceLines, {
-    type LineStatusActionKind,
-    type WorkOrderLineActions,
+  type LineStatusActionKind,
+  type WorkOrderLineActions,
 } from './WorkOrderServiceLines'
 import WorkOrderServicePickerModal from './WorkOrderServicePickerModal'
+import { WorkOrderErrorCard } from './WorkOrderQueryFeedback'
 import { WorkOrderDetailSkeleton } from './WorkOrderSkeletons'
 import {
-    WORK_ORDER_STATUS_BADGE_VARIANT,
-    WORK_ORDER_STATUS_I18N,
-    WORK_ORDER_TOAST_TYPE,
-    WORK_ORDERS_I18N,
-    WORK_ORDERS_LAYOUT_CLASS,
-    workOrderStatusClass,
-    type WorkOrderDetail,
-} from './constants'
-import {
-    addWorkOrderCatalogService,
-    addWorkOrderCustomService,
-    applyWorkOrderAssignedLinesStarted,
-    applyWorkOrderLineStatus,
-    applyWorkOrderStartedLinesCompleted,
-    buildWorkOrderCatalogCategories,
-    canEditWorkOrderServices,
-    removeWorkOrderServiceLine,
-    replaceWorkOrderCatalogService,
-    toSaveWorkOrderServiceLinesPayload,
-    toWorkOrderEditableLines,
-    WORK_ORDER_PICKER_MODE,
-    WORK_ORDER_SERVICE_APPROVAL,
-    WORK_ORDER_TICKET_FOOTER_ACTION,
-    workOrderCallerWorkDone,
-    workOrderEditableServiceTotal,
-    workOrderPendingServiceLines,
-    workOrderRemovedServiceLines,
-    workOrderTicketFooterAction,
-    type WorkOrderCatalogService,
-    type WorkOrderEditableLine,
-    type WorkOrderPickerMode,
+  WORK_ORDER_PICKER_MODE,
+  WORK_ORDER_SERVICE_APPROVAL,
+  buildWorkOrderCatalogCategories,
+  addWorkOrderCatalogService,
+  addWorkOrderCustomService,
+  applyWorkOrderAssignedLinesStarted,
+  applyWorkOrderLineStatus,
+  applyWorkOrderStartedLinesCompleted,
+  canEditWorkOrderServices,
+  removeWorkOrderServiceLine,
+  replaceWorkOrderCatalogService,
+  toSaveWorkOrderServiceLinesPayload,
+  toWorkOrderEditableLines,
+  workOrderEditableServiceTotal,
+  WORK_ORDER_TICKET_FOOTER_ACTION,
+  workOrderTicketFooterAction,
+  workOrderCallerWorkDone,
+  workOrderPendingServiceLines,
+  workOrderRemovedServiceLines,
+  type WorkOrderCatalogService,
+  type WorkOrderEditableLine,
+  type WorkOrderPickerMode,
 } from './workOrderServiceCatalog'
 import {
-    canStartWorkOrderNow,
-    formatWorkOrderNumber,
-    isWorkOrderCompletedStatus,
-    workOrderCompletionNoteText,
-    workOrderCustomerInitials,
-    workOrderTextOrPlaceholder,
+  canStartWorkOrderNow,
+  formatWorkOrderNumber,
+  isWorkOrderCompletedStatus,
+  workOrderCompletionNoteText,
+  workOrderCustomerInitials,
+  workOrderTextOrPlaceholder,
 } from './workOrderTickets'
+import {
+  useAcceptServiceLine,
+  useMarkServiceLineDone,
+  useRejectServiceLine,
+  useStartServiceLine,
+} from '../../../data/hooks/usePosOrders'
+import { formatDateIsoInTimeZone } from '../../../utils/localDate'
 
 interface StaffWorkOrderDetailProps {
   orderId: string

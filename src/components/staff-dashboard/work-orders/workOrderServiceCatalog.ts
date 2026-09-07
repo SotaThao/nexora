@@ -1,7 +1,7 @@
-import { PosOrderItemStatus } from '../../../constants/posOrderItemStatus'
 import { PosOrderStatus } from '../../../constants/posOrderStatus'
 import type { StaffWorkOrderCatalogItem } from '../../../data/repositories/staffWorkOrders'
 import type { SaveStaffWorkOrderServiceLinePayload } from '../../../types/repositories'
+import { PosOrderItemStatus } from '../../../constants/posOrderItemStatus'
 
 import type { WorkOrderItem } from './constants'
 

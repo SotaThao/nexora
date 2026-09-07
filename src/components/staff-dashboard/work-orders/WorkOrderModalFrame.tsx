@@ -1,5 +1,5 @@
-import { X } from 'lucide-react'
 import { useEffect, type ReactNode } from 'react'
+import { X } from 'lucide-react'
 import useBodyScrollLock from '../../../hooks/useBodyScrollLock'
 import useVisualViewportRect from '../../../hooks/useVisualViewportRect'
 import { WORK_ORDER_KEYBOARD, WORK_ORDERS_LAYOUT_CLASS } from './constants'

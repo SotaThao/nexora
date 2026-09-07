@@ -1,5 +1,5 @@
-import { ChevronDown, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { ChevronDown, Search } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
   WORK_ORDERS_I18N,
@@ -7,7 +7,6 @@ import {
   workOrderPickerOptionClass,
   workOrderPickerRadioClass,
 } from './constants'
-import WorkOrderModalFrame from './WorkOrderModalFrame'
 import {
   WORK_ORDER_PICKER_MODE,
   filterWorkOrderCatalogCategories,
@@ -18,6 +17,7 @@ import {
   type WorkOrderCatalogService,
   type WorkOrderPickerMode,
 } from './workOrderServiceCatalog'
+import WorkOrderModalFrame from './WorkOrderModalFrame'
 import { formatWorkOrderDurationMinutes, formatWorkOrderMoney } from './workOrderTickets'
 
 interface WorkOrderServicePickerModalProps {

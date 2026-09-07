@@ -1,8 +1,8 @@
 import { PosOrderStatus } from '../../../constants/posOrderStatus'
 import type {
-    StaffWorkOrderDetail,
-    StaffWorkOrderItem,
-    StaffWorkOrderListItem,
+  StaffWorkOrderDetail,
+  StaffWorkOrderItem,
+  StaffWorkOrderListItem,
 } from '../../../data/repositories/staffWorkOrders'
 import { STAFF_WORK_ORDERS_SCREEN } from '../constants'
 

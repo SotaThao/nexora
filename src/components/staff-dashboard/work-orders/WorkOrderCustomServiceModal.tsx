@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { WORK_ORDERS_I18N, WORK_ORDERS_LAYOUT_CLASS } from './constants'
-import WorkOrderModalFrame from './WorkOrderModalFrame'
 import {
-    canSubmitCustomWorkOrderService,
-    clampWorkOrderDurationInput,
-    clampWorkOrderPriceInput,
-    isValidCustomWorkOrderService,
-    WORK_ORDER_CUSTOM_SERVICE_MAX_NAME_LENGTH,
-    type WorkOrderCustomServiceInput,
+  canSubmitCustomWorkOrderService,
+  clampWorkOrderDurationInput,
+  clampWorkOrderPriceInput,
+  isValidCustomWorkOrderService,
+  WORK_ORDER_CUSTOM_SERVICE_MAX_NAME_LENGTH,
+  type WorkOrderCustomServiceInput,
 } from './workOrderServiceCatalog'
+import WorkOrderModalFrame from './WorkOrderModalFrame'
 
 interface WorkOrderCustomServiceModalProps {
   onConfirm: (input: WorkOrderCustomServiceInput) => void
