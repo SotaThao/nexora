@@ -31,9 +31,9 @@ import { getApiErrorCode } from '../../../../types/domain'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { qk } from '../../../../data/queryKeys'
 import { usePosAccess } from '../../../../data/hooks/usePosAccess'
+import { usePosNextTurnBalance } from '../../../../data/hooks/usePosNextTurnBalance'
 import { useStaffBusinesses } from '../../../../data/hooks/useStaffSelf'
 import { useWeeklyPayroll } from '../../../../data/hooks/useWeeklyPayroll'
-import { usePosReport } from '../../../../data/hooks/usePosReport'
 import { formatPosTime } from './posDateTime'
 import { useCancelOrder, useCompletedOrders, useOrderList } from '../../../../data/hooks/usePosOrders'
 import { useInServiceOrders, useOrderDetails } from '../../../../data/hooks/usePosCheckout'
@@ -69,10 +69,13 @@ import type {
 import { SkeletonList } from '../../../ui/skeleton'
 import { getInitials, joinOrEmpty } from './posDisplay'
 import PosOrderWorkspace from './PosOrderWorkspace'
+import { usePassPrntReturn } from './receipt/usePassPrntReturn'
+import { DASHBOARD_MENU_ID } from '../../constants'
 import {
   readPosWorkspaceFromParams,
   writePosWorkspaceToParams,
   type PosWorkspaceUrlState,
+  type PosReceiptMode,
 } from './posWorkspaceUrl'
 import { PosReportMode } from '../../../../constants/posReportMode'
 import PosReportPanel from './report/PosReportPanel'
@@ -97,7 +100,7 @@ import BeepInteractions from './timeclock/BeepInteractions'
 import BeepMessageModal from './timeclock/BeepMessageModal'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { formatCurrency } from '../../utils'
-import { compareNextTurnRows, selectNextTurnTechnician } from './posNextTurn'
+import { compareNextTurnRows, nextTurnServiceAmount, selectNextTurnTechnician } from './posNextTurn'
 import {
   POS_TABLE_HEADER_CELL_CLASS,
   POS_TABLE_HEADER_ROW_CLASS,
@@ -426,8 +429,10 @@ export default function PosFrontDeskView({
   // The ticket queue is the exception: its count is on the always-visible tab badge and the
   // Checkout Customer cards read phone numbers out of it, so gating it on the Tickets tab made a
   // reload on any other tab render "Tickets (0)". It loads on every tab; the effect below still
-  // refetches it on each visit to the Tickets tab, so there are no background polls either.
-  const orderListQuery = useOrderList(businessId, { refetchInterval: false })
+  // refetches it on each visit to Tickets; Turn Board polls for cross-device assignments.
+  const orderListQuery = useOrderList(businessId, {
+    refetchInterval: activeTab === PosFrontDeskTab.TurnBoard ? 15000 : false,
+  })
   const orderList = orderListQuery.data ?? []
   const isOrderListLoading = orderListQuery.isLoading
   // Today's appointments, for the Not Arrived chip and for the ticket counts, which include
@@ -459,17 +464,15 @@ export default function PosFrontDeskView({
   })
   const turnBoard = turnBoardQuery.data ?? []
   const isTurnBoardLoading = turnBoardQuery.isLoading
-  // The Turn Board's summary uses the same local-day roster as Staffs Clock, but fetches once
-  // per tab visit rather than maintaining a second 15s polling stream.
+  // Refresh clock-in eligibility with the next-turn balance while the board is visible.
   const todayTurnWindow = getLocalDayWindow()
   const todayRosterQuery = useTimeClockRoster(businessId, todayTurnWindow, {
     enabled:
       activeTab === PosFrontDeskTab.TurnBoard
       || activeTab === PosFrontDeskTab.Booking,
-    refetchInterval: false,
+    refetchInterval: 15000,
   })
-  // The roster above deliberately does not poll, so a station card would never notice a reply.
-  // The beep feed is its own polled query, which is what keeps the station pill live here.
+  // Beep replies use their own polled feed for the station pill.
   const { data: turnBoardBeeps = [] } = useMerchantBeepFeed(businessId, todayTurnWindow, {
     enabled: activeTab === PosFrontDeskTab.TurnBoard,
   })
@@ -477,16 +480,11 @@ export default function PosFrontDeskView({
     [...turnBoardBeeps].reverse().map((beep) => [beep.posStaffProfileId, beep]),
   )
   const canReadNextTurnReport = activeTab === PosFrontDeskTab.TurnBoard && Boolean(access?.canViewReport)
-  const todayServiceAmountReportQuery = usePosReport(
-    canReadNextTurnReport
-      ? {
-          businessId,
-          timeZone: reportBusinessTimeZone,
-          mode: PosReportMode.Daily,
-          dates: [reportTodayIso(reportBusinessTimeZone)],
-        }
-      : null,
-    { enabled: canReadNextTurnReport },
+  const todayNextTurnBalanceQuery = usePosNextTurnBalance(
+    businessId,
+    reportTodayIso(reportBusinessTimeZone || 'America/Chicago'),
+    reportBusinessTimeZone,
+    canReadNextTurnReport,
   )
   // Today’s Turns needs the services completed during the same local calendar day. The
   // completed-orders endpoint supplies the ticket IDs; each detail response supplies the
@@ -540,17 +538,14 @@ export default function PosFrontDeskView({
       )
       .map((technician) => technician.posStaffProfileId),
   )
-  const serviceAmountsTodayByStaffId = new Map(
-    (todayServiceAmountReportQuery.data?.rows ?? []).map((row) => [
-      row.posStaffProfileId,
-      row.serviceAmount,
-    ]),
-  )
-  const nextTurnTechnician = todayServiceAmountReportQuery.data
+  const serviceAmountsTodayByStaffId = todayNextTurnBalanceQuery.data?.completedAmounts ?? new Map<string, number>()
+  const nextTurnTechnician = todayNextTurnBalanceQuery.data
+    && !todayNextTurnBalanceQuery.isFetching && !todayNextTurnBalanceQuery.isError
     ? selectNextTurnTechnician(
         todayTurnRows,
         nextTurnSkilledTechnicianIds,
         serviceAmountsTodayByStaffId,
+        todayNextTurnBalanceQuery.data,
       )
     : undefined
   // A ticket with one technician is already unambiguous from the list response. Only fetch
@@ -655,6 +650,10 @@ export default function PosFrontDeskView({
   const [updateWorkspace, setUpdateWorkspaceState] = useState<UpdateWorkspaceState | null>(
     () => readPosWorkspaceFromParams(searchParams),
   )
+  // Set when PassPRNT reports a failed receipt print, so the workspace can open the preview and
+  // let the operator print through the browser instead of leaving the customer waiting.
+  const [printFallbackOrderId, setPrintFallbackOrderId] = useState<string | null>(null)
+
   const setUpdateWorkspace = useCallback((workspace: UpdateWorkspaceState | null, nextTab?: PosFrontDeskTab) => {
     setUpdateWorkspaceState(workspace)
     if (nextTab) setActiveTabState(nextTab)
@@ -663,6 +662,37 @@ export default function PosFrontDeskView({
       { replace: true },
     )
   }, [setSearchParams])
+
+  // A receipt print leaves the app for PassPRNT and returns here on a fresh page load. The
+  // restore path is the workspace URL state this view already owns, so no new params are needed.
+  usePassPrntReturn({
+    surface: 'frontDesk',
+    backPath: `/dashboard/${DASHBOARD_MENU_ID.pos}`,
+    onPrintFailed: useCallback((job) => setPrintFallbackOrderId(job.jobId), []),
+    onRestore: useCallback(
+      (restore) => {
+        if (restore.surface !== 'frontDesk') return
+        const tab = restore.tab as PosFrontDeskTab
+        // A re-print from the Completed list carries no order: its detail modal is local state
+        // with no URL representation, so the honest restore is the tab it was opened from.
+        if (!restore.orderId) {
+          setUpdateWorkspace(null, tab)
+          return
+        }
+        setUpdateWorkspace(
+          {
+            orderId: restore.orderId,
+            // Preserve where the operator actually was: printing an unpaid invoice returns to
+            // checkout, printing a paid receipt returns to the success screen.
+            mode: restore.mode ?? 'success',
+            receiptMode: restore.receiptMode as PosReceiptMode,
+          },
+          tab,
+        )
+      },
+      [setUpdateWorkspace],
+    ),
+  })
 
   useEffect(() => {
     const workspaceFromUrl = readPosWorkspaceFromParams(searchParams)
@@ -1275,8 +1305,12 @@ export default function PosFrontDeskView({
                         {row.turnsToday}
                       </td>
                       <td className="whitespace-nowrap px-3 py-2.5 text-right font-bold tabular-nums text-nexoraText">
-                        {todayServiceAmountReportQuery.data
-                          ? formatCurrency(serviceAmountsTodayByStaffId.get(row.posStaffProfileId) ?? 0)
+                        {todayNextTurnBalanceQuery.data
+                          ? formatCurrency(nextTurnServiceAmount(
+                              row.posStaffProfileId,
+                              serviceAmountsTodayByStaffId,
+                              todayNextTurnBalanceQuery.data.committedAmounts,
+                            ))
                           : '—'}
                       </td>
                       <td className="max-w-[320px] px-3 py-2.5 font-semibold text-nexoraText">
@@ -1363,6 +1397,9 @@ export default function PosFrontDeskView({
           businessPhone={businessPhone}
           businessTimeZone={reportBusinessTimeZone}
           canViewReport={Boolean(access?.canViewReport)}
+          receiptPrintTab={activeTab}
+          printFallbackOrderId={printFallbackOrderId}
+          onPrintFallbackHandled={() => setPrintFallbackOrderId(null)}
           onPaymentCompleted={(completedOrderId, receiptMode) => {
             setUpdateWorkspace({ orderId: completedOrderId, mode: 'success', receiptMode })
           }}
@@ -1505,6 +1542,7 @@ export default function PosFrontDeskView({
                       {t(tk('orderListNoServiceFlag'))}
                     </span>
                   ) : null}
+                  {renderServiceProgress(order.serviceLines)}
                 </>
               )
 

@@ -522,6 +522,7 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
       }
       setCategoryDrafts(savedDrafts)
       setDeletedCategoryIds([])
+      setCategoryManagerOpen(false)
       showToast(t('components.dashboard.views.pos.PosCategoriesView.updatedSuccess'), 'success')
     } catch (error) {
       setCategoryError(t(getErrorI18nKey(getApiErrorCode(error))))

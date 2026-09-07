@@ -4,7 +4,10 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { LogOut, ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react'
 import { useStaffPendingAcceptanceCount } from '../../../data/hooks/useStaffPendingAcceptanceCount'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { STAFF_CALENDAR_LAYOUT_CLASS } from '../calendar/constants'
+import { useStaffCalendarTodayCount } from '../calendar/useStaffCalendarSalon'
 import {
+  STAFF_CALENDAR_SCREEN,
   STAFF_MENU_ITEMS,
   STAFF_WORKSPACE_MENU_ITEM,
   STAFF_WORK_ORDERS_SCREEN,
@@ -56,6 +59,8 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
   // /staff/taxiq route itself, so this fires no extra network request.
   const { data: staffTaxYearPage } = useStaffTaxYearByYear(new Date().getFullYear())
   const enabledTaxiqModules = staffTaxYearPage?.items?.[0]?.enabledModules
+  // Shares the My Calendar screen's own queries, so the badge costs no extra request.
+  const calendarTodayCount = useStaffCalendarTodayCount()
 
   useEffect(() => {
     setIsTaxIqExpanded(activeScreen === 'taxiq')
@@ -160,6 +165,17 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
       >
         <MenuIcon item={item} active={isActive} />
         <span className="truncate">{t(item.labelKey)}</span>
+        {item.id === STAFF_CALENDAR_SCREEN && calendarTodayCount > 0 ? (
+          <span
+            className={`${STAFF_CALENDAR_LAYOUT_CLASS.navCount} ${
+              isActive
+                ? STAFF_CALENDAR_LAYOUT_CLASS.navCountActive
+                : STAFF_CALENDAR_LAYOUT_CLASS.navCountIdle
+            }`}
+          >
+            {calendarTodayCount}
+          </span>
+        ) : null}
       </button>
     )
   }

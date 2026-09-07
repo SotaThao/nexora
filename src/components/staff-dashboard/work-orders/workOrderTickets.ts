@@ -1,10 +1,11 @@
 import type { TFunction } from '../../../types/contexts'
 import type { StaffBusinessLink } from '../../../types/domain'
-import { formatDatePart, formatLocalDateIso, formatTimePart, parseApiUtcDateTime } from '../../../utils/localDate'
+import { formatDatePart, formatLocalDateIso, formatTimePart, getMeridiem, parseApiUtcDateTime } from '../../../utils/localDate'
 import {
   STAFF_BUSINESS_LINK_STATUS,
   resolveStaffBusinessLinkStatusLabel,
 } from '../../../utils/staffBusinessLinkStatus'
+import { STAFF_SALONS_PATH } from '../staffSalonPaths'
 import {
   StaffWorkOrdersViewKind,
   WORK_ORDERS_I18N,
@@ -14,6 +15,7 @@ import {
   WORK_ORDER_DATE_LOCALE,
   WORK_ORDER_DEFAULT_LANGUAGE,
   WORK_ORDER_EMPTY_PLACEHOLDER,
+  WORK_ORDER_FILTER_STATUSES,
   WORK_ORDER_INLINE_LIST_SEPARATOR,
   WORK_ORDER_MAX_INITIALS,
   WORK_ORDER_MONEY,
@@ -24,14 +26,16 @@ import {
   WORK_ORDER_SERVICE_NAME_SEPARATOR,
   WORK_ORDER_STARTABLE_STATUSES,
   WORK_ORDER_STATION_DIGITS,
+  WORK_ORDER_TICKET_FILTER,
   WORK_ORDER_VIETNAMESE_PREFIX,
   WORK_ORDER_WEEKDAY_COUNT,
   WORK_ORDER_WEEKDAY_SUNDAY,
-  staffWorkOrdersPath,
   type WorkOrderDetail,
+  type WorkOrderListItem,
   type WorkOrderSalon,
+  type WorkOrderTicketFilter,
 } from './constants'
-import type { PosOrderStatus } from '../../../constants/posOrderStatus'
+import { PosOrderStatus } from '../../../constants/posOrderStatus'
 
 export function isWorkOrderVietnamese(language: string): boolean {
   return language.toLowerCase().startsWith(WORK_ORDER_VIETNAMESE_PREFIX)
@@ -95,10 +99,52 @@ export function formatWorkOrderMonthLabel(year: number, month: number, language:
     .format(new Date(year, month - 1, 1))
 }
 
-export function formatWorkOrderCheckedInAt(iso: string, language: string): string {
+export function formatWorkOrderCheckedInAt(
+  iso: string,
+  language: string,
+  timeZone?: string | null,
+): string {
   const date = parseApiUtcDateTime(iso)
   if (!date) return ''
-  return formatTimePart(date, isWorkOrderVietnamese(language))
+  return formatTimePart(salonWallClockDate(date, timeZone), isWorkOrderVietnamese(language))
+}
+
+const SALON_CLOCK_ANCHOR_YEAR = 2000
+const SALON_CLOCK_ANCHOR_MONTH = 0
+const SALON_CLOCK_ANCHOR_DAY = 1
+
+function anchoredClockDate(hour: number, minute: number): Date {
+  return new Date(
+    SALON_CLOCK_ANCHOR_YEAR,
+    SALON_CLOCK_ANCHOR_MONTH,
+    SALON_CLOCK_ANCHOR_DAY,
+    hour,
+    minute,
+  )
+}
+
+/**
+ * Re-anchor a UTC instant (`checkedInAt`) onto the salon's wall clock so it reads the same on a
+ * technician's phone in any timezone. Without `timeZone` it falls back to the device zone.
+ */
+function salonWallClockDate(date: Date, timeZone?: string | null): Date {
+  const zone = timeZone?.trim()
+  if (!zone) return date
+  try {
+    const parts = new Intl.DateTimeFormat(WORK_ORDER_DATE_LOCALE.en, {
+      timeZone: zone,
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).formatToParts(date)
+    const get = (type: string) => Number(parts.find((part) => part.type === type)?.value ?? '')
+    const hour = get('hour')
+    const minute = get('minute')
+    if (!Number.isFinite(hour) || !Number.isFinite(minute)) return date
+    return anchoredClockDate(hour, minute)
+  } catch {
+    return date
+  }
 }
 
 const WALL_CLOCK_TIME = /T(\d{2}):(\d{2})/
@@ -117,11 +163,114 @@ export function formatWorkOrderWallClockTime(iso: string, language?: string): st
 export function formatWorkOrderTicketTime(
   ticket: { scheduledAt?: string | null; checkedInAt: string },
   language: string,
+  timeZone?: string | null,
 ): string {
-  const time = ticket.scheduledAt
-    ? formatWorkOrderWallClockTime(ticket.scheduledAt, language)
-    : formatWorkOrderCheckedInAt(ticket.checkedInAt, language)
-  return workOrderTextOrPlaceholder(time)
+  const clock = formatWorkOrderTicketClock(ticket, language, timeZone)
+  if (clock.value === WORK_ORDER_EMPTY_PLACEHOLDER) return WORK_ORDER_EMPTY_PLACEHOLDER
+  return `${clock.value} ${clock.period}`
+}
+
+export type WorkOrderClockParts = { value: string; period: string }
+
+function ticketClockDate(
+  ticket: { scheduledAt?: string | null; checkedInAt: string },
+  timeZone?: string | null,
+): Date | null {
+  const scheduled = ticket.scheduledAt?.trim()
+  if (scheduled) {
+    // The API already returns ScheduledAt with the salon's offset — read the wall clock as-is.
+    const match = WALL_CLOCK_TIME.exec(scheduled)
+    if (match) return anchoredClockDate(Number(match[1]), Number(match[2]))
+  }
+  const checkedIn = parseApiUtcDateTime(ticket.checkedInAt)
+  return checkedIn ? salonWallClockDate(checkedIn, timeZone) : null
+}
+
+export function formatWorkOrderTicketClock(
+  ticket: { scheduledAt?: string | null; checkedInAt: string },
+  language: string,
+  timeZone?: string | null,
+): WorkOrderClockParts {
+  const date = ticketClockDate(ticket, timeZone)
+  if (!date) {
+    return { value: WORK_ORDER_EMPTY_PLACEHOLDER, period: WORK_ORDER_EMPTY_PLACEHOLDER }
+  }
+  const vietnamese = isWorkOrderVietnamese(language)
+  const hour = date.getHours() % 12 || 12
+  const minute = String(date.getMinutes()).padStart(WORK_ORDER_STATION_DIGITS, WORK_ORDER_PAD_CHAR)
+  const meridiem = getMeridiem(date, vietnamese)
+  return {
+    value: `${hour}:${minute}`,
+    period: vietnamese ? meridiem : meridiem.toUpperCase(),
+  }
+}
+
+export function workOrderPrimaryServiceName(serviceNames: string[]): string {
+  return workOrderTextOrPlaceholder(serviceNames.find((name) => name.trim()) ?? '')
+}
+
+export function workOrderBeeperDisplay(beeper: string | null | undefined): string {
+  const text = workOrderBeeperLabel(beeper)
+  if (!text) return WORK_ORDER_EMPTY_PLACEHOLDER
+  return /^b/i.test(text) ? text : `B${text}`
+}
+
+export function workOrderSalonInitials(name: string): string {
+  const initials = workOrderCustomerInitials(name)
+  return initials || WORK_ORDER_EMPTY_PLACEHOLDER
+}
+
+export function isWorkOrderAssignedStatus(status: PosOrderStatus): boolean {
+  return WORK_ORDER_FILTER_STATUSES[WORK_ORDER_TICKET_FILTER.Assigned].includes(status)
+    || status === PosOrderStatus.Pending
+    || status === PosOrderStatus.Confirmed
+}
+
+export function workOrderTicketMatchesFilter(
+  status: PosOrderStatus,
+  filter: WorkOrderTicketFilter,
+): boolean {
+  if (filter === WORK_ORDER_TICKET_FILTER.All) return true
+  if (filter === WORK_ORDER_TICKET_FILTER.Assigned) return isWorkOrderAssignedStatus(status)
+  return WORK_ORDER_FILTER_STATUSES[filter].includes(status)
+}
+
+const MINUTES_PER_HOUR = 60
+
+export function workOrderTicketRank(ticket: WorkOrderListItem, timeZone?: string | null): number {
+  const date = ticketClockDate(ticket, timeZone)
+  if (!date) return 0
+  return date.getHours() * MINUTES_PER_HOUR + date.getMinutes()
+}
+
+export function sortWorkOrderTicketsByTime(
+  tickets: WorkOrderListItem[],
+  timeZone?: string | null,
+): WorkOrderListItem[] {
+  return tickets
+    .slice()
+    .sort((left, right) => workOrderTicketRank(left, timeZone) - workOrderTicketRank(right, timeZone))
+}
+
+export function newestAssignedWorkOrder(
+  tickets: WorkOrderListItem[],
+): WorkOrderListItem | null {
+  return tickets.reduce<WorkOrderListItem | null>((newest, ticket) => {
+    if (!isWorkOrderAssignedStatus(ticket.status)) return newest
+    if (!newest) return ticket
+    const newestTime = Date.parse(newest.checkedInAt)
+    const ticketTime = Date.parse(ticket.checkedInAt)
+    if (!Number.isFinite(ticketTime)) return newest
+    if (!Number.isFinite(newestTime) || ticketTime >= newestTime) return ticket
+    return newest
+  }, null)
+}
+
+export function countWorkOrdersByFilter(
+  tickets: WorkOrderListItem[],
+  filter: WorkOrderTicketFilter,
+): number {
+  return tickets.filter((ticket) => workOrderTicketMatchesFilter(ticket.status, filter)).length
 }
 
 export function formatWorkOrderStationNumber(stationNumber: number): string {
@@ -161,7 +310,7 @@ export function workOrderBeeperChipText(
   translate: TFunction,
 ): string {
   return translate(WORK_ORDERS_I18N.beeper, {
-    code: workOrderBeeperLabel(beeper) ?? WORK_ORDER_EMPTY_PLACEHOLDER,
+    code: workOrderBeeperDisplay(beeper),
   })
 }
 
@@ -217,10 +366,12 @@ export function isWorkOrderStartActionVisible(status: PosOrderStatus): boolean {
 }
 
 export function canStartWorkOrderNow(
-  ticket: Pick<WorkOrderDetail, 'canStartService' | 'scheduledAt'>,
+  ticket: Pick<WorkOrderDetail, 'status' | 'scheduledAt'>,
   todayIso: string,
 ): boolean {
-  return ticket.canStartService && isWorkOrderStartDateReached(ticket.scheduledAt, todayIso)
+  // The guest is already in the chair — remaining Assigned work for this technician can begin now.
+  if (ticket.status === PosOrderStatus.InService) return true
+  return isWorkOrderStartDateReached(ticket.scheduledAt, todayIso)
 }
 
 export function toggleWorkOrderSuggestion(selected: string[], suggestion: string): string[] {
@@ -239,6 +390,28 @@ export function composeWorkOrderCompletionNote(
   ].filter(Boolean)
   if (parts.length === 0) return null
   return parts.join(WORK_ORDER_COMPLETION_NOTE_SEPARATOR).slice(0, WORK_ORDER_COMPLETION_NOTE_MAX_LENGTH)
+}
+
+export function isWorkOrderCompletedStatus(status: PosOrderStatus): boolean {
+  return status === PosOrderStatus.Completed
+}
+
+export function workOrderCompletionNoteText(
+  ticket: Pick<WorkOrderDetail, 'completionNote' | 'items'>,
+  fallback: string,
+  localNote?: string | null,
+): string {
+  const fromLocal = localNote?.trim()
+  if (fromLocal) return fromLocal
+  const fromTicket = ticket.completionNote?.trim()
+  if (fromTicket) return fromTicket
+  const itemNotes = (ticket.items ?? [])
+    .map((item) => item?.note?.trim())
+    .filter((note): note is string => Boolean(note))
+  if (itemNotes.length) {
+    return itemNotes.join(WORK_ORDER_COMPLETION_NOTE_SEPARATOR)
+  }
+  return fallback
 }
 
 export function workOrderWeekdayLabels(language: string): string[] {
@@ -294,6 +467,7 @@ export function formatWorkOrderNavDate(iso: string, language: string): string {
   return formatDatePart(
     new Date(year, month - 1, day),
     isWorkOrderVietnamese(language),
+    { withYear: false },
   )
 }
 
@@ -328,7 +502,6 @@ export function workOrderAssignedTechnicianLabel(
 }
 
 export type StaffWorkOrdersView =
-  | { kind: StaffWorkOrdersViewKind.Picker }
   | { kind: StaffWorkOrdersViewKind.Redirect; to: string }
   | { kind: StaffWorkOrdersViewKind.Tickets; salon: WorkOrderSalon }
   | { kind: StaffWorkOrdersViewKind.Detail; salon: WorkOrderSalon; orderId: string }
@@ -338,10 +511,13 @@ export function resolveStaffWorkOrdersView(
   ticketId: string | undefined,
   salons: WorkOrderSalon[],
 ): StaffWorkOrdersView {
-  if (!salonId) return { kind: StaffWorkOrdersViewKind.Picker }
+  if (!salonId) return { kind: StaffWorkOrdersViewKind.Redirect, to: STAFF_SALONS_PATH }
 
-  const salon = getWorkOrderSalonById(salons, salonId)
-  if (!salon) return { kind: StaffWorkOrdersViewKind.Redirect, to: staffWorkOrdersPath() }
+  const salon = getWorkOrderSalonById(salons, salonId) ?? {
+    id: salonId,
+    name: '',
+    address: '',
+  }
   if (!ticketId) return { kind: StaffWorkOrdersViewKind.Tickets, salon }
 
   return { kind: StaffWorkOrdersViewKind.Detail, salon, orderId: ticketId }

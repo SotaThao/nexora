@@ -27,6 +27,7 @@ import BookingCalendar from './BookingCalendar'
 import type { BookingCalendarSlotSelect } from '../../BookingTeamCalendar'
 import RescheduleServicesEditor, { type RescheduleLineDraft } from './RescheduleServicesEditor'
 import BookingLinkShare from './BookingLinkShare'
+import { toBookingWallClockIso } from '../../../../../utils/bookingWallClock'
 import {
   bookingDateKey,
   formatBookingWallClock,
@@ -184,6 +185,10 @@ export default function BookingTab({
     }
   }
 
+  // One slot value for the whole Reschedule modal: the technician lists inside it and the
+  // scheduledAt that gets saved must never disagree.
+  const rescheduleWallClock = toBookingWallClockIso(rescheduleDate, rescheduleTime)
+
   const openReschedule = (bookingId: string) => {
     const booking = bookings.find((b) => b.bookingId === bookingId)
     if (booking) {
@@ -201,10 +206,8 @@ export default function BookingTab({
   }
 
   const submitReschedule = async () => {
-    if (!rescheduleTargetId || !rescheduleDate || !rescheduleTime || rescheduleLines.length === 0) return
-    const [year, month, day] = rescheduleDate.split('-').map(Number)
-    const [hour, minute] = rescheduleTime.split(':').map(Number)
-    const scheduledAt = new Date(Date.UTC(year, month - 1, day, hour, minute)).toISOString()
+    if (!rescheduleTargetId || !rescheduleWallClock || rescheduleLines.length === 0) return
+    const scheduledAt = rescheduleWallClock
 
     try {
       await rescheduleMutation.mutateAsync({
@@ -454,7 +457,12 @@ export default function BookingTab({
                 {rescheduleDetail.isLoading ? (
                   <SkeletonList count={2} lines={2} />
                 ) : (
-                  <RescheduleServicesEditor businessId={businessId} lines={rescheduleLines} onChange={setRescheduleLines} />
+                  <RescheduleServicesEditor
+                    businessId={businessId}
+                    lines={rescheduleLines}
+                    onChange={setRescheduleLines}
+                    scheduledAt={rescheduleWallClock}
+                  />
                 )}
               </div>
             </div>

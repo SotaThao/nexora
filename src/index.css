@@ -420,6 +420,11 @@ body:not(.homepage-active):not(.public-booking-active) input.vlinkpay-address-in
   }
 }
 
+/* Staff work-order inputs — beat the 16px mobile/iOS floor so typed text stays compact. */
+body:not(.homepage-active):not(.public-booking-active) input.nexora-work-order-input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]) {
+  font-size: 12px !important;
+}
+
 /* Keyboard focus visibility for buttons and links */
 body:not(.homepage-active):not(.public-booking-active) button:focus-visible,
 body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
@@ -880,8 +885,25 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   padding: 14px 14px;
   background: #ffffff;
   color: #000000;
+  font-size: 12px;
+  line-height: 1.4;
   font-weight: 400;
   font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.pos-ticket-print-page {
+  width: min(100%, 80mm);
+}
+
+.pos-ticket-print-page + .pos-ticket-print-page {
+  margin-top: 16px;
+}
+
+@media print {
+  .pos-ticket-print-page + .pos-ticket-print-page {
+    break-before: page;
+    page-break-before: always;
+  }
 }
 
 .pos-receipt-business {
@@ -904,9 +926,9 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 .pos-receipt-business p {
   margin: 0;
   color: #000000;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 400;
-  line-height: 1.2;
+  line-height: 1.4;
   white-space: pre-line;
 }
 
@@ -959,6 +981,11 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   padding: 18px;
 }
 
+.pos-report-detail-modal {
+  max-height: min(92vh, 900px);
+  max-height: min(92dvh, 900px);
+}
+
 .pos-receipt-print-header {
   padding-bottom: 8px;
   text-align: center;
@@ -967,9 +994,9 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 .pos-receipt-print-header p {
   margin: 0;
   color: #000000;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 400;
-  line-height: 1.2;
+  line-height: 1.4;
 }
 
 .pos-receipt-print-header .pos-receipt-ticket {
@@ -994,6 +1021,7 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 
 .pos-receipt-meta > div,
 .pos-receipt-group-lines > div,
+.pos-receipt-line-row,
 .pos-receipt-totals > div {
   display: flex;
   align-items: baseline;
@@ -1003,7 +1031,7 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 
 .pos-receipt-meta dt {
   color: #000000;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .pos-receipt-meta dd {
@@ -1031,10 +1059,10 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   gap: 6px;
   margin: 0;
   color: #000000;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.06em;
-  line-height: 1.2;
+  line-height: 1.4;
 }
 
 .pos-receipt-tech-heading::before {
@@ -1056,7 +1084,8 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   gap: 3px;
 }
 
-.pos-receipt-group-lines > div > span:first-child {
+.pos-receipt-group-lines > div > span:first-child,
+.pos-receipt-line-row > span:first-child {
   min-width: 0;
   overflow-wrap: anywhere;
   color: #000000;
@@ -1068,10 +1097,12 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   font-weight: 600;
 }
 
-.pos-receipt-group-lines > div > span:last-child {
+.pos-receipt-group-lines > div > span:last-child,
+.pos-receipt-line-row > span:last-child {
+  white-space: nowrap;
   flex-shrink: 0;
   color: #000000;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .pos-receipt-lines > p {
@@ -1084,7 +1115,7 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   display: grid;
   gap: 5px;
   margin: 10px 0 0;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .pos-receipt-totals dt {
@@ -1104,7 +1135,7 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 .pos-receipt-totals .pos-receipt-total {
   margin-top: 5px;
   padding-top: 9px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -1114,13 +1145,26 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   font-weight: 700;
 }
 
+.pos-receipt-masked-phone {
+  display: inline-flex;
+  align-items: baseline;
+  font: inherit;
+  white-space: nowrap;
+}
+
+.pos-receipt-masked-phone > span {
+  display: inline-block;
+  width: 0.65em;
+  font: inherit;
+  text-align: center;
+}
+
 .pos-receipt-payment {
   margin: 10px 0 0;
-  border-top: 1px solid #cbd5e1;
   padding-top: 10px;
   color: #000000;
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 400;
   text-align: center;
 }
 
@@ -1128,8 +1172,8 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   margin: 16px 0 0;
   padding-top: 8px;
   color: #000000;
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 400;
   text-align: center;
 }
 
@@ -1264,6 +1308,24 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
     overflow: visible !important;
   }
 
+  /* Multi-copy printing (US-047). PassPRNT prints one document per launch, but the browser path
+     has no such limit, so N copies are one print dialog containing N page-broken receipts rather
+     than N dialogs. iOS Safari fires afterprint unreliably, which rules out printing in sequence. */
+  body.printing-pos-invoice .pos-receipt-print-offscreen {
+    position: static !important;
+    left: auto !important;
+    width: 80mm !important;
+  }
+
+  body.printing-pos-invoice .pos-receipt-print-extra {
+    display: block !important;
+  }
+
+  .pos-receipt-print--page-break {
+    break-after: page;
+    page-break-after: always;
+  }
+
   @page pos-staff-report {
     size: 80mm auto;
     margin: 0;
@@ -1305,6 +1367,14 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
     color: #000000 !important;
   }
 
+  body.printing-pos-report-detail .pos-report-detail-body {
+    padding: 0 !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-print {
+    box-shadow: none !important;
+  }
+
   body.printing-pos-report-detail .pos-report-detail-header,
   body.printing-pos-report-detail .pos-report-detail-print * {
     color: #000000 !important;
@@ -1326,6 +1396,7 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
     overflow-wrap: anywhere !important;
   }
 
+  body.printing-pos-report-detail .pos-report-detail-toolbar,
   body.printing-pos-report-detail .pos-report-detail-actions,
   body.printing-pos-report-detail .pos-report-detail-close {
     display: none !important;
@@ -1677,6 +1748,20 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   .public-checkin-key {
     height: 4rem;
   }
+}
+
+/* Host for the extra copies the browser print path renders. Portalled to <body> as a sibling of
+   #root on purpose: the print stylesheet hides #root outright, so anything mounted inside the app
+   tree would be hidden with it. Positioned off-screen rather than display:none, because a hidden
+   element has no layout and prints blank. */
+.pos-receipt-print-offscreen {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+}
+
+.pos-receipt-print-extra {
+  display: none;
 }
 
 /* Beep bell — the tech's incoming-call icon (staff beep sheet + its minimised pill).

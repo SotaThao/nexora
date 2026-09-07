@@ -1,8 +1,9 @@
 import type { TimeClockRosterRowApiDto } from '../../../../types/repositories'
+import type { NextTurnBalance } from '../../../../data/repositories/posNextTurn'
 
 type NextTurnRosterRow = Pick<
   TimeClockRosterRowApiDto,
-  'posStaffProfileId' | 'displayName' | 'isClockedIn' | 'turnRank' | 'turnsToday'
+  'posStaffProfileId' | 'displayName' | 'isClockedIn' | 'turnRank' | 'turnsToday' | 'clockInAt'
 >
 
 export function compareNextTurnRows(a: NextTurnRosterRow, b: NextTurnRosterRow) {
@@ -14,7 +15,7 @@ export function compareNextTurnRows(a: NextTurnRosterRow, b: NextTurnRosterRow) 
   return a.turnRank - b.turnRank
 }
 
-function completedServiceAmount(
+function serviceAmount(
   serviceAmountsByStaffId: ReadonlyMap<string, number>,
   staffId: string,
 ) {
@@ -22,23 +23,36 @@ function completedServiceAmount(
   return Number.isFinite(amount) ? Math.max(0, amount) : 0
 }
 
+export function nextTurnServiceAmount(
+  staffId: string,
+  paidAmounts: ReadonlyMap<string, number>,
+  committedAmounts?: ReadonlyMap<string, number>,
+) {
+  return Math.round((serviceAmount(paidAmounts, staffId)
+    + (committedAmounts ? serviceAmount(committedAmounts, staffId) : 0)) * 100) / 100
+}
+
 // Skill filtering happens at the caller because a Turn Board recommendation can require several
 // services while a line-level picker requires only one. From that eligible set, both surfaces use
-// this identical fairness rule: clocked in, then lowest gross value of services completed today.
-// Turns and the fixed clock-in rank only break equal-dollar ties. Current workload does not
-// override fairness — a busy technician with a lower service amount remains next in the rotation.
+// this identical fairness rule: clocked in, then lowest paid + committed services. Current workload does not exclude anyone.
+// Longest wait breaks equal-dollar ties; fully tied rows retain their existing order.
 export function selectNextTurnTechnician<TRow extends NextTurnRosterRow>(
   rosterRows: readonly TRow[],
   eligibleStaffIds: ReadonlySet<string>,
   serviceAmountsByStaffId: ReadonlyMap<string, number>,
+  balance?: Pick<NextTurnBalance, 'committedAmounts' | 'availableSince'>,
 ) {
+  const total = (id: string) => Math.round(nextTurnServiceAmount(id, serviceAmountsByStaffId, balance?.committedAmounts) * 100)
+  const availableSince = (row: TRow) => Math.max(
+    balance?.availableSince.get(row.posStaffProfileId) ?? 0,
+    Date.parse(row.clockInAt ?? '') || 0,
+  )
   const eligibleRows = rosterRows
     .filter((row) => row.isClockedIn && eligibleStaffIds.has(row.posStaffProfileId))
     .slice()
     .sort((a, b) => {
-      const amountDifference = completedServiceAmount(serviceAmountsByStaffId, a.posStaffProfileId)
-        - completedServiceAmount(serviceAmountsByStaffId, b.posStaffProfileId)
-      return amountDifference || compareNextTurnRows(a, b)
+      const amountDifference = total(a.posStaffProfileId) - total(b.posStaffProfileId)
+      return amountDifference || availableSince(a) - availableSince(b)
     })
 
   return eligibleRows[0]

@@ -17,7 +17,19 @@ import { formatCustomerPhone } from './customer/customerFormatters'
 import { formatBookingHubDateTimeParts } from '../bookingHubFormatters'
 import { getPosCheckoutPaymentMethodLabel } from '../../../../constants/posCheckoutPaymentMethod'
 import { PosDiscountBearer } from '../../../../constants/posDiscount'
-import PosReceiptPrintPreview, { type PosReceiptPrintGroup } from './PosReceiptPrintPreview'
+import PosReceiptPrintPreview from './PosReceiptPrintPreview'
+import { buildPosReceiptDocument } from './receipt/posReceiptDocument'
+import { usePosReceiptPrint } from './receipt/usePosReceiptPrint'
+import {
+  resolveProductsGroupLabel,
+  resolvePosReceiptLabels,
+  resolvePosReceiptTotalsLabels,
+  resolveUnassignedTechnicianLabel,
+} from './receipt/posReceiptLabels'
+import { usePosReceiptSettings } from '../../../../data/hooks/usePosPrinterSettings'
+import { DEFAULT_POS_RECEIPT_SETTINGS, PosPrintTransport } from '../../../../constants/posPrinter'
+import { PosFrontDeskTab } from '../../../../constants/posFrontDesk'
+import { DASHBOARD_MENU_ID } from '../../constants'
 import {
   POS_TABLE_HEADER_CELL_CLASS,
   POS_TABLE_HEADER_ROW_CLASS,
@@ -26,22 +38,6 @@ import {
 } from './posTableStyles'
 
 const PAGE_SIZE = 10
-
-function formatReceiptDiscountLabel(
-  discountType: string | null | undefined,
-  discountValue: number | null | undefined,
-  discountAmount: number,
-) {
-  const value = discountType === 'Percent' && discountValue != null
-    ? `${discountValue}%`
-    : new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-      }).format(discountValue ?? discountAmount)
-  return `(-${value})`
-}
 
 export default function PosCompletedOrdersPanel({
   businessId,
@@ -55,6 +51,8 @@ export default function PosCompletedOrdersPanel({
   businessPhone?: string
 }) {
   const { t, currentLanguage } = useTranslation()
+  const { data: receiptSettings } = usePosReceiptSettings()
+  const { print: printReceipt, printSurface, transport: printTransport } = usePosReceiptPrint()
   const formatDateTime = (iso: string | null | undefined) =>
     formatPosDateTime(iso, currentLanguage)
   const queryClient = useQueryClient()
@@ -85,45 +83,25 @@ export default function PosCompletedOrdersPanel({
 
   const viewDetail = useOrderDetail(businessId, viewDetailTargetId ?? undefined)
 
-  const printableGroups: PosReceiptPrintGroup[] = viewDetail.data
-    ? [
-        ...viewDetail.data.serviceLines.reduce<PosReceiptPrintGroup[]>((groups, line) => {
-          const technician = line.technicianName?.trim()
-            || t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailUnassigned')
-          let group = groups.find((entry) => entry.label === technician)
-          if (!group) {
-            group = { id: `technician-${technician}`, label: technician, lines: [] }
-            groups.push(group)
-          }
-          group.lines.push({
-            id: line.id,
-            name: line.serviceName,
-            amount: line.lineTotal,
-            discountLabel: line.discountAmount > 0
-              ? formatReceiptDiscountLabel(line.discountType, line.discountValue, line.discountAmount)
-              : undefined,
-            addOns: (line.addOns ?? []).map((addOn) => ({
-              id: addOn.id,
-              name: addOn.addOnName,
-              amount: addOn.lineTotal,
-              discountLabel: addOn.discountAmount > 0
-                ? formatReceiptDiscountLabel(addOn.discountType, addOn.discountValue, addOn.discountAmount)
-                : undefined,
-            })),
-          })
-          return groups
-        }, []),
-        ...(viewDetail.data.productLines.length > 0 ? [{
-          id: 'products',
-          label: t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailProductsTitle'),
-          lines: viewDetail.data.productLines.map((line) => ({
-            id: line.id,
-            name: line.productName,
-            amount: line.lineTotal,
-          })),
-        }] : []),
-      ]
-    : []
+  // Same builder the checkout screen uses, so a re-printed receipt is identical to the one handed
+  // over at checkout — this panel used to carry its own copy of the grouping and badge logic.
+  const receiptDocument = viewDetail.data
+    ? buildPosReceiptDocument(
+        {
+          order: viewDetail.data,
+          business: { name: businessName, address: businessAddress, phone: businessPhone },
+          unassignedTechnicianLabel: resolveUnassignedTechnicianLabel(t),
+          productsLabel: resolveProductsGroupLabel(t),
+          paymentMethodLabel: viewDetail.data.paymentMethodType
+            ? getPosCheckoutPaymentMethodLabel(viewDetail.data.paymentMethodType, t)
+            : undefined,
+          totalsLabels: resolvePosReceiptTotalsLabels(t),
+          labels: resolvePosReceiptLabels(t),
+          locale: currentLanguage,
+        },
+        receiptSettings ?? DEFAULT_POS_RECEIPT_SETTINGS,
+      )
+    : null
 
   const closeViewDetail = () => {
     setPrintPreviewOpen(false)
@@ -570,27 +548,27 @@ export default function PosCompletedOrdersPanel({
         </div>
       ) : null}
 
-      {viewDetail.data ? (
+      {/* Re-print always produces a single copy, and only PassPRNT needs routing through the
+          hook — on the browser transport the modal prints its own DOM. */}
+      {receiptDocument ? (
         <PosReceiptPrintPreview
           open={printPreviewOpen}
           onClose={() => setPrintPreviewOpen(false)}
-          orderNumber={viewDetail.data.orderNumber}
-          businessName={businessName}
-          businessAddress={businessAddress}
-          businessPhone={businessPhone}
-          completedAt={viewDetail.data.completedAt}
-          groups={printableGroups}
-          tipAmount={viewDetail.data.tipAmount}
-          discountAmount={viewDetail.data.discountAmount}
-          orderDiscountAmount={viewDetail.data.orderDiscountAmount}
-          orderDiscountLabel={viewDetail.data.appliedPromotionName ?? undefined}
-          total={viewDetail.data.total}
-          paymentMethodLabel={viewDetail.data.paymentMethodType
-            ? getPosCheckoutPaymentMethodLabel(viewDetail.data.paymentMethodType, t)
-            : undefined}
-          isPaid
+          doc={receiptDocument}
+          onPrint={
+            printTransport === PosPrintTransport.PassPrnt
+              ? () =>
+                  printReceipt(receiptDocument, {
+                    jobId: `reprint-${viewDetail.data?.id ?? receiptDocument.orderNumber}`,
+                    copies: 1,
+                    backPath: `/dashboard/${DASHBOARD_MENU_ID.pos}`,
+                    restore: { surface: 'frontDesk', tab: PosFrontDeskTab.Completed },
+                  })
+              : undefined
+          }
         />
       ) : null}
+      {printSurface}
     </div>
   )
 }

@@ -1,10 +1,15 @@
 import { Loader2, Puzzle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { PosOrderItemStatus, posOrderItemStatusLabelKey } from '../../../constants/posOrderItemStatus'
 import {
-  PosOrderItemStatus,
-  posOrderItemStatusLabelKey,
-} from '../../../constants/posOrderItemStatus'
-import { WORK_ORDERS_I18N, WORK_ORDERS_LAYOUT_CLASS, type WorkOrderItem } from './constants'
+  WORK_ORDER_APPROVAL_I18N,
+  WORK_ORDER_APPROVAL_PILL_CLASS,
+  WORK_ORDERS_I18N,
+  WORK_ORDERS_LAYOUT_CLASS,
+  workOrderServiceRowClass,
+  workOrderServiceTableHeadClass,
+} from './constants'
+import type { WorkOrderEditableLine, WorkOrderServiceApproval } from './workOrderServiceCatalog'
 import {
   formatWorkOrderDurationMinutes,
   formatWorkOrderMoney,
@@ -15,10 +20,10 @@ import {
 export type LineStatusActionKind = 'accept' | 'decline' | 'start' | 'complete'
 
 export interface WorkOrderLineActions {
-  onAccept: (line: WorkOrderItem) => void
-  onDecline: (line: WorkOrderItem) => void
-  onStart: (line: WorkOrderItem) => void
-  onComplete: (line: WorkOrderItem) => void
+  onAccept: (line: WorkOrderEditableLine) => void
+  onDecline: (line: WorkOrderEditableLine) => void
+  onStart: (line: WorkOrderEditableLine) => void
+  onComplete: (line: WorkOrderEditableLine) => void
   isBusy: boolean
   /** The line whose button is mid-flight — only that button shows a spinner. */
   pendingLineId: string | null
@@ -35,20 +40,33 @@ const LINE_STATUS_BADGE_CLASS: Record<string, string> = {
   [PosOrderItemStatus.Completed]: 'bg-emerald-100 text-emerald-700',
 }
 
-// 44pt-ish tap targets: these are pressed one-handed, mid-service.
 const LINE_ACTION_PRIMARY_CLASS =
-  'inline-flex h-9 items-center gap-1.5 rounded-lg bg-nexoraBrand px-3 text-[11px] font-extrabold text-white disabled:opacity-60'
+  'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-3 text-[11px] font-extrabold text-white disabled:opacity-60'
 const LINE_ACTION_SECONDARY_CLASS =
-  'inline-flex h-9 items-center gap-1.5 rounded-lg border border-nexoraBorder px-3 text-[11px] font-extrabold text-nexoraText disabled:opacity-60'
+  'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder px-3 text-[11px] font-extrabold text-nexoraText disabled:opacity-60'
 
 interface WorkOrderServiceLinesProps {
-  items: WorkOrderItem[]
+  items: WorkOrderEditableLine[]
   serviceTotal: number
-  /** Omitted on read-only views; without it the rows render exactly as before. */
+  canEdit: boolean
+  onAddService: () => void
+  onAddCustomService: () => void
+  onChangeService: (key: string) => void
+  onRemoveService: (key: string) => void
+  /** Omitted on read-only views; without it the rows render without line-status buttons. */
   actions?: WorkOrderLineActions
 }
 
-export default function WorkOrderServiceLines({ items, serviceTotal, actions }: WorkOrderServiceLinesProps) {
+export default function WorkOrderServiceLines({
+  items,
+  serviceTotal,
+  canEdit,
+  onAddService,
+  onAddCustomService,
+  onChangeService,
+  onRemoveService,
+  actions,
+}: WorkOrderServiceLinesProps) {
   const { t } = useTranslation()
 
   return (
@@ -57,41 +75,44 @@ export default function WorkOrderServiceLines({ items, serviceTotal, actions }: 
         <h3 className={WORK_ORDERS_LAYOUT_CLASS.servicesTitle}>
           {t(WORK_ORDERS_I18N.services)}
         </h3>
+        {canEdit ? (
+          <div className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadActions}>
+            <button type="button" className={WORK_ORDERS_LAYOUT_CLASS.addServiceButton} onClick={onAddService}>
+              {t(WORK_ORDERS_I18N.addService)}
+            </button>
+            <button
+              type="button"
+              className={WORK_ORDERS_LAYOUT_CLASS.addServiceButton}
+              onClick={onAddCustomService}
+            >
+              {t(WORK_ORDERS_I18N.addCustomService)}
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {items.length === 0 ? (
         <p className={WORK_ORDERS_LAYOUT_CLASS.emptyInline}>{workOrderTextOrPlaceholder('')}</p>
       ) : (
         <>
-          <table className={WORK_ORDERS_LAYOUT_CLASS.serviceTable}>
-            <colgroup>
-              <col />
-              <col className={WORK_ORDERS_LAYOUT_CLASS.serviceColPrice} />
-              <col className={WORK_ORDERS_LAYOUT_CLASS.serviceColTime} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th scope="col" className={`${WORK_ORDERS_LAYOUT_CLASS.serviceHeadCell} ${WORK_ORDERS_LAYOUT_CLASS.textLeft}`}>
-                  {t(WORK_ORDERS_I18N.colService)}
-                </th>
-                <th scope="col" className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadCellEnd}>
-                  {t(WORK_ORDERS_I18N.colPrice)}
-                </th>
-                <th scope="col" className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadCellEnd}>
-                  {t(WORK_ORDERS_I18N.colTime)}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((line, index) => (
-                <WorkOrderServiceLineRow
-                  key={line.id || `${line.serviceName}-${index}`}
-                  line={line}
-                  actions={actions}
-                />
-              ))}
-            </tbody>
-          </table>
+          <div className={WORK_ORDERS_LAYOUT_CLASS.serviceTable}>
+            <div className={workOrderServiceTableHeadClass(canEdit)}>
+              <span className={WORK_ORDERS_LAYOUT_CLASS.textLeft}>{t(WORK_ORDERS_I18N.colService)}</span>
+              <span className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadCellEnd}>{t(WORK_ORDERS_I18N.colPrice)}</span>
+              <span className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadCellEnd}>{t(WORK_ORDERS_I18N.colTime)}</span>
+              {canEdit ? <span aria-hidden="true" /> : null}
+            </div>
+            {items.map((line, index) => (
+              <WorkOrderServiceLineRow
+                key={line.id || line.key || `${line.serviceName}-${index}`}
+                line={line}
+                canEdit={canEdit}
+                actions={actions}
+                onChangeService={() => onChangeService(line.key)}
+                onRemoveService={onRemoveService ? () => onRemoveService(line.key) : undefined}
+              />
+            ))}
+          </div>
           <div className={WORK_ORDERS_LAYOUT_CLASS.serviceTotalRow}>
             <span className={WORK_ORDERS_LAYOUT_CLASS.serviceTotalLabel}>
               {t(WORK_ORDERS_I18N.serviceTotal)}
@@ -106,37 +127,95 @@ export default function WorkOrderServiceLines({ items, serviceTotal, actions }: 
   )
 }
 
-function WorkOrderServiceLineRow({
-  line,
-  actions,
-}: {
-  line: WorkOrderItem
-  actions?: WorkOrderLineActions
-}) {
+function WorkOrderApprovalPill({ approval }: { approval: WorkOrderServiceApproval }) {
   const { t } = useTranslation()
 
-  // An add-on is finished together with the service it extends, and a line belonging to another
-  // technician is theirs to act on — neither gets buttons here.
-  const canAct = Boolean(actions) && line.isMine && !line.isAddOn
+  return (
+    <span className={WORK_ORDER_APPROVAL_PILL_CLASS[approval]}>
+      {t(WORK_ORDER_APPROVAL_I18N[approval])}
+    </span>
+  )
+}
 
+function WorkOrderServiceLineRow({
+  line,
+  canEdit,
+  actions,
+  onChangeService,
+  onRemoveService,
+}: {
+  line: WorkOrderEditableLine
+  canEdit: boolean
+  actions?: WorkOrderLineActions
+  onChangeService: () => void
+  onRemoveService: () => void
+}) {
+  const { t } = useTranslation()
+  const canAct = Boolean(actions) && Boolean(line.isMine) && !line.isAddOn && !line.pendingRemoval
   const isPending = (kind: LineStatusActionKind) =>
     actions?.pendingLineId === line.id && actions.pendingKind === kind
 
   return (
-    <tr className={WORK_ORDERS_LAYOUT_CLASS.serviceRow}>
-      <td className={WORK_ORDERS_LAYOUT_CLASS.serviceNameCell}>
+    <div className={workOrderServiceRowClass(canEdit, Boolean(line.pendingRemoval))}>
+      <div className={WORK_ORDERS_LAYOUT_CLASS.serviceNameCell}>
         {line.isAddOn ? (
           <p className={WORK_ORDERS_LAYOUT_CLASS.serviceAddOnName}>
             <Puzzle className={WORK_ORDERS_LAYOUT_CLASS.serviceAddOnIcon} aria-hidden="true" />
             <span className={WORK_ORDERS_LAYOUT_CLASS.truncate}>
               {workOrderTextOrPlaceholder(line.serviceName)}
             </span>
+            {line.approval ? <WorkOrderApprovalPill approval={line.approval} /> : null}
           </p>
         ) : (
-          <p className={WORK_ORDERS_LAYOUT_CLASS.serviceName}>
-            {workOrderTextOrPlaceholder(line.serviceName)}
-          </p>
+          <div className={WORK_ORDERS_LAYOUT_CLASS.serviceNameRow}>
+            <p className={`${WORK_ORDERS_LAYOUT_CLASS.serviceName}${line.pendingRemoval ? ' line-through' : ''}`}>
+              {workOrderTextOrPlaceholder(line.serviceName)}
+            </p>
+            {line.pendingRemoval ? (
+              <span className={WORK_ORDER_APPROVAL_PILL_CLASS.pending}>
+                {t(WORK_ORDERS_I18N.approvalRemovedLabel)}
+              </span>
+            ) : line.approval ? (
+              <WorkOrderApprovalPill approval={line.approval} />
+            ) : null}
+          </div>
         )}
+      </div>
+      <div className={`${WORK_ORDERS_LAYOUT_CLASS.serviceNumCell} ${WORK_ORDERS_LAYOUT_CLASS.servicePrice}`}>
+        {formatWorkOrderMoney(line.unitPrice)}
+      </div>
+      <div className={`${WORK_ORDERS_LAYOUT_CLASS.serviceNumCell} ${WORK_ORDERS_LAYOUT_CLASS.serviceDuration}`}>
+        {formatWorkOrderDurationMinutes(line.durationMinutes, t)}
+      </div>
+      {canEdit ? (
+        <div className={`${WORK_ORDERS_LAYOUT_CLASS.serviceActionCell} max-[400px]:col-span-full max-[400px]:justify-start max-[400px]:pl-0`}>
+          {line.isAddOn ? null : (
+            <span className={WORK_ORDERS_LAYOUT_CLASS.serviceActionGroup}>
+              <button
+                type="button"
+                className={WORK_ORDERS_LAYOUT_CLASS.serviceChangeButton}
+                aria-label={`${t(WORK_ORDERS_I18N.changeService)} ${workOrderTextOrPlaceholder(line.serviceName)}`}
+                disabled={Boolean(line.pendingRemoval)}
+                onClick={onChangeService}
+              >
+                {t(WORK_ORDERS_I18N.changeServiceAction)}
+              </button>
+              {onRemoveService ? (
+                <button
+                  type="button"
+                  className={WORK_ORDERS_LAYOUT_CLASS.serviceRemoveButton}
+                  aria-label={`${t(WORK_ORDERS_I18N.removeService)} ${workOrderTextOrPlaceholder(line.serviceName)}`}
+                  disabled={Boolean(line.pendingRemoval)}
+                  onClick={onRemoveService}
+                >
+                  {t(WORK_ORDERS_I18N.removeService)}
+                </button>
+              ) : null}
+            </span>
+          )}
+        </div>
+      ) : null}
+      <div className={WORK_ORDERS_LAYOUT_CLASS.serviceMeta}>
         <p className={WORK_ORDERS_LAYOUT_CLASS.serviceTech}>
           {workOrderAssignedTechnicianLabel(line.technicianName, t)}
         </p>
@@ -203,13 +282,7 @@ function WorkOrderServiceLineRow({
             ) : null}
           </div>
         ) : null}
-      </td>
-      <td className={`${WORK_ORDERS_LAYOUT_CLASS.serviceNumCell} ${WORK_ORDERS_LAYOUT_CLASS.servicePrice}`}>
-        {formatWorkOrderMoney(line.lineTotal || line.unitPrice)}
-      </td>
-      <td className={`${WORK_ORDERS_LAYOUT_CLASS.serviceNumCell} ${WORK_ORDERS_LAYOUT_CLASS.serviceDuration}`}>
-        {formatWorkOrderDurationMinutes(line.durationMinutes, t)}
-      </td>
-    </tr>
+      </div>
+    </div>
   )
 }
