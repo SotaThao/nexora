@@ -14,6 +14,7 @@ import { useVerifiedStatus } from '../../../data/hooks/useProfileSettings'
 import { getApiErrorCode } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { isValidEmail, isValidHttpUrl, isValidPhone } from '../../../utils/validation'
+import type { MapAddressParts } from '../../../utils/mapUrl'
 
 type SettingsFormErrors = Record<string, string>
 
@@ -42,10 +43,14 @@ const validateBusinessForm = (form: LooseObject, includeReviewLinks?: boolean): 
     const rate = Number(form.salesTaxRatePercent)
     if (Number.isNaN(rate) || rate < 0 || rate > 100) errors.salesTaxRatePercent = 'range'
   }
+  for (const [field, limit] of Object.entries({ street: 300, city: 100, state: 50, zipCode: 20, country: 100 })) {
+    if (formValue(form.businessAddress?.[field]).length > limit) errors[`businessAddress.${field}`] = 'invalid'
+  }
   return errors
 }
 
 type BusinessInfo = {
+  businessAddress: MapAddressParts
   businessName: string
   businessPhone: string
   businessEmail: string
@@ -85,6 +90,13 @@ export default function useBusinessInfoForm({
       : verifiedStatusData.status === 'None' || verifiedStatusData.status === 'Rejected'
 
   const businessInfo: BusinessInfo = {
+    businessAddress: {
+      street: setupData?.businessInfo?.address || '',
+      city: setupData?.businessInfo?.city || '',
+      state: setupData?.businessInfo?.state || '',
+      zipCode: setupData?.businessInfo?.zipCode || '',
+      country: setupData?.businessInfo?.country || '',
+    },
     businessName: setupData?.businessInfo?.name || '',
     businessPhone: setupData?.businessInfo?.phone || '',
     businessEmail: setupData?.reviewLinks?.feedbackEmail || '',
@@ -134,6 +146,13 @@ export default function useBusinessInfoForm({
     if (Object.keys(errors).length > 0) return
 
     const next: BusinessInfo = {
+      businessAddress: {
+        street: formValue(businessForm.businessAddress?.street),
+        city: formValue(businessForm.businessAddress?.city),
+        state: formValue(businessForm.businessAddress?.state),
+        zipCode: formValue(businessForm.businessAddress?.zipCode),
+        country: formValue(businessForm.businessAddress?.country),
+      },
       businessName: formValue(businessForm.businessName),
       businessPhone: formValue(businessForm.businessPhone),
       businessEmail: formValue(businessForm.businessEmail),
@@ -147,6 +166,11 @@ export default function useBusinessInfoForm({
     }
     const savePromises: Array<Promise<unknown>> = [
       updateBusinessInfoMutation.mutateAsync({
+        address: next.businessAddress.street,
+        city: next.businessAddress.city,
+        state: next.businessAddress.state,
+        zipCode: next.businessAddress.zipCode,
+        country: next.businessAddress.country,
         name: next.businessName,
         phone: next.businessPhone || undefined,
         feedbackEmail: next.businessEmail || undefined,

@@ -137,6 +137,11 @@ export function useUpdateBusinessInfo() {
     void,
     Error,
     {
+      address?: string
+      city?: string
+      state?: string
+      zipCode?: string
+      country?: string
       name: string
       phone?: string
       feedbackEmail?: string

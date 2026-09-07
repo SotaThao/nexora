@@ -19,6 +19,8 @@ import {
   useUpdateUserProfile,
   useVerifiedStatus,
 } from "../../../data/hooks/useProfileSettings";
+import { getApiErrorCode } from "../../../types/domain";
+import { getErrorI18nKey } from "../../../data/errorCodes";
 import { qk } from "../../../data/queryKeys";
 import { logger } from "../../../utils/logger";
 import { buildPublicQrImageUrl } from "../../../data/repositories/publicQr";
@@ -122,6 +124,7 @@ const DEFAULT_PROFILE = {
   zipCode: "",
   country: "",
   businessName: "",
+  businessAddress: { street: "", city: "", state: "", zipCode: "", country: "" },
   businessPhone: "",
   businessEmail: "",
   businessWebsite: "",
@@ -283,7 +286,6 @@ export default function useSettingsForm({
   const [basicForm, setBasicForm] = useState<LooseObject>({});
   const [basicErrors, setBasicErrors] = useState<SettingsFormErrors>({});
 
-  const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [addressForm, setAddressForm] = useState<LooseObject>({});
   const [addressErrors, setAddressErrors] = useState<SettingsFormErrors>({});
 
@@ -309,7 +311,6 @@ export default function useSettingsForm({
   useEffect(() => {
     if (canEditProfile) return;
     setIsEditingBasic(false);
-    setIsEditingAddress(false);
     setIsEditingBusiness(false);
     businessInfoForm.setIsEditingBusiness(false);
   }, [canEditProfile]);
@@ -346,8 +347,6 @@ export default function useSettingsForm({
       if (setupData) {
         next = {
           ...next,
-          fullName: setupData.businessInfo?.ownerName || next.fullName || "",
-          avatar: next.avatar || setupData.businessInfo?.logo || null,
           businessName: setupData.businessInfo?.name || "",
           businessPhone: setupData.businessInfo?.phone || "",
           businessWebsite: setupData.businessInfo?.website || "",
@@ -358,7 +357,13 @@ export default function useSettingsForm({
               : "",
           businessEmail:
             setupData.reviewLinks?.feedbackEmail || next.businessEmail || "",
-          street: next.street || setupData.businessInfo?.address || "",
+          businessAddress: {
+            street: setupData.businessInfo?.address || "",
+            city: setupData.businessInfo?.city || "",
+            state: setupData.businessInfo?.state || "",
+            zipCode: setupData.businessInfo?.zipCode || "",
+            country: setupData.businessInfo?.country || "",
+          },
           googleReview: setupData.reviewLinks?.googleReview || "",
           yelpReview: setupData.reviewLinks?.yelpReview || "",
           facebookReview: setupData.reviewLinks?.facebookReview || "",
@@ -373,7 +378,6 @@ export default function useSettingsForm({
         next = {
           ...next,
           email: userEmail || next.email || "",
-          businessEmail: userEmail || next.businessEmail || "",
         };
       }
       return next;
@@ -405,6 +409,14 @@ export default function useSettingsForm({
       dob: profile.dob,
       phone: profile.phone,
     });
+    setAddressErrors({});
+    setAddressForm({
+      street: profile.street,
+      city: profile.city,
+      state: profile.state,
+      zipCode: profile.zipCode,
+      country: profile.country,
+    });
     setIsEditingBasic(true);
   };
 
@@ -423,76 +435,55 @@ export default function useSettingsForm({
     };
   };
 
-  const saveBasic = (e) => {
+  const isSavingPersonalInfo = updateBasicInfoMutation.isPending || updateAddressMutation.isPending;
+
+  const saveBasic = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
-    if (!canEditProfile) return;
-    const errors = validateBasicForm(basicForm);
-    setBasicErrors(errors);
-    if (Object.keys(errors).length > 0) return;
+    if (!canEditProfile || isSavingPersonalInfo) return;
+    const basicValidation = validateBasicForm(basicForm);
+    const addressValidation = validateAddressForm(addressForm);
+    setBasicErrors(basicValidation);
+    setAddressErrors(addressValidation);
+    if (Object.keys(basicValidation).length || Object.keys(addressValidation).length) return;
 
-    const fullName = String(basicForm.fullName || '').trim();
-    const phone = String(basicForm.phone || '').trim();
-    const dto = {
-      firstName: fullName.split(' ')[0] || fullName,
-      lastName: fullName.split(' ').slice(1).join(' ') || undefined,
-      phoneNumber: phone || undefined,
-      dateOfBirth: basicForm.dob || undefined,
+    const fullName = formValue(basicForm.fullName);
+    const phone = formValue(basicForm.phone);
+    const homeAddress = {
+      street: formValue(addressForm.street),
+      city: formValue(addressForm.city),
+      state: formValue(addressForm.state),
+      zipCode: formValue(addressForm.zipCode),
+      country: formValue(addressForm.country),
     };
-    updateBasicInfoMutation.mutate(dto, {
-      onSuccess: () => {
-        saveProfile({
-          ...profile,
-          fullName,
-          dob: basicForm.dob,
-          phone,
-        });
-        showToast(t("components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully"));
-        setIsEditingBasic(false);
-      },
-    });
-  };
-
-  const startEditAddress = () => {
-    if (!canEditProfile) return;
-    setAddressErrors({});
-    setAddressForm({
-      street: profile.street,
-      city: profile.city,
-      state: profile.state,
-      zipCode: profile.zipCode,
-      country: profile.country,
-    });
-    setIsEditingAddress(true);
-  };
-
-  const saveAddress = (e) => {
-    e.preventDefault();
-    if (!canEditProfile) return;
-    const errors = validateAddressForm(addressForm);
-    setAddressErrors(errors);
-    if (Object.keys(errors).length > 0) return;
-
-    const dto = {
-      address: String(addressForm.street || '').trim() || undefined,
-      city: String(addressForm.city || '').trim() || undefined,
-      state: String(addressForm.state || '').trim() || undefined,
-      zipCode: String(addressForm.zipCode || '').trim() || undefined,
-      country: String(addressForm.country || '').trim() || undefined,
-    };
-    updateAddressMutation.mutate(dto, {
-      onSuccess: () => {
-        saveProfile({
-          ...profile,
-          street: addressForm.street,
-          city: addressForm.city,
-          state: addressForm.state,
-          zipCode: addressForm.zipCode,
-          country: addressForm.country,
-        });
-        showToast(t("components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully"));
-        setIsEditingAddress(false);
-      },
-    });
+    const results = await Promise.allSettled([
+      updateBasicInfoMutation.mutateAsync({
+        firstName: fullName.split(' ')[0] || fullName,
+        lastName: fullName.split(' ').slice(1).join(' ') || undefined,
+        phoneNumber: phone || undefined,
+        dateOfBirth: basicForm.dob || undefined,
+      }),
+      updateAddressMutation.mutateAsync({
+        address: homeAddress.street,
+        city: homeAddress.city,
+        state: homeAddress.state,
+        zipCode: homeAddress.zipCode,
+        country: homeAddress.country,
+      }),
+    ]);
+    setProfile((current) => ({
+      ...current,
+      ...(results[0].status === 'fulfilled' ? { fullName, dob: basicForm.dob, phone } : {}),
+      ...(results[1].status === 'fulfilled' ? homeAddress : {}),
+    }));
+    const failures = results.filter((result): result is PromiseRejectedResult => result.status === 'rejected');
+    if (failures.length === 0) {
+      showToast(t("components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully"));
+      setIsEditingBasic(false);
+    } else if (failures.length === results.length) {
+      showToast(t(getErrorI18nKey(getApiErrorCode(failures[0].reason))), 'error');
+    } else {
+      showToast(t("components.settings.hooks.useSettingsForm.partialSaveFailed"), 'error');
+    }
   };
 
   // Business Information card's edit state/save mutation is owned by
@@ -825,8 +816,7 @@ export default function useSettingsForm({
     setBasicForm,
     basicErrors,
     setBasicErrors,
-    isEditingAddress,
-    setIsEditingAddress,
+    isSavingPersonalInfo,
     addressForm,
     setAddressForm,
     addressErrors,
@@ -861,8 +851,6 @@ export default function useSettingsForm({
     handleCopy,
     startEditBasic,
     saveBasic,
-    startEditAddress,
-    saveAddress,
     startEditBusiness: businessInfoForm.startEditBusiness,
     saveBusiness,
     startEditReviews,
