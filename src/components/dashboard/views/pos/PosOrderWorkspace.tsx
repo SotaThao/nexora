@@ -691,6 +691,10 @@ export default function PosOrderWorkspace({
 
     return eligibleTechnicians.map((technician) => ({
       ...technician,
+      // The polled roster reflects current work more recently than the catalog roster.
+      isBusy: rosterRows.find(row => row.posStaffProfileId === technician.posStaffProfileId)?.currentOrderId
+        ? true : rosterRows.some(row => row.posStaffProfileId === technician.posStaffProfileId)
+          ? false : technician.isBusy,
       completedTurns: technicianNextTurnBalanceQuery.data?.completedTurns?.get(technician.posStaffProfileId) ?? (technicianNextTurnBalanceQuery.data ? 0 : undefined),
       assignedTurns: assignedTurnsToday.get(technician.posStaffProfileId),
       isNextTurn: technician.posStaffProfileId === nextTurnTechnician?.posStaffProfileId,
