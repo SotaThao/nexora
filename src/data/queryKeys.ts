@@ -695,6 +695,7 @@ export const qk = {
   // Certifications — the signed-in account's own certificates (My Certifications).
   myCertificates: () => ['myCertificates'],
   publicBookingPage: (businessSlug?: string) => ['publicBookingPage', businessSlug ?? ''],
+  publicServices: (businessSlug?: string) => ['publicServices', businessSlug ?? ''],
   // Customer entity unification — public contact-step "returning customer" lookup by phone.
   publicBookingCustomerLookup: (businessSlug?: string, phone?: string) =>
     ['publicBookingPage', 'customerLookup', businessSlug ?? '', phone ?? ''],
