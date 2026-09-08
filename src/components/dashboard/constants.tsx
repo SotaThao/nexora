@@ -327,9 +327,9 @@ export const MENU_ITEMS = [
       { id: 'report', labelKey: 'dashboard.menu.pos_report' },
       { id: 'products', labelKey: 'dashboard.menu.pos_products' },
       { id: 'promotions', labelKey: 'dashboard.menu.pos_promotions' },
+      { id: 'public-checkin', labelKey: 'dashboard.menu.pos_public_checkin' },
       { id: 'devices', labelKey: 'dashboard.menu.pos_devices' },
       { id: 'printer', labelKey: 'dashboard.menu.pos_printer' },
-      { id: 'public-checkin', labelKey: 'dashboard.menu.pos_public_checkin' },
     ]
   },
   {
