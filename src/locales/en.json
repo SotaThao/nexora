@@ -4572,7 +4572,8 @@
             "scanConfirmClockIn": "Ready to start your shift?",
             "scanConfirmClockOut": "End your shift? You have worked {{hours}} so far.",
             "scanClockedIn": "Clocked in at {{time}}.",
-            "scanClockedOut": "Clocked out at {{time}} — {{hours}} on shift."
+            "scanClockedOut": "Clocked out at {{time}} — {{hours}} on shift.",
+            "scanProfileNotSetUp": "Your salon hasn't finished setting up your check-in configuration yet. Please wait for your salon to complete setup."
           },
           "devices": {
             "PosDevicesView": {
