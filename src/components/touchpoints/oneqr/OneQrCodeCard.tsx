@@ -1,53 +1,21 @@
 import { useMemo, useState } from 'react'
-import { Check, Copy, Download, ExternalLink, Info, Loader2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { buildShareUrl, slugFromUrl } from './oneQrShare'
+import { Check, Copy, Download, ExternalLink, Eye, Info, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import QrImage from '../../ui/QrImage'
 import ToggleSwitch from '../../ui/ToggleSwitch'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { QR_IMAGE_SIZES, downloadQrCode } from '../../../utils/qrUtils'
-import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { logger } from '../../../utils/logger'
 import {
   OneQrAudience,
   ONEQR_AUDIENCE_ORDER,
   ONEQR_ROUTE,
-  buildOneQrPath,
   toOneQrViewAs,
 } from '../../../constants/oneQr'
 import type { OneQr } from '../../../types/oneQr'
-
-/**
- * `OneQrConfigDto` has no `businessSlug`, but `url` always ends in `/o/{slug}`.
- */
-function slugFromUrl(url: string): string {
-  const last = String(url || '')
-    .split('?')[0]
-    .split('/')
-    .filter(Boolean)
-    .pop()
-  return last && last !== 'o' ? last : ''
-}
-
-/**
- * The share URL is rebuilt on this app's own origin rather than echoing
- * `oneQr.url`.
- *
- * `oneQr.url` is cached by the backend at create time from *its* `FrontEndUrl`
- * setting, so a backend pointed at `localhost:3000` hands that string to every
- * environment. `getWebUrlOrigin()` (`VITE_VLINKPAY_WEB_URL_BASE`, falling back
- * to the live origin) is the repo-wide rule for anything a customer will open
- * or scan — see `src/utils/webUrlBase.ts`.
- *
- * Falls back to the server string when the origin cannot be determined (native
- * shell, missing env), so the card is never left without a link.
- */
-function buildShareUrl(oneQr: OneQr): string {
-  const slug = slugFromUrl(oneQr.url)
-  const origin = getWebUrlOrigin()
-  if (!slug || !origin) return oneQr.url
-  return `${origin}${buildOneQrPath(slug)}`
-}
 
 const AUDIENCE_LABEL_KEY: Record<OneQrAudience, string> = {
   [OneQrAudience.Customer]: 'oneqr.audience.customer',
@@ -230,6 +198,13 @@ export default function OneQrCodeCard({
         </div>
 
         <div className="flex flex-wrap gap-2">
+          {previewAudience === OneQrAudience.Customer && <Link
+            to={`/dashboard/touchpoints/oneqr/artwork?as=${toOneQrViewAs(previewAudience)}`}
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-nexoraBrand bg-nexoraSurface px-4 text-xs font-bold text-nexoraBrand transition hover:bg-nexoraSurfaceMuted"
+          >
+            <Eye className="h-4 w-4" aria-hidden />
+            {t('oneqr.artwork.title')}
+          </Link>}
           <a
             href={previewUrl}
             target="_blank"
@@ -251,7 +226,7 @@ export default function OneQrCodeCard({
             )}
             {t(copied ? 'common.copied' : 'oneqr.card.copy_url')}
           </button>
-          <button
+          {previewAudience !== OneQrAudience.Customer && <button
             type="button"
             onClick={handleDownload}
             disabled={isDownloading}
@@ -263,7 +238,7 @@ export default function OneQrCodeCard({
               <Download className="h-4 w-4" aria-hidden />
             )}
             {t('oneqr.card.download')}
-          </button>
+          </button>}
         </div>
       </div>
     </section>

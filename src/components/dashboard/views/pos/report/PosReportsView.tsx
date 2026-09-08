@@ -1,6 +1,6 @@
 import { NavLink, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { useState } from 'react'
-import { CircleDollarSign, UsersRound, type LucideIcon } from 'lucide-react'
+import { BarChart3, CircleDollarSign, UsersRound, type LucideIcon } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { PosReportMode } from '../../../../../constants/posReportMode'
 import {
@@ -16,6 +16,7 @@ import {
 } from '../../../../../constants/posReports'
 import PosReportPanel from './PosReportPanel'
 import StoreIncomeReportView from './StoreIncomeReportView'
+import ServiceIncomeReportView from './ServiceIncomeReportView'
 import {
   defaultSelectionFor,
   parseIsoWeekKey,
@@ -107,6 +108,11 @@ export default function PosReportsView({ businessId, businessTimeZone }: Props) 
       label: t(`${TK}.tabs.storeIncome`),
       Icon: CircleDollarSign,
     },
+    {
+      id: PosReportTab.ServiceIncome,
+      label: t(`${TK}.tabs.serviceIncome`),
+      Icon: BarChart3,
+    },
   ]
 
   return (
@@ -119,7 +125,7 @@ export default function PosReportsView({ businessId, businessTimeZone }: Props) 
       </header>
 
       <nav
-        className="grid grid-cols-2 gap-1 sm:flex sm:flex-wrap"
+        className="grid grid-cols-3 gap-1 sm:flex sm:flex-wrap"
         aria-label={t(`${TK}.tabs.ariaLabel`)}
       >
         {tabs.map(({ id, label, Icon }) => (
@@ -162,8 +168,10 @@ export default function PosReportsView({ businessId, businessTimeZone }: Props) 
           selection={selection}
           onSelectionChange={setSelection}
         />
-      ) : (
+      ) : reportTab === PosReportTab.StoreIncome ? (
         <StoreIncomeReportView businessId={businessId} businessTimeZone={businessTimeZone} />
+      ) : (
+        <ServiceIncomeReportView businessId={businessId} businessTimeZone={businessTimeZone} />
       )}
     </div>
   )

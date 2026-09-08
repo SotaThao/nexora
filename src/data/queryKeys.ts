@@ -135,6 +135,18 @@ export const qk = {
     if (selection) key.push(selection)
     return key
   },
+  merchantPosServiceIncomeReport: (businessId?: string, selection?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posServiceIncomeReport', businessId ?? '']
+    if (selection) key.push(selection)
+    return key
+  },
+  // `selection` here also carries the clicked row + page, so every drill-down page is its own entry
+  // while an omitted selection still prefix-matches every drill-down for the business.
+  merchantPosServiceIncomeLines: (businessId?: string, selection?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posServiceIncomeLines', businessId ?? '']
+    if (selection) key.push(selection)
+    return key
+  },
   merchantPosReportDetail: (businessId?: string, posStaffProfileId?: string, selection?: string) => [
     'merchantSettings',
     'posReportDetail',

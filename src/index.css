@@ -496,6 +496,13 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
     max-height: 90dvh;
   }
 
+  /* Service Income drill-down — pinned header/footer around a scrolling line table; vh then dvh. */
+  .pos-service-income-lines-card {
+    @apply nexora-card flex w-full flex-col overflow-hidden;
+    max-height: 90vh;
+    max-height: 90dvh;
+  }
+
   /* Payout setup modal — keep Save/Cancel on-screen; vh then dvh (iOS address bar). */
   .payout-setup-modal-scroll {
     max-height: 90vh;

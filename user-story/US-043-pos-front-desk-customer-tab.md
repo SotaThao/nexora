@@ -32,8 +32,8 @@ Toàn bộ tính năng là **read-only** — không tạo/sửa/xoá customer, k
 
 | Method | Endpoint | Auth | Request | Response | Nguồn |
 |---|---|---|---|---|---|
-| GET | `/api/v1/merchant/pos/{businessId}/customers` | Bearer (Owner hoặc Staff có `canManageOperations`) | query: `pageNumber`, `pageSize`, `searchTerm?`, `sortDescending?` | `PaginatedList<PosCustomerListItemDto>` — `Id,Name,Phone,Status,TotalVisit,LastVisit,CreatedAt` | (S) code BE cùng phiên |
-| GET | `/api/v1/merchant/pos/{businessId}/customers/{customerId}` | Bearer | — | `PosCustomerDetailDto` — đủ field (`Email,Address,DateOfBirth,Type,Source`...) | (S) code BE cùng phiên |
+| GET | `/api/v1/merchant/pos/{businessId}/customers` | Bearer (Owner hoặc Staff có `canManageOperations`) | query: `pageNumber`, `pageSize`, `searchTerm?`, `sortDescending?` | `PaginatedList<PosCustomerListItemDto>` — `Id,Name,Phone,Status,TotalVisit,LastVisit,CreatedAt,IsNewCustomer` | (S) code BE cùng phiên |
+| GET | `/api/v1/merchant/pos/{businessId}/customers/{customerId}` | Bearer | — | `PosCustomerDetailDto` — đủ field (`Email,Address,DateOfBirth,Type,Source,IsNewCustomer`...) | (S) code BE cùng phiên |
 | GET | `/api/v1/merchant/pos/{businessId}/customers/{customerId}/orders` | Bearer | query: `pageNumber`, `pageSize` | `PaginatedList<PosCustomerOrderHistoryItemDto>` — `Id,OrderNumber,IsBooking,Status,OccurredAt,ServiceNames[],TechnicianNames[],Total` | (S) code BE cùng phiên |
 
 **Điểm chưa chắc chắn / cần hỏi BE:** không còn — 3 endpoint do cùng phiên viết, đã build sạch (`dotnet build` pass).

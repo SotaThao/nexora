@@ -1,5 +1,5 @@
 import type { CheckInPrintDocument, PrintAssets } from './checkInPrintTypes'
-export const CHECK_IN_FONT_FAMILIES = { body: 'CheckInNotoSans', bodyBold: 'CheckInNotoSansBold', heading: 'CheckInNotoSerif' }
+export const CHECK_IN_FONT_FAMILIES = { body: 'CheckInNotoSans', bodyBold: 'CheckInNotoSansBold', heading: 'CheckInNotoSerif', inter: 'OneQrInter' }
 export function CheckInPrintPreview({ document, assets, className }: { document: CheckInPrintDocument; assets: PrintAssets; className?: string }) {
   return <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox={`0 0 ${document.widthPt} ${document.heightPt}`} width="100%" height="100%" role="img" aria-label={document.qrUrl} style={{display:'block',aspectRatio:`${document.widthPt}/${document.heightPt}`}}>
     {document.nodes.map((node,i)=>{

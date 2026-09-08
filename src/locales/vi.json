@@ -1,5 +1,26 @@
 {
   "oneqr": {
+    "artwork": {
+      "png": "Tải PNG",
+      "showHours": "Hiện giờ làm việc",
+      "hoursTitle": "Giờ làm việc",
+      "templates": {
+        "01": "Lá vàng",
+        "02": "Đen ánh vàng",
+        "03": "Hoa anh đào",
+        "04": "Lá xanh",
+        "05": "Ánh sáng neon",
+        "06": "Tối giản cổ điển",
+        "07": "Nét cọ vàng",
+        "08": "Gió biển"
+      },
+      "title": "Xem QR & Tải xuống",
+      "description": "Chọn artwork cho OneQR, sau đó tải xuống hoặc in.",
+      "back": "Quay lại",
+      "fixed": "Nội dung và màu sắc artwork được giữ nguyên. Mã OneQR đã chọn được ghép tự động.",
+      "loading": "Đang tải OneQR…",
+      "error": "Không thể tải OneQR. Vui lòng thử lại."
+    },
       "audience": {
         "customer": "Khách hàng",
         "staff": "Nhân viên",
@@ -170,7 +191,8 @@
       "sending": "Đang gửi…",
       "sentOnMyWay": "Lễ tân đã biết bạn đang tới",
       "sentBusy": "Lễ tân đã biết — {{minutes}} phút",
-      "sentDeclined": "Đã báo lễ tân"
+      "sentDeclined": "Đã báo lễ tân",
+      "noneActive": "Lượt gọi này không còn hiệu lực"
     },
     "brand": {
       "title": "NEXORA",
@@ -3998,7 +4020,9 @@
             "assignTechnicianFirst": "Cần gán thợ cho tất cả dịch vụ trước.",
             "addServiceFirst": "Cần thêm ít nhất một dịch vụ trước.",
             "orderListColumnOrder": "Order",
-            "orderListColumnGuest": "Khách"
+            "orderListColumnGuest": "Khách",
+            "newCustomerTag": "Khách mới",
+            "returningCustomerTag": "Khách cũ"
           },
           "BookingTab": {
             "metricBadge": "Lịch hẹn",
@@ -4738,11 +4762,76 @@
           },
           "reports": {
             "title": "Báo Cáo",
-            "description": "Theo dõi hiệu suất thợ và thu nhập cửa hàng.",
+            "description": "Theo dõi hiệu suất thợ, thu nhập cửa hàng và thu nhập dịch vụ.",
             "tabs": {
               "ariaLabel": "Báo cáo POS",
               "technician": "Báo cáo thợ",
-              "storeIncome": "Báo cáo thu nhập cửa hàng"
+              "storeIncome": "Báo cáo thu nhập cửa hàng",
+              "serviceIncome": "Báo cáo thu nhập dịch vụ"
+            },
+            "serviceIncome": {
+              "title": "Thu Nhập Dịch Vụ",
+              "day": "Ngày",
+              "week": "Tuần",
+              "month": "Tháng",
+              "range": "Khoảng ngày",
+              "today": "Hôm nay",
+              "thisWeek": "Tuần này",
+              "thisMonth": "Tháng này",
+              "dayReport": "Báo cáo ngày",
+              "reportDate": "Ngày báo cáo",
+              "reportWeek": "Tuần báo cáo",
+              "reportMonth": "Tháng báo cáo",
+              "previousPeriod": "Kỳ trước",
+              "nextPeriod": "Kỳ sau",
+              "fromDate": "Từ ngày",
+              "toDate": "Đến ngày",
+              "runReport": "Xem báo cáo",
+              "dateRangeSeparator": "đến",
+              "rangeError": "Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.",
+              "rangeTooLong": "Khoảng thời gian không được vượt quá 366 ngày.",
+              "loadError": "Không tải được thu nhập dịch vụ.",
+              "retry": "Thử lại",
+              "empty": "Không có dịch vụ hoàn thành trong kỳ này.",
+              "customServiceRow": "Dịch vụ tùy chỉnh",
+              "unnamedRow": "Dịch vụ không tên",
+              "periods": {
+                "ariaLabel": "Chọn kỳ báo cáo"
+              },
+              "chart": {
+                "revenueTitle": "Doanh thu theo dịch vụ",
+                "countTitle": "Số lượt theo dịch vụ",
+                "netRevenueCaption": "Doanh thu thuần",
+                "serviceLinesCaption": "Lượt dịch vụ",
+                "addOnBadge": "Dịch vụ thêm",
+                "countDetail": "{{count}} lượt dịch vụ",
+                "drillDownHint": "mở danh sách dòng dịch vụ",
+                "showAll": "Xem tất cả {{count}} dịch vụ",
+                "showTop": "Chỉ xem {{count}} dịch vụ đầu"
+              },
+              "lines": {
+                "close": "Đóng",
+                "tableAriaLabel": "Danh sách dòng dịch vụ",
+                "rowSummary": "{{net}} thuần · {{count}} lượt dịch vụ trong kỳ",
+                "order": "Đơn",
+                "completedAt": "Hoàn thành",
+                "customer": "Khách",
+                "technician": "Thợ",
+                "quantity": "SL",
+                "gross": "Giá gốc",
+                "lineDiscount": "Giảm theo dòng",
+                "allocatedOrderDiscount": "Giảm theo đơn",
+                "net": "Thuần",
+                "noCustomer": "Khách lẻ",
+                "noTechnician": "Chưa gán",
+                "pageTotal": "Tổng trang",
+                "pageStatus": "Trang {{page}}/{{totalPages}} · {{totalCount}} dòng",
+                "previousPage": "Trang trước",
+                "nextPage": "Trang sau",
+                "empty": "Không có dòng dịch vụ nào.",
+                "loadError": "Không tải được dòng dịch vụ.",
+                "retry": "Thử lại"
+              }
             },
             "storeIncome": {
               "title": "Thu Nhập Cửa Hàng",
@@ -10568,6 +10657,7 @@
     }
   },
   "checkInPrint": {
+    "png": "Tải PNG",
     "artworkNameTooLong": "Tên tiệm không vừa mẫu ảnh này. Tắt Hiển thị tên tiệm hoặc dùng Bố cục tùy chỉnh.",
     "hideSalonName": "Ẩn tên tiệm",
     "showSalonLogo": "Hiển thị logo tiệm",
