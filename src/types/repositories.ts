@@ -828,6 +828,11 @@ export interface OrderServiceLineApiDto {
   canAssignDiscountToStaff: boolean
   assignedPosStaffProfileId?: string | null
   technicianName?: string | null
+  /** When the line was rung up — the reading order inside one technician's block. */
+  addedAt: string
+  /** When the technician was put on this line. Null while nobody is assigned. Restamped when the
+   *  technician changes on an open ticket, deliberately kept on a completed one (turn counting). */
+  assignedAt?: string | null
   note?: string | null
   /** See PosOrderItemStatus — Unassigned/PendingAcceptance/Assigned/Started/Completed. */
   lineStatus: string

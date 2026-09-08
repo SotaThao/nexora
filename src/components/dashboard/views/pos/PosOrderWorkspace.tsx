@@ -11,7 +11,7 @@
 // page (PosCheckInTab / CheckInSurface), the same one the customer kiosk runs.
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowLeft, Loader2, Package, X, Printer, ClipboardCheck } from 'lucide-react'
+import { ArrowLeft, Loader2, Package, UserRound, X, Printer, ClipboardCheck } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getErrorMessage } from '../../../../data/errorCodes'
@@ -82,6 +82,7 @@ import CustomServiceModal from './modals/CustomServiceModal'
 import type { CustomServiceSubmit, CustomServiceTarget } from './modals/CustomServiceModal'
 import ServiceAddOnPickerModal from './modals/ServiceAddOnPickerModal'
 import OrderDiscountSection from './OrderDiscountSection'
+import { sortTicketServiceLines } from './posTicketLineOrder'
 import ServiceDiscountModal, {
   type ServiceDiscountSubmit,
   type ServiceDiscountTarget,
@@ -488,14 +489,16 @@ export default function PosOrderWorkspace({
 
   // No local draft for the lines — the table is always a live reflection of the latest
   // GetOrderDetailQuery result, since every edit already calls its endpoint immediately
-  // (see handlers below).
+  // (see handlers below). The reading order is decided here rather than by the backend: the
+  // customer receipt groups the same lines by its own rule, and the query feeds that too.
   const visibleLines: DisplayLine[] = useMemo(() => {
     if (!order) return []
     const idsBeforeAdd = serviceLineIdsBeforeAddRef.current
     const hideInFlightAdd = showAddLinePlaceholder && idsBeforeAdd !== null
     return [
-      ...order.serviceLines
-        .filter((l) => isPersistedLineId(l.id) && (!hideInFlightAdd || idsBeforeAdd.has(l.id)))
+      ...sortTicketServiceLines(
+        order.serviceLines.filter((l) => isPersistedLineId(l.id) && (!hideInFlightAdd || idsBeforeAdd.has(l.id))),
+      )
         .map((l): DisplayServiceLine => ({
           key: l.id,
           existingId: l.id,
@@ -529,6 +532,28 @@ export default function PosOrderWorkspace({
       })),
     ]
   }, [order, showAddLinePlaceholder])
+
+  // Which service lines open a technician's block. The list is already grouped by technician
+  // (sortTicketServiceLines), so a heading belongs wherever the name changes from the line above —
+  // and the name each row shows, pending assignment included, is the one that decides it.
+  const technicianHeadingByLineKey = useMemo(() => {
+    const headings = new Map<string, string>()
+    let previousLabel: string | null = null
+
+    for (const line of visibleLines) {
+      if (line.itemType !== 'Service') {
+        previousLabel = null
+        continue
+      }
+      const { technicianName } = lineTechnicianDisplay(line, pendingTechnician)
+      const label = technicianName
+        ?? t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel')
+      if (label !== previousLabel) headings.set(line.key, label)
+      previousLabel = label
+    }
+
+    return headings
+  }, [visibleLines, pendingTechnician, t])
 
   // Preserve service-line order while deduplicating staff. Exactly one entry means the ticket has
   // one technician on it, which is the only case a new line can be assigned from (see
@@ -1356,19 +1381,31 @@ export default function PosOrderWorkspace({
                 <div className="max-h-[320px] space-y-2 overflow-y-auto pr-1">
                   {visibleLines.map((line, index) => (
                     <Fragment key={line.key}>
-                      {index > 0 ? (
+                      {index > 0 && !technicianHeadingByLineKey.has(line.key) ? (
                         <div
                           data-testid={`ticket-detail-separator-${index}`}
                           aria-hidden="true"
                           className="border-t border-dashed border-nexoraBorder/70"
                         />
                       ) : null}
+                      {technicianHeadingByLineKey.has(line.key) ? (
+                        <div
+                          data-testid={`ticket-detail-technician-heading-${line.key}`}
+                          className={`flex items-center gap-1.5 rounded-lg bg-nexoraBrandSoft/70 px-2.5 py-1.5 ${
+                            index > 0 ? 'mt-2' : ''
+                          }`}
+                        >
+                          <UserRound className="h-3.5 w-3.5 shrink-0 text-nexoraBrandDark" />
+                          <span className="min-w-0 truncate text-[11px] font-black uppercase tracking-wider text-nexoraBrandDark">
+                            {technicianHeadingByLineKey.get(line.key)}
+                          </span>
+                        </div>
+                      ) : null}
                       {line.itemType === 'Service' ? (
                         (() => {
-                          const { isFirstAvailable, technicianName } = lineTechnicianDisplay(line, pendingTechnician)
-                          const technicianLabel = isFirstAvailable
-                            ? t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel')
-                            : technicianName
+                          // Only the button label still needs this — the name itself now lives in the
+                          // technician heading above the block.
+                          const { isFirstAvailable } = lineTechnicianDisplay(line, pendingTechnician)
                           const isCustomLine = line.posServiceId === null
                           const canEditServiceLine =
                             canEditLines && !line.completedAt && isPersistedLineId(line.existingId)
@@ -1402,12 +1439,6 @@ export default function PosOrderWorkspace({
                                     {t(posOrderItemStatusLabelKey(line.lineStatus))}
                                   </span>
                                 </div>
-                                <p className="mt-1 min-w-0 truncate text-xs font-semibold leading-tight text-nexoraText">
-                                  <span className="text-[10px] font-normal text-nexoraMuted">
-                                    {t('components.dashboard.views.pos.PosOrderWorkspace.technicianPrefix')}
-                                  </span>{' '}
-                                  {technicianLabel}
-                                </p>
                               </div>
                               <div className="text-right">
                                 {line.discountAmount > 0 ? (
