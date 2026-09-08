@@ -4573,7 +4573,8 @@
             "scanConfirmClockIn": "Bắt đầu ca làm?",
             "scanConfirmClockOut": "Kết thúc ca? Bạn đã làm {{hours}}.",
             "scanClockedIn": "Đã vào ca lúc {{time}}.",
-            "scanClockedOut": "Đã ra ca lúc {{time}} — làm {{hours}}."
+            "scanClockedOut": "Đã ra ca lúc {{time}} — làm {{hours}}.",
+            "scanProfileNotSetUp": "Tiệm chưa hoàn tất cấu hình chấm công cho bạn, vui lòng đợi tiệm setup xong."
           },
           "devices": {
             "PosDevicesView": {
