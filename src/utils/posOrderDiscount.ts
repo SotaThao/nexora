@@ -61,10 +61,15 @@ export interface OrderDiscountAllocationLine {
 
 /**
  * What the technicians on this ticket absorb of an order-level discount, mirroring
- * PosOrderDiscountResolver.AllocateStaffShares: the amount is spread pro-rata over the GROSS line
- * totals, a line whose technician cannot be charged contributes nothing, and each slice is
- * truncated to the cent independently of the others — so this preview and the backend snapshot
- * agree without depending on the order the lines happen to arrive in.
+ * PosOrderDiscountResolver.ResolveStaffShareTotal: the chargeable lines' share of the GROSS
+ * services total, then the bearer applied once.
+ *
+ * The bearer is applied to that one figure and not to each line's slice, which is what keeps
+ * "Technician" on a fully chargeable ticket reading as the whole discount. Slicing first and
+ * summing after leaked a cent per line to the salon — a $10 discount over $30 + $25 of services
+ * showed $9.99, and a 50/50 showed $4.99 against the $5.00 owed. The backend spreads this total
+ * back over the lines by largest remainder, so its per-line snapshot still adds up to what is
+ * previewed here.
  */
 export function resolveOrderDiscountStaffShare(
   serviceLines: OrderDiscountAllocationLine[],
@@ -76,13 +81,15 @@ export function resolveOrderDiscountStaffShare(
   const subtotalCents = serviceLines.reduce((sum, line) => sum + toCents(line.lineTotal), 0)
   if (subtotalCents <= 0) return 0
 
-  const amountCents = toCents(orderDiscountAmount)
-  const shareCents = serviceLines
+  const chargeableCents = serviceLines
     .filter((line) => line.canAssignDiscountToStaff && line.lineTotal > 0)
-    .reduce((sum, line) => {
-      const allocated = Math.floor((amountCents * toCents(line.lineTotal)) / subtotalCents)
-      return sum + (bearer === PosDiscountBearer.Staff ? allocated : Math.floor(allocated / 2))
-    }, 0)
+    .reduce((sum, line) => sum + toCents(line.lineTotal), 0)
+  if (chargeableCents <= 0) return 0
+
+  // Floored, matching the backend's MidpointRounding.ToZero: the technicians together never pay
+  // more than their pro-rata part. Exact when every line is chargeable, since the ratio is then 1.
+  const borneCents = Math.floor((toCents(orderDiscountAmount) * chargeableCents) / subtotalCents)
+  const shareCents = bearer === PosDiscountBearer.Staff ? borneCents : Math.floor(borneCents / 2)
 
   return shareCents / CENTS
 }
