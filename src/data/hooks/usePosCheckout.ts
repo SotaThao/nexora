@@ -488,6 +488,7 @@ export function useAddOrderServiceAddOnLine(businessId?: string) {
     onSuccess: (_result, { orderId }) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
     },
   })
 }
@@ -520,6 +521,7 @@ export function useRemoveOrderServiceAddOnLine(businessId?: string) {
     onSuccess: (_result, { orderId }) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
     },
   })
 }

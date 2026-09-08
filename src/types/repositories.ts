@@ -2436,4 +2436,5 @@ export interface PosPendingPrintJob {
   /** Null for a test print, which builds its own sample. */
   document: PosReceiptDocument | null
   restore: PosPrintRestoreState | null
+  ticketPrint?: { businessId: string; orderId: string }
 }
