@@ -1042,8 +1042,8 @@
       "pos_services": "Dịch Vụ",
       "pos_products": "Sản Phẩm",
       "pos_staff": "Hồ Sơ Nhân Viên",
-      "pos_devices": "Thiết Bị Check-In",
-      "pos_public_checkin": "Check-in công khai",
+      "pos_devices": "Thiết bị tự check-in",
+      "pos_public_checkin": "Tự check-in bằng QR",
       "pos_board": "Lễ Tân",
       "pos_report": "Báo Cáo",
       "settings": "Cài Đặt",
@@ -3717,7 +3717,7 @@
               "Products": "Sản Phẩm",
               "Staff": "Nhân Viên",
               "RolesPermissions": "Vai Trò & Quyền",
-              "Devices": "Thiết Bị Check-In",
+              "Devices": "Thiết bị tự check-in",
               "Reports": "Báo Cáo",
               "Operations": "Vận Hành"
             }
@@ -7320,8 +7320,8 @@
         "confirmPinPlaceholder": "Xác nhận mã PIN",
         "pinHint": "Cần mã này để vào Cài đặt trên máy, nơi có nút Đăng xuất.",
         "submit": "Ghép nối",
-        "errorExpired": "Mã đã hết hạn. Quét mã mới trên màn hình Thiết Bị Check-In.",
-        "errorInvalid": "Mã không hợp lệ. Mở POS › Thiết Bị Check-In và quét mã hiển thị ở đó.",
+        "errorExpired": "Mã đã hết hạn. Quét mã mới trên màn hình Thiết bị tự check-in.",
+        "errorInvalid": "Mã không hợp lệ. Mở POS › Thiết bị tự check-in và quét mã hiển thị ở đó.",
         "errorUsed": "Mã đã được một máy khác sử dụng. Hãy lấy mã mới.",
         "errorNetwork": "Không kết nối được tới tiệm. Kiểm tra mạng của máy rồi thử lại.",
         "errorGeneric": "Ghép nối thất bại. Hãy lấy mã mới và thử lại."
@@ -7332,7 +7332,7 @@
       },
       "SelfCheckInPage": {
         "unpairedTitle": "Máy chưa được ghép nối",
-        "unpairedBody": "Mở POS › Thiết Bị Check-In trên máy quản lý và quét mã hiển thị ở đó.",
+        "unpairedBody": "Mở POS › Thiết bị tự check-in trên máy quản lý và quét mã hiển thị ở đó.",
         "offlineTitle": "Không kết nối được tới tiệm",
         "offlineBody": "Kiểm tra kết nối mạng của máy rồi thử lại.",
         "retry": "Thử lại"
@@ -7388,7 +7388,7 @@
         "deviceNameLabel": "Tên thiết bị",
         "signOut": "Đăng xuất máy này",
         "signOutConfirmTitle": "Đăng xuất máy này?",
-        "signOutConfirmBody": "Máy sẽ ngừng nhận check-in ngay lập tức. Muốn dùng lại phải quét mã QR mới trong POS › Thiết Bị Check-In.",
+        "signOutConfirmBody": "Máy sẽ ngừng nhận check-in ngay lập tức. Muốn dùng lại phải quét mã QR mới trong POS › Thiết bị tự check-in.",
         "signOutConfirmButton": "Đăng xuất",
         "signOutError": "Đăng xuất chưa thành công. Kiểm tra kết nối rồi thử lại.",
         "done": "Xong"

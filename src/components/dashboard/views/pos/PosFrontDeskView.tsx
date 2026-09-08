@@ -100,7 +100,7 @@ import BeepInteractions from './timeclock/BeepInteractions'
 import BeepMessageModal from './timeclock/BeepMessageModal'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { formatCurrency } from '../../utils'
-import { compareNextTurnRows, nextTurnServiceAmount, selectNextTurnTechnician } from './posNextTurn'
+import { compareNextTurnRows, nextTurnServiceAmount, selectNextTurnTechnician, sortTurnBoardStations } from './posNextTurn'
 import {
   POS_TABLE_HEADER_CELL_CLASS,
   POS_TABLE_HEADER_ROW_CLASS,
@@ -964,7 +964,10 @@ export default function PosFrontDeskView({
       <div
         key={station.posStaffProfileId}
         data-testid={`turn-board-station-${station.posStaffProfileId}`}
-        className="space-y-3 rounded-xl border border-nexoraBorder bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-nexoraBrand/40 hover:shadow-md"
+        className={`space-y-3 rounded-xl border p-4 transition-colors ${isNextTurn
+          ? 'border-violet-500 bg-violet-50 shadow-md shadow-violet-200/60 ring-2 ring-inset ring-violet-500'
+          : 'border-nexoraBorder bg-white shadow-sm hover:border-nexoraBrand/40 hover:shadow-md'
+        }`}
       >
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nexoraLavender/20 text-[11px] font-bold text-nexoraBrandDark">
@@ -975,7 +978,7 @@ export default function PosFrontDeskView({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold text-nexoraText">{station.displayName}</p>
+            <p className={`truncate font-bold ${isNextTurn ? 'text-base text-violet-950' : 'text-sm text-nexoraText'}`}>{station.displayName}</p>
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
               <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-extrabold ${
                 station.currentStatus === PosOrderStatus.InService
@@ -988,7 +991,7 @@ export default function PosFrontDeskView({
                 {t(tk('stationTurnsToday'), { count: turnsToday })}
               </span>
               {isNextTurn ? (
-                <span className="inline-flex rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-extrabold text-violet-700">
+                <span className="inline-flex rounded-full bg-violet-700 px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide text-white">
                   {t(tk('nextTurnBadge'))}
                 </span>
               ) : null}
@@ -1767,7 +1770,7 @@ export default function PosFrontDeskView({
             <div
               className={`grid ${SCROLL_PANEL_MAX_HEIGHT} grid-cols-1 gap-4 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
             >
-              {turnBoard.map(renderStationCard)}
+              {sortTurnBoardStations(turnBoard, nextTurnTechnician?.posStaffProfileId).map(renderStationCard)}
             </div>
           )}
           {renderTodayTurnsPanel()}

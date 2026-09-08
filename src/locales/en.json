@@ -1042,8 +1042,8 @@
       "pos_services": "Services",
       "pos_products": "Products",
       "pos_staff": "Staff Profiles",
-      "pos_devices": "Check-In Devices",
-      "pos_public_checkin": "Public Check-In",
+      "pos_devices": "Self Check-in Device",
+      "pos_public_checkin": "QR Self Check-in",
       "pos_board": "Front Desk",
       "pos_report": "Report",
       "settings": "Settings",
@@ -3717,7 +3717,7 @@
               "Products": "Products",
               "Staff": "Staff",
               "RolesPermissions": "Roles & Permissions",
-              "Devices": "Check-In Devices",
+              "Devices": "Self Check-in Device",
               "Reports": "Reports",
               "Operations": "Operations"
             }
@@ -7324,8 +7324,8 @@
         "confirmPinPlaceholder": "Confirm PIN",
         "pinHint": "Needed to reach Settings on the tablet, where Sign Out lives.",
         "submit": "Pair tablet",
-        "errorExpired": "This code has expired. Scan the new one on the Check-In Devices screen.",
-        "errorInvalid": "This code is not valid. Open POS › Check-In Devices and scan the code shown there.",
+        "errorExpired": "This code has expired. Scan the new one on the Self Check-in Device screen.",
+        "errorInvalid": "This code is not valid. Open POS › Self Check-in Device and scan the code shown there.",
         "errorUsed": "This code has already been used by another tablet. Ask for a new code.",
         "errorNetwork": "Could not reach the salon. Check the tablet's connection and try again.",
         "errorGeneric": "Pairing failed. Ask for a new code and try again."
@@ -7336,7 +7336,7 @@
       },
       "SelfCheckInPage": {
         "unpairedTitle": "Tablet not paired",
-        "unpairedBody": "Open POS › Check-In Devices on the manager's screen and scan the code shown there.",
+        "unpairedBody": "Open POS › Self Check-in Device on the manager's screen and scan the code shown there.",
         "offlineTitle": "Cannot reach the salon",
         "offlineBody": "Check the tablet's internet connection, then try again.",
         "retry": "Try again"
@@ -7392,7 +7392,7 @@
         "deviceNameLabel": "Device name",
         "signOut": "Sign out this tablet",
         "signOutConfirmTitle": "Sign out this tablet?",
-        "signOutConfirmBody": "It will stop accepting check-ins immediately. Pairing it again needs a new QR code from POS › Check-In Devices.",
+        "signOutConfirmBody": "It will stop accepting check-ins immediately. Pairing it again needs a new QR code from POS › Self Check-in Device.",
         "signOutConfirmButton": "Sign out",
         "signOutError": "Sign out didn't go through. Check the connection and try again.",
         "done": "Done"
