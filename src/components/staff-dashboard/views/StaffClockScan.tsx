@@ -10,13 +10,23 @@ import { useSearchParams } from 'react-router-dom'
 import { AlertTriangle, CheckCircle2, Clock, LogIn, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { getApiErrorCode } from '../../../types/domain'
-import { getErrorI18nKey } from '../../../data/errorCodes'
+import { errorCodeToI18nKey, getErrorI18nKey } from '../../../data/errorCodes'
 import { useClockScanPreview, useScanClockQr } from '../../../data/hooks/usePosTimeClock'
 import { ScanClockAction } from '../../../constants/posClockSource'
 import { formatPosTime } from '../../dashboard/views/pos/posDateTime'
 import { formatHours } from '../../dashboard/views/pos/timeclock/timeClockDay'
 import { SkeletonList } from '../../ui/skeleton'
 import { tk } from '../../dashboard/views/pos/timeclock/timeClockI18n'
+
+/** Resolve to an i18n key (not translated text) so language switches re-render correctly. */
+function staffClockScanErrorKey(err: unknown): string {
+  const i18nKey = getErrorI18nKey(getApiErrorCode(err, 'ERROR'))
+  // Staff-facing copy for the same BE code merchant screens map to Worker Profile guidance.
+  if (i18nKey === errorCodeToI18nKey.POS_STAFF_CLOCK_PROFILE_NOT_SET_UP) {
+    return tk('scanProfileNotSetUp')
+  }
+  return i18nKey
+}
 
 export default function StaffClockScan() {
   const { t, currentLanguage } = useTranslation()
@@ -27,15 +37,15 @@ export default function StaffClockScan() {
   const { data: preview, isLoading, error: previewError } = useClockScanPreview(businessId, token)
   const scan = useScanClockQr()
   const [result, setResult] = useState<{ action: string; hours: number; occurredAt: string } | null>(null)
-  const [actionError, setActionError] = useState<string | null>(null)
+  const [actionErrorKey, setActionErrorKey] = useState<string | null>(null)
 
   const handleScan = async () => {
-    setActionError(null)
+    setActionErrorKey(null)
     try {
       const response = await scan.mutateAsync({ businessId, token })
       setResult({ action: response.action, hours: response.hours, occurredAt: response.occurredAt })
     } catch (err: unknown) {
-      setActionError(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))))
+      setActionErrorKey(staffClockScanErrorKey(err))
     }
   }
 
@@ -66,7 +76,7 @@ export default function StaffClockScan() {
           <SkeletonList count={2} lines={2} />
         </div>
       ) : previewError ? (
-        renderError(t(getErrorI18nKey(getApiErrorCode(previewError, 'ERROR'))))
+        renderError(t(staffClockScanErrorKey(previewError)))
       ) : result ? (
         <div className="space-y-2 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4">
           <p className="flex items-center gap-2 text-sm font-bold text-nexoraText">
@@ -97,7 +107,9 @@ export default function StaffClockScan() {
               : t(tk('scanConfirmClockIn'))}
           </p>
 
-          {actionError ? <p className="text-xs font-bold text-nexoraDanger">{actionError}</p> : null}
+          {actionErrorKey ? (
+            <p className="text-xs font-bold text-nexoraDanger">{t(actionErrorKey)}</p>
+          ) : null}
 
           <button
             type="button"
