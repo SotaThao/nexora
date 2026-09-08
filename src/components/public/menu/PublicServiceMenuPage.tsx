@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowUpRight, ChevronDown, Loader2, Search, X } from 'lucide
 import { Link, useParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { usePublicServices } from '../../../data/hooks/usePublicServices'
+import { usePublicOneQrBookingLink } from '../../../data/hooks/usePublicOneQr'
 import { buildOneQrPath, ONEQR_ROUTE } from '../../../constants/oneQr'
 import { useMediaQuery } from '../../../hooks/useMediaQuery'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
@@ -22,6 +23,7 @@ export default function PublicServiceMenuPage() {
   const isDesktop = useMediaQuery('(min-width: 800px)')
   const panelIdPrefix = useId()
   const { data, isPending, isError, refetch } = usePublicServices(businessSlug)
+  const { data: bookingUrl } = usePublicOneQrBookingLink(businessSlug)
   const [search, setSearch] = useState('')
   const [selectedCategory, setCategory] = useState<string | null>(null)
   const category = isDesktop ? selectedCategory : null
@@ -42,8 +44,7 @@ export default function PublicServiceMenuPage() {
     .filter(group => group.services.length > 0), [categories, category, query])
   const serviceCount = new Set(categories.flatMap(group => group.services.map(service => service.id))).size
   const backPath = `${buildOneQrPath(businessSlug)}?${ONEQR_ROUTE.asQuery}=${ONEQR_ROUTE.asCustomerValue}`
-  const bookingPath = `/booking/${encodeURIComponent(businessSlug)}`
-  const showBookingLink = Boolean(businessSlug && data && !isPending && !isError && serviceCount > 0)
+  const showBookingLink = Boolean(bookingUrl && data && !isPending && !isError && serviceCount > 0)
   const resetFilters = () => { setSearch(''); setCategory(null) }
 
   return (
@@ -169,10 +170,10 @@ export default function PublicServiceMenuPage() {
             <p>{t(showBookingLink ? `${K}.booking_hint` : `${K}.footer_hint`)}</p>
           </div>
           {showBookingLink ? (
-            <Link to={bookingPath} className="menu-button">
+            <a href={bookingUrl!} className="menu-button" target="_blank" rel="noopener noreferrer">
               {t(`${K}.book_appointment`)}
               <ArrowUpRight className="h-4 w-4 shrink-0" aria-hidden />
-            </Link>
+            </a>
           ) : (
             <Link to={backPath} className="menu-button">{t(`${K}.back`)}<ArrowLeft className="h-4 w-4" aria-hidden /></Link>
           )}
