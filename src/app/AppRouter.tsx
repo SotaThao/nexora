@@ -155,6 +155,9 @@ const QrRedirectPage = lazyWithRetry(
 const OneQrLandingPage = lazyWithRetry(
   () => import("../components/public/oneqr/OneQrLandingPage"),
 );
+const PublicServiceMenuPage = lazyWithRetry(
+  () => import("../components/public/menu/PublicServiceMenuPage"),
+);
 const PrivacyPolicyPage = lazyWithRetry(
   () => import("../components/legal/PrivacyPolicyPage"),
 );
@@ -348,6 +351,7 @@ export default function AppRouter() {
           <Route path="/qr/:code" element={<QrRedirectPage />} />
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
           <Route path={ONEQR_ROUTE.path} element={<OneQrLandingPage />} />
+          <Route path="/menu/:businessSlug" element={<PublicServiceMenuPage />} />
           <Route path={PUBLIC_BOOKING_ROUTE.path} element={<PublicBookingPage />} />
           <Route path="/booking/:businessSlug" element={<PublicPosBookingPage />} />
           <Route path="/booking/manage/:manageToken" element={<ManageBookingPage />} />
