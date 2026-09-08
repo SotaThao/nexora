@@ -1205,6 +1205,41 @@ export interface ReceiptApiDto {
   paymentMethodType: string | null
 }
 
+/**
+ * What the public certificate verify endpoint returns — deliberately the smallest payload that
+ * still proves a certificate is genuine. The certificate code printed on paper is sequential and
+ * therefore guessable, so everything not needed to verify is withheld server-side: no recipient
+ * email, no recipient user id, no internal notes, and no revoke reason.
+ */
+export interface CertificateVerificationApiDto {
+  /** The code printed on the certificate, e.g. "NXT-CS-2026-0001". */
+  certificateId: string
+  /** Snapshot of the holder's name taken when the certificate was written, not re-derived later. */
+  memberName: string
+  programCode: string
+  programName: string
+  programDescription?: string | null
+  /** Date-only (`YYYY-MM-DD`) — the date printed on the certificate, not the issue timestamp. */
+  certificationDate: string
+  /** Date-only. Null when the certificate does not expire. */
+  expiryDate?: string | null
+  /** `CertificateStatus` — the backend's effective status, so `Expired` arrives already computed. */
+  status: string
+  /** UTC instant the certificate was revoked. Null unless `status` is `Revoked`. */
+  revokedAt?: string | null
+  /**
+   * Score from the certification exam, e.g. 94 for the "94 / 100" printed on the certificate.
+   *
+   * **Not implemented backend-side yet** — there is no score column on the `Certificate` entity and
+   * no field for it in `CertificateVerificationDto` (verified against the live spec, 2026-09-08).
+   * It is optional here so the page renders the column the moment the backend starts sending it and
+   * simply omits it until then. See the "cần hỏi BE" section of US-048 for the shape to confirm.
+   */
+  examScore?: number | null
+  /** Denominator for `examScore`. Falls back to CERTIFICATE_EXAM_SCORE_MAX_DEFAULT when absent. */
+  examScoreMax?: number | null
+}
+
 export interface BookingListItemApiDto {
   bookingId: string
   customerName: string

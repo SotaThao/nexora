@@ -1,7 +1,8 @@
 // StaffHeader — top bar: brand (mobile), language switch, notifications bell, profile dropdown.
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, Bell, Calendar, LogOut, Menu, Settings, ShieldCheck, Star, UserCheck, Wallet, CreditCard } from 'lucide-react'
+import { AlertTriangle, Award, Bell, Calendar, LogOut, Menu, Settings, ShieldCheck, Star, UserCheck, Wallet, CreditCard } from 'lucide-react'
+import { MY_CERTIFICATIONS_PATH_SEGMENT } from '../../dashboard/constants'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import {
@@ -126,6 +127,19 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                 >
                   <ShieldCheck className="h-4 w-4 text-nexoraMuted" />
                   <span>{t('staff_dashboard.nav.profile_kyc')}</span>
+                </button>
+                {/* Personal, not salon-scoped — a certificate is issued to the person signed in,
+                    so it sits in the account menu rather than under a workspace module. */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    onNavigate(MY_CERTIFICATIONS_PATH_SEGMENT)
+                    setIsProfileOpen(false)
+                  }}
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-nexoraText transition hover:bg-nexoraCanvas"
+                >
+                  <Award className="h-4 w-4 text-nexoraMuted" />
+                  <span>{t('certifications.menu')}</span>
                 </button>
               </div>
 
