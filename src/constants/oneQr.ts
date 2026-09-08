@@ -66,6 +66,7 @@ export enum OneQrModuleKey {
   Review = 'Review',
   Rewards = 'Rewards',
   Membership = 'Membership',
+  VoiceBooking = 'VoiceBooking',
   // Band 10-19 — originally Staff
   ClockIn = 'ClockIn',
   TurnBoard = 'TurnBoard',

@@ -37,6 +37,7 @@
       },
       "modules": {
         "Booking": "Đặt lịch",
+        "VoiceBooking": "Book AI",
         "CheckIn": "Tự check-in",
         "Services": "Bảng giá dịch vụ",
         "TipAndPay": "Tip & Thanh toán",

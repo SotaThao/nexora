@@ -37,6 +37,7 @@
       },
       "modules": {
         "Booking": "Book Appointment",
+        "VoiceBooking": "Book AI",
         "CheckIn": "Smart Check-in",
         "Services": "Services & Prices",
         "TipAndPay": "Tip & Pay",
