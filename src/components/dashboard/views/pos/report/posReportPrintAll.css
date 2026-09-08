@@ -1,0 +1,6 @@
+@media print {
+  /* The shared receipt transport prints its own portal; exclude the preview copy. */
+  body.printing-pos-invoice .pos-report-all-preview.pos-invoice-modal-backdrop {
+    display: none !important;
+  }
+}

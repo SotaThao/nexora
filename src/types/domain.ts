@@ -990,7 +990,26 @@ export interface PosReceiptLabels {
   noLines: string
 }
 
+export interface PosTechnicianReportPrint {
+  name: string
+  heading: string
+  period: string
+  columns: [string, string, string]
+  emptyLabel: string
+  entries: Array<{
+    id: string
+    label: string
+    amount: string
+    tips: string
+    time?: string
+    services?: string[]
+    discount?: { label: string; value: string }
+  }>
+  totals: Array<{ label: string; value: string }>
+}
+
 export interface PosReceiptDocument {
+  technicianReport?: PosTechnicianReportPrint
   /** Separate technician tickets, retained for browser printing and PassPRNT retries. */
   pages?: PosReceiptDocument[]
   footerNotes?: { heading: string; lines: string[] }
