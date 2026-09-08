@@ -15,6 +15,7 @@
         "08": "Gió biển"
       },
       "title": "Xem QR & Tải xuống",
+      "linkLabel": "Link One QR cho khách hàng",
       "description": "Chọn artwork cho OneQR, sau đó tải xuống hoặc in.",
       "back": "Quay lại",
       "fixed": "Nội dung và màu sắc artwork được giữ nguyên. Mã OneQR đã chọn được ghép tự động.",
@@ -1009,7 +1010,7 @@
       "gift_card": "Thẻ quà tặng",
       "membership_card": "Thẻ thành viên",
       "product_management_error": "Không mở được Trung tâm thẻ quà tặng. Vui lòng thử lại.",
-      "touchpoints": "Trạm & Mã QR",
+      "touchpoints": "One QR",
       "qr_nfc": "Thiết bị QR và NFC",
       "tax_iq": "Tax IQ",
       "taxiq_onboarding": "Onboarding",
@@ -4957,6 +4958,7 @@
             "description": "In mã QR để khách tự check-in trên điện thoại của họ."
           },
           "PublicCheckInQrPanel": {
+            "linkLabel": "Link check-in cho khách hàng",
             "title": "QR check-in — in ra dán ở cửa",
             "description": "Khách quét mã này để tự check-in trên điện thoại của họ. Liên kết không bao giờ đổi nên chỉ cần in một lần.",
             "enableNotice": "Check-in công khai mặc định đang tắt. Nhờ admin bật cho tiệm này, nếu không QR sẽ hiện \"Không thể check-in\".",

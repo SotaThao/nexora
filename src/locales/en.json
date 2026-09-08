@@ -15,6 +15,7 @@
         "08": "Ocean Breeze"
       },
       "title": "View QR & Download",
+      "linkLabel": "Customer One QR link",
       "description": "Choose artwork for your OneQR, then download or print it.",
       "back": "Back",
       "fixed": "Artwork text and colors are fixed. Your selected OneQR is added automatically.",
@@ -1009,7 +1010,7 @@
       "gift_card": "Gift Card",
       "membership_card": "Membership Card",
       "product_management_error": "Could not open Gift Card Center. Please try again.",
-      "touchpoints": "Stations & QR Codes",
+      "touchpoints": "One QR",
       "qr_nfc": "QR and NFC Devices",
       "tax_iq": "Tax IQ",
       "taxiq_onboarding": "Onboarding",
@@ -4956,6 +4957,7 @@
             "description": "Print a QR so customers can check in from their own phone."
           },
           "PublicCheckInQrPanel": {
+            "linkLabel": "Customer check-in link",
             "title": "Check-in QR — print and stick it at the door",
             "description": "Customers scan this to check in from their own phone. The link never changes, so you print it once.",
             "enableNotice": "Public check-in is off by default. Ask your admin to turn it on for this salon, or the QR will show \"Check-in is not available\".",
