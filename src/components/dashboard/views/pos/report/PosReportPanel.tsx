@@ -214,7 +214,6 @@ export default function PosReportPanel({
             >
               <Mail className="h-4 w-4" aria-hidden="true" />
               {t(`${TK}.sendMailAll`)}
-              <span className="text-[10px] font-medium">({t(`${TK}.detail.emailComingSoon`)})</span>
             </button>
           </span>
           <button

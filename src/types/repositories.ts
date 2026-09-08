@@ -2397,6 +2397,8 @@ export type {
 
 export interface PosPrinterProfile {
   transport: PosPrintTransportType
+  /** Whether the device has explicitly chosen a print method. */
+  transportConfigured?: boolean
   /** Printer dots — see RECEIPT_PAPER_WIDTH_DOTS. */
   paperWidthDots: number
   /** ISO timestamp of the last test print, or null when never tested. */
