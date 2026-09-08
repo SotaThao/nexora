@@ -56,6 +56,7 @@ export const DEFAULT_POS_PRINTER_PROFILE: PosPrinterProfile = {
   // Browser, not PassPRNT: the pre-existing print path stays the default, so nothing changes for
   // an existing device until someone deliberately pairs a Star printer on /pos/printer.
   transport: PosPrintTransport.Browser,
+  transportConfigured: false,
   paperWidthDots: DEFAULT_RECEIPT_PAPER_WIDTH_DOTS,
   lastTestAt: null,
   lastTestCode: null,
@@ -126,6 +127,9 @@ export function normalizePosPrinterProfile(value: unknown): PosPrinterProfile {
   const raw = asRecord(value)
   return {
     transport: normalizeTransport(raw.transport),
+    transportConfigured: typeof raw.transportConfigured === 'boolean'
+      ? raw.transportConfigured
+      : raw.transport === PosPrintTransport.Browser || raw.transport === PosPrintTransport.PassPrnt,
     paperWidthDots: normalizePaperWidth(raw.paperWidthDots),
     lastTestAt: normalizeNullableString(raw.lastTestAt),
     lastTestCode: normalizeNullableString(raw.lastTestCode),
@@ -207,7 +211,13 @@ export function createPosPrinterSettingsRepository(
       const current = normalizePosPrinterProfile(
         readJson(store, POS_PRINTER_PROFILE_STORAGE_KEY),
       )
-      const next = normalizePosPrinterProfile({ ...current, ...patch })
+      const next = normalizePosPrinterProfile({
+        ...current,
+        ...patch,
+        transportConfigured: patch.transport === PosPrintTransport.Browser
+          || patch.transport === PosPrintTransport.PassPrnt
+          || current.transportConfigured,
+      })
       writeJson(store, POS_PRINTER_PROFILE_STORAGE_KEY, next)
       return next
     },
