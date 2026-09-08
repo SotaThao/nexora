@@ -15,17 +15,6 @@ function nonNegativeNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null
 }
 
-function displayOrder(value: unknown): number | null {
-  return typeof value === 'number' && Number.isInteger(value) ? value : null
-}
-
-function compareDisplayOrder(left: { displayOrder: number | null }, right: { displayOrder: number | null }): number {
-  if (left.displayOrder === right.displayOrder) return 0
-  if (left.displayOrder === null) return 1
-  if (right.displayOrder === null) return -1
-  return left.displayOrder - right.displayOrder
-}
-
 function normalizeService(value: unknown): PublicServiceItem {
   const service = asRecord(value)
   if (typeof service.id !== 'string' || typeof service.name !== 'string') {
@@ -38,7 +27,6 @@ function normalizeService(value: unknown): PublicServiceItem {
     description: typeof service.description === 'string' ? service.description : null,
     durationMinutes: nonNegativeNumber(service.durationMinutes) ?? 0,
     price: nonNegativeNumber(service.price),
-    displayOrder: displayOrder(service.displayOrder),
   }
 }
 
@@ -50,12 +38,11 @@ function normalizeCategory(value: unknown): PublicServiceCategory {
   return {
     categoryId,
     categoryName: typeof category.categoryName === 'string' ? category.categoryName : '',
-    displayOrder: categoryId === null ? null : displayOrder(category.displayOrder),
-    services: category.services.map(normalizeService).sort(compareDisplayOrder),
+    services: category.services.map(normalizeService),
   }
 }
 
-/** Stable sorting preserves the server's order for ties and legacy payloads without ranks. */
+/** The API owns category and service ordering; preserve its response order exactly. */
 export function normalizePublicServiceMenu(value: unknown): PublicServiceMenu {
   const menu = asRecord(value)
   if (typeof menu.businessName !== 'string' || !Array.isArray(menu.categories)) {
@@ -64,10 +51,7 @@ export function normalizePublicServiceMenu(value: unknown): PublicServiceMenu {
 
   return {
     businessName: menu.businessName,
-    categories: menu.categories.map(normalizeCategory).sort((left, right) =>
-      Number(left.categoryId === null) - Number(right.categoryId === null)
-      || compareDisplayOrder(left, right),
-    ),
+    categories: menu.categories.map(normalizeCategory),
   }
 }
 
