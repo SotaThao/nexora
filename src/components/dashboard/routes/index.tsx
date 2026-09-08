@@ -68,6 +68,7 @@ import { formatBusinessAddress } from '../views/pos/posDisplay'
 import PosDevicesView from '../views/pos/devices/PosDevicesView'
 import PosPrinterSetupView from '../views/pos/printer/PosPrinterSetupView'
 import PosPublicCheckInView from '../views/pos/PosPublicCheckInView'
+import MyCertificationsView from '../../certificate/MyCertificationsView'
 import ResponsiveStaffRoute from './ResponsiveStaffRoute'
 import {
   StaffDetailRouteContent,
@@ -1288,4 +1289,10 @@ export function FallbackRoute() {
   const navigate = useNavigate()
   const { '*': currentPath } = useParams()
   return <ComingSoon activeMenu={currentPath} onBack={() => navigate('/dashboard')} />
+}
+
+// Account menu > My Certifications. Personal, not business-scoped: no KYB/verification gate and
+// no business props, because a certificate belongs to whoever is signed in.
+export function MyCertificationsRoute() {
+  return <MyCertificationsView />
 }

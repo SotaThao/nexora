@@ -246,6 +246,7 @@
       "work-orders": "Work Orders",
       "calendar": "My Calendar",
       "report": "Report",
+      "certifications": "My Certifications",
       "profile": "Settings",
       "notifications": "Notifications",
       "clock-scan": "Clock in / out"
@@ -7727,7 +7728,32 @@
       }
     }
   },
+  "certifications": {
+    "menu": "My Certifications",
+    "title": "My Certifications",
+    "subtitle": "NEXORA TOUCH certificates issued to you. Download one as an image, or share its link.",
+    "emptyTitle": "No certificates yet",
+    "emptyBody": "Certificates you earn from NEXORA TOUCH product training appear here. If you have just completed an exam, it can take a little while to be issued.",
+    "download": "Download certificate",
+    "renderFailed": "The certificate image could not be produced in this browser.",
+    "canvasAlt": "NEXORA TOUCH certificate awarded to {{name}} for {{program}}, certificate ID {{id}}.",
+    "revoked": "This certificate has been revoked and is no longer valid.",
+    "revokedOn": "This certificate was revoked on {{date}} and is no longer valid.",
+    "expiredOn": "This certificate expired on {{date}}.",
+    "stampRevoked": "Revoked",
+    "stampExpired": "Expired"
+  },
   "public": {
+    "certificate": {
+      "notFoundTitle": "No certificate with this ID",
+      "notFoundBody": "We could not find a certificate matching {{code}}. Check it against the printed certificate — upper and lower case do not matter, but every dash does.",
+      "rateLimitTitle": "Too many checks from this connection",
+      "rateLimitBodyWait": "Verification is limited to 10 checks a minute. Try the ID again in {{seconds}} seconds — this is not a result about the certificate itself.",
+      "rateLimitBody": "Verification is limited to 10 checks a minute. Wait a moment and try the ID again — this is not a result about the certificate itself.",
+      "networkTitle": "Could not reach the verification service",
+      "networkBody": "This is a connection problem, not a verdict on the certificate. Check your internet connection and try the ID again.",
+      "loading": "Loading {{code}}…"
+    },
     "receipt": {
       "ticketNumber": "Ticket #{{number}}",
       "servicesTitle": "Services",

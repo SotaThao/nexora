@@ -689,6 +689,11 @@ export const qk = {
   publicStaffDirectPaymentPage: (staffProfileId: string) => ['publicStaffDirectPaymentPage', staffProfileId],
   // POS Booking — Public Booking Page discovery (Ticket 4)
   publicReceipt: (receiptToken?: string) => ['publicReceipt', receiptToken ?? ''],
+  // Certifications — public certificate page. Keyed on the uppercased code so the same certificate
+  // reached in lower case reuses the cached answer instead of spending another rate-limited request.
+  publicCertificate: (certificateId?: string) => ['publicCertificate', certificateId ?? ''],
+  // Certifications — the signed-in account's own certificates (My Certifications).
+  myCertificates: () => ['myCertificates'],
   publicBookingPage: (businessSlug?: string) => ['publicBookingPage', businessSlug ?? ''],
   // Customer entity unification — public contact-step "returning customer" lookup by phone.
   publicBookingCustomerLookup: (businessSlug?: string, phone?: string) =>
