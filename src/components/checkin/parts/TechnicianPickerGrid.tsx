@@ -12,6 +12,8 @@ export interface TechnicianOption {
   photoUrl?: string | null
   isBusy?: boolean
   turnsToday?: number
+  completedTurns?: number
+  assignedTurns?: number
   isNextTurn?: boolean
 }
 
@@ -40,9 +42,12 @@ export default function TechnicianPickerGrid({
   busyLabel,
   availableLabel,
   turnsLabel,
+  completedTurnsLabel,
+  assignedTurnsLabel,
   nextTurnLabel,
   compact = false,
   autoWrap = false,
+  technicianNameClassName = 'truncate text-xs font-bold',
 }: {
   technicians: TechnicianOption[]
   isLoading?: boolean
@@ -58,10 +63,13 @@ export default function TechnicianPickerGrid({
   busyLabel?: string
   availableLabel?: string
   turnsLabel?: (count: number) => string
+  completedTurnsLabel?: (count: number) => string
+  assignedTurnsLabel?: (count: number) => string
   nextTurnLabel?: string
   compact?: boolean
   // Check-in surfaces use content-width choices that wrap; other consumers keep the existing grid.
   autoWrap?: boolean
+  technicianNameClassName?: string
 }) {
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -144,10 +152,20 @@ export default function TechnicianPickerGrid({
                     )}
                   </span>
                 ) : null}
-                <span className={optionLabelClass}>{staff.displayName}</span>
+                <span className={`${autoWrap ? 'max-w-full' : 'w-full'} text-nexoraText ${technicianNameClassName}`}>{staff.displayName}</span>
                 {staff.turnsToday !== undefined && turnsLabel ? (
                   <span className="text-[10px] font-semibold tabular-nums text-nexoraMuted">
                     {turnsLabel(staff.turnsToday)}
+                  </span>
+                ) : null}
+                {staff.assignedTurns !== undefined && assignedTurnsLabel ? (
+                  <span className="text-[10px] font-semibold tabular-nums text-nexoraMuted">
+                    {assignedTurnsLabel(staff.assignedTurns)}
+                  </span>
+                ) : null}
+                {staff.completedTurns !== undefined && completedTurnsLabel ? (
+                  <span className="text-[10px] font-semibold tabular-nums text-nexoraMuted">
+                    {completedTurnsLabel(staff.completedTurns)}
                   </span>
                 ) : null}
                 {staff.isNextTurn && nextTurnLabel ? (

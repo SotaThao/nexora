@@ -192,6 +192,7 @@ export const qk = {
   // is attached to this iPad, so these are not business settings and must not be keyed as such.
   posPrinterProfile: () => ['posDevice', 'printerProfile'],
   posReceiptSettings: () => ['posDevice', 'receiptSettings'],
+  posTicketPrinted: (businessId: string, orderId: string) => ['posDevice', 'ticketPrinted', businessId, orderId],
   // POS Booking — per-business settings (Ticket 2)
   merchantPosBookingSettings: (businessId?: string) => ['merchantSettings', 'posBookingSettings', businessId ?? ''],
   merchantPosOrderSettings: (businessId?: string) => ['merchantSettings', 'posOrderSettings', businessId ?? ''],

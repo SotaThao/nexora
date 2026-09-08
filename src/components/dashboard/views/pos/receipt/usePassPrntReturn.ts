@@ -19,6 +19,8 @@
  */
 import { useCallback, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
+import { qk } from '../../../../../data/queryKeys'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import posPrinterSettingsRepository from '../../../../../data/repositories/posPrinterSettings'
@@ -55,6 +57,7 @@ export interface UsePassPrntReturnOptions {
 }
 
 export function usePassPrntReturn({ surface, backPath, onRestore, onPrintFailed }: UsePassPrntReturnOptions) {
+  const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const { t } = useTranslation()
   const { showToast } = useNotification()
@@ -114,6 +117,10 @@ export function usePassPrntReturn({ surface, backPath, onRestore, onPrintFailed 
     }
 
     const copiesDone = job.copiesDone + 1
+    if (job.ticketPrint) {
+      posPrinterSettingsRepository.markTicketPrinted(job.ticketPrint)
+      queryClient.setQueryData(qk.posTicketPrinted(job.ticketPrint.businessId, job.ticketPrint.orderId), true)
+    }
 
     if (job.kind === 'testPrint') {
       posPrinterSettingsRepository.savePrinterProfile({
@@ -159,5 +166,5 @@ export function usePassPrntReturn({ surface, backPath, onRestore, onPrintFailed 
     )
     restore(job.restore)
     firePassPrnt(built.url)
-  }, [searchParams, setSearchParams, showToast, t, restore, profile?.paperWidthDots, backPath, onPrintFailed])
+  }, [searchParams, setSearchParams, showToast, t, restore, profile?.paperWidthDots, backPath, onPrintFailed, queryClient])
 }

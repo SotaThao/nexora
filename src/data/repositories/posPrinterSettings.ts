@@ -25,6 +25,7 @@ import {
   POS_PRINTER_PROFILE_STORAGE_KEY,
   POS_PRINT_JOB_STORAGE_KEY,
   POS_RECEIPT_SETTINGS_STORAGE_KEY,
+  POS_TICKET_PRINT_HISTORY_STORAGE_KEY,
   PosPrintTransport,
   RECEIPT_COPIES_MAX,
   RECEIPT_COPIES_MIN,
@@ -163,6 +164,7 @@ export function normalizePendingPrintJob(value: unknown): PosPendingPrintJob | n
   if (raw.kind === 'receipt' && !hasDocument) return null
 
   const firedAttempts = Number(raw.firedAttempts)
+  const ticketPrint = asRecord(raw.ticketPrint)
 
   return {
     jobId: raw.jobId,
@@ -173,6 +175,10 @@ export function normalizePendingPrintJob(value: unknown): PosPendingPrintJob | n
     firedAttempts: Number.isFinite(firedAttempts) ? Math.max(0, Math.round(firedAttempts)) : 0,
     document: hasDocument ? (raw.document as PosPendingPrintJob['document']) : null,
     restore: (raw.restore ?? null) as PosPendingPrintJob['restore'],
+    ...(typeof ticketPrint.businessId === 'string' && ticketPrint.businessId
+      && typeof ticketPrint.orderId === 'string' && ticketPrint.orderId
+      ? { ticketPrint: { businessId: ticketPrint.businessId, orderId: ticketPrint.orderId } }
+      : {}),
   }
 }
 
@@ -180,6 +186,18 @@ export function createPosPrinterSettingsRepository(
   store: PosPrinterDeviceStore = storage,
 ) {
   return {
+    wasTicketPrinted(ticket: NonNullable<PosPendingPrintJob['ticketPrint']>): boolean {
+      const history = asRecord(readJson(store, POS_TICKET_PRINT_HISTORY_STORAGE_KEY))
+      return history[JSON.stringify([ticket.businessId, ticket.orderId])] === true
+    },
+
+    markTicketPrinted(ticket: NonNullable<PosPendingPrintJob['ticketPrint']>): void {
+      if (!ticket.businessId || !ticket.orderId) return
+      const history = asRecord(readJson(store, POS_TICKET_PRINT_HISTORY_STORAGE_KEY))
+      history[JSON.stringify([ticket.businessId, ticket.orderId])] = true
+      writeJson(store, POS_TICKET_PRINT_HISTORY_STORAGE_KEY, history)
+    },
+
     getPrinterProfile(): PosPrinterProfile {
       return normalizePosPrinterProfile(readJson(store, POS_PRINTER_PROFILE_STORAGE_KEY))
     },

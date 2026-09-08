@@ -465,12 +465,12 @@ export default function PosFrontDeskView({
   const turnBoard = turnBoardQuery.data ?? []
   const isTurnBoardLoading = turnBoardQuery.isLoading
   // Refresh clock-in eligibility with the next-turn balance while the board is visible.
-  const todayTurnWindow = getLocalDayWindow()
+  const todayTurnWindow = getLocalDayWindow(new Date(), reportBusinessTimeZone || 'America/Chicago')
   const todayRosterQuery = useTimeClockRoster(businessId, todayTurnWindow, {
     enabled:
       activeTab === PosFrontDeskTab.TurnBoard
       || activeTab === PosFrontDeskTab.Booking,
-    refetchInterval: 15000,
+    refetchInterval: 5000,
   })
   // Beep replies use their own polled feed for the station pill.
   const { data: turnBoardBeeps = [] } = useMerchantBeepFeed(businessId, todayTurnWindow, {
@@ -540,7 +540,8 @@ export default function PosFrontDeskView({
   )
   const serviceAmountsTodayByStaffId = todayNextTurnBalanceQuery.data?.completedAmounts ?? new Map<string, number>()
   const nextTurnTechnician = todayNextTurnBalanceQuery.data
-    && !todayNextTurnBalanceQuery.isFetching && !todayNextTurnBalanceQuery.isError
+    && !todayNextTurnBalanceQuery.isRecalculating
+    && !todayNextTurnBalanceQuery.isError && !todayRosterQuery.isError
     ? selectNextTurnTechnician(
         todayTurnRows,
         nextTurnSkilledTechnicianIds,
@@ -1302,7 +1303,16 @@ export default function PosFrontDeskView({
                         </div>
                       </td>
                       <td className="px-3 py-2.5 text-right font-bold tabular-nums text-nexoraText">
-                        {row.turnsToday}
+                        <p>{t('components.dashboard.views.pos.PosOrderWorkspace.technicianAssignedTurns', {
+                          count: row.turnsToday,
+                        })}</p>
+                        {todayNextTurnBalanceQuery.data ? (
+                          <div className="mt-1 space-y-0.5 text-[10px] font-semibold text-nexoraMuted">
+                            <p>{t('components.dashboard.views.pos.PosOrderWorkspace.technicianCompletedTurns', {
+                              count: todayNextTurnBalanceQuery.data.completedTurns?.get(row.posStaffProfileId) ?? 0,
+                            })}</p>
+                          </div>
+                        ) : null}
                       </td>
                       <td className="whitespace-nowrap px-3 py-2.5 text-right font-bold tabular-nums text-nexoraText">
                         {todayNextTurnBalanceQuery.data

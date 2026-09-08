@@ -21,6 +21,8 @@ export default function ChangeTechnicianModal({
   technicians,
   isLoading,
   selectedStaffId,
+  currentTechnicianName,
+  turnsError,
   note,
   onChangeNote,
   onSelect,
@@ -33,6 +35,8 @@ export default function ChangeTechnicianModal({
   isLoading?: boolean
   // null = First available, which clears the assignment rather than picking someone.
   selectedStaffId: string | null
+  currentTechnicianName?: string
+  turnsError?: boolean
   note: string
   onChangeNote: (note: string) => void
   onSelect: (posStaffProfileId: string | null) => void
@@ -41,6 +45,12 @@ export default function ChangeTechnicianModal({
   const { t } = useTranslation()
 
   if (!open) return null
+
+  const currentTechnicianLabel = selectedStaffId === null
+    ? t(`${K}.firstAvailableLabel`)
+    : currentTechnicianName?.trim()
+      || technicians.find((technician) => technician.posStaffProfileId === selectedStaffId)?.displayName
+      || t(`${K}.technicianNameUnavailable`)
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
@@ -54,9 +64,20 @@ export default function ChangeTechnicianModal({
           </IconButton>
         </div>
 
+        <p className="mb-4 shrink-0 rounded-lg border border-nexoraBrand/20 bg-nexoraBrand/5 px-3 py-2 text-sm text-nexoraMuted">
+          {t(`${K}.currentTechnicianLabel`)}{' '}
+          <span className={`break-words font-bold text-nexoraText ${selectedStaffId ? 'text-base uppercase' : ''}`}>{currentTechnicianLabel}</span>
+        </p>
+
         <div className="flex-1 space-y-3 overflow-y-auto p-0.5">
+          {turnsError ? (
+            <p role="status" className="text-xs text-nexoraMuted">
+              {t(`${K}.technicianTurnsError`)}
+            </p>
+          ) : null}
           <TechnicianPickerGrid
-            technicians={technicians}
+            technicianNameClassName="break-words text-sm font-extrabold uppercase"
+            technicians={[...technicians].sort((a, b) => Number(Boolean(b.isNextTurn)) - Number(Boolean(a.isNextTurn)))}
             isLoading={isLoading}
             selectedStaffId={selectedStaffId}
             onSelect={onSelect}
@@ -65,7 +86,8 @@ export default function ChangeTechnicianModal({
             emptyLabel={t(`${K}.noTechnicians`)}
             busyLabel={t(`${K}.technicianBusy`)}
             availableLabel={t(`${K}.technicianAvailable`)}
-            turnsLabel={(count) => t(`${K}.technicianTurnsToday`, { count })}
+            completedTurnsLabel={(count) => t(`${K}.technicianCompletedTurns`, { count })}
+            assignedTurnsLabel={(count) => t(`${K}.technicianAssignedTurns`, { count })}
             nextTurnLabel={t(`${K}.technicianNextTurn`)}
           />
 

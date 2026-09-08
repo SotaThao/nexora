@@ -16,6 +16,8 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useQueryClient } from '@tanstack/react-query'
+import { qk } from '../../../../../data/queryKeys'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import { usePosPrinterProfile } from '../../../../../data/hooks/usePosPrinterSettings'
@@ -28,6 +30,7 @@ import {
 } from '../../../../../constants/posPrinter'
 import type { PosPrintTransportType } from '../../../../../constants/posPrinter'
 import type { PosPrintRestoreState, PosReceiptDocument } from '../../../../../types/domain'
+import type { PosPendingPrintJob } from '../../../../../types/repositories'
 import { logger } from '../../../../../utils/logger'
 import PosReceiptPrintDocument from './PosReceiptPrintDocument'
 import { printDomWithBodyClass } from './browserPrintTransport'
@@ -45,6 +48,7 @@ export interface PosPrintRequest {
   backPath: string
   kind?: 'receipt' | 'testPrint'
   browserOnly?: boolean
+  ticketPrint?: PosPendingPrintJob['ticketPrint']
 }
 
 /** Release the button if afterprint is missing, but keep the printable DOM alive. */
@@ -53,9 +57,11 @@ const BROWSER_PRINT_UNLOCK_MS = 3000
 interface PendingBrowserPrint {
   doc: PosReceiptDocument
   copies: number
+  ticketPrint?: PosPendingPrintJob['ticketPrint']
 }
 
 export function usePosReceiptPrint() {
+  const queryClient = useQueryClient()
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const { data: profile } = usePosPrinterProfile()
@@ -68,8 +74,8 @@ export function usePosReceiptPrint() {
 
   const transport: PosPrintTransportType = profile?.transport ?? PosPrintTransport.Browser
 
-  const printViaBrowser = useCallback((doc: PosReceiptDocument, copies: number) => {
-    setPendingBrowserPrint({ doc, copies: Math.max(1, copies) })
+  const printViaBrowser = useCallback((doc: PosReceiptDocument, copies: number, ticketPrint?: PosPendingPrintJob['ticketPrint']) => {
+    setPendingBrowserPrint({ doc, copies: Math.max(1, copies), ticketPrint })
   }, [])
 
   // Second commit: the portal is mounted, so there is something to print.
@@ -92,6 +98,12 @@ export function usePosReceiptPrint() {
     const teardown = () => {
       if (torn) return
       torn = true
+      // Browsers only report that the dialog closed; they cannot confirm paper output or cancellation.
+      if (pendingBrowserPrint.ticketPrint) {
+        const ticket = pendingBrowserPrint.ticketPrint
+        posPrinterSettingsRepository.markTicketPrinted(ticket)
+        queryClient.setQueryData(qk.posTicketPrinted(ticket.businessId, ticket.orderId), true)
+      }
       window.removeEventListener('afterprint', teardown)
       window.clearTimeout(timer)
       handle?.cancel()
@@ -101,7 +113,12 @@ export function usePosReceiptPrint() {
 
     // Blocking browsers may dispatch afterprint before window.print returns.
     window.addEventListener('afterprint', teardown, { once: true })
-    handle = printDomWithBodyClass(POS_INVOICE_PRINT_BODY_CLASS)
+    handle = printDomWithBodyClass(POS_INVOICE_PRINT_BODY_CLASS, () => {
+      torn = true
+      window.removeEventListener('afterprint', teardown)
+      setPendingBrowserPrint(null)
+      unlock()
+    })
     if (!torn) timer = window.setTimeout(unlock, BROWSER_PRINT_UNLOCK_MS)
 
     return () => {
@@ -109,7 +126,7 @@ export function usePosReceiptPrint() {
       window.clearTimeout(timer)
       handle?.cancel()
     }
-  }, [pendingBrowserPrint])
+  }, [pendingBrowserPrint, queryClient])
 
   const print = useCallback(
     (doc: PosReceiptDocument, request: PosPrintRequest) => {
@@ -125,7 +142,7 @@ export function usePosReceiptPrint() {
       setIsPrinting(true)
 
       if (transport === PosPrintTransport.Browser || request.browserOnly) {
-        printViaBrowser(doc, request.copies)
+        printViaBrowser(doc, request.copies, request.ticketPrint)
         return
       }
 
@@ -145,7 +162,7 @@ export function usePosReceiptPrint() {
         // both of those reach the operator as blank paper with nothing to trace.
         logger.warn('[usePosReceiptPrint] receipt too large for PassPRNT, using the browser', built)
         showToast(t(`${POS_PRINTER_I18N_PREFIX}.printTooLarge`), 'info')
-        printViaBrowser(doc, request.copies)
+        printViaBrowser(doc, request.copies, request.ticketPrint)
         return
       }
 
@@ -158,6 +175,7 @@ export function usePosReceiptPrint() {
         firedAttempts: 1,
         document: doc,
         restore: request.restore,
+        ticketPrint: request.ticketPrint,
       })
 
       // iOS can resume this same page (including from the back/forward cache). A URL

@@ -1,5 +1,6 @@
 import type { TimeClockRosterRowApiDto } from '../../../../types/repositories'
 import type { NextTurnBalance } from '../../../../data/repositories/posNextTurn'
+import { parseApiUtcDateTime } from '../../../../utils/localDate'
 
 type NextTurnRosterRow = Pick<
   TimeClockRosterRowApiDto,
@@ -45,7 +46,7 @@ export function selectNextTurnTechnician<TRow extends NextTurnRosterRow>(
   const total = (id: string) => Math.round(nextTurnServiceAmount(id, serviceAmountsByStaffId, balance?.committedAmounts) * 100)
   const availableSince = (row: TRow) => Math.max(
     balance?.availableSince.get(row.posStaffProfileId) ?? 0,
-    Date.parse(row.clockInAt ?? '') || 0,
+    parseApiUtcDateTime(row.clockInAt)?.getTime() ?? 0,
   )
   const eligibleRows = rosterRows
     .filter((row) => row.isClockedIn && eligibleStaffIds.has(row.posStaffProfileId))
