@@ -5,13 +5,11 @@ export interface PublicServiceItem {
   durationMinutes: number
   /** A missing or invalid price stays unknown instead of being displayed as free. */
   price: number | null
-  displayOrder: number | null
 }
 
 export interface PublicServiceCategory {
   categoryId: string | null
   categoryName: string
-  displayOrder: number | null
   services: PublicServiceItem[]
 }
 
