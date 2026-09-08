@@ -1,5 +1,10 @@
 // Small display helpers shared by POS front-desk screens.
 
+import { getPosCheckoutPaymentMethodLabel } from '../../../../constants/posCheckoutPaymentMethod'
+import { formatUsdAmount } from '../../../../utils/currencyInput'
+import type { TFunction } from '../../../../types/contexts'
+import type { OrderPaymentAllocationApiDto } from '../../../../types/repositories'
+
 /** Shown wherever a value is legitimately absent (no technician yet, no ticket in progress). */
 export const EMPTY_VALUE = '—'
 
@@ -37,4 +42,29 @@ export function formatBusinessAddress(parts: {
   const stateAndZip = [state, zipCode].filter(Boolean).join(' ')
 
   return [street, city, stateAndZip, country].filter(Boolean).join(', ')
+}
+
+/**
+ * How a payment reads wherever one is shown as text — receipt, completed visit, success screen.
+ * A split names every portion and what went through it, so the customer can check the receipt
+ * against the card slip and the cash they handed over. Anything else reads exactly as it always
+ * has, so a single-method receipt is unchanged.
+ *
+ * Fewer than two portions is treated as no split: one portion means the cashier settled on a
+ * single method after all, and its own label already says everything.
+ */
+export function formatPaymentMethodDisplay(
+  allocations: OrderPaymentAllocationApiDto[] | null | undefined,
+  fallbackMethod: string | null | undefined,
+  t: TFunction,
+): string {
+  if (allocations && allocations.length >= 2) {
+    return allocations
+      .slice()
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .map((allocation) => `${getPosCheckoutPaymentMethodLabel(allocation.paymentMethodType, t)} ${formatUsdAmount(allocation.amount)}`)
+      .join(' · ')
+  }
+
+  return getPosCheckoutPaymentMethodLabel(fallbackMethod, t)
 }

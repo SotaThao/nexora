@@ -296,6 +296,9 @@ export interface CompletedOrderListItemApiDto {
   orderDiscountAmount?: number
   appliedPromotionName?: string | null
   paymentMethodType?: string | null
+  /** The methods a split payment was taken through, in the order the cashier entered them. Empty on
+   *  a single-method payment; amounts are in the detail view, not the row. */
+  paymentMethodTypes: string[]
 }
 
 export interface CompletedOrdersListQuery {
@@ -1004,6 +1007,10 @@ export interface OrderDetailApiDto {
   total: number
   staffTipShares: OrderStaffTipShareApiDto[]
   paymentMethodType?: string | null
+  /** The Split Pay portions. While the order is open this is the draft the cashier is building, so
+   *  it can be empty or not yet add up to `total`; once Completed it is what was actually taken and
+   *  is frozen. Empty on a single-method payment. */
+  paymentAllocations: OrderPaymentAllocationApiDto[]
   receiptEmail?: string | null
   receiptPhone?: string | null
   completedAt?: string | null
@@ -1530,6 +1537,34 @@ export interface CompleteOrderResultApiDto {
 
 export interface SetOrderStaffTipSplitPayload {
   shares: { posStaffProfileId: string; tipAmount: number }[]
+}
+
+/** One portion of a split payment: a method and what was taken through it. */
+export interface OrderPaymentAllocationApiDto {
+  /** A `PosCheckoutPaymentMethod` value — never `SplitPay`, which labels the order, not a portion. */
+  paymentMethodType: string
+  amount: number
+  /** The order's tip attributed to this method. Non-zero on exactly one portion. */
+  tipAmount: number
+  /** What the customer handed over. Only ever set on a cash portion; display only. */
+  cashReceived?: number | null
+  /** Position on the Quick Split screen: 0 is "Payment 1". */
+  displayOrder: number
+}
+
+/**
+ * Replaces the whole split on an open order — this is the auto-save from Quick Split, so it fires
+ * on every edit and an empty `allocations` array means Clear Split. Array order is the display
+ * order, so no index is sent. An unbalanced set is accepted here on purpose; the backend only
+ * enforces that it adds up to the amount due at Complete.
+ */
+export interface SetOrderPaymentAllocationsPayload {
+  allocations: {
+    paymentMethodType: string
+    amount: number
+    tipAmount: number
+    cashReceived?: number | null
+  }[]
 }
 
 export interface TipsSummaryApiDto {
