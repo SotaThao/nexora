@@ -24,6 +24,7 @@ import {
   BookingHubMainTab,
   isBookingHubMainTabVisible,
 } from '../../data/merchantVoice/domain'
+import { SHOW_POS_PRODUCTS_MENU } from '../../constants/posFeatureVisibility'
 import {
   PACKAGE_MANAGEMENT_TAB_I18N_KEY,
   PACKAGE_MANAGEMENT_TAB_ORDER,
@@ -323,12 +324,12 @@ export const MENU_ITEMS = [
     children: [
       { id: 'board', labelKey: 'dashboard.menu.pos_board' },
       { id: 'settings', labelKey: 'dashboard.menu.pos_settings' },
-      { id: 'roles', labelKey: 'dashboard.menu.pos_roles' },
-      { id: 'categories', labelKey: 'dashboard.menu.pos_categories' },
-      { id: 'services', labelKey: 'dashboard.menu.pos_services' },
+      { id: 'report', labelKey: 'dashboard.menu.pos_report' },
       { id: 'products', labelKey: 'dashboard.menu.pos_products' },
-      { id: 'staff', labelKey: 'dashboard.menu.pos_staff' },
-      { id: 'devices', labelKey: 'dashboard.menu.pos_devices' }
+      { id: 'promotions', labelKey: 'dashboard.menu.pos_promotions' },
+      { id: 'public-checkin', labelKey: 'dashboard.menu.pos_public_checkin' },
+      { id: 'devices', labelKey: 'dashboard.menu.pos_devices' },
+      { id: 'printer', labelKey: 'dashboard.menu.pos_printer' },
     ]
   },
   {
@@ -567,10 +568,11 @@ export function resolveDashboardMobileMenuTitle(
 }
 
 // sub-items are added as later POS Owner Setup tickets ship their own screens).
-export const POS_SUBMENU: { id: string; labelKey: string }[] =
+export const POS_SUBMENU: { id: string; labelKey: string }[] = (
   MENU_ITEMS.find((item): item is typeof item & { children: { id: string; labelKey: string }[] } =>
     item.id === DASHBOARD_MENU_ID.pos && 'children' in item,
   )?.children ?? []
+).filter((sub) => SHOW_POS_PRODUCTS_MENU || sub.id !== 'products')
 
 
 export const MERCHANT_SIDEBAR_MENU_ITEMS = MENU_ITEMS.filter(

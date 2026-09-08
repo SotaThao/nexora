@@ -14,6 +14,7 @@ export default function LanguageSwitcher({ className = '', variant = 'header' })
   const containerRef = useRef(null)
   const isSidebar = variant === 'sidebar'
   const isHeaderPlain = variant === 'header-plain'
+  const isPublic = variant === 'public'
   const currentLanguageLabel = LANGUAGE_OPTIONS.find((language) => language.code === currentLanguage)?.label
     ?? currentLanguage.toUpperCase()
 
@@ -40,7 +41,9 @@ export default function LanguageSwitcher({ className = '', variant = 'header' })
         aria-haspopup="listbox"
         className={isSidebar
           ? 'flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold text-white/75 transition hover:bg-white/5 hover:text-white'
-          : isHeaderPlain
+          : isPublic
+            ? 'flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2.5 text-sm font-medium text-white backdrop-blur-md transition hover:bg-white/15'
+            : isHeaderPlain
             ? 'flex flex-col items-center justify-center rounded-lg px-2 py-1 leading-none text-nexoraText transition hover:bg-nexoraCanvas'
             : 'flex flex-col items-center justify-center rounded-lg border border-nexoraBorder bg-nexoraSurfaceMuted px-2 py-1 leading-none text-nexoraText transition hover:bg-nexoraCanvas'}
       >
@@ -51,6 +54,12 @@ export default function LanguageSwitcher({ className = '', variant = 'header' })
               {t('staff_dashboard.profile.menu_language')}: {currentLanguageLabel}
             </span>
             <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          </>
+        ) : isPublic ? (
+          <>
+            <Globe className="h-4 w-4 text-white/80" />
+            <span>{currentLanguageLabel}</span>
+            <ChevronDown className={`h-3.5 w-3.5 text-white/70 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
           </>
         ) : (
           <>
@@ -65,8 +74,12 @@ export default function LanguageSwitcher({ className = '', variant = 'header' })
         <div
           role="listbox"
           aria-label={t('staff_dashboard.profile.menu_language')}
-          className={`absolute top-full z-50 mt-1.5 min-w-[160px] overflow-hidden rounded-xl border border-nexoraBorder bg-white shadow-lg animate-fadeIn dark:bg-nexoraSidebar dark:border-white/10 ${
-            isSidebar ? 'left-0 right-0' : 'right-0'
+          className={`absolute z-50 min-w-[160px] overflow-hidden rounded-xl border shadow-lg animate-fadeIn ${
+            isPublic
+              ? 'bottom-full left-0 mb-2 border-white/20 bg-[#1a1460]/95'
+              : `top-full mt-1.5 border-nexoraBorder bg-white dark:bg-nexoraSidebar dark:border-white/10 ${
+                  isSidebar ? 'left-0 right-0' : 'right-0'
+                }`
           }`}
         >
           {LANGUAGE_OPTIONS.map((lang) => {
@@ -82,13 +95,17 @@ export default function LanguageSwitcher({ className = '', variant = 'header' })
                   setIsOpen(false)
                 }}
                 className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-medium transition ${
-                  isSelected
+                  isPublic
+                    ? isSelected
+                      ? 'bg-white/10 text-white'
+                      : 'text-white/75 hover:bg-white/5'
+                    : isSelected
                     ? 'bg-nexoraBrand/5 text-nexoraBrand dark:bg-white/10 dark:text-white'
                     : 'text-nexoraText hover:bg-nexoraSurfaceMuted dark:text-white/75 dark:hover:bg-white/5'
                 }`}
               >
                 <span className="flex-1">{lang.label}</span>
-                {isSelected && <Check className="h-4 w-4 text-nexoraBrand dark:text-brandCyan" />}
+                {isSelected && <Check className={`h-4 w-4 ${isPublic ? 'text-brandCyan' : 'text-nexoraBrand dark:text-brandCyan'}`} />}
               </button>
             )
           })}

@@ -42,12 +42,16 @@ export default function CustomerNameStep({
       <div>
         <label htmlFor="kiosk-customer-name" className="mb-1 block text-xs font-bold uppercase tracking-wide text-nexoraMuted">
           {t(`${K}.nameLabel`)}
+          <span className="ml-1 text-[10px] font-semibold normal-case tracking-normal text-nexoraDanger">
+            {t('components.checkin.CustomerIdentityCard.requiredLabel')}
+          </span>
         </label>
         <input
           id="kiosk-customer-name"
           type="text"
           value={value}
           maxLength={NAME_MAX_LENGTH}
+          required
           autoComplete="off"
           onChange={(e) => onChange(e.target.value)}
           placeholder={t(`${K}.namePlaceholder`)}

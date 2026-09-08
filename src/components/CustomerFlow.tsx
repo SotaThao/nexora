@@ -37,6 +37,7 @@ export default function CustomerFlow() {
     rating, handleRatingChange,
     positiveTagKeys, negativeTagKeys, selectedTags, handleTagToggle,
     comment, setComment, handleSubmitFeedback,
+    isConfirmingTip, isSubmittingReview,
     reviewLinks,
     handleSkipTip,
     handleConfirmTip,
@@ -191,6 +192,7 @@ export default function CustomerFlow() {
                   showToast={showToast}
                   handlePay={handlePay}
                   handleConfirmTip={handleConfirmTip}
+                  isConfirming={isConfirmingTip}
                   isApiMode={isApiMode}
                   setStep={setStep}
                   paymentLinkData={paymentLinkData}
@@ -227,6 +229,7 @@ export default function CustomerFlow() {
                   comment={comment}
                   setComment={setComment}
                   handleSubmitFeedback={handleSubmitFeedback}
+                  isSubmitting={isSubmittingReview}
                   setStep={setStep}
                 />
               )}

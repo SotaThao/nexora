@@ -5,6 +5,7 @@
  * may be linked to more than one business.
  */
 import httpClient from '../../lib/httpClient'
+import { unlessOptimisticId } from '../../utils/uuid'
 import type {
   AssignableStaffApiDto,
   CheckInOrderPayload,
@@ -14,7 +15,11 @@ import type {
   OrderListItemApiDto,
   PosCheckInResultApiDto,
   PosWaitlistOrderApiDto,
+  ReassignableStaffApiDto,
+  ReassignPayrollWarningApiDto,
+  ServiceLineReassignmentApiDto,
 } from '../../types/repositories'
+import { mapOrderList } from './mapPosOrderList'
 
 type HttpClient = typeof httpClient
 
@@ -49,10 +54,10 @@ export function createPosOrdersRepository(client: HttpClient = httpClient) {
 
     // Order List tab (US-17) — Waiting + InService combined.
     async getOrderList(businessId: string): Promise<OrderListItemApiDto[]> {
-      const res = await client.get<OrderListItemApiDto[]>(
+      const res = await client.get<unknown>(
         `/api/v1/merchant/pos/${businessId}/orders`,
       )
-      return res ?? []
+      return mapOrderList(res)
     },
 
     // Completed Orders panel (US-17 follow-up) — paginated, filterable by CompletedAt
@@ -96,9 +101,14 @@ export function createPosOrdersRepository(client: HttpClient = httpClient) {
       posStaffProfileId?: string,
       note?: string,
     ): Promise<boolean> {
-      return await client.post<boolean>(
-        `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/assign`,
-        { posStaffProfileId, note },
+      return unlessOptimisticId(
+        serviceLineId,
+        () =>
+          client.post<boolean>(
+            `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/assign`,
+            { posStaffProfileId, note },
+          ),
+        false,
       )
     },
 
@@ -110,19 +120,121 @@ export function createPosOrdersRepository(client: HttpClient = httpClient) {
       )
     },
 
+    // Accept / decline / start one service line. Callable by the front desk OR by the technician
+    // the line is assigned to — the backend resolves which of the two is calling. All three are
+    // idempotent forwards: a line already further along answers 200 without changing anything,
+    // because the board these buttons sit on is up to 15s stale.
+    async acceptServiceLine(businessId: string, orderId: string, serviceLineId: string): Promise<boolean> {
+      return unlessOptimisticId(
+        serviceLineId,
+        () =>
+          client.post<boolean>(
+            `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/accept`,
+          ),
+        false,
+      )
+    },
+
+    async rejectServiceLine(businessId: string, orderId: string, serviceLineId: string): Promise<boolean> {
+      return unlessOptimisticId(
+        serviceLineId,
+        () =>
+          client.post<boolean>(
+            `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/reject`,
+          ),
+        false,
+      )
+    },
+
+    async startServiceLine(businessId: string, orderId: string, serviceLineId: string): Promise<boolean> {
+      return unlessOptimisticId(
+        serviceLineId,
+        () =>
+          client.post<boolean>(
+            `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/start`,
+          ),
+        false,
+      )
+    },
+
     // Frees the assigned staff on this line immediately, independent of the rest of the
     // order (US-026) — callable by the staff member themselves or a manager/cashier.
     async markServiceLineDone(businessId: string, orderId: string, serviceLineId: string): Promise<boolean> {
-      return await client.post<boolean>(
-        `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/complete`,
+      return unlessOptimisticId(
+        serviceLineId,
+        () =>
+          client.post<boolean>(
+            `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/complete`,
+          ),
+        false,
       )
     },
 
     // Technician picker filtered by skill (PosStaffServiceAssignment) for one service —
     // includes busy staff (isBusy flag) since a manager may still pick them as an override.
-    async getAssignableStaffForService(businessId: string, posServiceId: string): Promise<AssignableStaffApiDto[]> {
+    // scheduledAt (optional) narrows the list to technicians whose own registered working
+    // hours cover that slot; omitting it lists every non-locked technician with the skill.
+    async getAssignableStaffForService(
+      businessId: string,
+      posServiceId: string,
+      scheduledAt?: string,
+    ): Promise<AssignableStaffApiDto[]> {
+      const query = scheduledAt ? `?scheduledAt=${encodeURIComponent(scheduledAt)}` : ''
       const res = await client.get<AssignableStaffApiDto[]>(
-        `/api/v1/merchant/pos/${businessId}/orders/services/${posServiceId}/assignable-staff`,
+        `/api/v1/merchant/pos/${businessId}/orders/services/${posServiceId}/assignable-staff${query}`,
+      )
+      return res ?? []
+    },
+
+    // Reassigns one service line of a COMPLETED ticket. Moves revenue, the matching slice of the
+    // tip and any discount cost with it; a reason is mandatory server-side too.
+    async reassignCompletedOrderServiceLineStaff(
+      businessId: string,
+      orderId: string,
+      serviceLineId: string,
+      newPosStaffProfileId: string,
+      reason: string,
+    ): Promise<boolean> {
+      return await client.put<boolean>(
+        `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/reassign-staff`,
+        { newPosStaffProfileId, reason },
+      )
+    },
+
+    async getReassignableStaff(
+      businessId: string,
+      orderId: string,
+      serviceLineId: string,
+    ): Promise<ReassignableStaffApiDto[]> {
+      const res = await client.get<ReassignableStaffApiDto[]>(
+        `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/reassign-staff/options`,
+      )
+      return res ?? []
+    },
+
+    // Re-asked once a technician is picked: the receiving technician may be the one whose week was
+    // already paid, which the first call (with no technician yet) cannot know.
+    async getReassignPayrollWarning(
+      businessId: string,
+      orderId: string,
+      serviceLineId: string,
+      newPosStaffProfileId?: string,
+    ): Promise<ReassignPayrollWarningApiDto | null> {
+      const query = newPosStaffProfileId
+        ? `?newPosStaffProfileId=${encodeURIComponent(newPosStaffProfileId)}`
+        : ''
+      return await client.get<ReassignPayrollWarningApiDto>(
+        `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/reassign-staff/payroll-warning${query}`,
+      )
+    },
+
+    async getServiceLineReassignmentHistory(
+      businessId: string,
+      orderId: string,
+      serviceLineId: string,
+    ): Promise<ServiceLineReassignmentApiDto[]> {
+      const res = await client.get<ServiceLineReassignmentApiDto[]>(
+        `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/reassign-staff/history`,
       )
       return res ?? []
     },

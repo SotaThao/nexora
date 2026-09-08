@@ -28,13 +28,22 @@ export const POS_FRONT_DESK_TABS: PosFrontDeskTab[] = [
   PosFrontDeskTab.Booking,
   PosFrontDeskTab.TimeClock,
   PosFrontDeskTab.Customer,
-  PosFrontDeskTab.Report,
 ]
 
 export const DEFAULT_POS_FRONT_DESK_TAB = PosFrontDeskTab.OrderList
 
 /** Deep-link param, e.g. the Owner dashboard's "Total Bookings" KPI links to `?tab=booking`. */
 export const POS_FRONT_DESK_TAB_PARAM = 'tab'
+
+/**
+ * Report period deep-link params, e.g. `?tab=report&mode=Daily&dates=2026-08-21`.
+ * The plural query-key names are kept for backwards-compatible links, but the picker now keeps
+ * exactly one day, one ISO week, or one month.
+ */
+export const REPORT_MODE_PARAM = 'mode'
+export const REPORT_DATES_PARAM = 'dates'
+export const REPORT_WEEKS_PARAM = 'weeks'
+export const REPORT_MONTH_PARAM = 'month'
 
 /**
  * Order List (US-17) folded the old standalone Waitlist tab in as a filter — Waiting + InService

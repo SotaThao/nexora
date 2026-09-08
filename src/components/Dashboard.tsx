@@ -28,7 +28,12 @@ import {
   getTouchpointApiType,
   isMasterTouchpoint,
 } from '../constants/touchpoints'
-import { slugify } from './dashboard/utils'
+import { TOUCHPOINT_SECTION } from './touchpoints/touchpointSections'
+import {
+  resolveDashboardFooterVisibility,
+  resolveDashboardPosMobileSpacer,
+  slugify,
+} from './dashboard/utils'
 import { useDashboardNavigation } from './dashboard/hooks/useDashboardNavigation'
 import { useDevices } from './dashboard/hooks/useDevices'
 import { useKybGate } from '../contexts/KybGateContext'
@@ -794,6 +799,11 @@ export default function Dashboard({
   const [searchParams] = useSearchParams()
   const tabParam = searchParams.get('tab')
   const sectionParam = searchParams.get('section')
+  const isPosFillViewportRoute =
+    location.pathname === '/dashboard/pos' ||
+    location.pathname === '/dashboard/pos/public-checkin'
+  const footerVisibilityClass = resolveDashboardFooterVisibility(location.pathname)
+  const posMobileSpacerClass = resolveDashboardPosMobileSpacer(location.pathname)
   const activeMenuTitle = resolveDashboardMobileMenuTitle(
     activeMenu,
     tabParam,
@@ -822,7 +832,7 @@ export default function Dashboard({
         userRole={userRole}
       />
 
-      <div className={`flex min-h-dvh w-full min-w-0 flex-col transition-[padding-left] duration-200 ${isDesktopSidebarOpen ? 'lg:pl-72' : ''}`}>
+      <div className={`flex w-full min-w-0 flex-col transition-[padding-left] duration-200 ${isPosFillViewportRoute ? 'h-dvh min-h-0' : 'min-h-dvh'} ${isDesktopSidebarOpen ? 'lg:pl-72' : ''}`}>
         <DashboardHeader
           isSidebarOpen={isDesktopSidebarOpen}
           onToggleSidebar={() => setIsDesktopSidebarOpen((prev) => !prev)}
@@ -858,7 +868,7 @@ export default function Dashboard({
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        <main className="w-full min-w-0 flex-1 overflow-x-hidden p-4 pb-6 sm:p-6 sm:pb-8 lg:p-7 lg:pb-7">
+        <main className={`w-full min-w-0 flex-1 overflow-x-hidden p-4 pb-6 sm:p-6 sm:pb-8 lg:p-7 lg:pb-7 ${isPosFillViewportRoute ? 'flex min-h-0 flex-col overflow-y-auto' : ''}`}>
           {activeMenu !== 'overview' && activeMenuTitle ? (
             <div className="mb-3 flex min-w-0 items-center gap-3 sm:hidden">
               <h1 className="min-w-0 truncate text-lg font-extrabold text-nexoraText">
@@ -868,12 +878,13 @@ export default function Dashboard({
           ) : null}
           <Outlet context={dashboardCtx} />
         </main>
-        <footer className="mb-20 border-t border-nexoraBorder bg-white px-3 py-3 sm:px-6 lg:mb-0 lg:px-7 lg:py-4">
+        <footer className={`${footerVisibilityClass} mb-20 border-t border-nexoraBorder bg-white px-3 py-3 sm:px-6 lg:mb-0 lg:px-7 lg:py-4`}>
           <div className="flex flex-wrap items-center justify-between gap-2 text-left">
             <p className="shrink-0 text-xs font-medium text-slate-700 sm:text-sm">{t('dashboard.footer.copyright')}</p>
             <AppDownloadLinks />
           </div>
         </footer>
+        <div aria-hidden="true" className={posMobileSpacerClass} />
       </div>
 
       <MobileBottomNav activeMenu={activeMenu} onNavigate={handleNavigateMenu} />
@@ -999,7 +1010,7 @@ export default function Dashboard({
         onClose={() => setIsAddTouchpointModalOpen(false)}
         onAdd={async (name, type, deviceId, assignedStaffProfileId) => {
           await addTouchpoint(name, type, deviceId, assignedStaffProfileId)
-          handleNavigateMenu('touchpoints', 'stations')
+          handleNavigateMenu('touchpoints', 'stations', TOUCHPOINT_SECTION.tip)
         }}
       />
 

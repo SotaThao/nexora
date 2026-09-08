@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronDown, FolderOpen, Search, X } from 'lucide-react'
+import { ChevronDown, FolderOpen, Search, Trash2, X } from 'lucide-react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useNotification } from '../../../contexts/NotificationContext'
 import {
   getPublicBookingSubmitErrorCode,
+  getPublicBookingSubmitErrorDetail,
   useCreatePublicOnlineBooking,
   usePublicBookingPageData,
 } from '../../../data/hooks/usePublicVoiceBooking'
@@ -34,6 +35,7 @@ import {
   buildCreateBookingBody,
   createDefaultBookingState,
   customerFromBookingPageData,
+  errorsForBookingStep,
   formatBookingSlot,
   formatCustomerPhoneDisplay,
   formatServiceChoicePrice,
@@ -51,6 +53,8 @@ import {
 } from './bookingUtils'
 import { toTwelveHourLangTag } from '../../../constants/timeFormat'
 import BookingDateTimeFields from './BookingDateTimeFields'
+import BookingPromotions from './BookingPromotions'
+import ServiceDescriptionModal from './ServiceDescriptionModal'
 import './public-booking.css'
 import PublicBookingSkeleton from './PublicBookingSkeleton'
 
@@ -138,11 +142,14 @@ export default function PublicBookingPage() {
   })
   const [errors, setErrors] = useState([])
   const [statusMessage, setStatusMessage] = useState('')
-  const [openCategoryIds, setOpenCategoryIds] = useState(() => new Set())
+  // One category open at a time, like the reference accordion.
+  const [openCategoryId, setOpenCategoryId] = useState('')
   const [serviceSearchQuery, setServiceSearchQuery] = useState('')
+  const [descriptionServiceId, setDescriptionServiceId] = useState('')
 
   const pageData = pageQuery.data
   const businessName = pageData?.businessName || businessKey
+  const promotions = pageData?.promotions || []
   const catalog = useMemo(
     () => ({
       services: pageData?.services || [],
@@ -175,12 +182,7 @@ export default function PublicBookingPage() {
   // Open only the first category by default when the catalog first loads / changes.
   const categoryIdsKey = serviceCategories.map((category) => category.id).join('|')
   useEffect(() => {
-    if (!categoryIdsKey) {
-      setOpenCategoryIds(new Set())
-      return
-    }
-    const firstId = categoryIdsKey.split('|')[0]
-    setOpenCategoryIds(new Set(firstId ? [firstId] : []))
+    setOpenCategoryId(categoryIdsKey ? categoryIdsKey.split('|')[0] : '')
   }, [categoryIdsKey])
 
   const serviceSearchNeedle = serviceSearchQuery.trim()
@@ -197,29 +199,9 @@ export default function PublicBookingPage() {
     return ids
   }, [serviceCategories, serviceSearchNeedle])
 
-  // While searching, keep categories that contain matches expanded.
-  useEffect(() => {
-    if (!matchingServiceIds) return
-    if (matchingServiceIds.size === 0) return
-    setOpenCategoryIds((prev) => {
-      const next = new Set(prev)
-      serviceCategories.forEach((category) => {
-        const hasMatch = category.services.some((service) =>
-          matchingServiceIds.has(service.id),
-        )
-        if (hasMatch) next.add(category.id)
-      })
-      return next
-    })
-  }, [matchingServiceIds, serviceCategories])
-
+  // A search opens every category holding a hit — derived below, so no state to sync here.
   const toggleCategory = (categoryId) => {
-    setOpenCategoryIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(categoryId)) next.delete(categoryId)
-      else next.add(categoryId)
-      return next
-    })
+    setOpenCategoryId((prev) => (prev === categoryId ? '' : categoryId))
   }
 
   // Apply SMS / deep-link prefill when query values change (new preview link).
@@ -240,18 +222,22 @@ export default function PublicBookingPage() {
     }))
   }, [prefillPhoneRaw, prefillNameRaw, searchParams])
 
+  const recognisedCustomer = useMemo(
+    () => customerFromBookingPageData(pageData?.customer),
+    [pageData?.customer],
+  )
+
   // When API recognises an active customer for ?phone=, prefer that name/phone.
   useEffect(() => {
-    const recognised = customerFromBookingPageData(pageData?.customer)
-    if (!recognised) return
+    if (!recognisedCustomer) return
     setState((prev) => ({
       ...prev,
       customer: {
-        phone: recognised.phone || prev.customer.phone,
-        name: recognised.name || prev.customer.name,
+        phone: recognisedCustomer.phone || prev.customer.phone,
+        name: recognisedCustomer.name || prev.customer.name,
       },
     }))
-  }, [pageData?.customer])
+  }, [recognisedCustomer])
 
   useEffect(() => {
     document.title = `${copy.documentTitleSuffix} · ${businessName || copy.documentTitleSuffix}`
@@ -280,6 +266,13 @@ export default function PublicBookingPage() {
       ? copy.anyStaffName
       : selectedStaff?.fullName || copy.emDash
   const customerName = String(state.customer.name || '').trim()
+  const customerPhoneDisplay = formatCustomerPhoneDisplay(state.customer.phone)
+  // Only a recognised customer with a name on file gets the read-only treatment — locking an
+  // empty box would leave the required name unfillable.
+  const returningName = String(recognisedCustomer?.name || '').trim()
+  const descriptionService = catalog.services.find(
+    (service) => service.id === descriptionServiceId,
+  )
 
   const scrollToFirstError = (errorKeys) => {
     const slotTargetId =
@@ -342,10 +335,15 @@ export default function PublicBookingPage() {
   const goToStep = (nextStep) => {
     if (nextStep === PUBLIC_BOOKING_STEP.review) {
       const current = validateBookingDraft(state, catalog, defaultSlot.date)
-      if (!current.ok) {
-        setErrors(current.errors)
+      // Phone/name live on the review step now, so they must not gate Continue.
+      const formErrors = errorsForBookingStep(
+        current.errors,
+        PUBLIC_BOOKING_STEP.form,
+      )
+      if (formErrors.length) {
+        setErrors(formErrors)
         setState((prev) => ({ ...prev, step: PUBLIC_BOOKING_STEP.form }))
-        scrollToFirstError(current.errors)
+        scrollToFirstError(formErrors)
         return
       }
     }
@@ -354,18 +352,35 @@ export default function PublicBookingPage() {
     window.scrollTo?.({ top: 0, behavior: 'smooth' })
   }
 
+  // Localized copy wins when we have a line for the code; otherwise show the message the
+  // backend actually returned (a business rule we have no copy for yet is still far more
+  // useful than "something went wrong"), and only then the generic fallback.
   const resolveSubmitErrorMessage = (error) => {
     const code = getPublicBookingSubmitErrorCode(error)
     const copyKey = PUBLIC_BOOKING_SUBMIT_ERROR_COPY[code]
-    return (copyKey && copy[copyKey]) || copy.unexpectedError
+    return (
+      (copyKey && copy[copyKey])
+      || getPublicBookingSubmitErrorDetail(error)
+      || copy.unexpectedError
+    )
   }
 
   const submitBooking = async () => {
     const validation = validateBookingDraft(state, catalog, defaultSlot.date)
     if (!validation.ok) {
+      const formErrors = errorsForBookingStep(
+        validation.errors,
+        PUBLIC_BOOKING_STEP.form,
+      )
+      // Only bounce back to step 1 when the missing field actually lives there.
       setErrors(validation.errors)
-      setState((prev) => ({ ...prev, step: PUBLIC_BOOKING_STEP.form }))
-      scrollToFirstError(validation.errors)
+      setState((prev) => ({
+        ...prev,
+        step: formErrors.length
+          ? PUBLIC_BOOKING_STEP.form
+          : PUBLIC_BOOKING_STEP.review,
+      }))
+      scrollToFirstError(formErrors.length ? formErrors : validation.errors)
       return
     }
 
@@ -404,6 +419,7 @@ export default function PublicBookingPage() {
   const resetBooking = () => {
     setState(createDefaultBookingState(getDefaultBookingSlot()))
     setSmsConsent({ transactional: true, marketing: false })
+    setDescriptionServiceId('')
     setErrors([])
     setStatusMessage('')
     createMutation.reset()
@@ -497,89 +513,17 @@ export default function PublicBookingPage() {
       <div className="page-shell">
         {renderBrand()}
 
+        {state.step === PUBLIC_BOOKING_STEP.form ? (
+          <BookingPromotions
+            promotions={promotions}
+            copy={copy}
+            locale={locale}
+          />
+        ) : null}
+
         <main id="booking-app">
           {state.step === PUBLIC_BOOKING_STEP.form && (
             <section className="step-panel app-card" data-step-panel="1">
-              <div className="card-heading">
-                <div>
-                  <h2>{copy.step1PhoneHeading}</h2>
-                </div>
-              </div>
-
-              <div className="customer-fields" id="customer-fields">
-                <label
-                  className="form-field"
-                  id="booking-phone-field"
-                  htmlFor={PUBLIC_BOOKING_FIELD_ID.phone}
-                >
-                  <span>{copy.phoneLabel}</span>
-                  <div
-                    className={`booking-datetime-shell phone-input-shell${
-                      phoneParsed.nationalNumber ? ' has-value' : ' is-empty'
-                    }`}
-                  >
-                    <CountryCodeSelect
-                      value={phoneParsed.countryCode || PhoneDialCode.US}
-                      embedded
-                      onChange={(nextCode) => {
-                        updateCustomerPhone(nextCode, phoneParsed.nationalNumber)
-                      }}
-                    />
-                    <input
-                      className="booking-text-input phone-mask-input"
-                      id={PUBLIC_BOOKING_FIELD_ID.phone}
-                      type="tel"
-                      inputMode="numeric"
-                      autoComplete="tel-national"
-                      aria-describedby="phone-error"
-                      placeholder={getNationalPhonePlaceholder(
-                        phoneParsed.countryCode || PhoneDialCode.US,
-                      )}
-                      value={formatNationalNumber(
-                        phoneParsed.nationalNumber,
-                        phoneParsed.countryCode || PhoneDialCode.US,
-                      )}
-                      onChange={(event) => {
-                        updateCustomerPhone(
-                          phoneParsed.countryCode || PhoneDialCode.US,
-                          event.target.value,
-                        )
-                      }}
-                    />
-                  </div>
-                  <p className="field-error" id="phone-error" role="alert">
-                    {phoneError}
-                  </p>
-                </label>
-
-                <label
-                  className="form-field"
-                  id="booking-name-field"
-                  htmlFor={PUBLIC_BOOKING_FIELD_ID.name}
-                >
-                  <span>{copy.nameLabel}</span>
-                  <input
-                    className="input"
-                    id={PUBLIC_BOOKING_FIELD_ID.name}
-                    type="text"
-                    autoComplete="name"
-                    aria-describedby="name-error"
-                    placeholder={copy.namePlaceholder}
-                    value={state.customer.name}
-                    onChange={(event) => {
-                      setState((prev) => ({
-                        ...prev,
-                        customer: { ...prev.customer, name: event.target.value },
-                      }))
-                      setErrors([])
-                    }}
-                  />
-                  <p className="field-error" id="name-error" role="alert">
-                    {nameError}
-                  </p>
-                </label>
-              </div>
-
               <div className="card-heading service-heading-row">
                 <div>
                   <h2>{copy.step1ServiceHeading}</h2>
@@ -624,7 +568,6 @@ export default function PublicBookingPage() {
                   </div>
                 ) : (
                   serviceCategories.map((category) => {
-                    const isOpen = openCategoryIds.has(category.id)
                     const panelId = `service-category-panel-${category.id}`
                     const categoryHasMatch =
                       !matchingServiceIds ||
@@ -632,6 +575,9 @@ export default function PublicBookingPage() {
                         matchingServiceIds.has(service.id),
                       )
                     if (matchingServiceIds && !categoryHasMatch) return null
+                    const isOpen = matchingServiceIds
+                      ? categoryHasMatch
+                      : openCategoryId === category.id
                     return (
                       <div
                         key={category.id}
@@ -688,15 +634,27 @@ export default function PublicBookingPage() {
                                 const isMiss =
                                   Boolean(matchingServiceIds) && !isMatch
                                 if (isMiss) return null
+                                const durationMinutes = Number(
+                                  service.durationMinutes || 0,
+                                )
                                 return (
-                                  <button
+                                  // A div, not a button: the card carries a nested "View
+                                  // details" button, which a button may not contain.
+                                  <div
                                     key={`${category.id}-${service.id}`}
-                                    className={`choice-card${isMatch ? ' is-search-match' : ''}`}
-                                    type="button"
+                                    className={`choice-card service-choice-card${isMatch ? ' is-search-match' : ''}`}
+                                    role="button"
                                     data-service-id={service.id}
                                     aria-pressed={selected}
+                                    aria-label={service.name}
                                     tabIndex={isOpen ? 0 : -1}
                                     onClick={() => chooseService(service.id)}
+                                    onKeyDown={(event) => {
+                                      if (event.target.closest('button')) return
+                                      if (event.key !== 'Enter' && event.key !== ' ') return
+                                      event.preventDefault()
+                                      chooseService(service.id)
+                                    }}
                                   >
                                     <span className="choice-title">
                                       <ServiceNameLabel
@@ -704,12 +662,14 @@ export default function PublicBookingPage() {
                                         query={serviceSearchNeedle}
                                       />
                                     </span>
-                                    <span className="choice-detail">
-                                      <span>
-                                        {copy.durationMinutes(
-                                          service.durationMinutes || 0,
-                                        )}
-                                      </span>
+                                    <span
+                                      className={`choice-detail${durationMinutes > 0 ? '' : ' choice-detail-no-duration'}`}
+                                    >
+                                      {durationMinutes > 0 ? (
+                                        <span>
+                                          {copy.durationMinutes(durationMinutes)}
+                                        </span>
+                                      ) : null}
                                       <strong className="choice-price">
                                         {formatServiceChoicePrice(
                                           service,
@@ -717,7 +677,22 @@ export default function PublicBookingPage() {
                                         )}
                                       </strong>
                                     </span>
-                                  </button>
+                                    {service.note ? (
+                                      <span className="service-choice-actions">
+                                        <button
+                                          className="service-action service-action-view"
+                                          type="button"
+                                          tabIndex={isOpen ? 0 : -1}
+                                          onClick={(event) => {
+                                            event.stopPropagation()
+                                            setDescriptionServiceId(service.id)
+                                          }}
+                                        >
+                                          {copy.serviceViewDetails}
+                                        </button>
+                                      </span>
+                                    ) : null}
+                                  </div>
                                 )
                               })}
                             </div>
@@ -748,17 +723,19 @@ export default function PublicBookingPage() {
                         copy.otherCategoryName,
                       )
                       return (
-                        <button
-                          key={service.id}
-                          className="selected-service-chip"
-                          type="button"
-                          data-remove-service-id={service.id}
-                          aria-label={copy.removeServiceAria(label)}
-                          onClick={() => chooseService(service.id)}
-                        >
+                        <div key={service.id} className="selected-service-chip">
                           <span>{label}</span>
-                          <X aria-hidden="true" />
-                        </button>
+                          <button
+                            className="selected-service-remove"
+                            type="button"
+                            data-remove-service-id={service.id}
+                            aria-label={copy.removeServiceAria(label)}
+                            title={copy.removeServiceAria(label)}
+                            onClick={() => chooseService(service.id)}
+                          >
+                            <Trash2 aria-hidden="true" />
+                          </button>
+                        </div>
                       )
                     })}
                   </div>
@@ -870,6 +847,105 @@ export default function PublicBookingPage() {
             <section className="step-panel app-card" data-step-panel="2">
               <div className="card-heading">
                 <div>
+                  <h2>{copy.customerStepHeading}</h2>
+                </div>
+              </div>
+
+              <div className="customer-fields" id="customer-fields">
+                <label
+                  className="form-field"
+                  id="booking-phone-field"
+                  htmlFor={PUBLIC_BOOKING_FIELD_ID.phone}
+                >
+                  <span>{copy.phoneLabel}</span>
+                  <div
+                    className={`booking-datetime-shell phone-input-shell${
+                      phoneParsed.nationalNumber ? ' has-value' : ' is-empty'
+                    }`}
+                  >
+                    <CountryCodeSelect
+                      value={phoneParsed.countryCode || PhoneDialCode.US}
+                      embedded
+                      onChange={(nextCode) => {
+                        updateCustomerPhone(nextCode, phoneParsed.nationalNumber)
+                      }}
+                    />
+                    <input
+                      className="booking-text-input phone-mask-input"
+                      id={PUBLIC_BOOKING_FIELD_ID.phone}
+                      type="tel"
+                      inputMode="numeric"
+                      autoComplete="tel-national"
+                      aria-describedby="phone-error"
+                      placeholder={getNationalPhonePlaceholder(
+                        phoneParsed.countryCode || PhoneDialCode.US,
+                      )}
+                      value={formatNationalNumber(
+                        phoneParsed.nationalNumber,
+                        phoneParsed.countryCode || PhoneDialCode.US,
+                      )}
+                      onChange={(event) => {
+                        updateCustomerPhone(
+                          phoneParsed.countryCode || PhoneDialCode.US,
+                          event.target.value,
+                        )
+                      }}
+                    />
+                  </div>
+                  <p className="field-error" id="phone-error" role="alert">
+                    {phoneError}
+                  </p>
+                </label>
+
+                <label
+                  className="form-field"
+                  id="booking-name-field"
+                  htmlFor={PUBLIC_BOOKING_FIELD_ID.name}
+                >
+                  <span>{copy.nameLabel}</span>
+                  <input
+                    className="input"
+                    id={PUBLIC_BOOKING_FIELD_ID.name}
+                    type="text"
+                    autoComplete="name"
+                    aria-describedby="name-error"
+                    placeholder={copy.namePlaceholder}
+                    value={state.customer.name}
+                    readOnly={Boolean(returningName)}
+                    onChange={(event) => {
+                      setState((prev) => ({
+                        ...prev,
+                        customer: { ...prev.customer, name: event.target.value },
+                      }))
+                      setErrors([])
+                    }}
+                  />
+                  <p className="field-error" id="name-error" role="alert">
+                    {nameError}
+                  </p>
+                </label>
+              </div>
+
+              {/* Consent sits directly under the phone box, so the number, both boxes, the full
+                  disclosure and the submit button all appear in one view — which is what Twilio
+                  asks to see in a single screenshot for A2P registration. */}
+              <div className="mt-3">
+                <SmsConsentPanel
+                  transactional={smsConsent.transactional}
+                  marketing={smsConsent.marketing}
+                  onChange={setSmsConsent}
+                  lang={lang}
+                />
+              </div>
+
+              {returningName ? (
+                <div className="returning-banner" id="returning-customer" aria-live="polite">
+                  {copy.returningCustomer(returningName)}
+                </div>
+              ) : null}
+
+              <div className="card-heading">
+                <div>
                   <h2>{copy.step2Heading}</h2>
                   <p>{copy.step2Copy}</p>
                 </div>
@@ -877,19 +953,18 @@ export default function PublicBookingPage() {
 
               <div className="review-summary">
                 <dl className="review-list">
+                  {customerPhoneDisplay ? (
+                    <div className="review-row" id="review-phone-row">
+                      <dt>{copy.reviewPhone}</dt>
+                      <dd>{customerPhoneDisplay}</dd>
+                    </div>
+                  ) : null}
                   {customerName ? (
-                    <div className="review-row" id="review-customer-name-row">
+                    <div className="review-row" id="review-name-row">
                       <dt>{copy.reviewName}</dt>
                       <dd>{customerName}</dd>
                     </div>
                   ) : null}
-                  <div className="review-row">
-                    <dt>{copy.reviewPhone}</dt>
-                    <dd>
-                      {formatCustomerPhoneDisplay(state.customer.phone) ||
-                        copy.emDash}
-                    </dd>
-                  </div>
                   <div className="review-row">
                     <dt>{copy.reviewServices}</dt>
                     <dd className="review-service-chips">
@@ -938,18 +1013,6 @@ export default function PublicBookingPage() {
                 {reviewError}
               </p>
 
-              {/* Sits on the review step rather than beside the phone field: this screen already
-                  shows the phone number back to the customer, so the phone, both boxes, the full
-                  disclosure and the submit button all appear in one view — which is what Twilio
-                  asks to see in a single screenshot for A2P registration. */}
-              <div className="mt-4">
-                <SmsConsentPanel
-                  transactional={smsConsent.transactional}
-                  marketing={smsConsent.marketing}
-                  onChange={setSmsConsent}
-                  lang={lang}
-                />
-              </div>
 
               <div className="action-row">
                 <button
@@ -1033,6 +1096,12 @@ export default function PublicBookingPage() {
             </section>
           )}
         </main>
+
+        <ServiceDescriptionModal
+          service={descriptionService}
+          copy={copy}
+          onClose={() => setDescriptionServiceId('')}
+        />
 
         <p
           className="screen-reader"

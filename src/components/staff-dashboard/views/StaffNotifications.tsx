@@ -1,6 +1,6 @@
 // StaffNotifications — notification feed + push preferences.
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, Bell, Calendar, CreditCard, Star, Users, Wallet } from 'lucide-react'
+import { AlertTriangle, Bell, BellRing, Calendar, CreditCard, Star, UserCheck, UserMinus, Users, Wallet } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import {
@@ -9,6 +9,7 @@ import {
   useNotifications,
   useUnreadCount,
 } from '../../../data/hooks/useNotifications'
+import { isPosStaffBeepNotification } from '../../../constants/posStaffBeep'
 import type { NotificationRecord } from '../../../types/domain'
 import { SkeletonLayout } from '../../ui/skeleton'
 import ToggleSwitch from '../../ui/ToggleSwitch'
@@ -43,6 +44,14 @@ const TYPE_ICON: Record<string, typeof Bell> = {
   TaxIqDisputeResolved: Wallet,
   TaxIqDisputeRejected: AlertTriangle,
   BookingConfirmed: Calendar,
+  // Front desk calling the tech out. The answer buttons live in the shell sheet, so a PosStaffBeep
+  // row does not open a screen — it reopens that sheet when the tech closed or minimised it.
+  PosStaffBeep: BellRing,
+  PosStaffBeepResponse: BellRing,
+  // Work-order assignment lands on the ticket itself via actionUrl, so these rows are tappable.
+  PosServiceLineAssigned: UserCheck,
+  PosBookingAssigned: Calendar,
+  PosServiceLineUnassigned: UserMinus,
 };
 
 function notificationIcon(type: string) {
@@ -84,7 +93,9 @@ export default function StaffNotifications({ showPushPreferences = true } = {}) 
     const title = n.title?.trim() || t('staff_dashboard.notifications.generic_title')
     const message = (n.message || n.body || '').trim()
     const hasAction =
-      n.type === 'StaffLinkRequest' || Boolean(resolveStaffNotificationActionUrl(n.actionUrl))
+      n.type === 'StaffLinkRequest'
+      || isPosStaffBeepNotification(n.type)
+      || Boolean(resolveStaffNotificationActionUrl(n.actionUrl))
 
     return (
       <button

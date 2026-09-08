@@ -1,0 +1,23 @@
+/**
+ * Community Chat API error codes — DomainErrorCode.Chat namespace.
+ * Source: community-chat-flow.pdf §10 (Bảng mã lỗi tổng hợp).
+ */
+
+export const CommunityChatErrorCode = {
+  SESSION_NOT_FOUND: 'CHAT_SESSION_NOT_FOUND',
+  NOT_A_PARTICIPANT: 'CHAT_NOT_A_PARTICIPANT',
+  NOT_ALLOWED_TO_MANAGE_GROUP: 'CHAT_NOT_ALLOWED_TO_MANAGE_GROUP',
+  PARTICIPANT_MUST_HAVE_ACCOUNT: 'CHAT_PARTICIPANT_MUST_HAVE_ACCOUNT',
+  MESSAGE_NOT_FOUND: 'CHAT_MESSAGE_NOT_FOUND',
+  CANNOT_DELETE_OTHERS_MESSAGE: 'CHAT_CANNOT_DELETE_OTHERS_MESSAGE',
+  IMAGE_INVALID_EXTENSION: 'CHAT_IMAGE_INVALID_EXTENSION',
+  IMAGE_TOO_LARGE: 'CHAT_IMAGE_TOO_LARGE',
+  CANNOT_REMOVE_SELF: 'CHAT_CANNOT_REMOVE_SELF',
+  RENAME_ONLY_FOR_GROUP: 'CHAT_RENAME_ONLY_FOR_GROUP',
+} as const
+
+export type CommunityChatErrorCodeValue =
+  (typeof CommunityChatErrorCode)[keyof typeof CommunityChatErrorCode]
+
+/** Client guard when send/create is attempted without a session id. */
+export const COMMUNITY_CHAT_MISSING_SESSION_ERROR = 'Missing chat session' as const

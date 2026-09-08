@@ -45,6 +45,7 @@ export default function WeeklyPayrollDailyDetailModal({ businessStaffLinkId, dis
                     <th className="px-3 py-2">{t('taxiq.weeklyPayroll.dailyDetailModal.columns.hours')}</th>
                     <th className="px-3 py-2">{t('taxiq.weeklyPayroll.dailyDetailModal.columns.sales')}</th>
                     <th className="px-3 py-2">{t('taxiq.weeklyPayroll.dailyDetailModal.columns.tips')}</th>
+                    <th className="px-3 py-2">{t('taxiq.weeklyPayroll.dailyDetailModal.columns.discountBorne')}</th>
                     <th className="px-3 py-2">{t('taxiq.weeklyPayroll.dailyDetailModal.columns.estimatedPay')}</th>
                   </tr>
                 </thead>
@@ -56,6 +57,25 @@ export default function WeeklyPayrollDailyDetailModal({ businessStaffLinkId, dis
                       <td className="px-3 py-2 text-nexoraText">{day.hours.toFixed(1)}h</td>
                       <td className="px-3 py-2 text-nexoraText">{formatCurrency(day.sales)}</td>
                       <td className="px-3 py-2 text-nexoraText">{formatCurrency(day.tips)}</td>
+                      {/* Which service caused the deduction and why, so the technician can check it
+                          the same week instead of arguing at payday. */}
+                      <td className="px-3 py-2 text-nexoraText">
+                        {day.discountBorne > 0 ? (
+                          <>
+                            <span className="font-bold text-amber-700">-{formatCurrency(day.discountBorne)}</span>
+                            <ul className="mt-0.5 space-y-0.5 text-[10px] text-nexoraMuted">
+                              {day.discountDetails.map((detail, index) => (
+                                <li key={`${day.date}-${detail.serviceName}-${index}`}>
+                                  {detail.serviceName} {formatCurrency(detail.amount)}
+                                  {detail.note ? ` — ${detail.note}` : ''}
+                                </li>
+                              ))}
+                            </ul>
+                          </>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
                       <td className="px-3 py-2 text-nexoraText">~{formatCurrency(day.estimatedPay)}</td>
                     </tr>
                   ))}
@@ -65,6 +85,9 @@ export default function WeeklyPayrollDailyDetailModal({ businessStaffLinkId, dis
                       <td className="px-3 py-2 text-nexoraText">{data.totalHours.toFixed(1)}h</td>
                       <td className="px-3 py-2 text-nexoraText">{formatCurrency(data.totalSales)}</td>
                       <td className="px-3 py-2 text-nexoraText">{formatCurrency(data.totalTips)}</td>
+                      <td className="px-3 py-2 text-nexoraText">
+                        {data.totalDiscountBorne > 0 ? `-${formatCurrency(data.totalDiscountBorne)}` : '—'}
+                      </td>
                       <td className="px-3 py-2 text-nexoraText">{formatCurrency(data.totalEstimatedPay)}</td>
                     </tr>
                   )}

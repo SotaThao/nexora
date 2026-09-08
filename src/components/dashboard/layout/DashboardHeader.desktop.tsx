@@ -24,6 +24,11 @@ import IconButton from '../../ui/IconButton'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import { truncateTransactionId } from '../../ui/CopyableTransactionId'
 import HeaderEcosystem from './HeaderEcosystem'
+import { HeaderMessages, HeaderMessagesVariant } from '../../header-messages'
+import {
+  isCommunityChatNotificationLinkTab,
+  openCommunityChatFromNotification,
+} from '../../header-messages/openCommunityChatSession'
 import {
   buildDashboardReportsPath,
   DASHBOARD_REPORTS_TAB,
@@ -64,6 +69,9 @@ export default function DashboardHeader({
   const headerDropdownRef = useRef(null)
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const [isHeaderDropdownOpen, setIsHeaderDropdownOpen] = useState(false)
+  const sidebarToggleLabel = t(
+    isSidebarOpen ? 'dashboard.header.collapse_menu' : 'dashboard.header.expand_menu',
+  )
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -122,6 +130,8 @@ export default function DashboardHeader({
       }
       if (item.paymentId) params.paymentId = String(item.paymentId)
       navigate(buildDashboardReportsPath(params))
+    } else if (isCommunityChatNotificationLinkTab(item.linkTab)) {
+      openCommunityChatFromNotification(item)
     } else if (item.linkTab) {
       onNavigateMenu(item.linkTab)
     }
@@ -140,21 +150,21 @@ export default function DashboardHeader({
     if (!query) return null
 
     const matchedStaff = (staff || []).filter(s =>
-      s.fullName.toLowerCase().includes(query) ||
-      s.nickname.toLowerCase().includes(query) ||
-      s.position.toLowerCase().includes(query)
+      String(s.fullName ?? '').toLowerCase().includes(query) ||
+      String(s.nickname ?? '').toLowerCase().includes(query) ||
+      String(s.position ?? '').toLowerCase().includes(query)
     ).slice(0, 3)
 
     const matchedTxs = (transactions || []).filter(tx =>
-      tx.id.toLowerCase().includes(query) ||
-      tx.staffName.toLowerCase().includes(query) ||
-      tx.touchpoint.toLowerCase().includes(query) ||
+      String(tx.id ?? '').toLowerCase().includes(query) ||
+      String(tx.staffName ?? '').toLowerCase().includes(query) ||
+      String(tx.touchpoint ?? '').toLowerCase().includes(query) ||
       String(tx.amount).includes(query)
     ).slice(0, 3)
 
     const matchedReviews = (reviews || []).filter(r =>
-      r.comment.toLowerCase().includes(query) ||
-      r.staffName.toLowerCase().includes(query) ||
+      String(r.comment ?? '').toLowerCase().includes(query) ||
+      String(r.staffName ?? '').toLowerCase().includes(query) ||
       String(r.rating).includes(query)
     ).slice(0, 3)
 
@@ -203,10 +213,12 @@ export default function DashboardHeader({
       <button
         type="button"
         onClick={onToggleSidebar}
-        className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted lg:flex"
-        aria-label={isSidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+        className="hidden h-10 shrink-0 items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-white px-3 text-xs font-bold text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted lg:flex"
+        aria-label={sidebarToggleLabel}
+        title={sidebarToggleLabel}
       >
         {isSidebarOpen ? <PanelLeftClose className="h-5 w-5" /> : <PanelLeftOpen className="h-5 w-5" />}
+        <span>{sidebarToggleLabel}</span>
       </button>
 
       {/* Search Input with Suggestions Dropdown */}
@@ -541,6 +553,8 @@ export default function DashboardHeader({
             </div>
           )}
         </div>
+
+        <HeaderMessages variant={HeaderMessagesVariant.Desktop} />
 
         <div className="order-4">
           <LanguageSwitcher variant="header-plain" />

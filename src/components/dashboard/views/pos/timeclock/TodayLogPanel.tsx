@@ -27,7 +27,7 @@ export default function TodayLogPanel({ entries }: { entries: TimeClockLogEntryA
           {entries.map((entry) => (
             <li key={entry.id} className="border-b border-nexoraBorder pb-2 last:border-0 last:pb-0">
               <p className="text-xs font-bold text-nexoraText">{entry.displayName}</p>
-              <p className="text-[11px] text-nexoraMuted">
+              <p className="text-[11px] font-semibold text-nexoraText">
                 {entry.isOpen
                   ? `${t(tk('inSince'), {
                       time: formatPosTime(entry.clockInAt, currentLanguage),

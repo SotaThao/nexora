@@ -2,6 +2,7 @@
 import {
   LayoutDashboard,
   Calculator,
+  CalendarDays,
   QrCode,
   CircleDollarSign,
   Star,
@@ -10,12 +11,19 @@ import {
   Settings,
   Briefcase,
 } from 'lucide-react'
+import {
+  openCommunityChatFromNotification,
+} from '../header-messages/openCommunityChatSession'
+import { openStaffBeepSheetFromNotification } from './openStaffBeepSheet'
 
 // Bottom-nav / sidebar items. Icons align with merchant dashboard MENU_ITEMS.
 // 'taxiq' carries `children` (Tax IQ sub-nav) — StaffSidebar renders it as an
 // expandable group, mirroring the Owner Dashboard's MENU_ITEMS.taxiq pattern.
+export const STAFF_CALENDAR_SCREEN = 'calendar' as const
+
 const STAFF_ALL_MENU_ITEMS = [
   { id: 'home', icon: LayoutDashboard, labelKey: 'staff_dashboard.nav.home' },
+  { id: STAFF_CALENDAR_SCREEN, icon: CalendarDays, labelKey: 'staff_dashboard.nav.my_calendar' },
   { id: 'tips', icon: CircleDollarSign, labelKey: 'staff_dashboard.nav.tips' },
   { id: 'payments', icon: ReceiptText, labelKey: 'staff_dashboard.nav.payments' },
   { id: 'pay', icon: BarChart3, labelKey: 'staff_dashboard.nav.pay' },
@@ -48,6 +56,8 @@ export const STAFF_WORKSPACE_MENU_ITEM = {
   labelKey: 'staff_dashboard.nav.my_workspace',
 }
 
+export const STAFF_WORK_ORDERS_SCREEN = 'work-orders' as const
+
 export const STAFF_WORKSPACE_SUBMENU = [
   {
     id: 'my_qr',
@@ -70,15 +80,30 @@ export const STAFF_WORKSPACE_SUBMENU = [
     screen: 'salons',
     labelKey: 'staff_dashboard.nav.my_salons',
   },
+  {
+    id: 'report',
+    screen: 'salons/report',
+    labelKey: 'staff_dashboard.nav.report',
+  },
 ]
 
-export const STAFF_WORKSPACE_SCREEN_IDS = ['qr', 'payments', 'reviews', 'tips', 'earnings', 'salons', 'taxiq']
+export const STAFF_WORKSPACE_SCREEN_IDS = ['qr', 'payments', 'reviews', 'tips', 'earnings', 'salons', STAFF_WORK_ORDERS_SCREEN, 'taxiq']
 
 export function isStaffWorkspaceSubActive(
   activeScreen: string,
   tabParam: string | null,
   item: (typeof STAFF_WORKSPACE_SUBMENU)[number],
+  pathname?: string,
 ): boolean {
+  const normalizedPathname = pathname?.replace(/\/+$/, '') || ''
+  const isSalonReportRoute = normalizedPathname === '/staff/salons/report'
+
+  if (item.id === 'report') return isSalonReportRoute
+  if (item.id === 'my_salons') {
+    return (activeScreen === 'salons' && !isSalonReportRoute)
+      || activeScreen === STAFF_WORK_ORDERS_SCREEN
+  }
+
   if (activeScreen !== item.screen) return false
 
   if (item.id === 'my_qr') {
@@ -88,10 +113,6 @@ export function isStaffWorkspaceSubActive(
   if (item.id === 'my_earnings') {
     if (activeScreen !== 'earnings') return false
     return !tabParam || tabParam === 'overview'
-  }
-
-  if (item.id === 'my_salons') {
-    return activeScreen === 'salons'
   }
 
   if (!item.params?.tab) return true
@@ -107,7 +128,7 @@ export function isStaffWorkspaceRouteActive(
   activeScreen: string,
   tabParam: string | null,
 ): boolean {
-  if (activeScreen === 'earnings' || activeScreen === 'salons') return true
+  if (activeScreen === 'earnings' || activeScreen === 'salons' || activeScreen === STAFF_WORK_ORDERS_SCREEN) return true
   return STAFF_WORKSPACE_SUBMENU.some((item) =>
     isStaffWorkspaceSubActive(activeScreen, tabParam, item),
   )
@@ -166,7 +187,7 @@ export function isStaffBottomNavItemActive(
   return true
 }
 
-export const STAFF_SCREENS = ['home', 'qr', 'tips', 'reviews', 'pay', 'payments', 'earnings', 'salons', 'profile', 'notifications', 'taxiq']
+export const STAFF_SCREENS = ['home', 'qr', 'tips', 'reviews', 'pay', 'payments', 'earnings', 'salons', STAFF_WORK_ORDERS_SCREEN, STAFF_CALENDAR_SCREEN, 'profile', 'notifications', 'taxiq']
 
 // Maps a Staff Tax IQ sidebar sub-item id -> the StaffTaxYear.enabledModules entry
 // that must be present for it to show. Sub-items absent from this table (income,
@@ -243,10 +264,21 @@ export function resolveStaffNotificationScreen(type: string | null | undefined):
 }
 
 export function navigateStaffNotification(
-  notification: { type?: string | null; actionUrl?: string | null },
+  notification: {
+    type?: string | null
+    actionUrl?: string | null
+    referenceId?: string | null
+    chatSessionId?: string | null
+  },
   navigate: (path: string) => void,
   fallbackNavigate: (screen: string) => void,
 ) {
+  if (openCommunityChatFromNotification(notification)) return
+
+  // A beep is answered in the shell sheet, not on a screen. If the tech closed or minimised it,
+  // tapping the row brings the sheet back where they already are instead of navigating them away.
+  if (openStaffBeepSheetFromNotification(notification)) return
+
   if (notification.type === 'StaffLinkRequest') {
     navigate('/staff/qr')
     return

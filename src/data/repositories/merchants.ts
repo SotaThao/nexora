@@ -30,6 +30,7 @@ export function mapBusinessApiDtoToSetup(res: BusinessApiDto): MerchantSetup {
       country: res.country || '',
       phone: res.phone || '',
       website: res.website || '',
+      timeZone: res.timeZone?.trim() || null,
       logo: res.logoUrl || null,
       bookingNotificationPhone: res.bookingNotificationPhone || '',
       salesTaxRatePercent: res.salesTaxRatePercent,
@@ -139,6 +140,11 @@ export function createMerchantsRepository(client: HttpClient = httpClient) {
     },
 
     async updateBusinessInfo(dto: {
+      address?: string
+      city?: string
+      state?: string
+      zipCode?: string
+      country?: string
       name: string
       phone?: string
       feedbackEmail?: string

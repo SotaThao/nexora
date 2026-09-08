@@ -2,6 +2,7 @@ import { VoiceGender, VoiceSelectionState } from '../../constants/voiceCatalog'
 import httpClient from '../../lib/httpClient'
 import { BOOKING_HUB_PAGE_SIZE, BOOKING_HUB_STATUS_COLLECT_MAX_PAGES, BOOKING_HUB_STATUS_COLLECT_PAGE_SIZE } from '../../constants/pagination'
 import { HOLIDAY_TYPE, type HolidayType } from '../../constants/holiday'
+import type { PosServiceStatus } from '../../types/repositories'
 import {
   mapStaffStatusToActivityApi,
   MerchantVoiceBookingSearchField,
@@ -31,12 +32,13 @@ import {
   normalizeVoicePlanStatus,
   normalizeVoicePlanTier,
   type MerchantVoiceLeadStatusApiValue,
+  type MerchantVoiceLeadStatusValue,
   VoiceCreditType,
   type VoiceCreditActivityKind,
   type VoicePlanStatus,
   type VoicePlanTier,
 } from '../merchantVoice/domain'
-import { toUtcBookingSlot } from './publicVoiceBooking'
+import { toStartTimeApi } from './publicVoiceBooking'
 
 export {
   BookingHubMainTab,
@@ -50,6 +52,7 @@ export {
   BookingUiSearchField,
   BookingUiSource,
   BookingUiStatus,
+  isBookingUiStatus,
   BOOKING_UI_SEARCH_FIELD_TO_API,
   BOOKING_UI_SOURCE_I18N_KEY,
   CallUiStatus,
@@ -133,11 +136,13 @@ export {
 } from '../merchantVoice/domain'
 
 export type {
+  BookingDisplayStatus,
   MerchantVoiceBookingSearchFieldApiValue,
   MerchantVoiceCallStatusGroupApiValue,
   MerchantVoiceDayOfWeekApiValue,
   MerchantVoiceLeadSourceApiValue,
   MerchantVoiceLeadStatusApiValue,
+  MerchantVoiceLeadStatusValue,
   MerchantVoiceStaffActivityStatusApiValue,
 } from '../merchantVoice/domain'
 
@@ -170,7 +175,7 @@ export interface MerchantVoiceBookingDto {
   service: string | null
   preferredTime: string | null
   notes: string | null
-  status: MerchantVoiceLeadStatus
+  status: MerchantVoiceLeadStatusValue
   confirmationSmsSentAt: string | null
   assignedStaffId: string | null
   assignedStaffName: string | null
@@ -212,6 +217,7 @@ export interface MerchantVoiceStaffScheduleDto {
 
 export interface MerchantVoiceStaffDto {
   id: string
+  staffProfileId?: string | null
   tenantId: string
   fullName: string
   phoneNumber: string
@@ -251,17 +257,18 @@ export interface MerchantVoiceBookingsFilter {
 }
 
 /** POST `/api/v1/merchant/nexora-voice/bookings` — OpenAPI `CreateMerchantVoiceBookingCommand`.
- * `date` + `startTime` on the wire are UTC (same contract as public online booking).
- * Callers pass the user's local wall-clock selection; `createBooking` converts via browser TZ.
+ * `date` + `startTime` on the wire are the SALON's own wall clock, not UTC and not device-local.
+ * The backend converts them through the salon timezone itself (`BuildPlan` → `FromWallClock`), so
+ * converting here would shift the appointment twice.
  */
 export interface CreateMerchantVoiceBookingRequest {
   customerName: string
   customerPhone: string
   serviceIds: string[]
   staffId?: string | null
-  /** Local calendar date `YYYY-MM-DD` as shown in the UI. */
+  /** Salon calendar date `YYYY-MM-DD` as shown in the UI. */
   date: string
-  /** Local start time `HH:mm` or `HH:mm:ss` as shown in the UI. */
+  /** Salon start time `HH:mm` or `HH:mm:ss` as shown in the UI. */
   startTime: string
   notes?: string | null
   status: MerchantVoiceLeadStatusApiValue
@@ -275,7 +282,7 @@ export interface CreateMerchantVoiceBookingResultDto {
   servicePrice: number | null
   staffName: string | null
   requestedTimeLocal: string | null
-  status: MerchantVoiceLeadStatus | string
+  status: MerchantVoiceLeadStatusValue
 }
 
 export interface MerchantVoiceStaffFilter {
@@ -500,6 +507,7 @@ export interface MerchantVoiceServiceDto {
   durationMinutes: number | null
   note: string | null
   icon: string | null
+  photoUrl: string | null
   sortOrder: number
   isActive: boolean
   categoryIds: string[]
@@ -535,6 +543,7 @@ export interface CreateMerchantVoiceServiceRequest {
   durationMinutes?: number | null
   note?: string | null
   icon?: string | null
+  photo?: File | null
   isActive?: boolean
   /** Real category ids; Other-only / uncategorised → `null` */
   categoryIds?: string[] | null
@@ -546,10 +555,60 @@ export interface UpdateMerchantVoiceServiceRequest {
   durationMinutes?: number | null
   note?: string | null
   icon?: string | null
+  photo?: File | null
   isActive?: boolean
   sortOrder?: number | null
   /** Omit = leave categories; null / [] = Other-only clear; array = replace */
   categoryIds?: string[] | null
+}
+
+/**
+ * Item for POST {SHARED_CATALOG_BASE}/services/batch — omit `id` to create, set it to update.
+ * `description`/`tags`/`status` are optional and, like `photoUrl`, left unspecified whenever
+ * the caller doesn't own that field's current value — this endpoint is the shared catalog
+ * POS also writes to, so omitting means "leave as-is" instead of clobbering POS-managed data.
+ */
+export interface SaveServiceBatchItem {
+  id?: string | null
+  name: string
+  price: number
+  durationMinutes: number
+  description?: string | null
+  icon?: string | null
+  photoUrl?: string | null
+  categoryIds: string[]
+  tags?: string[]
+  status?: PosServiceStatus
+}
+
+export interface SaveServiceBatchResultItem {
+  id: string
+  wasCreated: boolean
+}
+
+export interface SaveServicesBatchResult {
+  items: SaveServiceBatchResultItem[]
+}
+
+export interface ReorderMerchantVoiceServiceItem {
+  serviceId: string
+  sortOrder: number
+}
+
+/** Item for POST {SHARED_CATALOG_BASE}/categories/batch — omit `id` to create, set it to update. */
+export interface SaveCategoryBatchItem {
+  id?: string | null
+  name: string
+  description?: string | null
+}
+
+export interface SaveCategoryBatchResultItem {
+  id: string
+  wasCreated: boolean
+}
+
+export interface SaveCategoriesBatchResult {
+  items: SaveCategoryBatchResultItem[]
 }
 
 export interface MerchantVoiceOperatingHourDto {
@@ -987,6 +1046,7 @@ function normalizeServiceDto(item: unknown, index = 0): MerchantVoiceServiceDto 
       ? String(row.note ?? row.Note ?? row.description ?? row.Description)
       : null,
     icon: (row.icon ?? row.Icon) ? String(row.icon ?? row.Icon) : null,
+    photoUrl: (row.photoUrl ?? row.PhotoUrl) ? String(row.photoUrl ?? row.PhotoUrl) : null,
     sortOrder: typeof row.sortOrder === 'number'
       ? row.sortOrder
       : typeof row.SortOrder === 'number'
@@ -1076,6 +1136,7 @@ function buildSharedServiceFormData(
   if (description) formData.append('description', description)
   const icon = body.icon?.trim()
   if (icon) formData.append('icon', icon)
+  if (body.photo) formData.append('photo', body.photo)
   ;(body.categoryIds ?? []).forEach((categoryId) => formData.append('categoryIds', categoryId))
   formData.append('status', body.isActive === false ? 'Inactive' : 'Active')
   return formData
@@ -1503,12 +1564,10 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
     async createBooking(
       body: CreateMerchantVoiceBookingRequest,
     ): Promise<CreateMerchantVoiceBookingResultDto> {
-      // UI is client-local; BE stores requestedStartAtUtc — convert like public booking.
-      const utcSlot = toUtcBookingSlot(body.date, body.startTime)
+      // The picked slot travels unconverted: BE reads date + startTime as the salon's wall clock.
       const payload: CreateMerchantVoiceBookingRequest = {
         ...body,
-        date: utcSlot.date || body.date,
-        startTime: utcSlot.startTime || body.startTime,
+        startTime: toStartTimeApi(body.startTime) || body.startTime,
       }
       const response = await client.post<CreateMerchantVoiceBookingResultDto>(
         `${MERCHANT_VOICE_BASE}/bookings`,
@@ -1571,8 +1630,8 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
       )
     },
 
-    async updateStaff(body: UpdateMerchantVoiceStaffRequest): Promise<MerchantVoiceStaffDto> {
-      return await client.put<MerchantVoiceStaffDto>(
+    async updateStaff(body: UpdateMerchantVoiceStaffRequest): Promise<void> {
+      await client.put<void>(
         `${MERCHANT_VOICE_BASE}/staff/${encodeURIComponent(body.id)}`,
         body,
         { headers: MERCHANT_VOICE_HEADERS },
@@ -1743,6 +1802,16 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
       )
     },
 
+    // JSON batch endpoint — used to save multiple category rows atomically in one request
+    // instead of one create/update request per row (see Booking Settings "Manage Categories").
+    async saveCategoriesBatch(items: SaveCategoryBatchItem[]): Promise<SaveCategoriesBatchResult> {
+      return await client.post<SaveCategoriesBatchResult>(
+        `${SHARED_CATALOG_BASE}/categories/batch`,
+        { items },
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+    },
+
     async getServices(): Promise<MerchantVoiceServiceDto[]> {
       const response = await client.get<unknown>(
         `${SHARED_CATALOG_BASE}/services`,
@@ -1751,8 +1820,7 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
       return normalizeServicesResponse(response)
     },
 
-    // The shared endpoint accepts multipart form data (it also handles POS's photo upload),
-    // even though Booking Hub's own service form has no photo field yet.
+    // The shared endpoint accepts multipart form data, including an optional service photo.
     async createService(body: CreateMerchantVoiceServiceRequest): Promise<string> {
       const formData = buildSharedServiceFormData(body)
       return await client.upload<string>(`${SHARED_CATALOG_BASE}/services`, formData, 'POST')
@@ -1770,6 +1838,24 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
     async deleteService(id: string): Promise<void> {
       await client.del<void>(
         `${SHARED_CATALOG_BASE}/services/${encodeURIComponent(id)}`,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+    },
+
+    // JSON batch endpoint — used to save multiple draft rows atomically in one request
+    // instead of one multipart request per row (see Booking Settings "Save settings").
+    async saveServicesBatch(items: SaveServiceBatchItem[]): Promise<SaveServicesBatchResult> {
+      return await client.post<SaveServicesBatchResult>(
+        `${SHARED_CATALOG_BASE}/services/batch`,
+        { items },
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+    },
+
+    async reorderServices(items: ReorderMerchantVoiceServiceItem[]): Promise<void> {
+      await client.put<void>(
+        `${SHARED_CATALOG_BASE}/services/reorder`,
+        { items },
         { headers: MERCHANT_VOICE_HEADERS },
       )
     },
@@ -1922,4 +2008,3 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
 }
 
 export const merchantVoiceRepository = createMerchantVoiceRepository()
-

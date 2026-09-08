@@ -14,6 +14,7 @@ import type {
   CheckInBookingPrefill,
   CheckInService,
   CheckInSourceHook,
+  CheckInSubmitResult,
   CheckInTechnician,
 } from './types'
 
@@ -57,7 +58,11 @@ export interface CheckInSession {
   totalPrice: number
 
   activeVisitOrderNumber: string | null
+  activeVisitReceiptToken: string | null
   continueAsNewGuest: () => void
+
+  // Set only by sources that have a rule of their own about when check-in is allowed.
+  checkInBlockedMessage: string | null
 
   booking: CheckInBookingPrefill | null
   bookingTimeLabel: string | null
@@ -79,8 +84,9 @@ export default function useCheckInSession({
   useSource: CheckInSourceHook
   submitErrorMessage: string
   // Fired the moment the order exists, before the guest has dismissed the thank-you screen — the
-  // front desk's lists should already be right behind it.
-  onCheckedIn?: (orderNumber: string) => void
+  // front desk's lists should already be right behind it. The full result comes along for callers
+  // that need more than the number (the public page reads its receipt token off it).
+  onCheckedIn?: (orderNumber: string, result: CheckInSubmitResult) => void
 }): CheckInSession {
   const [phase, setPhase] = useState<CheckInPhase>('phone')
   const [phone, setPhone] = useState('')
@@ -91,6 +97,9 @@ export default function useCheckInSession({
   const [technicianChoices, setTechnicianChoices] = useState<Record<string, string | null>>({})
   const [note, setNote] = useState('')
   const [booking, setBooking] = useState<CheckInBookingPrefill | null>(null)
+  // Remembers that the guest passed the active-visit screen on purpose, so the submit can say so
+  // rather than letting the server hand back the visit that is already open.
+  const [isAdditionalGuest, setIsAdditionalGuest] = useState(false)
   const [orderNumber, setOrderNumber] = useState('')
   const [submitError, setSubmitError] = useState<string | null>(null)
 
@@ -116,6 +125,7 @@ export default function useCheckInSession({
     setTechnicianChoices({})
     setNote('')
     setBooking(null)
+    setIsAdditionalGuest(false)
     setSubmitError(null)
   }, [])
 
@@ -163,7 +173,10 @@ export default function useCheckInSession({
     setPhase('form')
   }, [phase, source.areLookupsSettled, source.customerName, source.activeVisitOrderNumber, source.booking])
 
-  const continueAsNewGuest = useCallback(() => setPhase('form'), [])
+  const continueAsNewGuest = useCallback(() => {
+    setIsAdditionalGuest(true)
+    setPhase('form')
+  }, [])
 
   const toggleService = useCallback(
     (serviceId: string) => {
@@ -229,19 +242,25 @@ export default function useCheckInSession({
     // Two endpoints, one button. A booked guest converts the appointment they already have;
     // anyone else opens a new order.
     const request = booking
-      ? source.submitBooking({ bookingId: booking.bookingId, customerName: trimmedName, items })
-      : source.submitOrder({ customerName: trimmedName, customerPhone: phone, items })
+      ? source.submitBooking({ bookingId: booking.bookingId, customerName: trimmedName, items, note: trimmedNote })
+      : source.submitOrder({
+          customerName: trimmedName,
+          customerPhone: phone,
+          items,
+          note: trimmedNote,
+          ...(isAdditionalGuest ? { allowDuplicatePhone: true } : {}),
+        })
 
     request
       .then((result) => {
         setOrderNumber(result.orderNumber)
         setPhase('done')
-        onCheckedIn?.(result.orderNumber)
+        onCheckedIn?.(result.orderNumber, result)
       })
       .catch(() => setSubmitError(submitErrorMessage))
   }, [
-    booking, canSubmit, customerName, note, onCheckedIn, phone, selectedServiceIds, source,
-    submitErrorMessage, technicianChoices,
+    booking, canSubmit, customerName, isAdditionalGuest, note, onCheckedIn, phone,
+    selectedServiceIds, source, submitErrorMessage, technicianChoices,
   ])
 
   return {
@@ -269,7 +288,9 @@ export default function useCheckInSession({
     totalMinutes,
     totalPrice,
     activeVisitOrderNumber: source.activeVisitOrderNumber,
+    activeVisitReceiptToken: source.activeVisitReceiptToken ?? null,
     continueAsNewGuest,
+    checkInBlockedMessage: source.checkInBlockedMessage ?? null,
     booking,
     bookingTimeLabel: booking?.scheduledTimeLabel ?? null,
     canSubmit,

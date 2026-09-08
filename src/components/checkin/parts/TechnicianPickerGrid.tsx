@@ -1,10 +1,7 @@
 // The "who would you like?" grid, shared by the kiosk and the front desk.
 //
-// Both screens ask the same question of the same people, so they show the same cards: an avatar
-// over a name, with "First available" first and a busy/available badge underneath. The badge used
-// to be front-desk-only on the grounds that floor state is noise for a waiting customer; the
-// one-page spec reversed that, and the badge now lives in the grid itself rather than in a slot
-// each caller fills differently.
+// Both screens ask the same question of the same people. The kiosk keeps the visual avatar cards;
+// the front desk can request compact text-only cards to keep the working surface short.
 import { useMemo, useState } from 'react'
 import { Search } from 'lucide-react'
 import { SkeletonList } from '../../ui/skeleton'
@@ -14,10 +11,15 @@ export interface TechnicianOption {
   displayName: string
   photoUrl?: string | null
   isBusy?: boolean
+  turnsToday?: number
+  completedTurns?: number
+  assignedTurns?: number
+  isNextTurn?: boolean
 }
 
 // Above this many people the grid becomes hard to scan, and a name is faster to type than to hunt.
 const SEARCH_THRESHOLD = 6
+const EMPTY_ROSTER_SKELETON_COUNT = 4
 
 function initialsOf(displayName: string) {
   return displayName
@@ -39,10 +41,17 @@ export default function TechnicianPickerGrid({
   emptyLabel,
   busyLabel,
   availableLabel,
+  turnsLabel,
+  completedTurnsLabel,
+  assignedTurnsLabel,
+  nextTurnLabel,
+  compact = false,
+  autoWrap = false,
+  technicianNameClassName = 'truncate text-xs font-bold',
 }: {
   technicians: TechnicianOption[]
   isLoading?: boolean
-  // null = Anyone / First available.
+  // null = no technician preference.
   selectedStaffId: string | null
   onSelect: (posStaffProfileId: string | null) => void
   anyoneLabel: string
@@ -53,6 +62,14 @@ export default function TechnicianPickerGrid({
   // passes neither, so its cards stay exactly as they were).
   busyLabel?: string
   availableLabel?: string
+  turnsLabel?: (count: number) => string
+  completedTurnsLabel?: (count: number) => string
+  assignedTurnsLabel?: (count: number) => string
+  nextTurnLabel?: string
+  compact?: boolean
+  // Check-in surfaces use content-width choices that wrap; other consumers keep the existing grid.
+  autoWrap?: boolean
+  technicianNameClassName?: string
 }) {
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -64,9 +81,14 @@ export default function TechnicianPickerGrid({
   }, [technicians, searchQuery])
 
   const cardClass = (isSelected: boolean) =>
-    `flex flex-col items-center gap-1 rounded-xl border p-3 text-center ${
+    `${autoWrap ? 'min-w-0 w-auto max-w-full flex-none ' : ''}${compact
+      ? 'flex min-h-11 flex-col items-start gap-0.5 rounded-lg border px-3 py-2 text-left'
+      : 'flex flex-col items-center justify-center gap-1 rounded-xl border p-3 text-center'} ${
       isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder hover:border-nexoraBrand'
     }`
+
+  const optionLabelClass = `${autoWrap ? 'max-w-full' : 'w-full'} truncate text-xs font-bold text-nexoraText`
+  const fullRowClass = autoWrap ? 'w-full' : 'col-span-full'
 
   const renderBadge = (staff: TechnicianOption) => {
     if (!busyLabel || !availableLabel || staff.isBusy === undefined) return null
@@ -92,17 +114,25 @@ export default function TechnicianPickerGrid({
         </div>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <div
+        className={
+          autoWrap ? 'flex flex-wrap items-stretch gap-2' : 'grid grid-cols-2 gap-2 sm:grid-cols-3'
+        }
+      >
         {/* Outside the loading branch: "Anyone" needs no data, so it is tappable immediately. */}
         <button type="button" onClick={() => onSelect(null)} className={cardClass(selectedStaffId === null)}>
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-nexoraCanvas text-base">⚡</span>
-          <span className="text-xs font-bold text-nexoraText">{anyoneLabel}</span>
-          {anyoneHint ? <span className="text-[10px] text-nexoraMuted">{anyoneHint}</span> : null}
+          {!compact ? (
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-nexoraCanvas text-base">⚡</span>
+          ) : null}
+          <span className={optionLabelClass}>{anyoneLabel}</span>
+          {anyoneHint ? (
+            <span className="max-w-full truncate text-[10px] text-nexoraMuted">{anyoneHint}</span>
+          ) : null}
         </button>
 
-        {isLoading ? (
-          <div className="col-span-full">
-            <SkeletonList count={4} lines={1} />
+        {isLoading && technicians.length === 0 ? (
+          <div className={fullRowClass}>
+            <SkeletonList count={EMPTY_ROSTER_SKELETON_COUNT} lines={1} />
           </div>
         ) : (
           <>
@@ -113,20 +143,42 @@ export default function TechnicianPickerGrid({
                 onClick={() => onSelect(staff.posStaffProfileId)}
                 className={cardClass(selectedStaffId === staff.posStaffProfileId)}
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-nexoraCanvas text-xs font-bold text-nexoraText">
-                  {staff.photoUrl ? (
-                    <img src={staff.photoUrl} alt="" className="h-11 w-11 rounded-full object-cover" />
-                  ) : (
-                    initialsOf(staff.displayName)
-                  )}
-                </span>
-                <span className="w-full truncate text-xs font-bold text-nexoraText">{staff.displayName}</span>
+                {!compact ? (
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-nexoraCanvas text-xs font-bold text-nexoraText">
+                    {staff.photoUrl ? (
+                      <img src={staff.photoUrl} alt="" className="h-11 w-11 rounded-full object-cover" />
+                    ) : (
+                      initialsOf(staff.displayName)
+                    )}
+                  </span>
+                ) : null}
+                <span className={`${autoWrap ? 'max-w-full' : 'w-full'} text-nexoraText ${technicianNameClassName}`}>{staff.displayName}</span>
+                {staff.turnsToday !== undefined && turnsLabel ? (
+                  <span className="text-[10px] font-semibold tabular-nums text-nexoraMuted">
+                    {turnsLabel(staff.turnsToday)}
+                  </span>
+                ) : null}
+                {staff.assignedTurns !== undefined && assignedTurnsLabel ? (
+                  <span className="text-[10px] font-semibold tabular-nums text-nexoraMuted">
+                    {assignedTurnsLabel(staff.assignedTurns)}
+                  </span>
+                ) : null}
+                {staff.completedTurns !== undefined && completedTurnsLabel ? (
+                  <span className="text-[10px] font-semibold tabular-nums text-nexoraMuted">
+                    {completedTurnsLabel(staff.completedTurns)}
+                  </span>
+                ) : null}
+                {staff.isNextTurn && nextTurnLabel ? (
+                  <span className="rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-extrabold text-violet-700">
+                    {nextTurnLabel}
+                  </span>
+                ) : null}
                 {renderBadge(staff)}
               </button>
             ))}
 
             {filtered.length === 0 ? (
-              <p className="col-span-full text-xs text-nexoraMuted">{emptyLabel}</p>
+              <p className={`${fullRowClass} text-xs text-nexoraMuted`}>{emptyLabel}</p>
             ) : null}
           </>
         )}

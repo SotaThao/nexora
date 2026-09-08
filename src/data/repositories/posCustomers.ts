@@ -49,6 +49,10 @@ function buildOrderHistoryParams(query: PosCustomerOrderHistoryQuery = {}) {
   return params
 }
 
+function withVisitFlag<T extends { isNewCustomer?: boolean }>(item: T): T & { isNewCustomer: boolean } {
+  return { ...item, isNewCustomer: item.isNewCustomer === true }
+}
+
 export function createPosCustomersRepository(client: HttpClient = httpClient) {
   return {
     async getCustomerList(businessId: string, query: PosCustomerListQuery = {}): Promise<PosCustomerListPage> {
@@ -56,13 +60,15 @@ export function createPosCustomersRepository(client: HttpClient = httpClient) {
         `/api/v1/merchant/pos/${businessId}/customers`,
         { params: buildCustomerListParams(query) },
       )
-      return res ?? EMPTY_CUSTOMER_LIST_PAGE
+      const page = res ?? EMPTY_CUSTOMER_LIST_PAGE
+      return { ...page, items: (page.items ?? []).map(withVisitFlag) }
     },
 
-    async getCustomerDetail(businessId: string, customerId: string): Promise<PosCustomerDetailApiDto> {
-      return await client.get<PosCustomerDetailApiDto>(
+    async getCustomerDetail(businessId: string, customerId: string): Promise<PosCustomerDetailApiDto | null> {
+      const res = await client.get<PosCustomerDetailApiDto>(
         `/api/v1/merchant/pos/${businessId}/customers/${customerId}`,
       )
+      return res == null ? null : withVisitFlag(res)
     },
 
     async getCustomerOrderHistory(

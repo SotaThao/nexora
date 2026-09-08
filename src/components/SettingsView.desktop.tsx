@@ -271,8 +271,7 @@ export default function SettingsViewDesktop({
             setBasicForm={form.setBasicForm}
             basicErrors={form.basicErrors}
             setBasicErrors={form.setBasicErrors}
-            isEditingAddress={form.isEditingAddress}
-            setIsEditingAddress={form.setIsEditingAddress}
+            isSavingPersonalInfo={form.isSavingPersonalInfo}
             addressForm={form.addressForm}
             setAddressForm={form.setAddressForm}
             addressErrors={form.addressErrors}
@@ -300,8 +299,6 @@ export default function SettingsViewDesktop({
             handleCopy={form.handleCopy}
             startEditBasic={form.startEditBasic}
             saveBasic={form.saveBasic}
-            startEditAddress={form.startEditAddress}
-            saveAddress={form.saveAddress}
             startEditBusiness={form.startEditBusiness}
             saveBusiness={form.saveBusiness}
             startEditReviews={form.startEditReviews}

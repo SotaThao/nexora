@@ -22,6 +22,7 @@ export default function SelectTechnicianStep({
   onBack,
   onContinue,
   anyoneHint,
+  compact = false,
 }: {
   technicians: SelfCheckInTechnicianApiDto[]
   isLoading: boolean
@@ -31,6 +32,7 @@ export default function SelectTechnicianStep({
   onBack: () => void
   onContinue: () => void
   anyoneHint?: string
+  compact?: boolean
 }) {
   const { t } = useTranslation()
 
@@ -54,6 +56,8 @@ export default function SelectTechnicianStep({
         anyoneHint={anyoneHint}
         busyLabel={t(`${K}.technicianBusy`)}
         availableLabel={t(`${K}.technicianAvailable`)}
+        compact={compact}
+        autoWrap
       />
     </CheckInStepFrame>
   )

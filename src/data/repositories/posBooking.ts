@@ -18,6 +18,9 @@ import type {
 
 type HttpClient = typeof httpClient
 
+const BOOKING_LIST_COLLECTION_PAGE_SIZE = 200
+const MAX_BOOKING_LIST_COLLECTION_PAGES = 100
+
 function buildListQuery(filters: BookingListFilters): string {
   const params = new URLSearchParams()
   if (filters.posStaffProfileId) params.set('posStaffProfileId', filters.posStaffProfileId)
@@ -30,15 +33,48 @@ function buildListQuery(filters: BookingListFilters): string {
 }
 
 export function createPosBookingRepository(client: HttpClient = httpClient) {
+  async function getBookingList(
+    businessId: string,
+    filters: BookingListFilters,
+  ): Promise<BookingListResultApiDto> {
+    return await client.get<BookingListResultApiDto>(
+      `/api/v1/merchant/pos/${businessId}/bookings?${buildListQuery(filters)}`,
+    )
+  }
+
   return {
     async createStaffBooking(businessId: string, payload: CreateBookingPayload): Promise<string> {
       return await client.post<string>(`/api/v1/merchant/pos/${businessId}/bookings`, payload)
     },
 
-    async getBookingList(businessId: string, filters: BookingListFilters): Promise<BookingListResultApiDto> {
-      return await client.get<BookingListResultApiDto>(
-        `/api/v1/merchant/pos/${businessId}/bookings?${buildListQuery(filters)}`,
-      )
+    getBookingList,
+
+    async getAllBookingListPages(
+      businessId: string,
+      filters: Omit<BookingListFilters, 'page' | 'pageSize'>,
+    ): Promise<BookingListResultApiDto> {
+      const items: BookingListResultApiDto['items'] = []
+      let totalCount = 0
+
+      for (let page = 1; page <= MAX_BOOKING_LIST_COLLECTION_PAGES; page += 1) {
+        const result = await getBookingList(businessId, {
+          ...filters,
+          page,
+          pageSize: BOOKING_LIST_COLLECTION_PAGE_SIZE,
+        })
+        totalCount = Math.max(totalCount, result.totalCount)
+
+        if (result.items.length === 0) {
+          return { items, totalCount }
+        }
+
+        items.push(...result.items)
+        if (items.length >= totalCount) {
+          return { items, totalCount }
+        }
+      }
+
+      throw new Error('Booking list pagination exceeded the safety limit')
     },
 
     async getBookingDetail(businessId: string, bookingId: string): Promise<BookingDetailApiDto> {

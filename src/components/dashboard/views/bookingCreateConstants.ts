@@ -1,4 +1,5 @@
 import { BookingUiStatus } from '../../../data/repositories/merchantVoice'
+import { BOOKING_STATUS_FILTER_ORDER } from './bookingTodayConstants'
 import { toLocalDateIso, pad2 } from './bookingHubFormatters'
 
 export const BOOKING_CREATE_TK = 'components.dashboard.views.BookingHubView.today.create'
@@ -15,6 +16,10 @@ export const BOOKING_CREATE_LOCAL_ID_PREFIX = 'local-created-' as const
 export const BOOKING_CREATE_OPTIMISTIC_TTL_MS = 45_000
 /** Visual separator in service chips / success toast (not user-facing copy). */
 export const BOOKING_CREATE_DISPLAY_SEPARATOR = ' · ' as const
+
+export const BOOKING_CREATE_STATUS_OPTIONS = BOOKING_STATUS_FILTER_ORDER.filter(
+  (status) => status !== BookingUiStatus.Cancelled,
+)
 
 export const BOOKING_CREATE_CELL_ADD_HTML =
   '<span class="booking-cell-add" aria-hidden="true"><span>+</span></span>'

@@ -38,25 +38,34 @@ export interface CheckInBookingPrefill {
 
 export interface CheckInItemPayload {
   posServiceId: string
-  // null is "First available" and stays null — a person on the floor decides.
+  // null is "Anyone" and stays null — a person on the floor decides.
   posStaffProfileId: string | null
   note: string | null
 }
 
 export interface CheckInSubmitResult {
   orderNumber: string
+  // Anonymous handle for a "where am I in line?" page. Only the public web surface has one —
+  // a guest at the kiosk or the front desk is standing in the salon and can just ask.
+  receiptToken?: string
 }
 
 export interface CheckInOrderSubmit {
   customerName: string
   customerPhone: string
   items: CheckInItemPayload[]
+  note: string | null
+  // The guest answered "check in another guest" on the active-visit screen, so this phone
+  // deliberately gets a second open order — a family sharing one number is the common case.
+  // Sources whose API has no such flag ignore it.
+  allowDuplicatePhone?: boolean
 }
 
 export interface CheckInBookingSubmit {
   bookingId: string
   customerName: string
   items: CheckInItemPayload[]
+  note: string | null
 }
 
 // Everything the page needs, already resolved. A source hook takes the phone number currently on
@@ -73,7 +82,16 @@ export interface CheckInSourceResult {
   customerName: string | null
   booking: CheckInBookingPrefill | null
   activeVisitOrderNumber: string | null
+  // Paired with activeVisitOrderNumber where the surface has one, so "that's me" can lead
+  // somewhere. Omitted by sources whose guests are already in the building.
+  activeVisitReceiptToken?: string | null
   areLookupsSettled: boolean
+
+  // A reason this guest may not check in at all right now, already translated. Only the public
+  // web surface sets it (a booking outside its convert window): letting an appointment that is
+  // hours away turn into a walk-in would hold a queue slot all day. Sources that have no such
+  // rule omit it and the page behaves exactly as before.
+  checkInBlockedMessage?: string | null
 
   submitOrder: (payload: CheckInOrderSubmit) => Promise<CheckInSubmitResult>
   submitBooking: (payload: CheckInBookingSubmit) => Promise<CheckInSubmitResult>

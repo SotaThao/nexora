@@ -42,7 +42,9 @@ import {
   formatWalletBalanceUsd,
   hasEnoughWalletBalance,
   isPlanCardPaymentSymbol,
+  isVoiceAiUpgradeMove,
   resolvePlanBillingPeriodSuffix,
+  type PaidServicePlanId,
   type VoiceAiCheckoutSelection,
 } from './constants'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
@@ -56,6 +58,9 @@ type Props = {
   open: boolean
   selection: VoiceAiCheckoutSelection | null
   billingDefaults?: SubscriptionBillingDetails
+  /** Merchant's current active VoiceAI plan — re-validated here as defense-in-depth against a stale `selection`. */
+  currentPlanId?: PaidServicePlanId | null
+  currentPeriodInMonths?: number | null
   onClose: () => void
   onSuccess: (selection: VoiceAiCheckoutSelection, payment: SubscriptionPaymentMethod) => void
 }
@@ -77,6 +82,8 @@ export default function PlanPaymentModal({
   open,
   selection,
   billingDefaults,
+  currentPlanId,
+  currentPeriodInMonths,
   onClose,
   onSuccess,
 }: Props) {
@@ -257,6 +264,17 @@ export default function PlanPaymentModal({
   }
 
   const handleConfirm = () => {
+    // Defense-in-depth: the plan grid already blocks opening this modal for a downgrade,
+    // but re-check here in case the merchant's active plan changed while it was still open.
+    if (
+      selection
+      && !isVoiceAiUpgradeMove(selection.planId, selection.periodInMonths, currentPlanId, currentPeriodInMonths)
+    ) {
+      showToast(t(subscriptionModalKey('downgradeBlocked')), 'error')
+      onClose()
+      return
+    }
+
     if (isCardPayment) {
       void cardFormRef.current?.submit()
       return
@@ -455,7 +473,7 @@ export default function PlanPaymentModal({
                 </div>
                 {currentPlanLabel ? (
                   <p className="mt-3 text-xs font-semibold text-red-600">
-                    {t(`${SUBSCRIPTION_PAYMENT_MODAL_TK}.subscription_forfeit_warning`, { plan: currentPlanLabel })}
+                    {t(`${SUBSCRIPTION_PAYMENT_MODAL_TK}.subscription_forfeit_warning_no_credit`, { plan: currentPlanLabel })}
                   </p>
                 ) : null}
               </section>

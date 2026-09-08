@@ -6,6 +6,7 @@
 // Nothing is persisted here. Picking a card hands the id back and the caller makes the single
 // AssignStaffToServiceLine call; the note travels with it, since that endpoint overwrites Note on
 // every write.
+import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import IconButton from '../../../../ui/IconButton'
@@ -21,6 +22,8 @@ export default function ChangeTechnicianModal({
   technicians,
   isLoading,
   selectedStaffId,
+  currentTechnicianName,
+  turnsError,
   note,
   onChangeNote,
   onSelect,
@@ -33,14 +36,34 @@ export default function ChangeTechnicianModal({
   isLoading?: boolean
   // null = First available, which clears the assignment rather than picking someone.
   selectedStaffId: string | null
+  currentTechnicianName?: string
+  turnsError?: boolean
   note: string
   onChangeNote: (note: string) => void
   onSelect: (posStaffProfileId: string | null) => void
   onClose: () => void
 }) {
   const { t } = useTranslation()
+  const [busySelection, setBusySelection] = useState<string | null>(null)
+  useEffect(() => setBusySelection(null), [open, selectedStaffId, serviceName])
+  const busyTechnician = technicians.find(technician => technician.posStaffProfileId === busySelection)
+  const handleSelect = (staffId: string | null) => {
+    const technician = technicians.find(tech => tech.posStaffProfileId === staffId)
+    if (technician?.isBusy && staffId !== selectedStaffId) {
+      setBusySelection(staffId)
+      return
+    }
+    setBusySelection(null)
+    onSelect(staffId)
+  }
 
   if (!open) return null
+
+  const currentTechnicianLabel = selectedStaffId === null
+    ? t(`${K}.firstAvailableLabel`)
+    : currentTechnicianName?.trim()
+      || technicians.find((technician) => technician.posStaffProfileId === selectedStaffId)?.displayName
+      || t(`${K}.technicianNameUnavailable`)
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
@@ -54,17 +77,41 @@ export default function ChangeTechnicianModal({
           </IconButton>
         </div>
 
-        <div className="flex-1 space-y-3 overflow-y-auto">
+        <p className="mb-4 shrink-0 rounded-lg border border-nexoraBrand/20 bg-nexoraBrand/5 px-3 py-2 text-sm text-nexoraMuted">
+          {t(`${K}.currentTechnicianLabel`)}{' '}
+          <span className={`break-words font-bold text-nexoraText ${selectedStaffId ? 'text-base uppercase' : ''}`}>{currentTechnicianLabel}</span>
+        </p>
+
+        {busyTechnician ? (
+          <div className="mb-3 shrink-0 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900" role="alert">
+            <p className="font-semibold">{t(`${K}.technicianBusyWarning`, { name: busyTechnician.displayName })}</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button type="button" onClick={() => setBusySelection(null)} className="min-h-10 rounded-lg border border-amber-300 bg-white px-3 font-bold">{t(`${K}.technicianBusyChooseAnother`)}</button>
+              <button type="button" onClick={() => { setBusySelection(null); onSelect(busyTechnician.posStaffProfileId) }} className="min-h-10 rounded-lg bg-nexoraBrand px-3 font-bold text-white">{t(`${K}.technicianBusyAssignAnyway`)}</button>
+            </div>
+          </div>
+        ) : null}
+
+        <div className="flex-1 space-y-3 overflow-y-auto p-0.5">
+          {turnsError ? (
+            <p role="status" className="text-xs text-nexoraMuted">
+              {t(`${K}.technicianTurnsError`)}
+            </p>
+          ) : null}
           <TechnicianPickerGrid
-            technicians={technicians}
+            technicianNameClassName="break-words text-sm font-extrabold uppercase"
+            technicians={[...technicians].sort((a, b) => Number(Boolean(b.isNextTurn)) - Number(Boolean(a.isNextTurn)))}
             isLoading={isLoading}
             selectedStaffId={selectedStaffId}
-            onSelect={onSelect}
+            onSelect={handleSelect}
             anyoneLabel={t(`${K}.firstAvailableLabel`)}
             searchPlaceholder={t(`${K}.technicianSearchPlaceholder`)}
             emptyLabel={t(`${K}.noTechnicians`)}
             busyLabel={t(`${K}.technicianBusy`)}
             availableLabel={t(`${K}.technicianAvailable`)}
+            completedTurnsLabel={(count) => t(`${K}.technicianCompletedTurns`, { count })}
+            assignedTurnsLabel={(count) => t(`${K}.technicianAssignedTurns`, { count })}
+            nextTurnLabel={t(`${K}.technicianNextTurn`)}
           />
 
           <div>

@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import type { SetStateAction } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
 import {
@@ -7,10 +8,28 @@ import {
   DASHBOARD_MENU_ID,
   normalizeDashboardSettingsTab,
 } from '../constants'
+import { buildTouchpointsSearch } from '../../touchpoints/touchpointSections'
 
 type NavigateMenuOptions = {
   closeDrawer?: boolean
   tab?: string
+  section?: string
+}
+
+export const DESKTOP_SIDEBAR_STORAGE_KEY = 'nexora:dashboard:desktop-sidebar-open'
+
+function readDesktopSidebarPreference(): boolean | null {
+  if (typeof window === 'undefined') return null
+
+  try {
+    const savedValue = window.localStorage.getItem(DESKTOP_SIDEBAR_STORAGE_KEY)
+    if (savedValue === 'true') return true
+    if (savedValue === 'false') return false
+  } catch {
+    // Storage can be unavailable in private or restricted browser contexts.
+  }
+
+  return null
 }
 
 export function useDashboardNavigation() {
@@ -26,7 +45,25 @@ export function useDashboardNavigation() {
   // Desktop sidebar collapse toggle — same open/closed mechanic as the mobile
   // drawer above, just docked instead of an overlay (see DashboardSidebar's
   // `isOpen` prop and DashboardHeader.desktop's PanelLeft toggle button).
-  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true)
+  const [savedDesktopSidebarOpen] = useState(readDesktopSidebarPreference)
+  const [isDesktopSidebarOpen, setDesktopSidebarOpenState] = useState(
+    () => savedDesktopSidebarOpen ?? true,
+  )
+  const setIsDesktopSidebarOpen = useCallback((nextState: SetStateAction<boolean>) => {
+    setDesktopSidebarOpenState((currentState) => {
+      const nextValue = typeof nextState === 'function'
+        ? nextState(currentState)
+        : nextState
+
+      try {
+        window.localStorage.setItem(DESKTOP_SIDEBAR_STORAGE_KEY, String(nextValue))
+      } catch {
+        // Keep the menu usable when browser storage is unavailable.
+      }
+
+      return nextValue
+    })
+  }, [])
   const [isPaymentsPayoutsMobileExpanded, setIsPaymentsPayoutsMobileExpanded] = useState(isPaymentsPayoutsActive)
   const [isTaxIqMobileExpanded, setIsTaxIqMobileExpanded] = useState(activeMenu === DASHBOARD_MENU.TaxIq)
 
@@ -80,29 +117,32 @@ export function useDashboardNavigation() {
     }
   }, [activeMenu, isPaymentsPayoutsActive])
 
-  const buildMenuRoute = (menuId: string, tab?: string) => {
+  const buildMenuRoute = (menuId: string, tab?: string, section?: string) => {
     const base = buildDashboardMenuPath(menuId)
+    if (menuId === DASHBOARD_MENU_ID.touchpoints) {
+      return `${base}?${buildTouchpointsSearch({ tab, section })}`
+    }
     if (!tab) return base
     return `${base}?tab=${encodeURIComponent(tab)}`
   }
 
-  const handleNavigateMenu = (menuId: string, tab?: string) => {
+  const handleNavigateMenu = (menuId: string, tab?: string, section?: string) => {
     if (menuId === DASHBOARD_MENU_ID.productManagement) {
       void openProductManagement()
       return
     }
-    navigate(buildMenuRoute(menuId, tab))
+    navigate(buildMenuRoute(menuId, tab, section))
   }
 
   const navigateMenu = (menuId: string, options: NavigateMenuOptions = {}) => {
-    const { closeDrawer = true, tab } = options
+    const { closeDrawer = true, tab, section } = options
     if (menuId === DASHBOARD_MENU_ID.productManagement) {
       void openProductManagement().finally(() => {
         if (closeDrawer) setIsMobileMenuOpen(false)
       })
       return
     }
-    navigate(buildMenuRoute(menuId, tab))
+    navigate(buildMenuRoute(menuId, tab, section))
     if (closeDrawer) setIsMobileMenuOpen(false)
   }
 

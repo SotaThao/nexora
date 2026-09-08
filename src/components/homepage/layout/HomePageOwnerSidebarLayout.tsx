@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MobileMenuDrawer from '../../dashboard/layout/MobileMenuDrawer'
-import { MERCHANT_SIDEBAR_MENU_ITEMS, buildDashboardMenuPath } from '../../dashboard/constants'
+import { MERCHANT_SIDEBAR_MENU_ITEMS, buildDashboardMenuPath, DASHBOARD_MENU_ID } from '../../dashboard/constants'
+import { buildTouchpointsSearch } from '../../touchpoints/touchpointSections'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import { getTipPlatformSubscription } from '../../../utils/subscriptionDisplay'
@@ -70,6 +71,10 @@ export default function HomePageOwnerSidebarLayout({
 
   const handleNavigateMenu = useCallback(
     (menuId: string) => {
+      if (menuId === DASHBOARD_MENU_ID.touchpoints) {
+        navigate(`${buildDashboardMenuPath(menuId)}?${buildTouchpointsSearch()}`)
+        return
+      }
       navigate(buildDashboardMenuPath(menuId))
     },
     [navigate],
@@ -79,7 +84,12 @@ export default function HomePageOwnerSidebarLayout({
     (menuId: string, options: { tab?: string; closeDrawer?: boolean } = {}) => {
       const { tab, closeDrawer = true } = options
       const base = buildDashboardMenuPath(menuId)
-      const route = tab ? `${base}?tab=${encodeURIComponent(tab)}` : base
+      const route =
+        menuId === DASHBOARD_MENU_ID.touchpoints
+          ? `${base}?${buildTouchpointsSearch({ tab })}`
+          : tab
+            ? `${base}?tab=${encodeURIComponent(tab)}`
+            : base
       navigate(route)
       if (closeDrawer) setIsMobileMenuOpen(false)
     },
