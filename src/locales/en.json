@@ -5006,7 +5006,7 @@
             "warnGoBack": "Go back"
           },
           "PosOrderSettingsPanel": {
-            "title": "Service lines",
+            "title": "Service rules",
             "description": "How services on a ticket move from assigned to done.",
             "requireStaffAcceptanceLabel": "Technicians must accept assigned work",
             "requireStaffAcceptanceDescription": "When on, a technician gets a notification and taps Accept before the service counts as theirs. Turning this off accepts every service currently waiting.",

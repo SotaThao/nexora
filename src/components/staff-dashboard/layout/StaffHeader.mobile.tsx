@@ -111,7 +111,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
             </button>
 
             {isNotiOpen && (
-              <div className="absolute right-0 top-12 z-50 flex max-h-[460px] w-80 flex-col overflow-hidden rounded-xl border border-nexoraBorder bg-white shadow-2xl animate-fadeIn">
+              <div className="fixed left-4 right-4 top-[calc(var(--app-safe-area-top)+4.5rem)] z-[80] flex max-h-[calc(100dvh-5.5rem)] w-auto flex-col overflow-hidden rounded-xl border border-nexoraBorder bg-white shadow-2xl animate-fadeIn">
                 <div className="flex items-center justify-between border-b border-nexoraBorder bg-nexoraSurfaceMuted px-4 py-3">
                   <span className="text-xs font-black uppercase tracking-wider text-nexoraText">
                     {t('staff_dashboard.titles.notifications')} ({unreadCount})
@@ -128,7 +128,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                   )}
                 </div>
 
-                <div className="max-h-[380px] flex-grow divide-y divide-nexoraBorder overflow-y-auto">
+                <div className="max-h-[calc(100dvh-9.5rem)] flex-grow divide-y divide-nexoraBorder overflow-y-auto">
                   {isNotificationsLoading ? (
                     <div className="flex flex-col items-center justify-center py-12">
                       <Bell className="mb-2 h-8 w-8 animate-pulse text-nexoraBorder" />

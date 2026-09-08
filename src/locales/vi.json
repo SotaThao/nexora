@@ -5007,7 +5007,7 @@
             "warnGoBack": "Quay lại"
           },
           "PosOrderSettingsPanel": {
-            "title": "Dịch vụ trên phiếu",
+            "title": "Quy tắc dịch vụ",
             "description": "Cách các dịch vụ trên một phiếu đi từ lúc giao thợ đến lúc hoàn tất.",
             "requireStaffAcceptanceLabel": "Thợ phải xác nhận khi được giao khách",
             "requireStaffAcceptanceDescription": "Khi bật, thợ nhận thông báo và bấm Nhận thì dịch vụ mới tính là của họ. Tắt đi sẽ tự xác nhận mọi dịch vụ đang chờ.",
