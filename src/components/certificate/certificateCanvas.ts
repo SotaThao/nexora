@@ -14,12 +14,12 @@ import { CERTIFICATE_EXAM_SCORE_MAX_DEFAULT } from '../../constants/certificate'
 import { parseApiUtcDateTime } from '../../utils/localDate'
 import type { CertificateVerificationApiDto } from '../../types/repositories'
 
-/** Artwork resized to the export dimensions and encoded as lossless WebP. */
+/** Supplied optimized WebP artwork; the renderer fits it to the export dimensions. */
 export const CERTIFICATE_TEMPLATE_SRC = '/images/certificate-template.webp'
 
 const TEMPLATE = {
-  naturalWidth: 1427,
-  naturalHeight: 1102,
+  naturalWidth: 1600,
+  naturalHeight: 1236,
   /** Ink colour of the artwork's own headings, so the filled values match what is printed. */
   inkColor: '#081F49',
   /** Use the system Times New Roman face, with serif fallbacks where it is unavailable. */
@@ -61,7 +61,7 @@ const STAMP_TONE = {
 export type CertificateStampTone = keyof typeof STAMP_TONE
 
 /**
- * Keep the requested 1427 × 1102 preview and download size even when the source is larger.
+ * Keep the requested 1600 × 1236 preview and download size even when the source is larger.
  */
 const DEFAULT_SCALE = 1
 

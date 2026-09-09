@@ -1,6 +1,6 @@
 // CertificateCanvasPreview — renders one certificate onto the artwork and offers it as a download.
 //
-// The canvas and saved PNG use 1427 × 1102 pixels; CSS fits the preview to its card.
+// The canvas and saved PNG use 1600 × 1236 pixels; CSS fits the preview to its card.
 import { useEffect, useRef, useState } from 'react'
 import { AlertTriangle, Download, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
@@ -124,7 +124,7 @@ export default function CertificateCanvasPreview({
     <div className="space-y-3">
       <div className="relative overflow-hidden rounded-xl border border-nexoraBorder bg-nexoraSurface p-2 shadow-nexora-card">
         {/* Reserves the artwork's aspect ratio so the card does not jump when the canvas lands. */}
-        <div ref={holderRef} className="aspect-[1427/1102] w-full" />
+        <div ref={holderRef} className="aspect-[1600/1236] w-full" />
         {state === 'rendering' ? (
           <div className="absolute inset-0 flex items-center justify-center bg-nexoraSurface/80">
             <Loader2 className="h-6 w-6 animate-spin text-nexoraBrand" />
