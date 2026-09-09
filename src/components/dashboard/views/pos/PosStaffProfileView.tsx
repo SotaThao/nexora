@@ -26,6 +26,7 @@ interface StaffTableItem {
   displayName: string | null
   avatar: string | null
   position: string | null
+  staffLevelName: string | null
   phone: string | null
   email: string | null
 }
@@ -121,6 +122,9 @@ export default function PosStaffProfileView({ embedded = false }: { embedded?: b
                     {t('components.dashboard.views.pos.PosStaffProfileView.tableColumnPosition')}
                   </th>
                   <th className={POS_TABLE_HEADER_CELL_CLASS}>
+                    {t('components.dashboard.views.pos.PosStaffProfileView.tableColumnLevel')}
+                  </th>
+                  <th className={POS_TABLE_HEADER_CELL_CLASS}>
                     {t('components.dashboard.views.pos.PosStaffProfileView.tableColumnContact')}
                   </th>
                   <th className={`${POS_TABLE_HEADER_CELL_CLASS} ${POS_TABLE_STICKY_ACTION_HEADER_CLASS} text-center`}>
@@ -131,13 +135,13 @@ export default function PosStaffProfileView({ embedded = false }: { embedded?: b
               <tbody>
                 {staffListQuery.isFetching && staffItems.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-5 py-12 text-center">
+                    <td colSpan={5} className="px-5 py-12 text-center">
                       <Loader2 className="mx-auto h-6 w-6 animate-spin text-nexoraBrand" />
                     </td>
                   </tr>
                 ) : staffItems.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-5 py-12">
+                    <td colSpan={5} className="px-5 py-12">
                       <div className="flex flex-col items-center justify-center gap-2 text-center">
                         <Users className="h-8 w-8 text-nexoraSubtle" />
                         <p className="text-sm font-extrabold text-nexoraMuted">
@@ -173,6 +177,9 @@ export default function PosStaffProfileView({ embedded = false }: { embedded?: b
                         </td>
                         <td className="px-5 py-4 text-xs font-semibold text-nexoraMuted">
                           {member.position || '—'}
+                        </td>
+                        <td className="px-5 py-4 text-xs font-semibold text-nexoraMuted">
+                          {member.staffLevelName || '—'}
                         </td>
                         <td className={`px-5 py-4 text-xs font-semibold text-nexoraMuted ${member.phone ? 'whitespace-nowrap tabular-nums' : ''}`}>
                           {member.phone || member.email || '—'}

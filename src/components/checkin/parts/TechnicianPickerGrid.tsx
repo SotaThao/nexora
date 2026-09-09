@@ -12,10 +12,15 @@ export interface TechnicianOption {
   photoUrl?: string | null
   isBusy?: boolean
   turnsToday?: number
+  completedTurns?: number
+  assignedTurns?: number
   isNextTurn?: boolean
   // Clocked out, and offered anyway because they are already working the ticket being edited.
   // Check-in surfaces never set this — opening a ticket still takes a technician on shift.
   isOffShift?: boolean
+  // Business-defined staff proficiency level (e.g. Basic/Advanced/Senior), when assigned.
+  staffLevelName?: string | null
+  queueCount?: number
 }
 
 // Above this many people the grid becomes hard to scan, and a name is faster to type than to hunt.
@@ -44,9 +49,13 @@ export default function TechnicianPickerGrid({
   availableLabel,
   offShiftLabel,
   turnsLabel,
+  completedTurnsLabel,
+  assignedTurnsLabel,
   nextTurnLabel,
+  queueLabel,
   compact = false,
   autoWrap = false,
+  technicianNameClassName = 'truncate text-xs font-bold',
 }: {
   technicians: TechnicianOption[]
   isLoading?: boolean
@@ -64,10 +73,14 @@ export default function TechnicianPickerGrid({
   // Only passed where an off-shift technician can appear at all; without it they read as available.
   offShiftLabel?: string
   turnsLabel?: (count: number) => string
+  completedTurnsLabel?: (count: number) => string
+  assignedTurnsLabel?: (count: number) => string
   nextTurnLabel?: string
+  queueLabel?: (count: number) => string
   compact?: boolean
   // Check-in surfaces use content-width choices that wrap; other consumers keep the existing grid.
   autoWrap?: boolean
+  technicianNameClassName?: string
 }) {
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -96,6 +109,15 @@ export default function TechnicianPickerGrid({
     return (
       <span className={`text-[10px] font-semibold ${staff.isBusy ? 'text-rose-600' : 'text-emerald-600'}`}>
         {staff.isBusy ? busyLabel : availableLabel}
+      </span>
+    )
+  }
+
+  const renderQueuePill = (staff: TechnicianOption) => {
+    if (!queueLabel || !staff.queueCount) return null
+    return (
+      <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold leading-none text-amber-700">
+        {queueLabel(staff.queueCount)}
       </span>
     )
   }
@@ -153,10 +175,25 @@ export default function TechnicianPickerGrid({
                     )}
                   </span>
                 ) : null}
-                <span className={optionLabelClass}>{staff.displayName}</span>
+                <span className={`${autoWrap ? 'max-w-full' : 'w-full'} text-nexoraText ${technicianNameClassName}`}>{staff.displayName}</span>
+                {staff.staffLevelName ? (
+                  <span className="max-w-full truncate rounded-full bg-nexoraBrand/10 px-2 py-0.5 text-[10px] font-bold text-nexoraBrand">
+                    {staff.staffLevelName}
+                  </span>
+                ) : null}
                 {staff.turnsToday !== undefined && turnsLabel ? (
                   <span className="text-[10px] font-semibold tabular-nums text-nexoraMuted">
                     {turnsLabel(staff.turnsToday)}
+                  </span>
+                ) : null}
+                {staff.assignedTurns !== undefined && assignedTurnsLabel ? (
+                  <span className="text-[10px] font-semibold tabular-nums text-nexoraMuted">
+                    {assignedTurnsLabel(staff.assignedTurns)}
+                  </span>
+                ) : null}
+                {staff.completedTurns !== undefined && completedTurnsLabel ? (
+                  <span className="text-[10px] font-semibold tabular-nums text-nexoraMuted">
+                    {completedTurnsLabel(staff.completedTurns)}
                   </span>
                 ) : null}
                 {staff.isNextTurn && nextTurnLabel ? (
@@ -165,6 +202,7 @@ export default function TechnicianPickerGrid({
                   </span>
                 ) : null}
                 {renderBadge(staff)}
+                {renderQueuePill(staff)}
               </button>
             ))}
 

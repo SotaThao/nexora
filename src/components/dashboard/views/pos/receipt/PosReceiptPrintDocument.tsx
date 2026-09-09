@@ -10,6 +10,7 @@
  * Styling stays on the existing `.pos-receipt-*` classes in index.css, which already carry the
  * 80mm @page rules and the force-black print ink.
  */
+import PosTechnicianReportPrintDocument from './PosTechnicianReportPrintDocument'
 import { maskReceiptPhone } from './maskReceiptPhone'
 import { Fragment } from 'react'
 import { formatUsdAmount } from '../../../../../utils/currencyInput'
@@ -29,6 +30,11 @@ export default function PosReceiptPrintDocument({
   className?: string
 }) {
   if (doc.pages?.length) return <>{doc.pages.map((page, index) => <PosReceiptPrintDocument key={index} doc={page} className={`${index < doc.pages!.length - 1 ? 'pos-receipt-print--page-break' : ''} ${className ?? ''}`} />)}</>
+  if (doc.technicianReport) return (
+    <article className={`pos-receipt-print pos-receipt-ink-black ${className ?? ''}`} data-testid="pos-report-detail-print">
+      <PosTechnicianReportPrintDocument report={doc.technicianReport} />
+    </article>
+  )
   const hasLines = doc.rows.length > 0
   const hasBusiness = Boolean(doc.businessName || doc.businessAddress || doc.businessPhone)
   const hasCustomer = Boolean(doc.customerName || doc.customerPhone)

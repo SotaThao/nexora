@@ -122,7 +122,7 @@ import type { PosReceiptDocument } from '../../../../types/domain'
 import { PosFrontDeskTab } from '../../../../constants/posFrontDesk'
 import { DASHBOARD_MENU_ID } from '../../constants'
 import { DEFAULT_POS_RECEIPT_SETTINGS, PosPrintTransport } from '../../../../constants/posPrinter'
-import { usePosReceiptSettings } from '../../../../data/hooks/usePosPrinterSettings'
+import { usePosReceiptSettings, usePosTicketPrinted } from '../../../../data/hooks/usePosPrinterSettings'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { selectNextTurnTechnician } from './posNextTurn'
 import type { PosReceiptMode } from './posWorkspaceUrl'
@@ -302,8 +302,10 @@ export default function PosOrderWorkspace({
   businessTimeZone,
   canViewReport = false,
   receiptPrintTab = PosFrontDeskTab.CheckoutCustomer,
+  receiptPrintBackPath = POS_FRONT_DESK_ROUTE_PATH,
   printFallbackOrderId = null,
   onPrintFallbackHandled,
+  initialTicketNote,
 }: {
   businessId: string
   orderId: string
@@ -324,15 +326,18 @@ export default function PosOrderWorkspace({
   // Which Front Desk tab to return to after a PassPRNT round trip. Printing leaves the app, so
   // the callback lands on a fresh mount and has to be told where the operator was.
   receiptPrintTab?: string
+  receiptPrintBackPath?: string
   // Order whose PassPRNT print just failed. The preview opens on it so the operator can fall
   // back to the browser dialog without going anywhere.
   printFallbackOrderId?: string | null
   onPrintFallbackHandled?: () => void
+  initialTicketNote?: string
 }) {
   const { t, currentLanguage } = useTranslation()
   // Device-local receipt options (what to print, how many copies). Read here rather than at
   // print time so the document is already shaped correctly for the preview the operator sees.
   const { data: receiptSettings } = usePosReceiptSettings()
+  const { data: ticketWasPrinted } = usePosTicketPrinted(businessId, orderId)
   const { print: printReceipt, printSurface, isPrinting: isReceiptPrinting, transport: printTransport } = usePosReceiptPrint()
   // Set in the completion callback, acted on one commit later — see the effect below.
   const [autoPrintIntent, setAutoPrintIntent] = useState<{
@@ -345,6 +350,9 @@ export default function PosOrderWorkspace({
 
   const { data: order, isLoading: isOrderLoading } = useOrderDetail(businessId, orderId)
   const isPaid = order?.status === PosOrderStatus.Completed || Boolean(order?.completedAt)
+  // AssignStaffToServiceLine only accepts a Waiting or InService order.
+  const canEditLines =
+    order?.status === PosOrderStatus.Waiting || order?.status === PosOrderStatus.InService
   const { data: serviceCatalog = [] } = useCheckoutServiceCatalog(businessId)
   const {
     data: receivePaymentMethods = [],
@@ -428,18 +436,20 @@ export default function PosOrderWorkspace({
     serviceName: string
     posServiceId: string | null
     posStaffProfileId?: string
+    technicianName?: string
     note?: string
   } | null>(null)
-  const technicianTurnWindow = getLocalDayWindow()
+  const technicianTurnWindow = getLocalDayWindow(new Date(), businessTimeZone?.trim() || 'America/Chicago')
+  // Warm the shared next-turn data while the operator reviews the ticket, before opening a picker.
   const technicianTurnRosterQuery = useTimeClockRoster(businessId, technicianTurnWindow, {
-    enabled: technicianTarget !== null,
-    refetchInterval: 15000,
+    enabled: canEditLines,
+    refetchInterval: 5000,
   })
   const technicianNextTurnBalanceQuery = usePosNextTurnBalance(
     businessId,
     reportTodayIso(businessTimeZone || 'America/Chicago'),
     businessTimeZone,
-    technicianTarget !== null && canViewReport,
+    canEditLines && canViewReport,
   )
   const [noteDraft, setNoteDraft] = useState('')
   // Chosen technician shown immediately so the row never flashes the previous name while
@@ -496,6 +506,8 @@ export default function PosOrderWorkspace({
   useEffect(() => setTicketBrowserFallback(false), [orderId])
   const [tipSplitInputs, setTipSplitInputs] = useState<Record<string, string>>({})
   const initializedWorkspaceRef = useRef<string | null>(null)
+  const restoredTicketNoteKeyRef = useRef<string | null>(null)
+  const ticketNoteEditedRef = useRef(false)
   const initializedOrderIdRef = useRef<string | null>(null)
   const printCleanupRef = useRef<(() => void) | null>(null)
   const serviceLineIdsBeforeAddRef = useRef<Set<string> | null>(null)
@@ -623,13 +635,24 @@ export default function PosOrderWorkspace({
   useEffect(() => {
     if (!order) return
     const workspaceKey = `${order.id}:${mode}`
-    if (initializedWorkspaceRef.current === workspaceKey) return
+    if (initializedWorkspaceRef.current === workspaceKey) {
+      // The parent may recover the print draft after this cached order has hydrated.
+      // Apply it once, without overwriting any edits made since returning.
+      if (mode === 'edit' && initialTicketNote !== undefined
+        && restoredTicketNoteKeyRef.current !== workspaceKey) {
+        restoredTicketNoteKeyRef.current = workspaceKey
+        if (!ticketNoteEditedRef.current) setNoteInput(initialTicketNote)
+      }
+      return
+    }
     initializedWorkspaceRef.current = workspaceKey
+    ticketNoteEditedRef.current = false
+    restoredTicketNoteKeyRef.current = mode === 'edit' && initialTicketNote !== undefined ? workspaceKey : null
 
     // Status never reveals checkout information by itself. An InService order reached through
     // Edit still opens as an operational ticket; only an explicit Checkout entry reveals payment.
     setShowPaymentSection(mode === 'checkout' && !isPaid)
-    setNoteInput(order.note ?? '')
+    setNoteInput(mode === 'edit' ? initialTicketNote ?? order.note ?? '' : order.note ?? '')
     if (mode !== 'success') {
       setReceiptChoice('none')
       setPaymentMethod('Cash')
@@ -651,7 +674,7 @@ export default function PosOrderWorkspace({
       else setTipMode('custom')
       setCustomTipInput(formatUsdInputAmount(order.tipAmount))
     }
-  }, [order, mode, isPaid])
+  }, [order, mode, isPaid, initialTicketNote])
 
   // Keep the default equal to the live total while tip/discount edits are still changing it.
   // Once the cashier types a received amount, that physical cash value belongs to them and must
@@ -803,11 +826,6 @@ export default function PosOrderWorkspace({
     0,
   )
 
-  // AssignStaffToServiceLine only accepts a Waiting or InService order, so a closed ticket shows
-  // its technicians as text instead of offering a picker every tap of which would fail.
-  const canEditLines =
-    order?.status === PosOrderStatus.Waiting || order?.status === PosOrderStatus.InService
-
   useEffect(() => {
     if (areReceivePaymentMethodsLoading || isCorePaymentMethod || selectedReceivePaymentMethod) return
     setPaymentMethod(PosCheckoutPaymentMethod.Cash)
@@ -824,12 +842,13 @@ export default function PosOrderWorkspace({
       eligibleTechnicians.map((technician) => technician.posStaffProfileId),
     )
     const rosterRows = technicianTurnRosterQuery.data?.rows ?? []
-    const turnsByTechnicianId = new Map(
+    const assignedTurnsToday = new Map(
       rosterRows.map((row) => [row.posStaffProfileId, row.turnsToday]),
     )
     const serviceAmountsByTechnicianId = technicianNextTurnBalanceQuery.data?.completedAmounts ?? new Map<string, number>()
     const nextTurnTechnician = technicianNextTurnBalanceQuery.data
-      && !technicianNextTurnBalanceQuery.isFetching && !technicianNextTurnBalanceQuery.isError
+      && !technicianNextTurnBalanceQuery.isRecalculating
+      && !technicianNextTurnBalanceQuery.isError && !technicianTurnRosterQuery.isError
       ? selectNextTurnTechnician(
           rosterRows,
           eligibleTechnicianIds,
@@ -840,7 +859,12 @@ export default function PosOrderWorkspace({
 
     return eligibleTechnicians.map((technician) => ({
       ...technician,
-      turnsToday: turnsByTechnicianId.get(technician.posStaffProfileId),
+      // The polled roster reflects current work more recently than the catalog roster.
+      isBusy: rosterRows.find(row => row.posStaffProfileId === technician.posStaffProfileId)?.currentOrderId
+        ? true : rosterRows.some(row => row.posStaffProfileId === technician.posStaffProfileId)
+          ? false : technician.isBusy,
+      completedTurns: technicianNextTurnBalanceQuery.data?.completedTurns?.get(technician.posStaffProfileId) ?? (technicianNextTurnBalanceQuery.data ? 0 : undefined),
+      assignedTurns: assignedTurnsToday.get(technician.posStaffProfileId),
       isNextTurn: technician.posStaffProfileId === nextTurnTechnician?.posStaffProfileId,
     }))
   }
@@ -988,6 +1012,7 @@ export default function PosOrderWorkspace({
       serviceName: line.serviceName,
       posServiceId: line.posServiceId,
       posStaffProfileId: line.posStaffProfileId,
+      technicianName: line.technicianName,
       note: line.note,
     })
     setNoteDraft(line.note ?? '')
@@ -1648,7 +1673,7 @@ export default function PosOrderWorkspace({
                                       {t('components.dashboard.views.pos.serviceLineStatus.startAction')}
                                     </button>
                                   ) : null}
-                                  {canMutateLine && line.lineStatus === PosOrderItemStatus.Started ? (
+                                  {mode === 'checkout' && canMutateLine && line.lineStatus === PosOrderItemStatus.Started ? (
                                     <button
                                       type="button"
                                       data-testid={`complete-line-${line.key}`}
@@ -1886,7 +1911,7 @@ export default function PosOrderWorkspace({
               <textarea
                 id="pos-ticket-note"
                 value={noteInput}
-                onChange={(e) => setNoteInput(e.target.value)}
+                onChange={(e) => { ticketNoteEditedRef.current = true; setNoteInput(e.target.value) }}
                 onBlur={handleNoteCommit}
                 disabled={isBusy}
                 maxLength={500}
@@ -1907,7 +1932,7 @@ export default function PosOrderWorkspace({
                     className="inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-nexoraSurface px-3 text-xs font-semibold text-nexoraMuted transition-colors hover:border-nexoraBrand/30 hover:bg-nexoraBrandSoft/40 hover:text-nexoraBrandDark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand/30 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Printer className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    {t('components.dashboard.views.pos.PosOrderWorkspace.printTicketAction')}
+                    {t(`components.dashboard.views.pos.PosOrderWorkspace.${ticketWasPrinted ? 'reprintTicketAction' : 'printTicketAction'}`)}
                   </button>
                 ) : null}
                 {order?.status === PosOrderStatus.Waiting && hasServiceLines ? (
@@ -2477,13 +2502,14 @@ export default function PosOrderWorkspace({
   const printableTicket = order ? (
     <PosTicketPrintPreview
       open={ticketPreviewOpen}
+      wasPrinted={ticketWasPrinted}
       isPrinting={isReceiptPrinting}
       onPrint={() => {
         const doc = buildPosTicketDocument({ orderNumber: order.orderNumber, completedAtLabel: formatPosDateTime(order.completedAt ?? new Date().toISOString(), currentLanguage), customerName: order.customerName, orderNote: noteInput, groups: printableReceiptGroups,
           noteLabel: t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteTitle'), customerLabel: t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewCustomer') })
         setTicketPreviewOpen(false)
-        printReceipt(doc, { jobId: orderId, copies: 1, backPath: POS_FRONT_DESK_ROUTE_PATH, browserOnly: ticketBrowserFallback,
-          restore: { surface: 'frontDesk', tab: receiptPrintTab, orderId, mode: 'edit' } })
+        printReceipt(doc, { jobId: orderId, copies: 1, backPath: receiptPrintBackPath, browserOnly: ticketBrowserFallback, ticketPrint: { businessId, orderId },
+          restore: { surface: 'frontDesk', tab: receiptPrintTab, orderId, mode: 'edit', ticketNote: noteInput } })
       }}
       customerName={order.customerName}
       orderNote={noteInput}
@@ -2536,7 +2562,7 @@ export default function PosOrderWorkspace({
     printReceipt(autoPrintIntent.doc, {
       jobId: autoPrintIntent.orderId,
       copies: autoPrintIntent.copies,
-      backPath: POS_FRONT_DESK_ROUTE_PATH,
+      backPath: receiptPrintBackPath,
       restore: {
         surface: 'frontDesk',
         tab: receiptPrintTab,
@@ -2546,7 +2572,7 @@ export default function PosOrderWorkspace({
       },
     })
     setAutoPrintIntent(null)
-  }, [autoPrintIntent, printReceipt, receiptPrintTab])
+  }, [autoPrintIntent, printReceipt, receiptPrintTab, receiptPrintBackPath])
 
   // The manual Print button has to respect the device transport too. Without this, a salon that
   // paired a Star printer would still get the browser dialog every time someone pressed Print —
@@ -2560,7 +2586,7 @@ export default function PosOrderWorkspace({
   const isPrintFallback = Boolean(printFallbackOrderId) && printFallbackOrderId === orderId
   useEffect(() => {
     if (!isPrintFallback) return
-    if (mode === 'edit') { setTicketBrowserFallback(true); setTicketPreviewOpen(true) }
+    if (mode === 'edit') setTicketBrowserFallback(true)
     else setPrintPreviewOpen(true)
     onPrintFallbackHandled?.()
   }, [isPrintFallback, onPrintFallbackHandled, mode])
@@ -2573,7 +2599,7 @@ export default function PosOrderWorkspace({
             {
               jobId: orderId,
               copies: 1,
-              backPath: POS_FRONT_DESK_ROUTE_PATH,
+              backPath: receiptPrintBackPath,
               restore: {
                 surface: 'frontDesk',
                 tab: receiptPrintTab,
@@ -2682,6 +2708,8 @@ export default function PosOrderWorkspace({
         technicians={technicianTarget ? technicianOptionsForTicket(technicianTarget.posServiceId) : []}
         isLoading={areTechniciansPending && allTechnicians.length === 0}
         selectedStaffId={technicianTarget?.posStaffProfileId ?? null}
+        currentTechnicianName={technicianTarget?.technicianName}
+        turnsError={technicianNextTurnBalanceQuery.isError || technicianTurnRosterQuery.isError}
         note={noteDraft}
         onChangeNote={setNoteDraft}
         onSelect={handleSelectTechnician}

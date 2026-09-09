@@ -80,6 +80,8 @@ export interface BookingServiceCategoryDto {
 export interface BookingStaffDto {
   id: string
   fullName: string
+  /** Staff photo from BE `StaffProfile.PhotoUrl`; omitted or null when none is set. */
+  avatarUrl?: string | null
 }
 
 export interface BookingOperatingHourDto {
@@ -187,6 +189,8 @@ export interface PublicBookingStaff {
   id: string
   fullName: string
   initials: string
+  /** http(s) photo URL, or null to keep the initials chip. */
+  avatarUrl: string | null
 }
 
 export interface PublicBookingOperatingHour {

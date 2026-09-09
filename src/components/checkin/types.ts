@@ -22,6 +22,7 @@ export interface CheckInTechnician {
   // service only when it appears here; anything else stays unassigned for the front desk.
   serviceIds: string[]
   isBusy: boolean
+  queueCount?: number
 }
 
 // Today's appointment for the number that was typed, if there is one.

@@ -79,6 +79,7 @@ export default function SinglePageCheckInLayout({
               emptyLabel={t(`${K}.noTechnicians`)}
               busyLabel={t(`${K}.technicianBusy`)}
               availableLabel={t(`${K}.technicianAvailable`)}
+              queueLabel={(count) => t(`${K}.technicianQueueCount`, { count })}
               compact={compactTechnicianCards}
               autoWrap
             />
@@ -110,7 +111,7 @@ export default function SinglePageCheckInLayout({
           <button
             type="button"
             onClick={session.submit}
-            disabled={!session.canSubmit || session.isSubmitting}
+            disabled={session.isSubmitting}
             className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-nexoraBrand text-base font-black text-white hover:bg-nexoraBrandDark disabled:opacity-60"
           >
             {session.isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : null}

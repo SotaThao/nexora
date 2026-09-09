@@ -160,6 +160,9 @@ export interface PosStaffProfileApiDto {
   contractType?: string | null
   posRoleId?: string | null
   posRoleName?: string | null
+  // POS Staff Level (optional, business-defined lookup) — see PosStaffLevelApiDto.
+  staffLevelId?: string | null
+  staffLevelName?: string | null
   payStructureType: string
   commissionPercent?: number | null
   weeklySalaryAmount?: number | null
@@ -169,6 +172,16 @@ export interface PosStaffProfileApiDto {
   // from Turn Board's currentStatus (Empty/InService), which is about being busy with a
   // customer right now, not whether they're on shift.
   status: string
+  // Count of PosOrderItems completed today for this staff member — computed inline server-side.
+  turnsToday: number
+}
+
+// POS Staff Level — business-scoped lookup list (Basic/Advanced/Senior by default), optionally
+// assigned to a PosStaffProfile. Managed in Salon Settings, modeled after PosRoleApiDto.
+export interface PosStaffLevelApiDto {
+  id: string
+  name: string
+  displayOrder: number
 }
 
 // POS Merchant Ops — Front Desk access self-check (US-12)
@@ -626,6 +639,11 @@ export interface CheckInTechnicianApiDto {
   // present) reads as "not local staff", not as a false positive block on every technician's Beep.
   isLocalStaff?: boolean
   email?: string | null
+  // Not in the live contract yet either (CheckInTechnicianDto has no staffLevelName as of
+  // 2026-09-09) — optional so the technician picker's Level badge starts working the moment
+  // BE adds it, no FE change needed.
+  staffLevelName?: string | null
+  queueCount?: number
 }
 
 export interface CheckInActiveVisitApiDto {
@@ -1210,6 +1228,41 @@ export interface ReceiptApiDto {
   salesTaxAmount: number
   total: number
   paymentMethodType: string | null
+}
+
+/**
+ * What the public certificate verify endpoint returns — deliberately the smallest payload that
+ * still proves a certificate is genuine. The certificate code printed on paper is sequential and
+ * therefore guessable, so everything not needed to verify is withheld server-side: no recipient
+ * email, no recipient user id, no internal notes, and no revoke reason.
+ */
+export interface CertificateVerificationApiDto {
+  /** The code printed on the certificate, e.g. "NXT-CS-2026-0001". */
+  certificateId: string
+  /** Snapshot of the holder's name taken when the certificate was written, not re-derived later. */
+  memberName: string
+  programCode: string
+  programName: string
+  programDescription?: string | null
+  /** Date-only (`YYYY-MM-DD`) — the date printed on the certificate, not the issue timestamp. */
+  certificationDate: string
+  /** Date-only. Null when the certificate does not expire. */
+  expiryDate?: string | null
+  /** `CertificateStatus` — the backend's effective status, so `Expired` arrives already computed. */
+  status: string
+  /** UTC instant the certificate was revoked. Null unless `status` is `Revoked`. */
+  revokedAt?: string | null
+  /**
+   * Score from the certification exam, e.g. 94 for the "94 / 100" printed on the certificate.
+   *
+   * **Not implemented backend-side yet** — there is no score column on the `Certificate` entity and
+   * no field for it in `CertificateVerificationDto` (verified against the live spec, 2026-09-08).
+   * It is optional here so the page renders the column the moment the backend starts sending it and
+   * simply omits it until then. See the "cần hỏi BE" section of US-048 for the shape to confirm.
+   */
+  examScore?: number | null
+  /** Denominator for `examScore`. Falls back to CERTIFICATE_EXAM_SCORE_MAX_DEFAULT when absent. */
+  examScoreMax?: number | null
 }
 
 export interface BookingListItemApiDto {
@@ -1924,6 +1977,9 @@ export interface StaffListItemApiDto {
   status?: string
   position?: string | null
   roleAtBusiness?: string | null
+  // Not yet returned by GET /api/v1/merchant/staff (StaffListItemDto) as of 2026-09-09 — added
+  // speculatively so the Staff table's Level column starts working the moment BE adds it.
+  staffLevelName?: string | null
   bio?: string | null
   invitedEmail?: string | null
   invitedPhone?: string | null
@@ -2432,6 +2488,8 @@ export type {
 
 export interface PosPrinterProfile {
   transport: PosPrintTransportType
+  /** Whether the device has explicitly chosen a print method. */
+  transportConfigured?: boolean
   /** Printer dots — see RECEIPT_PAPER_WIDTH_DOTS. */
   paperWidthDots: number
   /** ISO timestamp of the last test print, or null when never tested. */
@@ -2471,4 +2529,11 @@ export interface PosPendingPrintJob {
   /** Null for a test print, which builds its own sample. */
   document: PosReceiptDocument | null
   restore: PosPrintRestoreState | null
+  /** The editor was already recovered without a result; do not reopen it on later visits. */
+  workspaceRestored?: boolean
+  /** Unique invocation ID carried in the callback path, including each individual copy. */
+  attemptId?: string
+  /** Canonical owner/staff salon route that owns this print job. */
+  backPath?: string
+  ticketPrint?: { businessId: string; orderId: string }
 }

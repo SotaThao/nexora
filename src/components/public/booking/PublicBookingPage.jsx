@@ -81,6 +81,28 @@ function ServiceChips({ names, emptyLabel }) {
   ))
 }
 
+function StaffChoiceIcon({ initials, avatarUrl }) {
+  const [failed, setFailed] = useState(false)
+  const showPhoto = Boolean(avatarUrl) && !failed
+
+  return (
+    <span className="choice-icon" aria-hidden="true">
+      {showPhoto ? (
+        <img
+          src={avatarUrl}
+          alt=""
+          width={36}
+          height={36}
+          className="staff-avatar-img"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        initials
+      )}
+    </span>
+  )
+}
+
 function BookingStatusCard({ title, copy, actionLabel, onAction }) {
   return (
     <section className="step-panel app-card success-card">
@@ -782,9 +804,7 @@ export default function PublicBookingPage() {
                       aria-pressed={selected}
                       onClick={() => chooseStaff(staff.id)}
                     >
-                      <span className="choice-icon" aria-hidden="true">
-                        {staff.initials}
-                      </span>
+                      <StaffChoiceIcon initials={staff.initials} avatarUrl={staff.avatarUrl} />
                       <span className="choice-title">{staff.fullName}</span>
                       <span className="staff-status">{copy.staffAvailable}</span>
                     </button>

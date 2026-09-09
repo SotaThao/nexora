@@ -135,9 +135,12 @@ export function OneQrArtworkEditor({ url, fileSlug, businessName, businessLogo }
         {showLogo && !businessLogo && <p role="status" className="text-xs text-nexoraMuted">{text('artworkMissingLogo')}</p>}
         {showName && !businessName?.trim() && <p role="status" className="text-xs text-nexoraMuted">{text('artworkMissingName')}</p>}
         <p className="text-xs text-nexoraMuted">{t('oneqr.artwork.fixed')}</p>
-        <div className="flex min-w-0 items-center gap-2 rounded-lg border border-nexoraBorder p-2">
-          <a href={url} target="_blank" rel="noopener noreferrer" className="min-w-0 flex-1 truncate text-xs text-nexoraMuted">{url}</a>
-          <button type="button" onClick={() => void copy()} className="inline-flex min-h-11 items-center gap-1 text-xs text-nexoraBrand">{copied ? <Check className="h-4 w-4" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}{t(copied ? 'common.copied' : 'common.copy')}</button>
+        <div className="min-w-0 space-y-1">
+          <p className="text-xs font-bold text-nexoraText">{t('oneqr.artwork.linkLabel')}</p>
+          <div className="flex min-w-0 items-center gap-2 rounded-lg border border-nexoraBorder p-2">
+            <a href={url} target="_blank" rel="noopener noreferrer" className="min-w-0 flex-1 truncate text-xs text-nexoraMuted">{url}</a>
+            <button type="button" onClick={() => void copy()} className="inline-flex min-h-11 items-center gap-1 text-xs text-nexoraBrand">{copied ? <Check className="h-4 w-4" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}{t(copied ? 'common.copied' : 'common.copy')}</button>
+          </div>
         </div>
       </div>
       <div className="min-w-0 space-y-4">

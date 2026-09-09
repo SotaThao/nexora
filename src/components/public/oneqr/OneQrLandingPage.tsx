@@ -9,14 +9,16 @@
  */
 import { useCallback, useEffect, useMemo, type ReactNode } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { Clock, Loader2, LogIn, MapPin, PauseCircle, Sparkles } from 'lucide-react'
+import { ArrowUpRight, Clock, Loader2, LogIn, MapPin, PauseCircle, Sparkles } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
   usePublicOneQrLanding,
   useTrackOneQrModuleClick,
 } from '../../../data/hooks/usePublicOneQr'
 import OneQrModuleIcon from '../../oneqr/OneQrModuleIcon'
+import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import { resolveOneQrModuleLabel } from '../../oneqr/oneQrModuleLabel'
+import { resolveOneQrModuleHref } from './oneQrModuleHref'
 import {
   ONEQR_ROUTE,
   OneQrModuleKey,
@@ -186,15 +188,26 @@ export default function OneQrLandingPage() {
   // button once the switch has already been taken.
   const showViewAsCustomer =
     viewAs !== ONEQR_ROUTE.asCustomerValue && data.canViewAsCustomer
+  const welcomeMessage = data.welcomeMessage?.trim().toLowerCase() === 'welcome to merchant'
+    ? t('oneqr.landing.visit_message')
+    : data.welcomeMessage
 
   return (
     <Shell business={data.business}>
-      {data.welcomeMessage ? (
-        <div className="mx-5 mb-3.5 flex items-center gap-2.5 rounded-2xl bg-nexoraSurfaceMuted px-3.5 py-3 text-[13px] font-bold text-nexoraBrand">
-          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white">
+      {welcomeMessage ? (
+        <div className="mx-3 mb-1 mt-3 flex items-center gap-2 rounded-lg bg-nexoraBrandSoft/40 px-3 py-2 text-xs font-medium leading-relaxed text-nexoraBrand sm:mx-5">
+          <span className="grid h-5 w-5 shrink-0 place-items-center">
             <Sparkles className="h-3.5 w-3.5" aria-hidden />
           </span>
-          <p className="min-w-0 break-words">{data.welcomeMessage}</p>
+          <p className="min-w-0 break-words">{welcomeMessage}</p>
+        </div>
+      ) : null}
+
+      {data.modules.length > 0 ? (
+        <div className="px-3 pb-3 pt-3 sm:px-5">
+          <h2 className="text-sm font-bold tracking-tight text-nexoraText">
+            {t('oneqr.landing.actions_title')}
+          </h2>
         </div>
       ) : null}
 
@@ -207,7 +220,7 @@ export default function OneQrLandingPage() {
           aria-label={t('oneqr.landing.menu_label', {
             business: data.business.name,
           })}
-          className="grid grid-cols-2 gap-3 px-5 pb-6 pt-1"
+          className="grid grid-cols-2 gap-2.5 px-3 pb-3 sm:px-5"
         >
           {data.modules.map((module, index) => (
             <ModuleTile
@@ -230,7 +243,7 @@ export default function OneQrLandingPage() {
       )}
 
       {showViewAsCustomer ? (
-        <div className="px-5 pb-6">
+        <div className="px-3 pb-3 sm:px-5">
           <Link
             to={`${buildOneQrPath(businessSlug)}?${ONEQR_ROUTE.asQuery}=${ONEQR_ROUTE.asCustomerValue}`}
             className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraMuted transition hover:text-nexoraText"
@@ -258,27 +271,27 @@ function BusinessFooter({ business }: { business: OneQrLandingBusiness }) {
   if (!hasAddress && !hasHours) return null
 
   return (
-    <footer className="mx-5 mb-6 flex flex-col gap-1.5 border-t border-nexoraBorder pt-3.5">
+    <footer className="mx-3 mb-3 flex flex-col gap-2.5 rounded-xl bg-nexoraCanvas px-3 py-3 sm:mx-5">
       {hasAddress ? (
-        <p className="flex items-start gap-2 text-xs font-semibold leading-snug text-nexoraMuted">
+        <p className="flex items-start gap-2 text-xs font-medium leading-relaxed text-nexoraMuted">
           <MapPin
-            className="mt-px h-3.5 w-3.5 shrink-0 text-nexoraBrand"
+            className="mt-0.5 h-4 w-4 shrink-0 text-nexoraBrand"
             aria-hidden
           />
-          <span>
-            <span className="sr-only">{t('oneqr.landing.address_label')}: </span>
+          <span className="min-w-0 break-words">
+            <span className="sr-only">{t('oneqr.landing.address_label')} </span>
             {business.address}
           </span>
         </p>
       ) : null}
       {hasHours ? (
-        <p className="flex items-start gap-2 text-xs font-semibold leading-snug text-nexoraMuted">
+        <p className="flex items-start gap-2 text-xs font-medium leading-relaxed text-nexoraMuted">
           <Clock
-            className="mt-px h-3.5 w-3.5 shrink-0 text-nexoraBrand"
+            className="mt-0.5 h-4 w-4 shrink-0 text-nexoraBrand"
             aria-hidden
           />
-          <span>
-            <span className="sr-only">{t('oneqr.landing.hours_label')}: </span>
+          <span className="min-w-0 break-words">
+            <span className="sr-only">{t('oneqr.landing.hours_label')} </span>
             {business.hours.map((line) => (
               <span key={line} className="block">
                 {line}
@@ -304,10 +317,16 @@ function ModuleTile({
   // Destinations come from the backend registry and may be either an in-app
   // path or an external CustomLink, so this is a plain anchor rather than a
   // react-router <Link>; external targets additionally get noopener.
-  const url = module.url.trim()
+  const url = resolveOneQrModuleHref(module)
   const isExternal = /^https?:\/\//i.test(url)
   const isInternal = url.startsWith('/')
   const safeHref = isExternal || isInternal ? url : '#'
+  const iconColor = {
+    [OneQrModuleKey.CheckIn]: 'bg-nexoraTeal/10 text-nexoraTealAlt',
+    [OneQrModuleKey.Payment]: 'bg-nexoraElectric/10 text-nexoraElectric',
+    [OneQrModuleKey.Booking]: 'bg-nexoraViolet/10 text-nexoraViolet',
+    [OneQrModuleKey.Rewards]: 'bg-nexoraTeal/10 text-nexoraTealAlt',
+  }[module.moduleKey] ?? 'bg-nexoraBrandSoft/70 text-nexoraBrand'
 
   return (
     <a
@@ -317,12 +336,15 @@ function ModuleTile({
         onClick()
       }}
       {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-      className="flex min-h-[92px] flex-col items-center justify-center gap-2.5 rounded-2xl border border-nexoraBorder bg-white px-2.5 py-3.5 text-center transition hover:border-nexoraLavender hover:shadow-nexora-card"
+      className="group flex min-h-[90px] flex-col items-start justify-between gap-2 rounded-xl border border-nexoraBorder/80 bg-white px-3 py-3 text-left shadow-sm transition duration-200 hover:border-nexoraLavender hover:bg-nexoraBrandSoft/20 hover:shadow-nexora-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2 motion-reduce:transition-none"
     >
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-nexoraSurfaceMuted text-nexoraBrand">
-        <OneQrModuleIcon name={module.icon} className="h-4 w-4" />
+      <span className="flex w-full items-start justify-between gap-2">
+        <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${iconColor}`}>
+          <OneQrModuleIcon name={module.icon} className="h-4 w-4" />
+        </span>
+        <ArrowUpRight className="mt-1 h-4 w-4 text-nexoraSubtle transition group-hover:text-nexoraBrand motion-reduce:transition-none" aria-hidden />
       </span>
-      <span className="text-[13px] font-black leading-tight text-nexoraText">
+      <span className="min-w-0 w-full break-words text-[13px] font-semibold leading-snug text-nexoraText">
         {label}
       </span>
     </a>
@@ -336,30 +358,57 @@ function Shell({
   business?: OneQrLandingBusiness
   children: ReactNode
 }) {
+  const { t } = useTranslation()
   const businessName = business?.name ?? ''
   const businessLogoUrl = business?.logoUrl ?? null
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-[420px] bg-white">
-      {businessName ? (
-        <header className="flex items-center gap-2.5 px-5 py-4">
-          {businessLogoUrl ? (
-            <img
-              src={businessLogoUrl}
-              alt=""
-              className="h-9 w-9 shrink-0 rounded-full object-cover"
-            />
-          ) : (
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-nexoraBrand text-sm font-black text-white">
-              {businessName.trim().charAt(0).toUpperCase()}
-            </span>
-          )}
-          <h1 className="min-w-0 truncate text-base font-black text-nexoraText">
-            {businessName}
-          </h1>
+    <main className="min-h-screen bg-white sm:bg-nexoraCanvas sm:px-6 sm:py-8">
+      <div className="mx-auto w-full max-w-[480px] bg-white sm:overflow-hidden sm:rounded-2xl sm:border sm:border-nexoraBorder/70 sm:shadow-nexora-card">
+        <header className="relative z-10 flex items-center gap-3 border-b border-nexoraBorder/50 bg-gradient-to-br from-nexoraBrandSoft/80 via-nexoraCanvas to-white px-3 py-4 sm:px-5">
+          {businessName ? (
+            <>
+            <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl border-2 border-white/80 bg-white shadow-sm">
+              {businessLogoUrl ? (
+                <img
+                  src={businessLogoUrl}
+                  alt=""
+                  width={48}
+                  height={48}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="text-xl font-bold text-nexoraBrand">
+                  {businessName.trim().charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-nexoraBrand">
+                {t('oneqr.landing.welcome_label')}
+              </p>
+              <h1 className="break-words text-lg font-bold leading-snug tracking-tight text-nexoraText sm:text-xl">
+                {businessName}
+              </h1>
+            </div>
+            </>
+          ) : <div className="flex-1" />}
+          <LanguageSwitcher className="shrink-0 [&>button]:h-11 [&>button]:min-w-11" />
         </header>
-      ) : null}
-      {children}
+        {children}
+      </div>
+      <p className="mx-auto flex flex-wrap items-center justify-center gap-x-1 px-3 pb-2 text-[11px] font-medium text-nexoraMuted">
+        {t('oneqr.landing.powered_by')}
+        <a
+          href="https://nexoratouch.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex min-h-11 items-center gap-1 rounded-md px-1 font-semibold text-nexoraBrand underline decoration-nexoraBrand/30 underline-offset-4 transition hover:text-nexoraBrandDark hover:decoration-nexoraBrand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2"
+        >
+          {t('oneqr.landing.brand_name')}
+          <ArrowUpRight className="h-3 w-3" aria-hidden />
+        </a>
+      </p>
     </main>
   )
 }

@@ -78,6 +78,8 @@ export const qk = {
   merchantBusinessHours: ()    => ['merchantSettings', 'businessHours'],
   // POS Owner Setup — Roles & Permissions (US-015)
   merchantPosRoles: ()         => ['merchantSettings', 'posRoles'],
+  // POS Owner Setup — Staff Levels
+  merchantPosStaffLevels: ()   => ['merchantSettings', 'posStaffLevels'],
   // POS Owner Setup — Categories (US-016)
   merchantPosCategories: ()    => ['merchantSettings', 'posCategories'],
   // POS Owner Setup — Services (US-017)
@@ -204,6 +206,9 @@ export const qk = {
   // is attached to this iPad, so these are not business settings and must not be keyed as such.
   posPrinterProfile: () => ['posDevice', 'printerProfile'],
   posReceiptSettings: () => ['posDevice', 'receiptSettings'],
+  posTicketPrinted: (businessId: string, orderId: string) => ['posDevice', 'ticketPrinted', businessId, orderId],
+  // Front desk's own saved beep quick messages — device-scoped for the same reason.
+  posBeepSuggestions: () => ['posDevice', 'beepSuggestions'],
   // POS Booking — per-business settings (Ticket 2)
   merchantPosBookingSettings: (businessId?: string) => ['merchantSettings', 'posBookingSettings', businessId ?? ''],
   merchantPosOrderSettings: (businessId?: string) => ['merchantSettings', 'posOrderSettings', businessId ?? ''],
@@ -636,6 +641,8 @@ export const qk = {
   merchantVoiceStaffById: (id?: string | null) => ['merchantVoice', 'staff', 'detail', id ?? ''],
   merchantVoiceBusinessStaff: (filters = EMPTY) => ['merchantVoice', 'staff', 'businessStaff', filters],
   merchantVoiceConfig: () => ['merchantVoice', 'config'],
+  merchantVoiceOptionsRoot: () => ['merchantVoice', 'voice-options'],
+  merchantVoiceOptions: (accountId: string, businessId: string, language: string) => ['merchantVoice', 'voice-options', accountId, businessId, language],
   merchantVoiceHolidays: () => ['merchantVoice', 'holidays'],
   merchantVoiceHolidaysAffectedCount: (date: string) => ['merchantVoice', 'holidays', 'affected-count', date],
   merchantVoiceServiceCategories: () => ['merchantVoice', 'service-categories'],
@@ -686,7 +693,13 @@ export const qk = {
   publicStaffDirectPaymentPage: (staffProfileId: string) => ['publicStaffDirectPaymentPage', staffProfileId],
   // POS Booking — Public Booking Page discovery (Ticket 4)
   publicReceipt: (receiptToken?: string) => ['publicReceipt', receiptToken ?? ''],
+  // Certifications — public certificate page. Keyed on the uppercased code so the same certificate
+  // reached in lower case reuses the cached answer instead of spending another rate-limited request.
+  publicCertificate: (certificateId?: string) => ['publicCertificate', certificateId ?? ''],
+  // Certifications — the signed-in account's own certificates (My Certifications).
+  myCertificates: () => ['myCertificates'],
   publicBookingPage: (businessSlug?: string) => ['publicBookingPage', businessSlug ?? ''],
+  publicServices: (businessSlug?: string) => ['publicServices', businessSlug ?? ''],
   // Customer entity unification — public contact-step "returning customer" lookup by phone.
   publicBookingCustomerLookup: (businessSlug?: string, phone?: string) =>
     ['publicBookingPage', 'customerLookup', businessSlug ?? '', phone ?? ''],
