@@ -7631,6 +7631,8 @@
     "checkin": {
       "CheckInSurface": {
         "submitError": "Check-in didn't go through. Please try again, or ask the front desk.",
+        "nameRequired": "Please enter the guest's name to check in.",
+        "consentRequired": "Please check the text consent box to check in.",
         "blockedBack": "Back"
       },
       "CustomerIdentityCard": {
@@ -7689,6 +7691,7 @@
         "noTechnicians": "Nobody is available right now — Anyone still works.",
         "technicianBusy": "busy now",
         "technicianAvailable": "available",
+        "technicianQueueCount": "{{count}} customers ahead",
         "submit": "Check in"
       },
       "WizardCheckInLayout": {

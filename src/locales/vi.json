@@ -7627,6 +7627,8 @@
     "checkin": {
       "CheckInSurface": {
         "submitError": "Check-in chưa thành công. Vui lòng thử lại hoặc báo quầy lễ tân.",
+        "nameRequired": "Vui lòng nhập tên khách để check-in.",
+        "consentRequired": "Vui lòng tick ô đồng ý nhận tin nhắn để check-in.",
         "blockedBack": "Quay lại"
       },
       "CustomerIdentityCard": {
@@ -7685,6 +7687,7 @@
         "noTechnicians": "Hiện chưa có nhân viên nào rảnh — vẫn chọn \"Nhân viên bất kỳ\" được.",
         "technicianBusy": "đang bận",
         "technicianAvailable": "đang rảnh",
+        "technicianQueueCount": "{{count}} trong hàng đợi",
         "submit": "Check-in"
       },
       "WizardCheckInLayout": {

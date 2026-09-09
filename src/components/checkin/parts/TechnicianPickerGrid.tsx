@@ -15,6 +15,7 @@ export interface TechnicianOption {
   completedTurns?: number
   assignedTurns?: number
   isNextTurn?: boolean
+  queueCount?: number
 }
 
 // Above this many people the grid becomes hard to scan, and a name is faster to type than to hunt.
@@ -45,6 +46,7 @@ export default function TechnicianPickerGrid({
   completedTurnsLabel,
   assignedTurnsLabel,
   nextTurnLabel,
+  queueLabel,
   compact = false,
   autoWrap = false,
   technicianNameClassName = 'truncate text-xs font-bold',
@@ -66,6 +68,7 @@ export default function TechnicianPickerGrid({
   completedTurnsLabel?: (count: number) => string
   assignedTurnsLabel?: (count: number) => string
   nextTurnLabel?: string
+  queueLabel?: (count: number) => string
   compact?: boolean
   // Check-in surfaces use content-width choices that wrap; other consumers keep the existing grid.
   autoWrap?: boolean
@@ -95,6 +98,15 @@ export default function TechnicianPickerGrid({
     return (
       <span className={`text-[10px] font-semibold ${staff.isBusy ? 'text-rose-600' : 'text-emerald-600'}`}>
         {staff.isBusy ? busyLabel : availableLabel}
+      </span>
+    )
+  }
+
+  const renderQueuePill = (staff: TechnicianOption) => {
+    if (!queueLabel || !staff.queueCount) return null
+    return (
+      <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold leading-none text-amber-700">
+        {queueLabel(staff.queueCount)}
       </span>
     )
   }
@@ -174,6 +186,7 @@ export default function TechnicianPickerGrid({
                   </span>
                 ) : null}
                 {renderBadge(staff)}
+                {renderQueuePill(staff)}
               </button>
             ))}
 
