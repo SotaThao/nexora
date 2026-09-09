@@ -9,10 +9,11 @@
 //
 // Creating an order is no longer done here: the Check-in tab renders the shared check-in
 // page (PosCheckInTab / CheckInSurface), the same one the customer kiosk runs.
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ArrowLeft, Loader2, Package, UserRound, X, Printer, ClipboardCheck } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
+import type { TechnicianOption } from '../../../checkin/parts/TechnicianPickerGrid'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getErrorMessage } from '../../../../data/errorCodes'
 import {
@@ -94,6 +95,7 @@ import { formatPosDateTime } from './posDateTime'
 import { useTicketActionLock } from './useTicketActionLock'
 import PosPaymentMethodSelector from './PosPaymentMethodSelector'
 import PosQuickSplitPanel from './PosQuickSplitPanel'
+import { reallocateTip } from './posPaymentAllocations'
 import {
   getPosCheckoutPaymentMethodLabel,
   isPosCheckoutPaymentMethod,
@@ -717,6 +719,21 @@ export default function PosOrderWorkspace({
       && (splitTipCents === 0 || splitTipBearerCount === 1)
       && splitCashCovered)
 
+  // Every blocker above used to share one sentence about the total, which sent the cashier to
+  // re-check amounts that were already correct. Each condition now names itself.
+  const splitBlockMessage = (() => {
+    if (isSplitPaymentReady) return null
+    if (splitAllocations.length < 2) return t('components.dashboard.views.pos.PosQuickSplitPanel.needTwoMethods')
+    if (splitAllocatedCents !== orderTotalCents) {
+      const unallocatedCents = orderTotalCents - splitAllocatedCents
+      return unallocatedCents > 0
+        ? t('components.dashboard.views.pos.PosQuickSplitPanel.short', { amount: formatUsdAmount(unallocatedCents / 100) })
+        : t('components.dashboard.views.pos.PosQuickSplitPanel.over', { amount: formatUsdAmount(-unallocatedCents / 100) })
+    }
+    if (!splitCashCovered) return t('components.dashboard.views.pos.PosQuickSplitPanel.cashNotCovered')
+    return t('components.dashboard.views.pos.PosQuickSplitPanel.tipNotAttributed')
+  })()
+
   // The same filter PosPaymentMethodSelector applies to the chip row, minus Split Pay itself —
   // that value labels the order, it is never one of the portions.
   const availableSplitMethods = useMemo(() => {
@@ -732,11 +749,55 @@ export default function PosOrderWorkspace({
     return [...core, ...Array.from(new Set(configured))]
   }, [receivePaymentMethods])
 
-  // Stable across renders on purpose: Quick Split debounces its auto-save off this identity, so a
-  // fresh arrow every render would keep resetting the timer and the save would never fire.
-  const handleSaveSplit = useCallback((payload: SetOrderPaymentAllocationsPayload) => {
-    setPaymentAllocations.mutate({ orderId, payload })
-  }, [orderId, setPaymentAllocations])
+  // The chosen method is recorded only on the portion carrying the tip, so clearing the tip to
+  // zero erases it. Remembered per order while this screen stays open, so No Tip followed by a
+  // new tip still lands where the cashier said rather than sending them back into Quick Split.
+  const savedTipBearerMethod = order?.paymentAllocations
+    .find((allocation) => allocation.tipAmount > 0)?.paymentMethodType
+  const lastTipBearerRef = useRef<{ orderId: string; method: string } | null>(null)
+  useEffect(() => {
+    if (savedTipBearerMethod) lastTipBearerRef.current = { orderId, method: savedTipBearerMethod }
+  }, [orderId, savedTipBearerMethod])
+
+  // Once the cashier has said which method the tip arrives through, a tip edited on this screen
+  // re-places itself — reopening Quick Split only to press Save again is work the screen can do.
+  // Covers every path that moves the tip, including the percentage effect below re-applying a %
+  // after a service is added, which changes the tip without anyone touching the tip controls.
+  const reconciledSplitRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!order || paymentMethod !== PosCheckoutPaymentMethod.SplitPay) return
+    // Quick Split does this itself while open, and writing underneath it would leave the amounts
+    // on screen disagreeing with what the dialog thinks is saved.
+    if (isQuickSplitOpen || isBusy || setPaymentAllocations.isPending) return
+
+    const rememberedBearer = lastTipBearerRef.current?.orderId === orderId
+      ? lastTipBearerRef.current.method
+      : null
+    const payload = reallocateTip(order.paymentAllocations, order.tipAmount, rememberedBearer)
+    if (!payload) {
+      reconciledSplitRef.current = null
+      return
+    }
+
+    // One attempt per distinct split: a rejected write must not turn into a retry loop driven by
+    // the refetch it triggers.
+    const signature = JSON.stringify(payload)
+    if (reconciledSplitRef.current === signature) return
+    reconciledSplitRef.current = signature
+    setPaymentAllocations.mutate({ orderId, payload }, { onError: reportError })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order?.tipAmount, order?.paymentAllocations, paymentMethod, isQuickSplitOpen, isBusy,
+    setPaymentAllocations.isPending, orderId])
+
+  // Closes only once the server has taken the split. On a rejected save the dialog stays open
+  // with the cashier's amounts still on screen and the reason in a toast, rather than vanishing
+  // and taking the work with it.
+  const handleSaveSplit = (payload: SetOrderPaymentAllocationsPayload) => {
+    setPaymentAllocations.mutate({ orderId, payload }, {
+      onSuccess: () => setIsQuickSplitOpen(false),
+      onError: reportError,
+    })
+  }
   const draftSubtotal = visibleLines.reduce(
     (sum, l) => sum + lineTotalAfterDiscount(l) + addOnsTotalAfterDiscount(l),
     0,
@@ -792,6 +853,35 @@ export default function PosOrderWorkspace({
     showToast(getErrorMessage(err, t, 'ERROR'), 'error')
   }
 
+  // What the ticket's own technician pickers offer: the qualified roster, plus anyone already on
+  // this ticket who has since clocked out. The backend keeps those assignable on the order they are
+  // already working (PosStaffAssignmentResolver), so hiding them would leave the front desk unable
+  // to move a line back to the technician actually doing it. Every other off-shift technician stays
+  // out, and a technician who is on shift but not trained for the service stays out too — that is a
+  // skill rule, not a shift one.
+  const technicianOptionsForTicket = (posServiceId: string | null): TechnicianOption[] => {
+    const qualified = techniciansForService(posServiceId)
+    const rosterIds = new Set(allTechnicians.map((tech) => tech.posStaffProfileId))
+    const offShiftOnTicket = assignedTechnicianIds
+      .filter((staffId) => !rosterIds.has(staffId))
+      .map((staffId) => ({
+        posStaffProfileId: staffId,
+        displayName: technicianDisplayName(staffId) ?? '',
+        isOffShift: true,
+      }))
+      .filter((option) => option.displayName !== '')
+    return [...qualified, ...offShiftOnTicket]
+  }
+
+  // Whether the ticket's technician may take one more service. Absence from the roster is not a
+  // "no": it only lists technicians who are clocked in, and a shift ends (or PosStaffClockAutoCloseJob
+  // ends it) while the customer is still in the chair — the ticket already names who is doing the
+  // work. Only a technician the roster does list is held to their assigned services.
+  const canTechnicianTakeService = (staffId: string, posServiceId: string) => {
+    const rosterEntry = allTechnicians.find((tech) => tech.posStaffProfileId === staffId)
+    return !rosterEntry || rosterEntry.serviceIds.includes(posServiceId)
+  }
+
   // Keep an existing ticket with an already assigned technician when services are added.
   const handleCatalogServiceClick = (service: CheckoutServiceCatalogItemApiDto) => {
     // Qualification must be known before inheriting a sole technician. The picker is disabled
@@ -811,7 +901,7 @@ export default function PosOrderWorkspace({
 
           const inheritedStaffId = resolveNewLineTechnicianAssignment(
             assignedTechnicianIds,
-            (staffId) => techniciansForService(service.id).some((tech) => tech.posStaffProfileId === staffId),
+            (staffId) => canTechnicianTakeService(staffId, service.id),
           )
           // Nothing to inherit means the line is already how it should be — an assign call here
           // would only write an empty note over an empty note.
@@ -958,10 +1048,18 @@ export default function PosOrderWorkspace({
     runDiscountMutation({ discountType: null, discountValue: null, discountBearer: null, discountNote: null })
   }
 
-  const technicianDisplayName = (staffId: string | null | undefined) =>
-    staffId
-      ? allTechnicians.find((tech) => tech.posStaffProfileId === staffId)?.displayName ?? null
-      : null
+  // Roster first, then the ticket's own lines: an off-shift technician is no longer in the roster,
+  // and this name feeds the optimistic patch — "First available" flashing over work that already has
+  // a technician reads as a lost assignment.
+  const technicianDisplayName = (staffId: string | null | undefined) => {
+    if (!staffId) return null
+    const rosterName = allTechnicians.find((tech) => tech.posStaffProfileId === staffId)?.displayName
+    if (rosterName) return rosterName
+    const assignedLine = visibleLines.find(
+      (line): line is DisplayServiceLine => line.itemType === 'Service' && line.posStaffProfileId === staffId,
+    )
+    return assignedLine?.technicianName ?? null
+  }
 
   // AssignStaffToServiceLine overwrites Note unconditionally, so both values travel together on
   // every call — sending only the technician would silently wipe the note.
@@ -2027,32 +2125,28 @@ export default function PosOrderWorkspace({
                       availableMethods={availableSplitMethods}
                       savedAllocations={order.paymentAllocations}
                       isSaving={setPaymentAllocations.isPending}
-                      hasSavedOnce={setPaymentAllocations.isSuccess}
                       onSave={handleSaveSplit}
                       onBack={() => setIsQuickSplitOpen(false)}
                       disabled={isBusy}
                     />
                   ) : null}
-                  <h3
-                    className="text-[10px] font-bold uppercase tracking-wide text-nexoraMuted"
-                    hidden={isQuickSplitOpen}
-                  >
+                  <h3 className="text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
                     {t('components.dashboard.views.pos.PosOrderWorkspace.paymentMethodTitle')}
                   </h3>
-                  {!isQuickSplitOpen ? (
-                    <PosPaymentMethodSelector
-                      value={paymentMethod}
-                      onChange={(value) => {
-                        setPaymentMethod(value)
-                        // Split Pay is a doorway, not a method: picking it opens the screen where the
-                        // real portions get built. The payment is still confirmed by Pay below.
-                        if (value === PosCheckoutPaymentMethod.SplitPay) setIsQuickSplitOpen(true)
-                      }}
-                      receiveMethods={receivePaymentMethods}
-                      disabled={isBusy}
-                    />
-                  ) : null}
-                  {!isQuickSplitOpen && paymentMethod === PosCheckoutPaymentMethod.SplitPay && order ? (
+                  {/* Nothing here hides while Quick Split is open any more: it is a dialog over the
+                      page now, so the checkout it belongs to stays visible behind it. */}
+                  <PosPaymentMethodSelector
+                    value={paymentMethod}
+                    onChange={(value) => {
+                      setPaymentMethod(value)
+                      // Split Pay is a doorway, not a method: picking it opens the dialog where the
+                      // real portions get built. The payment is still confirmed by Pay below.
+                      if (value === PosCheckoutPaymentMethod.SplitPay) setIsQuickSplitOpen(true)
+                    }}
+                    receiveMethods={receivePaymentMethods}
+                    disabled={isBusy}
+                  />
+                  {paymentMethod === PosCheckoutPaymentMethod.SplitPay && order ? (
                     <div className="space-y-2 rounded-xl border border-nexoraBorder/70 bg-nexoraCanvas/40 p-3">
                       {splitAllocations.length > 0 ? (
                         <dl className="space-y-1 text-xs">
@@ -2074,9 +2168,9 @@ export default function PosOrderWorkspace({
                           {t('components.dashboard.views.pos.PosQuickSplitPanel.noSplitYet')}
                         </p>
                       )}
-                      {!isSplitPaymentReady ? (
+                      {splitBlockMessage ? (
                         <p className="text-xs font-bold text-nexoraDanger" aria-live="polite">
-                          {t('components.dashboard.views.pos.PosQuickSplitPanel.notReady')}
+                          {splitBlockMessage}
                         </p>
                       ) : null}
                       <button
@@ -2089,7 +2183,7 @@ export default function PosOrderWorkspace({
                       </button>
                     </div>
                   ) : null}
-                  {!isQuickSplitOpen && paymentMethod === PosCheckoutPaymentMethod.Cash && order ? (
+                  {paymentMethod === PosCheckoutPaymentMethod.Cash && order ? (
                     <PosCashPaymentPanel
                       total={order.total}
                       value={cashReceived}
@@ -2100,7 +2194,7 @@ export default function PosOrderWorkspace({
                       disabled={isBusy}
                     />
                   ) : null}
-                  {!isQuickSplitOpen && selectedReceivePaymentMethod && order ? (
+                  {selectedReceivePaymentMethod && order ? (
                     <PosReceivePaymentPanel
                       method={selectedReceivePaymentMethod}
                       amount={order.total}
@@ -2585,7 +2679,7 @@ export default function PosOrderWorkspace({
       <ChangeTechnicianModal
         open={technicianTarget !== null}
         serviceName={technicianTarget?.serviceName ?? ''}
-        technicians={technicianTarget ? techniciansForService(technicianTarget.posServiceId) : []}
+        technicians={technicianTarget ? technicianOptionsForTicket(technicianTarget.posServiceId) : []}
         isLoading={areTechniciansPending && allTechnicians.length === 0}
         selectedStaffId={technicianTarget?.posStaffProfileId ?? null}
         note={noteDraft}
@@ -2606,7 +2700,7 @@ export default function PosOrderWorkspace({
       <CustomServiceModal
         target={customServiceTarget}
         isSaving={isBusy}
-        technicians={techniciansForService(null)}
+        technicians={technicianOptionsForTicket(null)}
         isTechnicianRosterLoading={areTechniciansPending && allTechnicians.length === 0}
         onSubmit={handleSaveCustomService}
         onPickFromMenu={

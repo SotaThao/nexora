@@ -4118,7 +4118,7 @@
             "backToMonth": "Về xem tháng"
           },
           "PosQuickSplitPanel": {
-            "back": "Quay lại",
+            "close": "Đóng",
             "title": "Chia nhanh",
             "subtitle": "Chia một lần thanh toán cho nhiều phương thức.",
             "saving": "Đang lưu…",
@@ -4139,15 +4139,19 @@
             "errorChooseMethod": "Hãy chọn một phương thức thanh toán.",
             "errorAmountRequired": "Số tiền phải lớn hơn $0.00.",
             "errorCashShort": "Tiền mặt nhận ít hơn khoản này.",
+            "errorTipExceedsAmount": "Khoản này phải ít nhất bằng tip {{amount}} mà nó gánh.",
             "tipAttribution": "Tip {{amount}} tính vào",
-            "tipAttributionHelp": "Tip được ghi theo phương thức mà nó thực sự đến qua.",
+            "tipAttributionHelp": "Tip được cộng vào khoản đó và ghi theo phương thức mà nó đến.",
             "amountDue": "Số tiền cần thu",
             "short": "Còn thiếu {{amount}} chưa phân bổ.",
             "over": "Vượt {{amount}} so với số cần thu.",
             "addMethod": "+ Thêm phương thức",
             "clearSplit": "Xoá chia",
+            "saveSplit": "Lưu chia",
             "noSplitYet": "Chưa dựng khoản chia nào.",
-            "notReady": "Các khoản chưa cộng bằng số tiền cần thu.",
+            "needTwoMethods": "Chia tiền cần ít nhất hai phương thức.",
+            "cashNotCovered": "Tiền mặt nhận ít hơn số tiền của phần Cash.",
+            "tipNotAttributed": "Chọn tip đến từ phương thức nào.",
             "editSplit": "Sửa chia"
           },
           "PosOrderWorkspace": {
@@ -4190,6 +4194,7 @@
             "noTechnicians": "Chưa có thợ nào được đào tạo dịch vụ này.",
             "technicianBusy": "đang bận",
             "technicianAvailable": "đang rảnh",
+            "technicianOffShift": "đã hết ca",
             "technicianTurnsToday": "Lượt hôm nay: {{count}}",
             "technicianNextTurn": "Lượt kế tiếp",
             "noteLabel": "Ghi chú",

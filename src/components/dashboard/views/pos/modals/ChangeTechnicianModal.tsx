@@ -28,7 +28,8 @@ export default function ChangeTechnicianModal({
 }: {
   open: boolean
   serviceName: string
-  // Already narrowed to the people who can perform this line's service.
+  // Already narrowed to the people who can perform this line's service, plus anyone on this
+  // ticket who has clocked out since — they carry isOffShift and stay pickable.
   technicians: TechnicianOption[]
   isLoading?: boolean
   // null = First available, which clears the assignment rather than picking someone.
@@ -65,6 +66,7 @@ export default function ChangeTechnicianModal({
             emptyLabel={t(`${K}.noTechnicians`)}
             busyLabel={t(`${K}.technicianBusy`)}
             availableLabel={t(`${K}.technicianAvailable`)}
+            offShiftLabel={t(`${K}.technicianOffShift`)}
             turnsLabel={(count) => t(`${K}.technicianTurnsToday`, { count })}
             nextTurnLabel={t(`${K}.technicianNextTurn`)}
           />
