@@ -1,7 +1,6 @@
 // CertificateCanvasPreview — renders one certificate onto the artwork and offers it as a download.
 //
-// The canvas is drawn at twice the template's pixel size and scaled back down by CSS, so it stays
-// sharp on a retina screen and the saved file is big enough for the QR to scan off paper.
+// The canvas and saved PNG use 1427 × 1102 pixels; CSS fits the preview to its card.
 import { useEffect, useRef, useState } from 'react'
 import { AlertTriangle, Download, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
@@ -137,7 +136,7 @@ export default function CertificateCanvasPreview({
         type="button"
         onClick={handleDownload}
         disabled={state !== 'ready' || isSaving}
-        className="nexora-primary-button w-full disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+        className="nexora-primary-button mx-auto flex w-full disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
       >
         {isSaving ? (
           <Loader2 className="h-4 w-4 animate-spin" />
