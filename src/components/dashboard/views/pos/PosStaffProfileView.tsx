@@ -22,6 +22,9 @@ const STAFF_TABLE_PAGE_SIZE = 10
 
 interface StaffTableItem {
   linkId: string | null
+  staffProfileId?: string | null
+  isLocalStaff?: boolean
+  bio?: string | null
   fullName: string
   displayName: string | null
   avatar: string | null
@@ -196,7 +199,7 @@ export default function PosStaffProfileView({ embedded = false }: { embedded?: b
                               disabled={!linkId}
                               className="rounded-lg border border-nexoraBorder px-2.5 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand disabled:opacity-60"
                             >
-                              {t('common.view')}
+                              {t('components.dashboard.views.pos.PosStaffProfileView.viewEditButton')}
                             </button>
                           </div>
                         </td>
@@ -232,6 +235,7 @@ export default function PosStaffProfileView({ embedded = false }: { embedded?: b
           staffAvatar={selectedStaffAvatar}
           staffPosition={selectedStaffPosition}
           staffContact={selectedStaffContact}
+          staffInfo={selectedStaff}
           onClose={handleCloseModal}
         />
       )}
