@@ -32,6 +32,48 @@ export const POS_BEEP_DELAY_MINUTES_FALLBACK: readonly number[] = [2, 5, 10]
 /** Matches [MaxLength(500)] on PosStaffBeep.ResponseNote. */
 export const POS_BEEP_NOTE_MAX_LENGTH = 500
 
+/** The front desk's optional message on a beep — the textarea limit and the clamp on a saved one. */
+export const POS_BEEP_MESSAGE_MAX_LENGTH = 200
+
+/**
+ * Front-desk quick messages the salon typed itself, kept on this device.
+ *
+ * Device-local rather than business-level for the same reason as the printer profile
+ * (`POS_PRINTER_PROFILE_STORAGE_KEY` in `posPrinter.ts`): there is no beep-suggestion endpoint,
+ * and the wording that helps is the wording of the iPad it is typed on ("station 2" means nothing
+ * on the back-office machine). Key naming follows `pos_printer_profile_v1`; `storage.ts` prefixes
+ * it with `nexora_v3_`.
+ */
+export const POS_BEEP_SUGGESTIONS_STORAGE_KEY = 'pos_beep_suggestions_v1'
+
+/**
+ * Cap on saved quick messages. The chips sit above the textarea in a modal that must still fit an
+ * iPad in portrait, so the list has to stop growing somewhere; the modal disables Save at the cap
+ * and asks for a removal instead of silently dropping the oldest.
+ */
+export const POS_BEEP_SAVED_SUGGESTIONS_MAX = 12
+
+/**
+ * Trims a typed message down to what a chip can hold: one line, and no longer than the beep
+ * textarea itself allows. Empty means there is nothing worth saving.
+ *
+ * Newlines collapse rather than survive — the chip renders on one line, and a suggestion that
+ * looks like one line here but arrives as three on the tech's phone is a surprise.
+ */
+export function normalizeBeepSuggestion(value: unknown): string {
+  if (typeof value !== 'string') return ''
+  return value.replace(/\s+/g, ' ').trim().slice(0, POS_BEEP_MESSAGE_MAX_LENGTH)
+}
+
+/**
+ * What "already a quick message" means, for both the built-in five and the saved ones. Case- and
+ * whitespace-insensitive so the same sentence typed again with a capital letter or a stray double
+ * space does not earn a second chip that looks identical to the first.
+ */
+export function beepSuggestionKey(value: string): string {
+  return normalizeBeepSuggestion(value).toLowerCase()
+}
+
 /** A call the front desk has not closed and that has not timed out. */
 export function isBeepOpen(status: string | null | undefined): boolean {
   return (
