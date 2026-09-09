@@ -1,15 +1,10 @@
 /**
  * Draws a member's details onto the NEXORA TOUCH certificate artwork.
  *
- * The artwork is the source of truth for the layout: it ships with the frame, the headings, the
- * seal, the signatures and the three meta labels already printed, and leaves five slots blank —
- * member name, exam score, certification date, certificate ID, and the QR box. Only those five are
- * drawn here, so a redesign of the sheet is a new image rather than a code change.
- *
- * Every coordinate below is a fraction of the template, measured off the artwork's own ink (the
- * blank QR box was found by scanning for the white rectangle, the meta columns by scanning for the
- * three label clusters) rather than eyeballed from a screenshot. That also means the numbers stay
- * correct if the template is ever re-exported at a different resolution.
+ * The artwork provides the frame, headings, signatures and two metadata labels. The renderer
+ * adds the member name, certification date, certificate ID and verification QR.
+ * Coordinates are fractions of the sheet so the source artwork can have a higher resolution
+ * than the downloaded PNG.
  *
  * Same idiom as `renderCheckInBackgroundCanvas.ts`, which composes a QR onto a background for the
  * POS check-in poster.
@@ -17,52 +12,38 @@
 import QRCode from 'qrcode'
 import { CERTIFICATE_EXAM_SCORE_MAX_DEFAULT } from '../../constants/certificate'
 import { parseApiUtcDateTime } from '../../utils/localDate'
-import {
-  CERTIFICATE_FONT_FALLBACK,
-  CERTIFICATE_FONT_FAMILY,
-  loadCertificateFont,
-} from './certificateFont'
 import type { CertificateVerificationApiDto } from '../../types/repositories'
 
-/** Public path of the artwork. WebP, re-encoded from the 1.4MB design PNG down to ~119KB. */
+/** Supplied optimized WebP artwork; the renderer fits it to the export dimensions. */
 export const CERTIFICATE_TEMPLATE_SRC = '/images/certificate-template.webp'
 
 const TEMPLATE = {
-  naturalWidth: 1427,
-  naturalHeight: 1102,
+  naturalWidth: 1600,
+  naturalHeight: 1236,
   /** Ink colour of the artwork's own headings, so the filled values match what is printed. */
   inkColor: '#081F49',
-  /**
-   * The design sets the sheet in Playfair Display. It is shipped with the app and loaded on demand
-   * (see certificateFont.ts); the fallbacks only apply if that load fails, and Times leads them
-   * because Georgia renders numbers as old-style figures, which makes "94 / 100" sit unevenly.
-   *
-   * A variable-font optical-size axis was tried here (pinning `opsz` per role via
-   * `variationSettings`) and reverted: it made canvas drop strokes on some glyphs. Every weight
-   * below draws from the font's default instance.
-   */
-  fontFamily: `"${CERTIFICATE_FONT_FAMILY}", ${CERTIFICATE_FONT_FALLBACK}`,
-  /** Weights the sheet uses. Playfair Display is a variable font, so one file covers all three. */
-  weights: { memberName: 500, meta: 700, stamp: 700 },
+  /** Use the system Times New Roman face, with serif fallbacks where it is unavailable. */
+  fontFamily: '"Times New Roman", Times, serif',
+  weights: { memberName: 400, meta: 400, stamp: 700 },
   memberName: {
     centerX: 0.5,
-    /** Centre of the blank gap between "presented to" (ends y=426) and the gold rule (y≈545). */
-    centerY: 0.4410,
+    /** Leave space below the introduction (y≈428) and above the gold rule (y≈545). */
+    topY: 440 / 1102,
+    bottomY: 532 / 1102,
     maxWidth: 0.62,
-    /** Fractions of the template height. Shrinks from `fontSize` when a long name will not fit. */
-    fontSize: 0.069,
-    minFontSize: 0.036,
+    /** Maximum size as a fraction of the template height; shrink to fit the full name. */
+    fontSize: 0.0817,
   },
-  /** The three meta values sit on one baseline just above the labels printed at y=799..808. */
+  /** Date and ID sit just above the two labels printed on the artwork. */
   meta: {
     baselineY: 0.7132,
-    fontSize: 0.0272,
+    fontSize: 0.0245,
     maxWidth: 0.2,
-    /** Centres of the printed EXAM SCORE / CERTIFICATION DATE / CERTIFICATE ID labels. */
-    columnsX: [0.2404, 0.4835, 0.7246],
+    /** Centres of the printed CERTIFICATION DATE / CERTIFICATE ID labels. */
+    columnsX: [0.347, 0.653],
   },
-  /** The blank white square in the bottom-right corner, under "VERIFY CERTIFICATE". */
-  qrBox: { x: 0.8809, y: 0.7613, width: 0.0897, height: 0.1116 },
+  /** White QR interior measured on the 5708 × 4408 artwork, excluding the decorative border. */
+  qrBox: { x: 5025 / 5708, y: 3357 / 4408, width: 523 / 5708, height: 520 / 4408 },
   /** Keeps the QR off the box's printed border so the quiet zone survives. */
   qrInset: 0.06,
   /**
@@ -80,11 +61,9 @@ const STAMP_TONE = {
 export type CertificateStampTone = keyof typeof STAMP_TONE
 
 /**
- * Rendered at twice the artwork's pixel size. The on-screen preview is scaled back down by CSS, so
- * it stays sharp on a retina display, and the downloaded file is large enough for the QR to still
- * scan off paper — at 1x the QR lands at ~113px, which is thin for print.
+ * Keep the requested 1600 × 1236 preview and download size even when the source is larger.
  */
-const DEFAULT_SCALE = 2
+const DEFAULT_SCALE = 1
 
 /** A canvas this big is still well inside what mobile Safari will export. */
 const MAX_PIXELS = 12_000_000
@@ -237,30 +216,16 @@ export async function renderCertificateCanvas({
   // The holder's name is a snapshot taken when the certificate was written, so it is the name that
   // was printed even if the account has been renamed since.
   const name = certificate.memberName?.trim() ?? ''
-  // Exam score | certification date | certificate ID, in the order the artwork prints the labels.
+  // Certification date | certificate ID, matching the supplied two-column artwork.
   const metaValues = [
-    formatExamScore(certificate),
     formatCertificateDate(certificate.certificationDate),
     certificate.certificateId ?? '',
   ]
 
-  // Artwork and font in parallel — both have to be ready before anything is drawn, and neither
-  // depends on the other. The font load is given the exact text so only the subsets that text needs
-  // are fetched, and it never rejects: a failure just leaves the fallback serif in the stack.
-  const [template] = await Promise.all([
-    loadTemplate(signal),
-    loadCertificateFont([
-      { style: 'italic', weight: TEMPLATE.weights.memberName, text: name },
-      {
-        style: 'normal',
-        weight: TEMPLATE.weights.meta,
-        text: metaValues.join('') + (stamp ? stamp.label.toUpperCase() : ''),
-      },
-    ]),
-  ])
+  const template = await loadTemplate(signal)
 
-  const width = Math.round(template.naturalWidth * scale)
-  const height = Math.round(template.naturalHeight * scale)
+  const width = Math.round(TEMPLATE.naturalWidth * scale)
+  const height = Math.round(TEMPLATE.naturalHeight * scale)
   if (width * height > MAX_PIXELS) {
     throw new CertificateTemplateError('Certificate canvas exceeds the supported size')
   }
@@ -285,17 +250,29 @@ export async function renderCertificateCanvas({
     const slot = TEMPLATE.memberName
     const nameFont = (size: number) =>
       `italic ${TEMPLATE.weights.memberName} ${size}px ${TEMPLATE.fontFamily}`
-    const size = fitFontSize(
-      context,
-      name,
-      nameFont,
-      slot.maxWidth * width,
-      slot.fontSize * height,
-      slot.minFontSize * height,
-    )
+    const top = slot.topY * height
+    const availableHeight = (slot.bottomY - slot.topY) * height
+    const availableWidth = slot.maxWidth * width
+    context.textBaseline = 'alphabetic'
+    let size = slot.fontSize * height
     context.font = nameFont(size)
-    context.textBaseline = 'middle'
-    context.fillText(name, slot.centerX * width, slot.centerY * height)
+    let metrics = context.measureText(name)
+    // Ink bounds include stacked Vietnamese accents, descenders and italic overhangs.
+    // Advance width alone misses these, and a minimum font size lets long names overflow.
+    while (
+      size > 1 &&
+      (metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight > availableWidth ||
+        metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent > availableHeight)
+    ) {
+      size = Math.max(1, size - 1)
+      context.font = nameFont(size)
+      metrics = context.measureText(name)
+    }
+    const inkHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
+    const x = slot.centerX * width +
+      (metrics.actualBoundingBoxLeft - metrics.actualBoundingBoxRight) / 2
+    const baseline = top + (availableHeight - inkHeight) / 2 + metrics.actualBoundingBoxAscent
+    context.fillText(name, x, baseline)
   }
 
   const metaFont = (size: number) => `${TEMPLATE.weights.meta} ${size}px ${TEMPLATE.fontFamily}`
@@ -322,13 +299,13 @@ export async function renderCertificateCanvas({
 
   // QR into the blank box. Generated locally by the `qrcode` package rather than fetched from an
   // image service — an external image would taint the canvas and make the download throw.
+  const box = {
+    x: TEMPLATE.qrBox.x * width,
+    y: TEMPLATE.qrBox.y * height,
+    width: TEMPLATE.qrBox.width * width,
+    height: TEMPLATE.qrBox.height * height,
+  }
   if (certificate.certificateId) {
-    const box = {
-      x: TEMPLATE.qrBox.x * width,
-      y: TEMPLATE.qrBox.y * height,
-      width: TEMPLATE.qrBox.width * width,
-      height: TEMPLATE.qrBox.height * height,
-    }
     const inset = Math.min(box.width, box.height) * TEMPLATE.qrInset
     const qrSize = Math.round(Math.min(box.width, box.height) - inset * 2)
     const qrCanvas = document.createElement('canvas')
