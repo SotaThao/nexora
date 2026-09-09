@@ -623,6 +623,7 @@ export interface CheckInTechnicianApiDto {
   // present) reads as "not local staff", not as a false positive block on every technician's Beep.
   isLocalStaff?: boolean
   email?: string | null
+  queueCount?: number
 }
 
 export interface CheckInActiveVisitApiDto {

@@ -67,6 +67,8 @@ export default function CheckInSurface({
   const session = useCheckInSession({
     useSource,
     submitErrorMessage: t(`${K}.submitError`),
+    nameRequiredMessage: t(`${K}.nameRequired`),
+    consentRequiredMessage: t(`${K}.consentRequired`),
     onCheckedIn,
   })
 
