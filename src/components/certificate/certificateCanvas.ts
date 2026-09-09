@@ -14,8 +14,8 @@ import { CERTIFICATE_EXAM_SCORE_MAX_DEFAULT } from '../../constants/certificate'
 import { parseApiUtcDateTime } from '../../utils/localDate'
 import type { CertificateVerificationApiDto } from '../../types/repositories'
 
-/** Supplied artwork, preserved without additional lossy compression. */
-export const CERTIFICATE_TEMPLATE_SRC = '/images/certificate-template.png'
+/** Artwork resized to the export dimensions and encoded as lossless WebP. */
+export const CERTIFICATE_TEMPLATE_SRC = '/images/certificate-template.webp'
 
 const TEMPLATE = {
   naturalWidth: 1427,
@@ -42,8 +42,8 @@ const TEMPLATE = {
     /** Centres of the printed CERTIFICATION DATE / CERTIFICATE ID labels. */
     columnsX: [0.347, 0.653],
   },
-  /** White QR interior, excluding the decorative border. */
-  qrBox: { x: 0.8809, y: 0.7613, width: 0.0897, height: 0.1116 },
+  /** White QR interior measured on the 5708 × 4408 artwork, excluding the decorative border. */
+  qrBox: { x: 5025 / 5708, y: 3357 / 4408, width: 523 / 5708, height: 520 / 4408 },
   /** Keeps the QR off the box's printed border so the quiet zone survives. */
   qrInset: 0.06,
   /**
@@ -305,9 +305,6 @@ export async function renderCertificateCanvas({
     width: TEMPLATE.qrBox.width * width,
     height: TEMPLATE.qrBox.height * height,
   }
-  // Keep the QR interior white so the generated code has a clean background.
-  context.fillStyle = '#FFFFFF'
-  context.fillRect(box.x, box.y, box.width, box.height)
   if (certificate.certificateId) {
     const inset = Math.min(box.width, box.height) * TEMPLATE.qrInset
     const qrSize = Math.round(Math.min(box.width, box.height) - inset * 2)
