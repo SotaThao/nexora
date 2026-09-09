@@ -5200,6 +5200,7 @@
             "printingCopy": "Printing copy {{current}} of {{total}}…",
             "printQueueFinished": "Receipt printed.",
             "printNotStarted": "Printing did not start. Check that Star PassPRNT is installed on this device.",
+            "printResultUnknown": "Your ticket is still open. No print result was received. Check the printer before printing again.",
             "printTooLarge": "This receipt is too long to send to PassPRNT. Printed with the browser instead.",
             "passprntError": {
               "3": "The receipt was too long for the printer. Try printing fewer copies or a shorter ticket.",

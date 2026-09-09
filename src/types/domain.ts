@@ -1044,5 +1044,7 @@ export type PosPrintRestoreState =
       orderId?: string
       mode?: 'edit' | 'checkout' | 'success'
       receiptMode?: string
+      /** Unsaved Edit Ticket note, retained across the external print app round trip. */
+      ticketNote?: string
     }
   | { surface: 'printerSetup' }

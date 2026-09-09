@@ -17,8 +17,8 @@
  * - A pending job with no callback and no recent activity is swept. That is the only signal
  *   available that PassPRNT never opened — iOS reports nothing when a URL scheme has no handler.
  */
-import { useCallback, useEffect, useRef } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { qk } from '../../../../../data/queryKeys'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
@@ -32,6 +32,7 @@ import {
 import type { PosPrintRestoreState } from '../../../../../types/domain'
 import type { PosPendingPrintJob } from '../../../../../types/repositories'
 import { logger } from '../../../../../utils/logger'
+import { randomUuid } from '../../../../../utils/uuid'
 import {
   buildPassPrntBackUrl,
   buildPassPrntUrl,
@@ -39,9 +40,11 @@ import {
   getPassPrntErrorI18nKey,
   parsePassPrntCallback,
   stripPassPrntCallbackParams,
+  readPassPrntReturnPath,
 } from './passprntTransport'
 import { buildPosReceiptHtml } from './posReceiptHtml'
 import { usePosPrinterProfile } from '../../../../../data/hooks/usePosPrinterSettings'
+import { readPosWorkspaceFromParams, writePosWorkspaceToParams, type PosReceiptMode } from '../posWorkspaceUrl'
 
 export interface UsePassPrntReturnOptions {
   surface: 'frontDesk' | 'printerSetup'
@@ -59,10 +62,34 @@ export interface UsePassPrntReturnOptions {
 export function usePassPrntReturn({ surface, backPath, onRestore, onPrintFailed }: UsePassPrntReturnOptions) {
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const { backPath: callbackBackPath, attemptId: callbackAttemptId } = readPassPrntReturnPath(pathname)
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const { data: profile } = usePosPrinterProfile()
   const handledRef = useRef<string | null>(null)
+  const handledLegacyJobRef = useRef<string | null>(null)
+  const handledReturnParamsRef = useRef<URLSearchParams | null>(null)
+  const [arrivalJob] = useState(() => posPrinterSettingsRepository.getPendingPrintJob())
+  const recoveredArrivalRef = useRef<string | null>(null)
+  const replaceReturnParams = useCallback((params: URLSearchParams) => {
+    if (callbackAttemptId) navigate({ pathname: callbackBackPath, search: params.toString() }, { replace: true })
+    else setSearchParams(params, { replace: true })
+  }, [callbackAttemptId, callbackBackPath, navigate, setSearchParams])
+
+  const returnParams = useCallback((state: PosPrintRestoreState | null) => {
+    const next = stripPassPrntCallbackParams(searchParams)
+    if (surface !== 'frontDesk' || state?.surface !== 'frontDesk') return next
+    const workspace = state.orderId ? {
+      orderId: state.orderId,
+      mode: state.mode ?? ('success' as const),
+      receiptMode: state.receiptMode as PosReceiptMode,
+    } : null
+    const restored = writePosWorkspaceToParams(next, workspace)
+    restored.set('tab', state.tab)
+    return restored
+  }, [searchParams, surface])
 
   const restore = useCallback(
     (state: PosPrintRestoreState | null) => {
@@ -74,10 +101,50 @@ export function usePassPrntReturn({ surface, backPath, onRestore, onPrintFailed 
   useEffect(() => {
     const callback = parsePassPrntCallback(searchParams)
     const job = posPrinterSettingsRepository.getPendingPrintJob()
+    const callbackKey = `${callbackBackPath}:${callbackAttemptId ?? job?.createdAt ?? handledLegacyJobRef.current ?? ''}:${searchParams.toString()}`
+    if (callback && handledRef.current === callbackKey && (!job || !callbackAttemptId || job.attemptId === callbackAttemptId)) {
+      replaceReturnParams(handledReturnParamsRef.current ?? stripPassPrntCallbackParams(searchParams))
+      return
+    }
+    const recoveryKey = callbackAttemptId ? `return:${callbackAttemptId}` : `arrival:${job?.attemptId ?? job?.createdAt ?? ''}`
+
+    // A late response must never acknowledge a different invocation or another surface.
+    // Legacy jobs without an invocation ID still accept their original callback URLs.
+    if ((callback || callbackAttemptId) && (
+      (job?.attemptId ?? null) !== callbackAttemptId
+      || (job?.restore && job.restore.surface !== surface)
+      || (job?.backPath && job.backPath !== callbackBackPath)
+    )) {
+      recoveredArrivalRef.current = `arrival:${job?.attemptId ?? job?.createdAt ?? ''}`
+      const currentRestore = job?.restore?.surface === surface && (!job.backPath || job.backPath === callbackBackPath) ? job.restore : null
+      replaceReturnParams(returnParams(currentRestore))
+      if (currentRestore && job) {
+        posPrinterSettingsRepository.savePendingPrintJob({ ...job, workspaceRestored: true })
+        restore(currentRestore)
+      }
+      return
+    }
 
     if (!callback) {
-      // No result in the URL. If a job has been sitting here since before the staleness window,
-      // the companion app never took it — most often because it is not installed.
+      // Recover only a job present when this page mounted, never one just launched by it.
+      // Keep the job: returning without a result does not prove printing failed.
+      const currentWorkspace = readPosWorkspaceFromParams(searchParams)
+      const explicitReturn = callbackAttemptId && callbackAttemptId === job?.attemptId
+      if (recoveredArrivalRef.current !== recoveryKey && job && (!job.workspaceRestored || explicitReturn)
+        && (explicitReturn || (arrivalJob?.createdAt === job.createdAt && arrivalJob?.jobId === job.jobId))
+        && job.restore?.surface === 'frontDesk' && surface === 'frontDesk'
+        && (!job.backPath || job.backPath === callbackBackPath)
+        && job.restore.mode === 'edit') {
+        recoveredArrivalRef.current = recoveryKey
+        posPrinterSettingsRepository.savePendingPrintJob({ ...job, workspaceRestored: true })
+        // An explicit destination declines automatic recovery, including after it closes.
+        if (currentWorkspace && (currentWorkspace.orderId !== job.restore.orderId || currentWorkspace.mode !== 'edit')) return
+        replaceReturnParams(returnParams(job.restore))
+        restore(job.restore)
+        showToast(t(`${POS_PRINTER_I18N_PREFIX}.printResultUnknown`), 'info')
+        return
+      }
+      if (job?.restore?.surface === 'frontDesk' && job.restore.mode === 'edit') return
       if (job && Date.now() - new Date(job.createdAt).getTime() > PASSPRNT_JOB_STALE_MS) {
         posPrinterSettingsRepository.clearPendingPrintJob()
         showToast(t(`${POS_PRINTER_I18N_PREFIX}.printNotStarted`), 'error')
@@ -87,12 +154,13 @@ export function usePassPrntReturn({ surface, backPath, onRestore, onPrintFailed 
 
     // The persisted job advances below. Keying this guard on copiesDone would turn an
     // effect replay for the same URL into a second acknowledgement and duplicate print.
-    const callbackKey = searchParams.toString()
-    if (handledRef.current === callbackKey) return
     handledRef.current = callbackKey
+    if (!callbackAttemptId && job) handledLegacyJobRef.current = job.createdAt
+    handledReturnParamsRef.current = returnParams(job?.restore ?? null)
 
     // Strip first: whatever happens next, this URL must not read as a print result again.
-    setSearchParams(stripPassPrntCallbackParams(searchParams), { replace: true })
+    // Restore the workspace and remove callback parameters in a single navigation.
+    replaceReturnParams(handledReturnParamsRef.current)
 
     if (!job) {
       logger.warn('[usePassPrntReturn] callback with no pending job', callback.code)
@@ -139,9 +207,10 @@ export function usePassPrntReturn({ surface, backPath, onRestore, onPrintFailed 
     // More copies to go. Re-fire from the document stored with the job, never from a fresh build:
     // the order query may not even be warm yet on this mount, and copy 2 has to match copy 1.
     const widthDots = profile?.paperWidthDots ?? 576
+    const attemptId = randomUuid()
     const built = buildPassPrntUrl({
       html: buildPosReceiptHtml(job.document, { widthDots }),
-      backUrl: buildPassPrntBackUrl(window.location.origin, backPath),
+      backUrl: buildPassPrntBackUrl(window.location.origin, backPath, attemptId),
       widthDots,
     })
 
@@ -156,6 +225,7 @@ export function usePassPrntReturn({ surface, backPath, onRestore, onPrintFailed 
       ...job,
       copiesDone,
       firedAttempts: 1,
+      attemptId,
     })
     showToast(
       t(`${POS_PRINTER_I18N_PREFIX}.printingCopy`, {
@@ -166,5 +236,5 @@ export function usePassPrntReturn({ surface, backPath, onRestore, onPrintFailed 
     )
     restore(job.restore)
     firePassPrnt(built.url)
-  }, [searchParams, setSearchParams, showToast, t, restore, profile?.paperWidthDots, backPath, onPrintFailed, queryClient])
+  }, [searchParams, showToast, t, restore, profile?.paperWidthDots, backPath, onPrintFailed, arrivalJob, returnParams, surface, callbackAttemptId, callbackBackPath, replaceReturnParams, queryClient])
 }

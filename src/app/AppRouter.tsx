@@ -448,6 +448,7 @@ export default function AppRouter() {
             <Route path={DASHBOARD_MENU_ID.productManagement} element={<ProductManagementRoute />} />
             <Route element={<PosOnboardingLayout />}>
               <Route path={DASHBOARD_MENU_ID.pos} element={<PosFrontDeskRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/print-return/:printAttemptId`} element={<PosFrontDeskRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/settings/:settingsTab?`} element={<PosSalonSettingsRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/report/:reportTab?`} element={<PosReportsRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/roles`} element={<PosRolesRoute />} />
@@ -458,6 +459,7 @@ export default function AppRouter() {
               <Route path={`${DASHBOARD_MENU_ID.pos}/staff`} element={<PosStaffProfileRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/devices`} element={<PosDevicesRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/printer`} element={<PosPrinterSetupRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/printer/print-return/:printAttemptId`} element={<PosPrinterSetupRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/public-checkin`} element={<PosPublicCheckInRoute />} />
             </Route>
             {/* Account menu > My Certifications. Not a sidebar menu id: a certificate belongs to
@@ -511,6 +513,7 @@ export default function AppRouter() {
             <Route path="salons" element={<StaffMySalons />} />
             <Route path="salons/report" element={<StaffSalonReport />} />
             <Route path="salons/:businessId/front-desk" element={<StaffFrontDesk />} />
+            <Route path="salons/:businessId/front-desk/print-return/:printAttemptId" element={<StaffFrontDesk />} />
             <Route path="work-orders/:salonId?/:ticketId?" element={<StaffWorkOrders />} />
             <Route path="calendar" element={<StaffMyCalendar />} />
             {/* Landing page for the rotating clock-in QR — salon id and token arrive as ?b=&t= */}
