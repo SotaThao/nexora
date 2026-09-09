@@ -29,10 +29,11 @@ import {
 import type { PosPrintTransportType } from '../../../../../constants/posPrinter'
 import type { PosPrintRestoreState, PosReceiptDocument } from '../../../../../types/domain'
 import { logger } from '../../../../../utils/logger'
+import { randomUuid } from '../../../../../utils/uuid'
 import PosReceiptPrintDocument from './PosReceiptPrintDocument'
 import { printDomWithBodyClass } from './browserPrintTransport'
 import type { BrowserPrintHandle } from './browserPrintTransport'
-import { buildPassPrntBackUrl, buildPassPrntUrl, firePassPrnt } from './passprntTransport'
+import { buildPassPrntBackUrl, buildPassPrntUrl, firePassPrnt, readPassPrntReturnPath } from './passprntTransport'
 import { buildPosReceiptHtml, estimatePosReceiptHeightPx } from './posReceiptHtml'
 import { POS_INVOICE_PRINT_BODY_CLASS } from '../PosReceiptPrintPreview'
 
@@ -101,7 +102,7 @@ export function usePosReceiptPrint() {
 
     // Blocking browsers may dispatch afterprint before window.print returns.
     window.addEventListener('afterprint', teardown, { once: true })
-    handle = printDomWithBodyClass(POS_INVOICE_PRINT_BODY_CLASS)
+    handle = printDomWithBodyClass(POS_INVOICE_PRINT_BODY_CLASS, teardown)
     if (!torn) timer = window.setTimeout(unlock, BROWSER_PRINT_UNLOCK_MS)
 
     return () => {
@@ -130,13 +131,14 @@ export function usePosReceiptPrint() {
       }
 
       const widthDots = profile?.paperWidthDots ?? 576
+      const attemptId = randomUuid()
       const html = buildPosReceiptHtml(doc, { widthDots })
       const built =
         estimatePosReceiptHeightPx(doc) > PASSPRNT_MAX_RECEIPT_HEIGHT_PX
           ? { tooLarge: true as const, encodedLength: 0 }
           : buildPassPrntUrl({
               html,
-              backUrl: buildPassPrntBackUrl(window.location.origin, request.backPath),
+              backUrl: buildPassPrntBackUrl(window.location.origin, request.backPath, attemptId),
               widthDots,
             })
 
@@ -158,6 +160,8 @@ export function usePosReceiptPrint() {
         firedAttempts: 1,
         document: doc,
         restore: request.restore,
+        attemptId,
+        backPath: readPassPrntReturnPath(request.backPath).backPath,
       })
 
       // iOS can resume this same page (including from the back/forward cache). A URL
@@ -176,7 +180,14 @@ export function usePosReceiptPrint() {
         setIsPrinting(false)
       }
       const pageHidden = () => { leftPage = true }
-      const pageShown = () => { if (leftPage) unlock() }
+      const pageShown = () => {
+        if (!leftPage) return
+        const pending = posPrinterSettingsRepository.getPendingPrintJob()
+        if (pending?.attemptId === attemptId) {
+          posPrinterSettingsRepository.savePendingPrintJob({ ...pending, workspaceRestored: true })
+        }
+        unlock()
+      }
       const visibilityChanged = () => {
         if (document.visibilityState === 'hidden') pageHidden()
         else pageShown()

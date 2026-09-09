@@ -9,7 +9,7 @@
 // decides whether the actionable UI renders at all; the caller (Owner vs Staff
 // route wrapper) is responsible for only linking here when access is expected.
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   ChevronLeft,
@@ -70,7 +70,7 @@ import { SkeletonList } from '../../../ui/skeleton'
 import { getInitials, joinOrEmpty } from './posDisplay'
 import PosOrderWorkspace from './PosOrderWorkspace'
 import { usePassPrntReturn } from './receipt/usePassPrntReturn'
-import { DASHBOARD_MENU_ID } from '../../constants'
+import { readPassPrntReturnPath } from './receipt/passprntTransport'
 import {
   readPosWorkspaceFromParams,
   writePosWorkspaceToParams,
@@ -419,6 +419,8 @@ export default function PosFrontDeskView({
   // kept in sync on every tab switch (see setActiveTab below) so a reload restores
   // whichever tab was active instead of always falling back to Order List.
   const [searchParams, setSearchParams] = useSearchParams()
+  const { pathname } = useLocation()
+  const receiptPrintBackPath = readPassPrntReturnPath(pathname).backPath
   const tabFromUrl = searchParams.get(POS_FRONT_DESK_TAB_PARAM) as PosFrontDeskTab | null
   const initialTab: PosFrontDeskTab =
     tabFromUrl && availableTabs.includes(tabFromUrl) ? tabFromUrl : DEFAULT_POS_FRONT_DESK_TAB
@@ -653,8 +655,10 @@ export default function PosFrontDeskView({
   // Set when PassPRNT reports a failed receipt print, so the workspace can open the preview and
   // let the operator print through the browser instead of leaving the customer waiting.
   const [printFallbackOrderId, setPrintFallbackOrderId] = useState<string | null>(null)
+  const [printReturnDraft, setPrintReturnDraft] = useState<{ orderId: string; note: string } | null>(null)
 
   const setUpdateWorkspace = useCallback((workspace: UpdateWorkspaceState | null, nextTab?: PosFrontDeskTab) => {
+    setPrintReturnDraft(null)
     setUpdateWorkspaceState(workspace)
     if (nextTab) setActiveTabState(nextTab)
     setSearchParams(
@@ -667,30 +671,19 @@ export default function PosFrontDeskView({
   // restore path is the workspace URL state this view already owns, so no new params are needed.
   usePassPrntReturn({
     surface: 'frontDesk',
-    backPath: `/dashboard/${DASHBOARD_MENU_ID.pos}`,
+    backPath: receiptPrintBackPath,
     onPrintFailed: useCallback((job) => setPrintFallbackOrderId(job.jobId), []),
     onRestore: useCallback(
       (restore) => {
         if (restore.surface !== 'frontDesk') return
-        const tab = restore.tab as PosFrontDeskTab
-        // A re-print from the Completed list carries no order: its detail modal is local state
-        // with no URL representation, so the honest restore is the tab it was opened from.
-        if (!restore.orderId) {
-          setUpdateWorkspace(null, tab)
-          return
-        }
-        setUpdateWorkspace(
-          {
-            orderId: restore.orderId,
-            // Preserve where the operator actually was: printing an unpaid invoice returns to
-            // checkout, printing a paid receipt returns to the success screen.
-            mode: restore.mode ?? 'success',
-            receiptMode: restore.receiptMode as PosReceiptMode,
-          },
-          tab,
-        )
+        // The print return hook restores the URL atomically. The URL effect below owns
+        // the workspace; a second navigation here would reintroduce callback parameters.
+        setActiveTabState(restore.tab as PosFrontDeskTab)
+        setPrintReturnDraft(restore.mode === 'edit' && restore.orderId && typeof restore.ticketNote === 'string'
+          ? { orderId: restore.orderId, note: restore.ticketNote }
+          : null)
       },
-      [setUpdateWorkspace],
+      [],
     ),
   })
 
@@ -1398,7 +1391,9 @@ export default function PosFrontDeskView({
           businessTimeZone={reportBusinessTimeZone}
           canViewReport={Boolean(access?.canViewReport)}
           receiptPrintTab={activeTab}
+          receiptPrintBackPath={receiptPrintBackPath}
           printFallbackOrderId={printFallbackOrderId}
+          initialTicketNote={printReturnDraft?.orderId === updateWorkspace.orderId ? printReturnDraft.note : undefined}
           onPrintFallbackHandled={() => setPrintFallbackOrderId(null)}
           onPaymentCompleted={(completedOrderId, receiptMode) => {
             setUpdateWorkspace({ orderId: completedOrderId, mode: 'success', receiptMode })

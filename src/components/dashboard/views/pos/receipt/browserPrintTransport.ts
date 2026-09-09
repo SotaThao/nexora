@@ -16,8 +16,9 @@ export interface BrowserPrintHandle {
   cancel: () => void
 }
 
-export function printDomWithBodyClass(bodyClass: string): BrowserPrintHandle {
+export function printDomWithBodyClass(bodyClass: string, onError?: () => void): BrowserPrintHandle {
   if (typeof window === 'undefined' || typeof window.print !== 'function') {
+    onError?.()
     return { cancel: () => {} }
   }
 
@@ -38,6 +39,7 @@ export function printDomWithBodyClass(bodyClass: string): BrowserPrintHandle {
     // A blocked or unavailable print dialog must not leave the app wearing the print stylesheet.
     logger.error('[browserPrintTransport] window.print() failed', error)
     cleanup()
+    onError?.()
   }
 
   return { cancel: cleanup }

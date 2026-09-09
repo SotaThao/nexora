@@ -287,8 +287,10 @@ export default function PosOrderWorkspace({
   businessTimeZone,
   canViewReport = false,
   receiptPrintTab = PosFrontDeskTab.CheckoutCustomer,
+  receiptPrintBackPath = POS_FRONT_DESK_ROUTE_PATH,
   printFallbackOrderId = null,
   onPrintFallbackHandled,
+  initialTicketNote,
 }: {
   businessId: string
   orderId: string
@@ -309,10 +311,12 @@ export default function PosOrderWorkspace({
   // Which Front Desk tab to return to after a PassPRNT round trip. Printing leaves the app, so
   // the callback lands on a fresh mount and has to be told where the operator was.
   receiptPrintTab?: string
+  receiptPrintBackPath?: string
   // Order whose PassPRNT print just failed. The preview opens on it so the operator can fall
   // back to the browser dialog without going anywhere.
   printFallbackOrderId?: string | null
   onPrintFallbackHandled?: () => void
+  initialTicketNote?: string
 }) {
   const { t, currentLanguage } = useTranslation()
   // Device-local receipt options (what to print, how many copies). Read here rather than at
@@ -476,6 +480,8 @@ export default function PosOrderWorkspace({
   useEffect(() => setTicketBrowserFallback(false), [orderId])
   const [tipSplitInputs, setTipSplitInputs] = useState<Record<string, string>>({})
   const initializedWorkspaceRef = useRef<string | null>(null)
+  const restoredTicketNoteKeyRef = useRef<string | null>(null)
+  const ticketNoteEditedRef = useRef(false)
   const initializedOrderIdRef = useRef<string | null>(null)
   const printCleanupRef = useRef<(() => void) | null>(null)
   const serviceLineIdsBeforeAddRef = useRef<Set<string> | null>(null)
@@ -579,13 +585,24 @@ export default function PosOrderWorkspace({
   useEffect(() => {
     if (!order) return
     const workspaceKey = `${order.id}:${mode}`
-    if (initializedWorkspaceRef.current === workspaceKey) return
+    if (initializedWorkspaceRef.current === workspaceKey) {
+      // The parent may recover the print draft after this cached order has hydrated.
+      // Apply it once, without overwriting any edits made since returning.
+      if (mode === 'edit' && initialTicketNote !== undefined
+        && restoredTicketNoteKeyRef.current !== workspaceKey) {
+        restoredTicketNoteKeyRef.current = workspaceKey
+        if (!ticketNoteEditedRef.current) setNoteInput(initialTicketNote)
+      }
+      return
+    }
     initializedWorkspaceRef.current = workspaceKey
+    ticketNoteEditedRef.current = false
+    restoredTicketNoteKeyRef.current = mode === 'edit' && initialTicketNote !== undefined ? workspaceKey : null
 
     // Status never reveals checkout information by itself. An InService order reached through
     // Edit still opens as an operational ticket; only an explicit Checkout entry reveals payment.
     setShowPaymentSection(mode === 'checkout' && !isPaid)
-    setNoteInput(order.note ?? '')
+    setNoteInput(mode === 'edit' ? initialTicketNote ?? order.note ?? '' : order.note ?? '')
     if (mode !== 'success') {
       setReceiptChoice('none')
       setPaymentMethod('Cash')
@@ -607,7 +624,7 @@ export default function PosOrderWorkspace({
       else setTipMode('custom')
       setCustomTipInput(formatUsdInputAmount(order.tipAmount))
     }
-  }, [order, mode, isPaid])
+  }, [order, mode, isPaid, initialTicketNote])
 
   // Keep the default equal to the live total while tip/discount edits are still changing it.
   // Once the cashier types a received amount, that physical cash value belongs to them and must
@@ -1692,7 +1709,7 @@ export default function PosOrderWorkspace({
               <textarea
                 id="pos-ticket-note"
                 value={noteInput}
-                onChange={(e) => setNoteInput(e.target.value)}
+                onChange={(e) => { ticketNoteEditedRef.current = true; setNoteInput(e.target.value) }}
                 onBlur={handleNoteCommit}
                 disabled={isBusy}
                 maxLength={500}
@@ -2232,8 +2249,8 @@ export default function PosOrderWorkspace({
         const doc = buildPosTicketDocument({ orderNumber: order.orderNumber, completedAtLabel: formatPosDateTime(order.completedAt ?? new Date().toISOString(), currentLanguage), customerName: order.customerName, orderNote: noteInput, groups: printableReceiptGroups,
           noteLabel: t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteTitle'), customerLabel: t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewCustomer') })
         setTicketPreviewOpen(false)
-        printReceipt(doc, { jobId: orderId, copies: 1, backPath: POS_FRONT_DESK_ROUTE_PATH, browserOnly: ticketBrowserFallback,
-          restore: { surface: 'frontDesk', tab: receiptPrintTab, orderId, mode: 'edit' } })
+        printReceipt(doc, { jobId: orderId, copies: 1, backPath: receiptPrintBackPath, browserOnly: ticketBrowserFallback,
+          restore: { surface: 'frontDesk', tab: receiptPrintTab, orderId, mode: 'edit', ticketNote: noteInput } })
       }}
       customerName={order.customerName}
       orderNote={noteInput}
@@ -2286,7 +2303,7 @@ export default function PosOrderWorkspace({
     printReceipt(autoPrintIntent.doc, {
       jobId: autoPrintIntent.orderId,
       copies: autoPrintIntent.copies,
-      backPath: POS_FRONT_DESK_ROUTE_PATH,
+      backPath: receiptPrintBackPath,
       restore: {
         surface: 'frontDesk',
         tab: receiptPrintTab,
@@ -2296,7 +2313,7 @@ export default function PosOrderWorkspace({
       },
     })
     setAutoPrintIntent(null)
-  }, [autoPrintIntent, printReceipt, receiptPrintTab])
+  }, [autoPrintIntent, printReceipt, receiptPrintTab, receiptPrintBackPath])
 
   // The manual Print button has to respect the device transport too. Without this, a salon that
   // paired a Star printer would still get the browser dialog every time someone pressed Print —
@@ -2310,7 +2327,7 @@ export default function PosOrderWorkspace({
   const isPrintFallback = Boolean(printFallbackOrderId) && printFallbackOrderId === orderId
   useEffect(() => {
     if (!isPrintFallback) return
-    if (mode === 'edit') { setTicketBrowserFallback(true); setTicketPreviewOpen(true) }
+    if (mode === 'edit') setTicketBrowserFallback(true)
     else setPrintPreviewOpen(true)
     onPrintFallbackHandled?.()
   }, [isPrintFallback, onPrintFallbackHandled, mode])
@@ -2323,7 +2340,7 @@ export default function PosOrderWorkspace({
             {
               jobId: orderId,
               copies: 1,
-              backPath: POS_FRONT_DESK_ROUTE_PATH,
+              backPath: receiptPrintBackPath,
               restore: {
                 surface: 'frontDesk',
                 tab: receiptPrintTab,
