@@ -2382,4 +2382,8 @@ export interface PosPendingPrintJob {
   restore: PosPrintRestoreState | null
   /** The editor was already recovered without a result; do not reopen it on later visits. */
   workspaceRestored?: boolean
+  /** Unique invocation ID carried in the callback path, including each individual copy. */
+  attemptId?: string
+  /** Canonical owner/staff salon route that owns this print job. */
+  backPath?: string
 }

@@ -9,7 +9,7 @@
 // decides whether the actionable UI renders at all; the caller (Owner vs Staff
 // route wrapper) is responsible for only linking here when access is expected.
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   ChevronLeft,
@@ -70,7 +70,7 @@ import { SkeletonList } from '../../../ui/skeleton'
 import { getInitials, joinOrEmpty } from './posDisplay'
 import PosOrderWorkspace from './PosOrderWorkspace'
 import { usePassPrntReturn } from './receipt/usePassPrntReturn'
-import { DASHBOARD_MENU_ID } from '../../constants'
+import { readPassPrntReturnPath } from './receipt/passprntTransport'
 import {
   readPosWorkspaceFromParams,
   writePosWorkspaceToParams,
@@ -419,6 +419,8 @@ export default function PosFrontDeskView({
   // kept in sync on every tab switch (see setActiveTab below) so a reload restores
   // whichever tab was active instead of always falling back to Order List.
   const [searchParams, setSearchParams] = useSearchParams()
+  const { pathname } = useLocation()
+  const receiptPrintBackPath = readPassPrntReturnPath(pathname).backPath
   const tabFromUrl = searchParams.get(POS_FRONT_DESK_TAB_PARAM) as PosFrontDeskTab | null
   const initialTab: PosFrontDeskTab =
     tabFromUrl && availableTabs.includes(tabFromUrl) ? tabFromUrl : DEFAULT_POS_FRONT_DESK_TAB
@@ -669,7 +671,7 @@ export default function PosFrontDeskView({
   // restore path is the workspace URL state this view already owns, so no new params are needed.
   usePassPrntReturn({
     surface: 'frontDesk',
-    backPath: `/dashboard/${DASHBOARD_MENU_ID.pos}`,
+    backPath: receiptPrintBackPath,
     onPrintFailed: useCallback((job) => setPrintFallbackOrderId(job.jobId), []),
     onRestore: useCallback(
       (restore) => {
@@ -1389,6 +1391,7 @@ export default function PosFrontDeskView({
           businessTimeZone={reportBusinessTimeZone}
           canViewReport={Boolean(access?.canViewReport)}
           receiptPrintTab={activeTab}
+          receiptPrintBackPath={receiptPrintBackPath}
           printFallbackOrderId={printFallbackOrderId}
           initialTicketNote={printReturnDraft?.orderId === updateWorkspace.orderId ? printReturnDraft.note : undefined}
           onPrintFallbackHandled={() => setPrintFallbackOrderId(null)}

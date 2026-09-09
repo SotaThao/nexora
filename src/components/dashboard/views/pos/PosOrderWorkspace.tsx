@@ -287,6 +287,7 @@ export default function PosOrderWorkspace({
   businessTimeZone,
   canViewReport = false,
   receiptPrintTab = PosFrontDeskTab.CheckoutCustomer,
+  receiptPrintBackPath = POS_FRONT_DESK_ROUTE_PATH,
   printFallbackOrderId = null,
   onPrintFallbackHandled,
   initialTicketNote,
@@ -310,6 +311,7 @@ export default function PosOrderWorkspace({
   // Which Front Desk tab to return to after a PassPRNT round trip. Printing leaves the app, so
   // the callback lands on a fresh mount and has to be told where the operator was.
   receiptPrintTab?: string
+  receiptPrintBackPath?: string
   // Order whose PassPRNT print just failed. The preview opens on it so the operator can fall
   // back to the browser dialog without going anywhere.
   printFallbackOrderId?: string | null
@@ -2247,7 +2249,7 @@ export default function PosOrderWorkspace({
         const doc = buildPosTicketDocument({ orderNumber: order.orderNumber, completedAtLabel: formatPosDateTime(order.completedAt ?? new Date().toISOString(), currentLanguage), customerName: order.customerName, orderNote: noteInput, groups: printableReceiptGroups,
           noteLabel: t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteTitle'), customerLabel: t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewCustomer') })
         setTicketPreviewOpen(false)
-        printReceipt(doc, { jobId: orderId, copies: 1, backPath: POS_FRONT_DESK_ROUTE_PATH, browserOnly: ticketBrowserFallback,
+        printReceipt(doc, { jobId: orderId, copies: 1, backPath: receiptPrintBackPath, browserOnly: ticketBrowserFallback,
           restore: { surface: 'frontDesk', tab: receiptPrintTab, orderId, mode: 'edit', ticketNote: noteInput } })
       }}
       customerName={order.customerName}
@@ -2301,7 +2303,7 @@ export default function PosOrderWorkspace({
     printReceipt(autoPrintIntent.doc, {
       jobId: autoPrintIntent.orderId,
       copies: autoPrintIntent.copies,
-      backPath: POS_FRONT_DESK_ROUTE_PATH,
+      backPath: receiptPrintBackPath,
       restore: {
         surface: 'frontDesk',
         tab: receiptPrintTab,
@@ -2311,7 +2313,7 @@ export default function PosOrderWorkspace({
       },
     })
     setAutoPrintIntent(null)
-  }, [autoPrintIntent, printReceipt, receiptPrintTab])
+  }, [autoPrintIntent, printReceipt, receiptPrintTab, receiptPrintBackPath])
 
   // The manual Print button has to respect the device transport too. Without this, a salon that
   // paired a Star printer would still get the browser dialog every time someone pressed Print —
@@ -2338,7 +2340,7 @@ export default function PosOrderWorkspace({
             {
               jobId: orderId,
               copies: 1,
-              backPath: POS_FRONT_DESK_ROUTE_PATH,
+              backPath: receiptPrintBackPath,
               restore: {
                 surface: 'frontDesk',
                 tab: receiptPrintTab,

@@ -174,6 +174,8 @@ export function normalizePendingPrintJob(value: unknown): PosPendingPrintJob | n
     document: hasDocument ? (raw.document as PosPendingPrintJob['document']) : null,
     restore: (raw.restore ?? null) as PosPendingPrintJob['restore'],
     ...(raw.workspaceRestored === true ? { workspaceRestored: true } : {}),
+    ...(typeof raw.attemptId === 'string' && /^[a-zA-Z0-9-]+$/.test(raw.attemptId) ? { attemptId: raw.attemptId } : {}),
+    ...(typeof raw.backPath === 'string' && raw.backPath.startsWith('/') ? { backPath: raw.backPath } : {}),
   }
 }
 
