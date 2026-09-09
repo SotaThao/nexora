@@ -5015,6 +5015,7 @@
             "printingCopy": "Đang in bản {{current}}/{{total}}…",
             "printQueueFinished": "Đã in hoá đơn.",
             "printNotStarted": "Chưa in được. Kiểm tra xem thiết bị đã cài Star PassPRNT chưa.",
+            "printResultUnknown": "Ticket vẫn đang mở. Chưa nhận được kết quả in. Kiểm tra máy in trước khi in lại.",
             "printTooLarge": "Hoá đơn quá dài để gửi sang PassPRNT. Đã in bằng trình duyệt thay thế.",
             "passprntError": {
               "3": "Hoá đơn quá dài so với máy in. Thử in ít bản hơn hoặc rút gọn hoá đơn.",

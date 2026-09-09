@@ -173,6 +173,7 @@ export function normalizePendingPrintJob(value: unknown): PosPendingPrintJob | n
     firedAttempts: Number.isFinite(firedAttempts) ? Math.max(0, Math.round(firedAttempts)) : 0,
     document: hasDocument ? (raw.document as PosPendingPrintJob['document']) : null,
     restore: (raw.restore ?? null) as PosPendingPrintJob['restore'],
+    ...(raw.workspaceRestored === true ? { workspaceRestored: true } : {}),
   }
 }
 

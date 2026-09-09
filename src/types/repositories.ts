@@ -2380,4 +2380,6 @@ export interface PosPendingPrintJob {
   /** Null for a test print, which builds its own sample. */
   document: PosReceiptDocument | null
   restore: PosPrintRestoreState | null
+  /** The editor was already recovered without a result; do not reopen it on later visits. */
+  workspaceRestored?: boolean
 }

@@ -17,7 +17,7 @@
  * - A pending job with no callback and no recent activity is swept. That is the only signal
  *   available that PassPRNT never opened — iOS reports nothing when a URL scheme has no handler.
  */
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
@@ -40,6 +40,7 @@ import {
 } from './passprntTransport'
 import { buildPosReceiptHtml } from './posReceiptHtml'
 import { usePosPrinterProfile } from '../../../../../data/hooks/usePosPrinterSettings'
+import { readPosWorkspaceFromParams, writePosWorkspaceToParams, type PosReceiptMode } from '../posWorkspaceUrl'
 
 export interface UsePassPrntReturnOptions {
   surface: 'frontDesk' | 'printerSetup'
@@ -60,6 +61,21 @@ export function usePassPrntReturn({ surface, backPath, onRestore, onPrintFailed 
   const { showToast } = useNotification()
   const { data: profile } = usePosPrinterProfile()
   const handledRef = useRef<string | null>(null)
+  const [arrivalJob] = useState(() => posPrinterSettingsRepository.getPendingPrintJob())
+  const recoveredArrivalRef = useRef(false)
+
+  const returnParams = useCallback((state: PosPrintRestoreState | null) => {
+    const next = stripPassPrntCallbackParams(searchParams)
+    if (surface !== 'frontDesk' || state?.surface !== 'frontDesk') return next
+    const workspace = state.orderId ? {
+      orderId: state.orderId,
+      mode: state.mode ?? ('success' as const),
+      receiptMode: state.receiptMode as PosReceiptMode,
+    } : null
+    const restored = writePosWorkspaceToParams(next, workspace)
+    restored.set('tab', state.tab)
+    return restored
+  }, [searchParams, surface])
 
   const restore = useCallback(
     (state: PosPrintRestoreState | null) => {
@@ -73,8 +89,23 @@ export function usePassPrntReturn({ surface, backPath, onRestore, onPrintFailed 
     const job = posPrinterSettingsRepository.getPendingPrintJob()
 
     if (!callback) {
-      // No result in the URL. If a job has been sitting here since before the staleness window,
-      // the companion app never took it — most often because it is not installed.
+      // Recover only a job present when this page mounted, never one just launched by it.
+      // Keep the job: returning without a result does not prove printing failed.
+      const currentWorkspace = readPosWorkspaceFromParams(searchParams)
+      if (!recoveredArrivalRef.current && arrivalJob && job && !job.workspaceRestored
+        && arrivalJob.createdAt === job.createdAt && arrivalJob.jobId === job.jobId
+        && job.restore?.surface === 'frontDesk' && surface === 'frontDesk'
+        && job.restore.mode === 'edit') {
+        recoveredArrivalRef.current = true
+        posPrinterSettingsRepository.savePendingPrintJob({ ...job, workspaceRestored: true })
+        // An explicit destination declines automatic recovery, including after it closes.
+        if (currentWorkspace && (currentWorkspace.orderId !== job.restore.orderId || currentWorkspace.mode !== 'edit')) return
+        setSearchParams(returnParams(job.restore), { replace: true })
+        restore(job.restore)
+        showToast(t(`${POS_PRINTER_I18N_PREFIX}.printResultUnknown`), 'info')
+        return
+      }
+      if (job?.restore?.surface === 'frontDesk' && job.restore.mode === 'edit') return
       if (job && Date.now() - new Date(job.createdAt).getTime() > PASSPRNT_JOB_STALE_MS) {
         posPrinterSettingsRepository.clearPendingPrintJob()
         showToast(t(`${POS_PRINTER_I18N_PREFIX}.printNotStarted`), 'error')
@@ -89,7 +120,8 @@ export function usePassPrntReturn({ surface, backPath, onRestore, onPrintFailed 
     handledRef.current = callbackKey
 
     // Strip first: whatever happens next, this URL must not read as a print result again.
-    setSearchParams(stripPassPrntCallbackParams(searchParams), { replace: true })
+    // Restore the workspace and remove callback parameters in a single navigation.
+    setSearchParams(returnParams(job?.restore ?? null), { replace: true })
 
     if (!job) {
       logger.warn('[usePassPrntReturn] callback with no pending job', callback.code)
@@ -159,5 +191,5 @@ export function usePassPrntReturn({ surface, backPath, onRestore, onPrintFailed 
     )
     restore(job.restore)
     firePassPrnt(built.url)
-  }, [searchParams, setSearchParams, showToast, t, restore, profile?.paperWidthDots, backPath, onPrintFailed])
+  }, [searchParams, setSearchParams, showToast, t, restore, profile?.paperWidthDots, backPath, onPrintFailed, arrivalJob, returnParams, surface])
 }

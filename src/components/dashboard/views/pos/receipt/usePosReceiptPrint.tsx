@@ -101,7 +101,7 @@ export function usePosReceiptPrint() {
 
     // Blocking browsers may dispatch afterprint before window.print returns.
     window.addEventListener('afterprint', teardown, { once: true })
-    handle = printDomWithBodyClass(POS_INVOICE_PRINT_BODY_CLASS)
+    handle = printDomWithBodyClass(POS_INVOICE_PRINT_BODY_CLASS, teardown)
     if (!torn) timer = window.setTimeout(unlock, BROWSER_PRINT_UNLOCK_MS)
 
     return () => {
