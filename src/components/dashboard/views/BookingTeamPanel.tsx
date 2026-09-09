@@ -25,6 +25,7 @@ import {
   useUpdateLocalStaff,
 } from "../../../data/hooks/useLocalStaff";
 import { usePosRoles } from "../../../data/hooks/usePosRoles";
+import { usePosStaffLevels } from "../../../data/hooks/usePosStaffLevels";
 import {
   useSaveStaffPosProfile,
   useSaveStaffServiceAssignments,
@@ -682,6 +683,7 @@ export default function BookingTeamPanel({
   const [draftCreatedLocalStaffProfileId, setDraftCreatedLocalStaffProfileId] =
     useState<string | null>(null);
   const [draftPosRoleId, setDraftPosRoleId] = useState("");
+  const [draftStaffLevelId, setDraftStaffLevelId] = useState("");
   const [draftPayStructureType, setDraftPayStructureType] =
     useState<PosPayStructureType>("Commission");
   const [draftCommissionPercent, setDraftCommissionPercent] = useState("60");
@@ -755,6 +757,9 @@ export default function BookingTeamPanel({
   const saveWeeklyScheduleMutation = useUpdateStaffWeeklySchedule();
   const toggleStaffStatusMutation = useToggleMerchantVoiceStaffStatus();
   const { data: posRoles = [] } = usePosRoles({
+    enabled: posPayEnabled && modalOpen,
+  });
+  const { data: posStaffLevels = [] } = usePosStaffLevels({
     enabled: posPayEnabled && modalOpen,
   });
   const [pendingToggleIds, setPendingToggleIds] = useState<
@@ -861,6 +866,15 @@ export default function BookingTeamPanel({
   }, [posRoles]);
   const selectedPosRoleId = draftPosRoleId || defaultPosRoleId;
   const posRoleHasError = Boolean(formErrors.posPay && !selectedPosRoleId);
+
+  // Level is optional (unlike Role) — default to the lowest DisplayOrder level per the
+  // ticket's "salon tự tạo riêng" rule, but never blocks submit if none exist yet.
+  const defaultStaffLevelId = useMemo(() => {
+    return (
+      [...posStaffLevels].sort((a, b) => a.displayOrder - b.displayOrder)[0]?.id ?? ""
+    );
+  }, [posStaffLevels]);
+  const selectedStaffLevelId = draftStaffLevelId || defaultStaffLevelId;
   const posPayValueHasError = Boolean(
     formErrors.posPay && selectedPosRoleId,
   );
@@ -872,6 +886,7 @@ export default function BookingTeamPanel({
 
   const resetPosPayDraft = () => {
     setDraftPosRoleId("");
+    setDraftStaffLevelId("");
     setDraftPayStructureType("Commission");
     setDraftCommissionPercent("60");
     setDraftWeeklySalaryAmount("");
@@ -1130,6 +1145,7 @@ export default function BookingTeamPanel({
     await savePosProfileMutation.mutateAsync({
       businessStaffLinkId,
       posRoleId: selectedPosRoleId,
+      staffLevelId: selectedStaffLevelId || null,
       payStructureType: draftPayStructureType,
       commissionPercent:
         draftPayStructureType === "Commission"
@@ -1911,6 +1927,27 @@ export default function BookingTeamPanel({
                           {formErrors.posPay}
                         </span>
                       ) : null}
+                    </label>
+
+                    <label className="settings-field">
+                      <span className="settings-label">
+                        {t(`${POS_TK}.staffLevelLabel`)}
+                      </span>
+                      <select
+                        className="settings-input"
+                        aria-label={t(`${POS_TK}.staffLevelLabel`)}
+                        value={selectedStaffLevelId}
+                        onChange={(event) => {
+                          setDraftStaffLevelId(event.target.value);
+                        }}
+                      >
+                        <option value="">{t(`${POS_TK}.staffLevelNoneOption`)}</option>
+                        {posStaffLevels.map((level) => (
+                          <option key={level.id} value={level.id}>
+                            {level.name}
+                          </option>
+                        ))}
+                      </select>
                     </label>
 
                     <label className="settings-field">

@@ -160,6 +160,9 @@ export interface PosStaffProfileApiDto {
   contractType?: string | null
   posRoleId?: string | null
   posRoleName?: string | null
+  // POS Staff Level (optional, business-defined lookup) — see PosStaffLevelApiDto.
+  staffLevelId?: string | null
+  staffLevelName?: string | null
   payStructureType: string
   commissionPercent?: number | null
   weeklySalaryAmount?: number | null
@@ -169,6 +172,16 @@ export interface PosStaffProfileApiDto {
   // from Turn Board's currentStatus (Empty/InService), which is about being busy with a
   // customer right now, not whether they're on shift.
   status: string
+  // Count of PosOrderItems completed today for this staff member — computed inline server-side.
+  turnsToday: number
+}
+
+// POS Staff Level — business-scoped lookup list (Basic/Advanced/Senior by default), optionally
+// assigned to a PosStaffProfile. Managed in Salon Settings, modeled after PosRoleApiDto.
+export interface PosStaffLevelApiDto {
+  id: string
+  name: string
+  displayOrder: number
 }
 
 // POS Merchant Ops — Front Desk access self-check (US-12)
@@ -623,6 +636,10 @@ export interface CheckInTechnicianApiDto {
   // present) reads as "not local staff", not as a false positive block on every technician's Beep.
   isLocalStaff?: boolean
   email?: string | null
+  // Not in the live contract yet either (CheckInTechnicianDto has no staffLevelName as of
+  // 2026-09-09) — optional so the technician picker's Level badge starts working the moment
+  // BE adds it, no FE change needed.
+  staffLevelName?: string | null
 }
 
 export interface CheckInActiveVisitApiDto {
@@ -1924,6 +1941,9 @@ export interface StaffListItemApiDto {
   status?: string
   position?: string | null
   roleAtBusiness?: string | null
+  // Not yet returned by GET /api/v1/merchant/staff (StaffListItemDto) as of 2026-09-09 — added
+  // speculatively so the Staff table's Level column starts working the moment BE adds it.
+  staffLevelName?: string | null
   bio?: string | null
   invitedEmail?: string | null
   invitedPhone?: string | null

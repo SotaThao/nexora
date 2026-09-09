@@ -1083,6 +1083,7 @@
       "pos": "POS",
       "pos_settings": "Salon Settings",
       "pos_roles": "Roles & Permissions",
+      "pos_staff_levels": "Staff Levels",
       "pos_categories": "Categories",
       "pos_services": "Services",
       "pos_products": "Products",
@@ -2306,6 +2307,7 @@
     "nickname_not_set": "Not set — using original name",
     "nickname_badge": "Nickname",
     "nickname_value": "Nickname: {{name}}",
+    "staff_level_value": "Level: {{name}}",
     "open_work_orders": "Open Work Orders",
     "status_previous": "Previous",
     "status_help_aria": "What this salon status means",
@@ -2818,6 +2820,8 @@
     "pos_role_name_required": "Role name is required.",
     "pos_role_name_too_long": "Role name cannot exceed 100 characters.",
     "pos_role_name_duplicate": "A role with this name already exists.",
+    "pos_staff_level_not_found": "This staff level was not found.",
+    "pos_staff_level_name_duplicate": "A staff level with this name already exists.",
     "pos_permission_owner_only": "This permission can only be granted to the Owner role.",
     "pos_cannot_edit_owner_role_permissions": "The Owner role's permissions cannot be changed.",
     "pos_cannot_delete_owner_role": "The Owner role cannot be deleted.",
@@ -3732,7 +3736,8 @@
               "salonInformation": "Salon Information",
               "staff": "Staff",
               "services": "Services",
-              "rolesPermissions": "Roles & Permissions"
+              "rolesPermissions": "Roles & Permissions",
+              "staffLevels": "Staff Levels"
             }
           },
           "PosGeneralSettingsView": {
@@ -3766,6 +3771,22 @@
               "Reports": "Reports",
               "Operations": "Operations"
             }
+          },
+          "PosStaffLevelsView": {
+            "description": "Define your salon's own staff proficiency levels (e.g. Basic, Advanced, Senior) and assign them from a staff member's profile.",
+            "addLevel": "Add Level",
+            "addLevelModalTitle": "New Staff Level",
+            "levelNamePlaceholder": "e.g. Advanced",
+            "save": "Save",
+            "cancel": "Cancel",
+            "edit": "Rename level",
+            "delete": "Delete level",
+            "deleteConfirmTitle": "Delete this level?",
+            "deleteConfirmBody": "This cannot be undone. Staff currently assigned this level will simply have no level set.",
+            "noLevels": "No staff levels found.",
+            "createdSuccess": "Staff level created.",
+            "updatedSuccess": "Staff level renamed.",
+            "deletedSuccess": "Staff level deleted."
           },
           "PosCategoriesView": {
             "description": "Group your Services and Products with categories like \"Manicures\" or \"Retail\", and drag to reorder them.",
@@ -3897,6 +3918,7 @@
             "searchPlaceholder": "Search staff by name...",
             "tableColumnStaff": "Staff",
             "tableColumnPosition": "Position",
+            "tableColumnLevel": "Level",
             "tableColumnContact": "Contact",
             "tableColumnActions": "Actions",
             "staffDetailTitle": "Staff Detail",
@@ -3918,7 +3940,10 @@
               "Locked": "Locked"
             },
             "statusSavedSuccess": "Staff status updated.",
+            "turnsTodayLabel": "Turns Today",
             "roleLabel": "POS Role",
+            "staffLevelLabel": "Staff Level",
+            "staffLevelNoneOption": "— None —",
             "payStructureLabel": "Pay Structure",
             "payStructureTypes": {
               "Commission": "Commission (%)",

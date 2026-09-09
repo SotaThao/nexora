@@ -47,6 +47,8 @@ export interface StaffMember {
   refCode?: string | null
   source?: string | null
   paymentAccounts?: Record<string, string>
+  /** POS Staff Level name assigned at this business, when the backend returns one. */
+  staffLevelName?: string | null
   [key: string]: unknown
 }
 
@@ -422,6 +424,11 @@ export interface StaffBusinessLink {
   role: string | null
   roleLabel: string | null
   roleAtBusiness: string | null
+  // POS Staff Level assigned to this staff member at this salon (business-defined,
+  // optional — see PosStaffLevelApiDto). Not yet returned by the backend's
+  // GET /api/v1/staff/businesses; renders only once BE adds it.
+  staffLevelId?: string | null
+  staffLevelName?: string | null
   linkStatus: string | null
   linkStatusLabel: string | null
   linkedAt: string | null

@@ -15,6 +15,8 @@ export interface TechnicianOption {
   completedTurns?: number
   assignedTurns?: number
   isNextTurn?: boolean
+  // Business-defined staff proficiency level (e.g. Basic/Advanced/Senior), when assigned.
+  staffLevelName?: string | null
 }
 
 // Above this many people the grid becomes hard to scan, and a name is faster to type than to hunt.
@@ -153,6 +155,11 @@ export default function TechnicianPickerGrid({
                   </span>
                 ) : null}
                 <span className={`${autoWrap ? 'max-w-full' : 'w-full'} text-nexoraText ${technicianNameClassName}`}>{staff.displayName}</span>
+                {staff.staffLevelName ? (
+                  <span className="max-w-full truncate rounded-full bg-nexoraBrand/10 px-2 py-0.5 text-[10px] font-bold text-nexoraBrand">
+                    {staff.staffLevelName}
+                  </span>
+                ) : null}
                 {staff.turnsToday !== undefined && turnsLabel ? (
                   <span className="text-[10px] font-semibold tabular-nums text-nexoraMuted">
                     {turnsLabel(staff.turnsToday)}
