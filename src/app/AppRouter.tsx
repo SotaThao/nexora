@@ -371,6 +371,7 @@ export default function AppRouter() {
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           <Route path="/sms-consent" element={<SmsConsentReferencePage />} />
+          <Route path="/:businessSlug/sms-consent" element={<SmsConsentReferencePage />} />
           <Route path="/news-library" element={<PublicNewsLibraryPage />} />
           <Route
             path={VoiceCallPlanRoute.path}
