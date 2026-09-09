@@ -207,6 +207,8 @@ export const qk = {
   posPrinterProfile: () => ['posDevice', 'printerProfile'],
   posReceiptSettings: () => ['posDevice', 'receiptSettings'],
   posTicketPrinted: (businessId: string, orderId: string) => ['posDevice', 'ticketPrinted', businessId, orderId],
+  // Front desk's own saved beep quick messages — device-scoped for the same reason.
+  posBeepSuggestions: () => ['posDevice', 'beepSuggestions'],
   // POS Booking — per-business settings (Ticket 2)
   merchantPosBookingSettings: (businessId?: string) => ['merchantSettings', 'posBookingSettings', businessId ?? ''],
   merchantPosOrderSettings: (businessId?: string) => ['merchantSettings', 'posOrderSettings', businessId ?? ''],
