@@ -55,6 +55,7 @@ export default function TechnicianPickerPopup({
             emptyLabel={t(`${K}.noTechnicians`)}
             busyLabel={t(`${K}.technicianBusy`)}
             availableLabel={t(`${K}.technicianAvailable`)}
+            offShiftLabel={t(`${K}.technicianOffShift`)}
           />
         </div>
       </div>

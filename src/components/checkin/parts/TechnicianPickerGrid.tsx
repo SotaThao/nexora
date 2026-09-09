@@ -15,6 +15,9 @@ export interface TechnicianOption {
   completedTurns?: number
   assignedTurns?: number
   isNextTurn?: boolean
+  // Clocked out, and offered anyway because they are already working the ticket being edited.
+  // Check-in surfaces never set this — opening a ticket still takes a technician on shift.
+  isOffShift?: boolean
   // Business-defined staff proficiency level (e.g. Basic/Advanced/Senior), when assigned.
   staffLevelName?: string | null
   queueCount?: number
@@ -44,6 +47,7 @@ export default function TechnicianPickerGrid({
   emptyLabel,
   busyLabel,
   availableLabel,
+  offShiftLabel,
   turnsLabel,
   completedTurnsLabel,
   assignedTurnsLabel,
@@ -66,6 +70,8 @@ export default function TechnicianPickerGrid({
   // passes neither, so its cards stay exactly as they were).
   busyLabel?: string
   availableLabel?: string
+  // Only passed where an off-shift technician can appear at all; without it they read as available.
+  offShiftLabel?: string
   turnsLabel?: (count: number) => string
   completedTurnsLabel?: (count: number) => string
   assignedTurnsLabel?: (count: number) => string
@@ -96,6 +102,9 @@ export default function TechnicianPickerGrid({
   const fullRowClass = autoWrap ? 'w-full' : 'col-span-full'
 
   const renderBadge = (staff: TechnicianOption) => {
+    if (staff.isOffShift && offShiftLabel) {
+      return <span className="text-[10px] font-semibold text-amber-600">{offShiftLabel}</span>
+    }
     if (!busyLabel || !availableLabel || staff.isBusy === undefined) return null
     return (
       <span className={`text-[10px] font-semibold ${staff.isBusy ? 'text-rose-600' : 'text-emerald-600'}`}>

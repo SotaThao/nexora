@@ -18,6 +18,7 @@ import { formatCustomerPhone } from './customer/customerFormatters'
 import { formatBookingHubDateTimeParts } from '../bookingHubFormatters'
 import { getPosCheckoutPaymentMethodLabel } from '../../../../constants/posCheckoutPaymentMethod'
 import { PosDiscountBearer } from '../../../../constants/posDiscount'
+import { formatPaymentMethodDisplay } from './posDisplay'
 import PosReceiptPrintPreview from './PosReceiptPrintPreview'
 import ServiceLineReassignmentHistory from './ServiceLineReassignmentHistory'
 import ReassignTechnicianModal, {
@@ -100,7 +101,12 @@ export default function PosCompletedOrdersPanel({
           unassignedTechnicianLabel: resolveUnassignedTechnicianLabel(t),
           productsLabel: resolveProductsGroupLabel(t),
           paymentMethodLabel: viewDetail.data.paymentMethodType
-            ? getPosCheckoutPaymentMethodLabel(viewDetail.data.paymentMethodType, t)
+            || viewDetail.data.paymentAllocations.length > 0
+            ? formatPaymentMethodDisplay(
+              viewDetail.data.paymentAllocations,
+              viewDetail.data.paymentMethodType,
+              t,
+            )
             : undefined,
           totalsLabels: resolvePosReceiptTotalsLabels(t),
           labels: resolvePosReceiptLabels(t),
@@ -240,8 +246,14 @@ export default function PosCompletedOrdersPanel({
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="whitespace-nowrap rounded-full bg-sky-50 px-2.5 py-1 text-[10px] font-extrabold text-sky-700">
-                          {getPosCheckoutPaymentMethodLabel(order.paymentMethodType, t)}
+                        {/* A row has space for which methods were used, not for the amounts —
+                            those are in the detail view. */}
+                        <span className="rounded-full bg-sky-50 px-2.5 py-1 text-[10px] font-extrabold text-sky-700">
+                          {order.paymentMethodTypes.length >= 2
+                            ? order.paymentMethodTypes
+                              .map((method) => getPosCheckoutPaymentMethodLabel(method, t))
+                              .join(' · ')
+                            : getPosCheckoutPaymentMethodLabel(order.paymentMethodType, t)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right font-bold tabular-nums text-nexoraText">
@@ -356,11 +368,17 @@ export default function PosCompletedOrdersPanel({
                         {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailPaymentMethod')}
                       </p>
                       <p className="text-xs text-nexoraText">
-                        {getPosCheckoutPaymentMethodLabel(
-                          viewDetail.data.paymentMethodType,
-                          t,
-                          t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailNotProvided'),
-                        )}
+                        {viewDetail.data.paymentAllocations.length >= 2
+                          ? formatPaymentMethodDisplay(
+                            viewDetail.data.paymentAllocations,
+                            viewDetail.data.paymentMethodType,
+                            t,
+                          )
+                          : getPosCheckoutPaymentMethodLabel(
+                            viewDetail.data.paymentMethodType,
+                            t,
+                            t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailNotProvided'),
+                          )}
                       </p>
                     </div>
                   </div>

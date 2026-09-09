@@ -18,6 +18,7 @@ import type {
   ServiceLineAddOnOptionApiDto,
   SetOrderDiscountPayload,
   SetOrderServiceLineDiscountPayload,
+  SetOrderPaymentAllocationsPayload,
   SetOrderStaffTipSplitPayload,
   UpdateOrderServiceLineTarget,
 } from '../../types/repositories'
@@ -245,6 +246,17 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
     ): Promise<boolean> {
       return await client.put<boolean>(
         `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/tip-split`,
+        payload,
+      )
+    },
+
+    async setOrderPaymentAllocations(
+      businessId: string,
+      orderId: string,
+      payload: SetOrderPaymentAllocationsPayload,
+    ): Promise<boolean> {
+      return await client.put<boolean>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/payment-allocations`,
         payload,
       )
     },
