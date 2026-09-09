@@ -124,6 +124,34 @@ export interface PosReportDetailParams {
   timeZone: string
 }
 
+export interface PosStaffReportEmailParams {
+  businessId: string
+  posStaffProfileId: string
+  mode: PosReportMode
+  periodKey: string
+  toEmails: string[]
+}
+
+export interface PosStaffReportEmailBulkRecipient {
+  posStaffProfileId: string
+  email: string
+}
+
+export interface PosStaffReportEmailBulkParams {
+  businessId: string
+  mode: PosReportMode
+  periodKey: string
+  skipEmptyReports: boolean
+  recipients: PosStaffReportEmailBulkRecipient[]
+}
+
+export interface PosStaffReportEmailBulkResultItem {
+  posStaffProfileId: string
+  displayName: string
+  sent: boolean
+  skippedReason?: string | null
+}
+
 type QueryParams = Record<string, string | number | boolean | string[] | number[]>
 
 /** Only the parameter matching the mode is sent — the backend validator rejects the others. */
@@ -328,6 +356,35 @@ export function createPosReportRepository(client: HttpClient = httpClient) {
 
     async exportStaffReportCsv(params: PosReportParams): Promise<Blob> {
       return await client.getBlob(`${BASE_PATH}/export.csv`, { params: toQueryParams(params) })
+    },
+
+    async sendStaffReportEmail(params: PosStaffReportEmailParams): Promise<void> {
+      // Only businessId is a query param — the controller reads the rest of the command
+      // (posStaffProfileId/mode/periodKey/toEmails) from the request body.
+      await client.post(`${BASE_PATH}/email`, {
+        posStaffProfileId: params.posStaffProfileId,
+        mode: params.mode,
+        periodKey: params.periodKey,
+        toEmails: params.toEmails,
+      }, {
+        params: { businessId: params.businessId },
+      })
+    },
+
+    async sendStaffReportEmailBulk(
+      params: PosStaffReportEmailBulkParams,
+    ): Promise<PosStaffReportEmailBulkResultItem[]> {
+      const result = await client.post<{ results: PosStaffReportEmailBulkResultItem[] }>(
+        `${BASE_PATH}/email/bulk`,
+        {
+          mode: params.mode,
+          periodKey: params.periodKey,
+          skipEmptyReports: params.skipEmptyReports,
+          recipients: params.recipients,
+        },
+        { params: { businessId: params.businessId } },
+      )
+      return result?.results ?? []
     },
 
     async getStaffReportsForPrint(

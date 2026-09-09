@@ -640,6 +640,7 @@ export interface CheckInTechnicianApiDto {
   // 2026-09-09) — optional so the technician picker's Level badge starts working the moment
   // BE adds it, no FE change needed.
   staffLevelName?: string | null
+  queueCount?: number
 }
 
 export interface CheckInActiveVisitApiDto {

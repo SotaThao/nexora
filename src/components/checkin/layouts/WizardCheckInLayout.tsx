@@ -108,7 +108,6 @@ export default function WizardCheckInLayout({
           customerPhone={session.phone}
           bookingTime={session.bookingTimeLabel}
           isSubmitting={session.isSubmitting}
-          primaryDisabled={!session.canSubmit}
           errorMessage={session.submitError}
           onChoose={session.chooseServiceTechnician}
           onBack={() => setStep('services')}

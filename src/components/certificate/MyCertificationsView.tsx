@@ -30,7 +30,7 @@ export default function MyCertificationsView() {
     certificates.find((row) => row.certificateId === selectedId) ?? certificates[0] ?? null
 
   return (
-    <div className="space-y-5">
+    <div className="mx-auto w-[1000px] max-w-full space-y-5">
       <header className="space-y-1">
         <h1 className="text-xl font-black text-nexoraText">{t(`${K}.title`)}</h1>
         <p className="text-xs text-nexoraMuted">{t(`${K}.subtitle`)}</p>

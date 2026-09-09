@@ -85,6 +85,7 @@ export default function createPosCheckInSource(businessId: string): CheckInSourc
           photoUrl: tech.photoUrl,
           serviceIds: tech.serviceIds,
           isBusy: tech.isBusy,
+          queueCount: tech.queueCount,
         })),
       [techniciansQuery.data],
     )

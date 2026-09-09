@@ -1,7 +1,6 @@
 // CertificateCanvasPreview — renders one certificate onto the artwork and offers it as a download.
 //
-// The canvas is drawn at twice the template's pixel size and scaled back down by CSS, so it stays
-// sharp on a retina screen and the saved file is big enough for the QR to scan off paper.
+// The canvas and saved PNG use 1600 × 1236 pixels; CSS fits the preview to its card.
 import { useEffect, useRef, useState } from 'react'
 import { AlertTriangle, Download, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
@@ -125,7 +124,7 @@ export default function CertificateCanvasPreview({
     <div className="space-y-3">
       <div className="relative overflow-hidden rounded-xl border border-nexoraBorder bg-nexoraSurface p-2 shadow-nexora-card">
         {/* Reserves the artwork's aspect ratio so the card does not jump when the canvas lands. */}
-        <div ref={holderRef} className="aspect-[1427/1102] w-full" />
+        <div ref={holderRef} className="aspect-[1600/1236] w-full" />
         {state === 'rendering' ? (
           <div className="absolute inset-0 flex items-center justify-center bg-nexoraSurface/80">
             <Loader2 className="h-6 w-6 animate-spin text-nexoraBrand" />
@@ -137,7 +136,7 @@ export default function CertificateCanvasPreview({
         type="button"
         onClick={handleDownload}
         disabled={state !== 'ready' || isSaving}
-        className="nexora-primary-button w-full disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+        className="nexora-primary-button mx-auto flex w-full disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
       >
         {isSaving ? (
           <Loader2 className="h-4 w-4 animate-spin" />
