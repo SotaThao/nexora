@@ -17,9 +17,11 @@ import {
 	isBookingHubSubActive, 
 	VISIBLE_TOUCHPOINTS_SUBMENU, 
 	GIFT_CARD_CENTER_SUBMENU, 
-	DASHBOARD_MENU, 
-	DASHBOARD_MENU_ID, 
-	bookingHubPath, 
+	DASHBOARD_MENU,
+	DASHBOARD_MENU_ID,
+	MY_CERTIFICATIONS_PATH,
+	MY_CERTIFICATIONS_PATH_SEGMENT,
+	bookingHubPath,
 	getDefaultBookingHubTab, 
 	getDashboardMenuLocalizedLabel, 
 	buildDashboardMenuPath, 
@@ -271,6 +273,20 @@ export default function DashboardSidebar({
             >
               <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === DASHBOARD_MENU_ID.settings && settingsTab === 'kyb' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
               <span>{t('dashboard.menu.kyb')}</span>
+            </button>
+            {/* Personal, not business-scoped — a NEXORA TOUCH certificate belongs to whoever is
+                signed in, so it sits in this account block rather than under a workspace module. */}
+            <button
+              type="button"
+              onClick={() => navigate(MY_CERTIFICATIONS_PATH)}
+              className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
+                activeMenu === MY_CERTIFICATIONS_PATH_SEGMENT
+                  ? 'text-brandCyan font-extrabold'
+                  : 'text-white/75 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === MY_CERTIFICATIONS_PATH_SEGMENT ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+              <span>{t('certifications.menu')}</span>
             </button>
             <LanguageSwitcher variant="sidebar" className="w-full" />
           </div>
