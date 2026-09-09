@@ -435,6 +435,18 @@ export interface StaffWorkOrderCatalogItemApiDto {
   categories?: { id?: string; name?: string }[]
 }
 
+export interface StaffWorkOrderCatalogCategoryApiDto {
+  id?: string
+  name?: string
+  description?: string | null
+  displayOrder?: number
+}
+
+export interface StaffWorkOrderServiceCatalogApiDto {
+  categories?: StaffWorkOrderCatalogCategoryApiDto[]
+  services?: StaffWorkOrderCatalogItemApiDto[]
+}
+
 export interface CompletedOrdersPage {
   items: CompletedOrderListItemApiDto[]
   pageNumber: number

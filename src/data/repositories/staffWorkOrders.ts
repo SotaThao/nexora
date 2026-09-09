@@ -13,6 +13,8 @@ import type {
   StaffBookingCalendarQuery,
   SaveStaffWorkOrderServiceLinesPayload,
   StaffWorkOrderCatalogItemApiDto,
+  StaffWorkOrderCatalogCategoryApiDto,
+  StaffWorkOrderServiceCatalogApiDto,
   StaffWorkOrderDetailApiDto,
   StaffWorkOrderItemApiDto,
   StaffWorkOrderListItemApiDto,
@@ -27,6 +29,17 @@ export type StaffWorkOrderCatalogItem = {
   price: number
   durationMinutes: number
   categories: { id: string; name: string }[]
+}
+
+export type StaffWorkOrderCatalogCategory = {
+  id: string
+  name: string
+  displayOrder: number
+}
+
+export type StaffWorkOrderCatalog = {
+  categories: StaffWorkOrderCatalogCategory[]
+  services: StaffWorkOrderCatalogItem[]
 }
 
 export type StaffWorkOrderItem = {
@@ -243,6 +256,45 @@ function normalizeCatalogItem(dto: StaffWorkOrderCatalogItemApiDto): StaffWorkOr
   }
 }
 
+function normalizeCatalogCategory(
+  dto: StaffWorkOrderCatalogCategoryApiDto,
+): StaffWorkOrderCatalogCategory | null {
+  const id = readText(dto, 'id', 'Id')
+  if (!id) return null
+  return {
+    id,
+    name: readText(dto, 'name', 'Name'),
+    displayOrder: readNumber(dto, 'displayOrder', 'DisplayOrder'),
+  }
+}
+
+function normalizeCatalogServices(items: StaffWorkOrderCatalogItemApiDto[]): StaffWorkOrderCatalogItem[] {
+  return items
+    .map(normalizeCatalogItem)
+    .filter((item): item is StaffWorkOrderCatalogItem => item != null)
+}
+
+function normalizeCatalog(
+  dto: StaffWorkOrderServiceCatalogApiDto | StaffWorkOrderCatalogItemApiDto[] | null | undefined,
+): StaffWorkOrderCatalog {
+  // Older payloads were a flat service array. Empty salon categories could not exist in that
+  // shape, so treat a leftover array as services-only rather than dropping the picker.
+  if (Array.isArray(dto)) {
+    return { categories: [], services: normalizeCatalogServices(dto) }
+  }
+  if (!dto || typeof dto !== 'object') {
+    return { categories: [], services: [] }
+  }
+  const categories = readValue<StaffWorkOrderCatalogCategoryApiDto[]>(dto, 'categories', 'Categories') ?? []
+  const services = readValue<StaffWorkOrderCatalogItemApiDto[]>(dto, 'services', 'Services') ?? []
+  return {
+    categories: (Array.isArray(categories) ? categories : [])
+      .map(normalizeCatalogCategory)
+      .filter((category): category is StaffWorkOrderCatalogCategory => category != null),
+    services: Array.isArray(services) ? normalizeCatalogServices(services) : [],
+  }
+}
+
 function buildListParams(query: StaffWorkOrdersListQuery): Record<string, string | string[]> {
   const params: Record<string, string | string[]> = {
     [LIST_QUERY_PARAM.businessId]: query.businessId,
@@ -330,16 +382,12 @@ function createStaffWorkOrdersRepository(client: HttpClient = httpClient) {
       return normalizeDetail(res)
     },
 
-    // Already narrowed server-side to what this technician is qualified for, so anything listed
-    // here is something the save will accept.
-    async getMyServiceCatalog(orderId: string): Promise<StaffWorkOrderCatalogItem[]> {
-      const res = await client.get<StaffWorkOrderCatalogItemApiDto[]>(
+    // Salon menu: every category plus every Active service, matching POS Settings > Services.
+    async getMyServiceCatalog(orderId: string): Promise<StaffWorkOrderCatalog> {
+      const res = await client.get<StaffWorkOrderServiceCatalogApiDto | StaffWorkOrderCatalogItemApiDto[]>(
         `${workOrderDetailPath(orderId)}/${STAFF_WORK_ORDER_SERVICE_CATALOG}`,
       )
-      if (!Array.isArray(res)) return []
-      return res
-        .map(normalizeCatalogItem)
-        .filter((item): item is StaffWorkOrderCatalogItem => item != null)
+      return normalizeCatalog(res)
     },
 
     // One call for the whole basket: the customer approves once, so the change lands once.

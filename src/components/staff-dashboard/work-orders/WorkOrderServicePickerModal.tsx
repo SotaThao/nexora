@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ChevronDown, Search } from 'lucide-react'
+import { ChevronDown, Inbox, Search } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
   WORK_ORDERS_I18N,
@@ -41,7 +41,7 @@ export default function WorkOrderServicePickerModal({
   const isEdit = mode === WORK_ORDER_PICKER_MODE.edit
   const [query, setQuery] = useState('')
   const [selectedKeys, setSelectedKeys] = useState<string[]>([])
-  const [openCategoryId, setOpenCategoryId] = useState('')
+  const [openCategoryIds, setOpenCategoryIds] = useState<Set<string>>(new Set())
   const categories = useMemo(() => filterWorkOrderCatalogCategories(query, catalog), [query, catalog])
   const initialKey = firstWorkOrderCatalogOptionKey(catalog, initialServiceId)
   const activeKey = selectedKeys[0] || initialKey
@@ -112,7 +112,7 @@ export default function WorkOrderServicePickerModal({
       ) : (
         <div className={WORK_ORDERS_LAYOUT_CLASS.pickerList}>
           {categories.map((category) => {
-            const isOpen = Boolean(query.trim()) || openCategoryId === category.id
+            const isOpen = Boolean(query.trim()) || openCategoryIds.has(category.id)
             const panelId = `work-order-picker-panel-${category.id}`
             return (
             <div
@@ -125,7 +125,12 @@ export default function WorkOrderServicePickerModal({
                 aria-controls={panelId}
                 onClick={() => {
                   if (query.trim()) return
-                  setOpenCategoryId((current) => current === category.id ? '' : category.id)
+                  setOpenCategoryIds((current) => {
+                    const next = new Set(current)
+                    if (next.has(category.id)) next.delete(category.id)
+                    else next.add(category.id)
+                    return next
+                  })
                 }}
                 className={`${WORK_ORDERS_LAYOUT_CLASS.pickerCategoryHead} ${isOpen ? WORK_ORDERS_LAYOUT_CLASS.pickerCategoryHeadOpen : ''}`}
               >
@@ -144,6 +149,12 @@ export default function WorkOrderServicePickerModal({
                 className={`${WORK_ORDERS_LAYOUT_CLASS.pickerCategoryPanel} ${isOpen ? WORK_ORDERS_LAYOUT_CLASS.pickerCategoryPanelOpen : ''}`}
               >
                 <div className={`${WORK_ORDERS_LAYOUT_CLASS.pickerCategoryPanelInner} ${isOpen ? WORK_ORDERS_LAYOUT_CLASS.pickerCategoryPanelInnerOpen : ''}`}>
+                  {category.services.length === 0 ? (
+                    <div className={WORK_ORDERS_LAYOUT_CLASS.pickerCategoryEmpty}>
+                      <Inbox className={WORK_ORDERS_LAYOUT_CLASS.pickerCategoryEmptyIcon} aria-hidden="true" />
+                      <span>{t(WORK_ORDERS_I18N.pickerCategoryEmpty)}</span>
+                    </div>
+                  ) : (
                   <div className={WORK_ORDERS_LAYOUT_CLASS.pickerOptions}>
                 {category.services.map((service) => {
                   const optionKey = workOrderCatalogOptionKey(category.id, service.id)
@@ -186,6 +197,7 @@ export default function WorkOrderServicePickerModal({
                   )
                 })}
                   </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -197,8 +209,8 @@ export default function WorkOrderServicePickerModal({
   )
 }
 
-// "No match" and "nothing to offer at all" are different answers: the second one means the owner
-// has not set this technician up for any service yet, which searching harder will never fix.
+// "No match" vs "the salon menu itself is empty". Empty category groups still count as a
+// catalog, so this only fires when there is nothing to group at all.
 function pickerEmptyKey(isLoading: boolean, catalogSize: number, query: string): string {
   if (isLoading) return WORK_ORDERS_I18N.pickerLoading
   if (catalogSize === 0) return WORK_ORDERS_I18N.pickerNoneAssignable
