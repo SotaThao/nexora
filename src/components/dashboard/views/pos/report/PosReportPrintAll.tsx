@@ -55,7 +55,7 @@ export default function PosReportPrintAll({ reports, onClose }: { reports: Techn
   </>
 }
 
-function hasReportActivity(detail: PosStaffReportDetail): boolean {
+export function hasReportActivity(detail: PosStaffReportDetail): boolean {
   return detail.days.some(day => day.tickets.length > 0 || day.amount !== 0 || day.tips !== 0 || day.totalDiscount !== 0)
     || [detail.totalAmount, detail.totalTips, detail.totalDiscount, detail.totalCommission].some(value => value !== 0)
     || detail.paymentTotals.some(payment => payment.amount !== 0)

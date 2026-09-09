@@ -3,13 +3,16 @@
  * Unlike useWeeklyPayroll this is NOT owner-gated: a staff member whose PosRole has the
  * `view_pos_report` permission can read it too, which the caller checks via PosAccess.canViewReport.
  */
-import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import posReportRepository, {
   type PosReportDetailParams,
   type PosReportParams,
   type PosStaffReport,
   type PosStaffReportDetail,
+  type PosStaffReportEmailBulkParams,
+  type PosStaffReportEmailBulkResultItem,
+  type PosStaffReportEmailParams,
 } from '../repositories/posReport'
 import { PosReportMode } from '../../constants/posReportMode'
 import { todayIso } from '../../components/dashboard/views/pos/report/posReportPeriod'
@@ -72,6 +75,18 @@ export function usePosReportDetail(
     // do the same so a newly completed checkout cannot leave the row and modal out of sync.
     staleTime: 0,
     refetchOnMount: 'always',
+  })
+}
+
+export function useSendPosStaffReportEmail() {
+  return useMutation<void, Error, PosStaffReportEmailParams>({
+    mutationFn: (params) => posReportRepository.sendStaffReportEmail(params),
+  })
+}
+
+export function useSendPosStaffReportEmailBulk() {
+  return useMutation<PosStaffReportEmailBulkResultItem[], Error, PosStaffReportEmailBulkParams>({
+    mutationFn: (params) => posReportRepository.sendStaffReportEmailBulk(params),
   })
 }
 
