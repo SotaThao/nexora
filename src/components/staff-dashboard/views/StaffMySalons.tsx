@@ -485,6 +485,11 @@ function SalonCard({
             {timeline ? (
               <p className="mt-1 text-xs font-medium text-nexoraMuted">{timeline}</p>
             ) : null}
+            {business.staffLevelName ? (
+              <span className="mt-1.5 inline-flex w-fit items-center rounded-full bg-nexoraBrand/10 px-2 py-0.5 text-[10px] font-bold text-nexoraBrand">
+                {t('staff_salons.staff_level_value', { name: business.staffLevelName })}
+              </span>
+            ) : null}
           </div>
           <span className="flex shrink-0 items-center gap-1">
             <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${status.className}`}>

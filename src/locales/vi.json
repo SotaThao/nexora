@@ -1083,6 +1083,7 @@
       "pos": "POS",
       "pos_settings": "Cài Đặt Salon",
       "pos_roles": "Vai Trò & Quyền",
+      "pos_staff_levels": "Cấp Độ Nhân Viên",
       "pos_categories": "Danh Mục",
       "pos_services": "Dịch Vụ",
       "pos_products": "Sản Phẩm",
@@ -2306,6 +2307,7 @@
     "nickname_not_set": "Chưa đặt — dùng tên gốc",
     "nickname_badge": "Nickname",
     "nickname_value": "Nickname: {{name}}",
+    "staff_level_value": "Cấp độ: {{name}}",
     "open_work_orders": "Mở đơn công việc",
     "status_previous": "Trước đây",
     "status_help_aria": "Giải thích trạng thái salon",
@@ -2818,6 +2820,8 @@
     "pos_role_name_required": "Tên vai trò là bắt buộc.",
     "pos_role_name_too_long": "Tên vai trò không được vượt quá 100 ký tự.",
     "pos_role_name_duplicate": "Đã tồn tại vai trò với tên này.",
+    "pos_staff_level_not_found": "Không tìm thấy cấp độ nhân viên này.",
+    "pos_staff_level_name_duplicate": "Đã tồn tại cấp độ nhân viên với tên này.",
     "pos_permission_owner_only": "Quyền này chỉ có thể cấp cho vai trò Owner.",
     "pos_cannot_edit_owner_role_permissions": "Không thể thay đổi quyền của vai trò Owner.",
     "pos_cannot_delete_owner_role": "Không thể xóa vai trò Owner.",
@@ -3732,7 +3736,8 @@
               "salonInformation": "Thông Tin Salon",
               "staff": "Nhân Viên",
               "services": "Dịch Vụ",
-              "rolesPermissions": "Vai Trò & Quyền"
+              "rolesPermissions": "Vai Trò & Quyền",
+              "staffLevels": "Cấp Độ Nhân Viên"
             }
           },
           "PosGeneralSettingsView": {
@@ -3766,6 +3771,22 @@
               "Reports": "Báo Cáo",
               "Operations": "Vận Hành"
             }
+          },
+          "PosStaffLevelsView": {
+            "description": "Định nghĩa danh sách cấp độ chuyên môn riêng của salon (vd: Basic, Advanced, Senior) và gán từ hồ sơ nhân viên.",
+            "addLevel": "Thêm Cấp Độ",
+            "addLevelModalTitle": "Cấp Độ Mới",
+            "levelNamePlaceholder": "vd: Advanced",
+            "save": "Lưu",
+            "cancel": "Hủy",
+            "edit": "Đổi tên cấp độ",
+            "delete": "Xóa cấp độ",
+            "deleteConfirmTitle": "Xóa cấp độ này?",
+            "deleteConfirmBody": "Không thể hoàn tác. Nhân viên đang gán cấp độ này sẽ về trạng thái chưa có cấp độ.",
+            "noLevels": "Không tìm thấy cấp độ nào.",
+            "createdSuccess": "Đã tạo cấp độ.",
+            "updatedSuccess": "Đã đổi tên cấp độ.",
+            "deletedSuccess": "Đã xóa cấp độ."
           },
           "PosCategoriesView": {
             "description": "Nhóm Dịch Vụ và Sản Phẩm bằng danh mục như \"Manicures\" hoặc \"Retail\", và kéo-thả để sắp xếp thứ tự.",
@@ -3897,6 +3918,7 @@
             "searchPlaceholder": "Tìm staff theo tên...",
             "tableColumnStaff": "Staff",
             "tableColumnPosition": "Vị trí",
+            "tableColumnLevel": "Cấp Độ",
             "tableColumnContact": "Liên hệ",
             "tableColumnActions": "Thao tác",
             "staffDetailTitle": "Hồ Sơ Staff",
@@ -3918,7 +3940,10 @@
               "Locked": "Khoá"
             },
             "statusSavedSuccess": "Đã cập nhật trạng thái nhân viên.",
+            "turnsTodayLabel": "Lượt Hôm Nay",
             "roleLabel": "Role POS",
+            "staffLevelLabel": "Cấp Độ Nhân Viên",
+            "staffLevelNoneOption": "— Không có —",
             "payStructureLabel": "Cách Trả Lương",
             "payStructureTypes": {
               "Commission": "Hoa Hồng (%)",

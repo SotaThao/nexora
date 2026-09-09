@@ -65,6 +65,8 @@ interface StaffBusinessApiDto {
   role?: number | string | null
   roleLabel?: string | null
   roleAtBusiness?: string | null
+  staffLevelId?: string | null
+  staffLevelName?: string | null
   linkStatus?: number | string | null
   linkStatusLabel?: string | null
   linkedAt?: string | null
@@ -150,6 +152,8 @@ function normalizeStaffBusinessLink(b: StaffBusinessApiDto): StaffBusinessLink {
     role: wireRole != null ? String(wireRole) : null,
     roleLabel: b.roleLabel ?? readField<string>(b as Record<string, unknown>, 'roleLabel', 'RoleLabel') ?? null,
     roleAtBusiness,
+    staffLevelId: readField<string | null>(b as Record<string, unknown>, 'staffLevelId', 'StaffLevelId') ?? null,
+    staffLevelName: readField<string | null>(b as Record<string, unknown>, 'staffLevelName', 'StaffLevelName') ?? null,
     linkStatus: linkStatus != null ? String(linkStatus) : null,
     linkStatusLabel: b.linkStatusLabel ?? readField<string>(b as Record<string, unknown>, 'linkStatusLabel', 'LinkStatusLabel') ?? null,
     linkedAt: b.linkedAt ?? null,
