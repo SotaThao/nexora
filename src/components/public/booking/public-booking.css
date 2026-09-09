@@ -1292,10 +1292,19 @@ body.public-booking-active #root {
 }
 
 .public-booking-root .staff-card .choice-icon {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  font-size: 11px;
+  font-size: 12px;
+  overflow: hidden;
+}
+
+.public-booking-root .staff-avatar-img {
+  display: block;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .public-booking-root .staff-card .choice-title {
@@ -1923,9 +1932,10 @@ body.public-booking-active #root {
   }
 
   .public-booking-root .staff-card .choice-icon {
-    width: 28px;
-    height: 28px;
-    font-size: 11px;
+    width: 36px;
+    height: 36px;
+    font-size: 12px;
+    overflow: hidden;
   }
 
   .public-booking-root .staff-card .choice-title {
