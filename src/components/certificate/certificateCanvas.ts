@@ -24,7 +24,7 @@ const TEMPLATE = {
   inkColor: '#081F49',
   /** Use the system Times New Roman face, with serif fallbacks where it is unavailable. */
   fontFamily: '"Times New Roman", Times, serif',
-  weights: { memberName: 400, meta: 700, stamp: 700 },
+  weights: { memberName: 400, meta: 400, stamp: 700 },
   memberName: {
     centerX: 0.5,
     /** Leave space below the introduction (y≈428) and above the gold rule (y≈545). */
