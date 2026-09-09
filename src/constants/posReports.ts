@@ -1,6 +1,7 @@
 export enum PosReportTab {
   Technician = 'technician',
   StoreIncome = 'store-income',
+  ServiceIncome = 'service-income',
 }
 
 export const POS_REPORT_ROOT_PATH = '/dashboard/pos/report'

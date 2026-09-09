@@ -11,7 +11,7 @@
  */
 
 import httpClient from '../../lib/httpClient'
-import { ONEQR_ROUTE, type OneQrAudience } from '../../constants/oneQr'
+import { ONEQR_ROUTE, OneQrModuleKey, type OneQrAudience } from '../../constants/oneQr'
 import { toOneQrAudience, toOneQrModuleKey } from './merchantOneQr'
 import type {
   OneQrLanding,
@@ -119,6 +119,21 @@ export function normalizeOneQrLanding(raw: unknown): OneQrLanding | null {
   }
 }
 
+export function resolveOneQrBookAiUrl(landing: OneQrLanding | null): string | null {
+  if (!landing || landing.status !== 'active' || landing.requiresAuth) return null
+  const rawUrl = landing.modules.find(module => module.moduleKey === OneQrModuleKey.VoiceBooking)?.url
+  if (!rawUrl || /[\u0000-\u001f\u007f]/.test(rawUrl)) return null
+  const href = rawUrl.trim()
+  if (!href || /[\\\u0000-\u0020\u007f]/.test(href) || href.startsWith('//')) return null
+  if (href.startsWith('/')) return href
+  try {
+    const url = new URL(href)
+    return ['http:', 'https:'].includes(url.protocol) && !url.username && !url.password ? href : null
+  } catch {
+    return null
+  }
+}
+
 export function createPublicOneQrRepository(client: HttpClient = httpClient) {
   return {
     async getLanding({
@@ -138,7 +153,8 @@ export function createPublicOneQrRepository(client: HttpClient = httpClient) {
       viewAs?: string | null
       anonymous?: boolean
     }): Promise<OneQrLanding | null> {
-      const params: Record<string, string> = { sessionId }
+      const params: Record<string, string> = {}
+      if (sessionId) params.sessionId = sessionId
       const trimmedViewAs = viewAs?.trim()
       if (trimmedViewAs) params[ONEQR_ROUTE.asQuery] = trimmedViewAs
 

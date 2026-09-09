@@ -82,6 +82,7 @@ export default function PosGeneralSettingsView({
           column, leaving this card wider than the Business Hours card below it. */}
       <div className="space-y-6">
         <BusinessInfoCard
+          businessAddress={businessInfoForm.businessInfo.businessAddress}
           businessName={businessInfoForm.businessInfo.businessName}
           businessPhone={businessInfoForm.businessInfo.businessPhone}
           businessEmail={businessInfoForm.businessInfo.businessEmail}

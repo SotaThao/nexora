@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { Mail, Printer } from 'lucide-react'
+import PosReportPrintAll, { type TechnicianPrintReport } from './PosReportPrintAll'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { SkeletonList } from '../../../../ui/skeleton'
 import { formatCurrency } from '../../../utils'
@@ -11,7 +13,6 @@ import posReportRepository, {
   type PosReportRow,
 } from '../../../../../data/repositories/posReport'
 import { PosReportMode } from '../../../../../constants/posReportMode'
-import { formatPosTime } from '../posDateTime'
 import PosReportPeriodPicker from './PosReportPeriodPicker'
 import PosReportTable from './PosReportTable'
 import PosReportDetailModal, { POS_REPORT_EMAIL_ENABLED } from './PosReportDetailModal'
@@ -55,9 +56,25 @@ export default function PosReportPanel({
   selection,
   onSelectionChange,
 }: Props) {
-  const { t, currentLanguage } = useTranslation()
+  const { t } = useTranslation()
   const [isExporting, setIsExporting] = useState(false)
   const [exportError, setExportError] = useState(false)
+  const [printError, setPrintError] = useState(false)
+  const [isPreparingPrint, setIsPreparingPrint] = useState(false)
+  const [printReports, setPrintReports] = useState<TechnicianPrintReport[] | null>(null)
+  const printRequestRef = useRef(0)
+  const preparingPrintRef = useRef(false)
+  useEffect(() => {
+    printRequestRef.current += 1
+    preparingPrintRef.current = false
+    setIsPreparingPrint(false)
+    setPrintReports(null)
+    setPrintError(false)
+    return () => {
+      printRequestRef.current += 1
+    }
+  }, [selection, businessId, businessTimeZone, isActive])
+
   const [detailRow, setDetailRow] = useState<PosReportRow | null>(null)
   const { isOwner, isStaff, session } = useSessionRole()
   const staffListQuery = useMerchantStaff({
@@ -147,6 +164,27 @@ export default function PosReportPanel({
     }
   }
 
+  const handlePrintAll = async () => {
+    if (preparingPrintRef.current || !data || !params || !rows.length || reportQuery.isFetching
+      || reportQuery.isPlaceholderData || reportQuery.isError || !data.periods[0]) return
+    const request = ++printRequestRef.current
+    preparingPrintRef.current = true
+    setIsPreparingPrint(true)
+    setPrintError(false)
+    setPrintReports(null)
+    try {
+      const reports = await posReportRepository.getStaffReportsForPrint(params, rows, data.periods[0])
+      if (request === printRequestRef.current) setPrintReports(reports)
+    } catch {
+      if (request === printRequestRef.current) setPrintError(true)
+    } finally {
+      if (request === printRequestRef.current) {
+        preparingPrintRef.current = false
+        setIsPreparingPrint(false)
+      }
+    }
+  }
+
   return (
     <section className="space-y-3" aria-label={t(`${TK}.title`)} data-testid="report-panel">
       <div
@@ -159,19 +197,25 @@ export default function PosReportPanel({
           onChange={onSelectionChange}
         />
         <div className="flex flex-wrap items-center gap-2">
-          {data?.generatedAtUtc ? (
-            <span className="text-[11px] font-semibold text-nexoraMuted">
-              {t(`${TK}.updatedAt`, { time: formatPosTime(data.generatedAtUtc, currentLanguage) })}
-            </span>
-          ) : null}
           <button
             type="button"
-            onClick={() => void reportQuery.refetch()}
-            disabled={reportQuery.isFetching || !params}
+            onClick={handlePrintAll}
+            disabled={isPreparingPrint || !params || !rows.length || !data?.periods.length || reportQuery.isFetching || reportQuery.isPlaceholderData || reportQuery.isError}
             className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-nexoraBorder bg-nexoraSurface px-3 text-xs font-bold text-nexoraText hover:bg-nexoraCanvas disabled:opacity-50"
           >
-            {reportQuery.isFetching ? t(`${TK}.refreshing`) : t(`${TK}.refresh`)}
+            <Printer className="h-4 w-4" aria-hidden="true" />
+            {t(`${TK}.${isPreparingPrint ? 'preparingPrint' : 'printAll'}`)}
           </button>
+          <span title={t(`${TK}.detail.emailComingSoon`)} className="inline-flex">
+            <button
+              type="button"
+              disabled
+              className="inline-flex h-9 cursor-not-allowed items-center gap-1.5 rounded-lg border border-nexoraBorder bg-nexoraSurface px-3 text-xs font-bold text-nexoraText opacity-50"
+            >
+              <Mail className="h-4 w-4" aria-hidden="true" />
+              {t(`${TK}.sendMailAll`)}
+            </button>
+          </span>
           <button
             type="button"
             onClick={handleExport}
@@ -185,6 +229,12 @@ export default function PosReportPanel({
 
       {exportError ? (
         <p className="text-xs font-semibold text-nexoraDanger" role="alert">{t(`${TK}.exportError`)}</p>
+      ) : null}
+      {printError ? (
+        <p className="text-xs font-semibold text-nexoraDanger" role="alert">{t(`${TK}.printError`)}</p>
+      ) : null}
+      {isActive && printReports ? (
+        <PosReportPrintAll reports={printReports} onClose={() => setPrintReports(null)} />
       ) : null}
 
       {reportQuery.isPending && reportQuery.fetchStatus !== 'idle' ? (

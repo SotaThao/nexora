@@ -130,7 +130,10 @@ function PublicCheckInQrEditor({ businessId, businessSlug, businessName, busines
           <CheckInTemplateEditor config={config} onChange={setConfig} />
           {(!businessLogo || withoutLogo) && <p className="text-xs text-nexoraMuted">{text('noLogo')}</p>}
           </>}
-          <div className="flex min-w-0 items-center gap-2 rounded-lg border border-nexoraBorder p-2"><a className="min-w-0 flex-1 truncate text-xs text-nexoraMuted" href={url} target="_blank" rel="noreferrer">{url.replace(/^https?:\/\//, '')}</a><button type="button" className="flex min-h-10 items-center gap-1 text-xs text-nexoraBrand" onClick={() => void copy()}>{isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{t('common.copy')}</button></div>
+          <div className="min-w-0 space-y-1">
+            <p className="text-xs font-bold text-nexoraText">{t(TK + 'linkLabel')}</p>
+            <div className="flex min-w-0 items-center gap-2 rounded-lg border border-nexoraBorder p-2"><a className="min-w-0 flex-1 truncate text-xs text-nexoraMuted" href={url} target="_blank" rel="noreferrer">{url.replace(/^https?:\/\//, '')}</a><button type="button" className="flex min-h-10 items-center gap-1 text-xs text-nexoraBrand" onClick={() => void copy()}>{isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{t('common.copy')}</button></div>
+          </div>
         </div>
         <div className="min-w-0 space-y-4">
           <h4 className="text-sm font-bold">{text('preview')}</h4>

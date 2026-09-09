@@ -1,17 +1,23 @@
 import type { OrderDetailApiDto } from '../../types/repositories'
 import { PosOrderStatus } from '../../constants/posOrderStatus'
+import { PosOrderItemStatus } from '../../constants/posOrderItemStatus'
+import { parseApiUtcDateTime } from '../../utils/localDate'
 import posOrdersRepository from './posOrders'
 
 export interface NextTurnBalance {
   completedAmounts: Map<string, number>
   committedAmounts: Map<string, number>
   availableSince: Map<string, number>
+  completedTurns: Map<string, number>
+  assignedTurns: Map<string, number>
 }
 
 function calendarDay(timestamp: string, timeZone: string) {
+  const date = parseApiUtcDateTime(timestamp)
+  if (!date) return ''
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
-  }).formatToParts(new Date(timestamp))
+  }).formatToParts(date)
   const part = (type: string) => parts.find(value => value.type === type)?.value
   return `${part('year')}-${part('month')}-${part('day')}`
 }
@@ -22,6 +28,7 @@ export function calculateNextTurnBalance(
   const balance: NextTurnBalance = {
     completedAmounts: new Map(), committedAmounts: new Map(),
     availableSince: new Map(),
+    completedTurns: new Map(), assignedTurns: new Map(),
   }
   for (const order of new Map(orders.map(order => [order.id, order])).values()) {
     const paid = order.status === PosOrderStatus.Completed
@@ -30,6 +37,7 @@ export function calculateNextTurnBalance(
       if (!order.completedAt) continue
       if (calendarDay(order.completedAt, timeZone) !== day) continue
     }
+    const turns = new Map<string, { unfinished: boolean; lastFinishedAt: number }>()
     for (const line of order.serviceLines) {
       const staffId = line.assignedPosStaffProfileId
       if (!staffId) continue
@@ -38,9 +46,22 @@ export function calculateNextTurnBalance(
         .reduce((sum, value) => sum + (Number.isFinite(value) ? Math.max(0, value) : 0), 0)
       const amounts = paid ? balance.completedAmounts : balance.committedAmounts
       amounts.set(staffId, Math.round(((amounts.get(staffId) ?? 0) + amount) * 100) / 100)
-      const finishedAt = Date.parse(line.completedAt ?? (paid ? order.completedAt : '') ?? '')
+      const finishedAt = parseApiUtcDateTime(line.completedAt ?? (paid ? order.completedAt : null))?.getTime()
+        ?? Number.NaN
+      const turn = turns.get(staffId) ?? { unfinished: false, lastFinishedAt: 0 }
+      turn.unfinished ||= !paid && line.lineStatus !== PosOrderItemStatus.Completed && !line.completedAt
+      if (Number.isFinite(finishedAt)) turn.lastFinishedAt = Math.max(turn.lastFinishedAt, finishedAt)
+      turns.set(staffId, turn)
       if (Number.isFinite(finishedAt)) {
         balance.availableSince.set(staffId, Math.max(balance.availableSince.get(staffId) ?? 0, finishedAt))
+      }
+    }
+    // A turn is one technician's work on one ticket, even when it contains several services.
+    for (const [staffId, turn] of turns) {
+      if (turn.unfinished) {
+        balance.assignedTurns.set(staffId, (balance.assignedTurns.get(staffId) ?? 0) + 1)
+      } else if (turn.lastFinishedAt && calendarDay(new Date(turn.lastFinishedAt).toISOString(), timeZone) === day) {
+        balance.completedTurns.set(staffId, (balance.completedTurns.get(staffId) ?? 0) + 1)
       }
     }
   }
@@ -75,10 +96,14 @@ export async function getNextTurnBalance(
     page.items.filter(completedToday).forEach(order => ids.add(order.id))
   }
   const orderIds = [...ids]
-  const details: OrderDetailApiDto[] = []
-  // Limit concurrent detail requests for a busy salon. Completed details are cached by the hook.
-  for (let offset = 0; offset < orderIds.length; offset += 6) {
-    details.push(...await Promise.all(orderIds.slice(offset, offset + 6).map(loadDetail)))
-  }
-  return calculateNextTurnBalance(details, day, timeZone)
+  const details: OrderDetailApiDto[] = new Array(orderIds.length)
+  let nextIndex = 0
+  // Refill each of six slots as it completes; one slow ticket must not stall the whole next batch.
+  await Promise.all(Array.from({ length: Math.min(6, orderIds.length) }, async () => {
+    while (nextIndex < orderIds.length) {
+      const index = nextIndex++
+      details[index] = await loadDetail(orderIds[index])
+    }
+  }))
+  return { ...calculateNextTurnBalance(details, day, timeZone), orders: details }
 }

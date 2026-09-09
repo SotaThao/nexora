@@ -242,11 +242,12 @@ export default function useCheckInSession({
     // Two endpoints, one button. A booked guest converts the appointment they already have;
     // anyone else opens a new order.
     const request = booking
-      ? source.submitBooking({ bookingId: booking.bookingId, customerName: trimmedName, items })
+      ? source.submitBooking({ bookingId: booking.bookingId, customerName: trimmedName, items, note: trimmedNote })
       : source.submitOrder({
           customerName: trimmedName,
           customerPhone: phone,
           items,
+          note: trimmedNote,
           ...(isAdditionalGuest ? { allowDuplicatePhone: true } : {}),
         })
 

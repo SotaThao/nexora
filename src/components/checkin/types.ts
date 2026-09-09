@@ -54,6 +54,7 @@ export interface CheckInOrderSubmit {
   customerName: string
   customerPhone: string
   items: CheckInItemPayload[]
+  note: string | null
   // The guest answered "check in another guest" on the active-visit screen, so this phone
   // deliberately gets a second open order — a family sharing one number is the common case.
   // Sources whose API has no such flag ignore it.
@@ -64,6 +65,7 @@ export interface CheckInBookingSubmit {
   bookingId: string
   customerName: string
   items: CheckInItemPayload[]
+  note: string | null
 }
 
 // Everything the page needs, already resolved. A source hook takes the phone number currently on

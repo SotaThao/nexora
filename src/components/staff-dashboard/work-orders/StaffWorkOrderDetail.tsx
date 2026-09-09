@@ -16,12 +16,9 @@ import { getApiErrorCode } from '../../../types/domain'
 import { PosOrderStatus } from '../../../constants/posOrderStatus'
 import { PosOrderItemStatus } from '../../../constants/posOrderItemStatus'
 import {
-  WORK_ORDER_STATUS_BADGE_VARIANT,
-  WORK_ORDER_STATUS_I18N,
   WORK_ORDER_TOAST_TYPE,
   WORK_ORDERS_I18N,
   WORK_ORDERS_LAYOUT_CLASS,
-  workOrderStatusClass,
   type WorkOrderDetail,
 } from './constants'
 import WorkOrderCompleteServiceModal from './WorkOrderCompleteServiceModal'
@@ -295,7 +292,6 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
       <WorkOrderDetailHeader
         onBack={onBack}
         orderNumber={ticket?.orderNumber}
-        status={displayStatus}
       />
       <WorkOrderDetailBody
         isError={detailQuery.isError}
@@ -388,13 +384,14 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
               ? lines.find((line) => line.key === picker.lineKey)?.posServiceId ?? ''
               : ''
           }
-          onConfirm={(service: WorkOrderCatalogService) => {
+          onConfirm={(services: WorkOrderCatalogService[]) => {
             setApprovalError(null)
-            setLines((current) => (
-              picker.mode === WORK_ORDER_PICKER_MODE.edit && picker.lineKey
-                ? replaceWorkOrderCatalogService(current, picker.lineKey, service)
-                : addWorkOrderCatalogService(current, service)
-            ))
+            setLines((current) => {
+              if (picker.mode === WORK_ORDER_PICKER_MODE.edit && picker.lineKey) {
+                return replaceWorkOrderCatalogService(current, picker.lineKey, services[0])
+              }
+              return services.reduce(addWorkOrderCatalogService, current)
+            })
             setPicker(null)
           }}
           onClose={() => setPicker(null)}
@@ -628,11 +625,9 @@ function WorkOrderPrimaryAction({
 function WorkOrderDetailHeader({
   onBack,
   orderNumber,
-  status,
 }: {
   onBack: () => void
   orderNumber?: string
-  status?: PosOrderStatus
 }) {
   const { t } = useTranslation()
 
@@ -656,11 +651,6 @@ function WorkOrderDetailHeader({
           </p>
         </div>
       </div>
-      {status ? (
-        <span className={workOrderStatusClass(status, WORK_ORDER_STATUS_BADGE_VARIANT.detail)}>
-          {t(WORK_ORDER_STATUS_I18N[status])}
-        </span>
-      ) : null}
     </div>
   )
 }

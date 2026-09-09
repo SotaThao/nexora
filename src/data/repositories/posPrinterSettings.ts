@@ -25,6 +25,7 @@ import {
   POS_PRINTER_PROFILE_STORAGE_KEY,
   POS_PRINT_JOB_STORAGE_KEY,
   POS_RECEIPT_SETTINGS_STORAGE_KEY,
+  POS_TICKET_PRINT_HISTORY_STORAGE_KEY,
   PosPrintTransport,
   RECEIPT_COPIES_MAX,
   RECEIPT_COPIES_MIN,
@@ -55,6 +56,7 @@ export const DEFAULT_POS_PRINTER_PROFILE: PosPrinterProfile = {
   // Browser, not PassPRNT: the pre-existing print path stays the default, so nothing changes for
   // an existing device until someone deliberately pairs a Star printer on /pos/printer.
   transport: PosPrintTransport.Browser,
+  transportConfigured: false,
   paperWidthDots: DEFAULT_RECEIPT_PAPER_WIDTH_DOTS,
   lastTestAt: null,
   lastTestCode: null,
@@ -125,6 +127,9 @@ export function normalizePosPrinterProfile(value: unknown): PosPrinterProfile {
   const raw = asRecord(value)
   return {
     transport: normalizeTransport(raw.transport),
+    transportConfigured: typeof raw.transportConfigured === 'boolean'
+      ? raw.transportConfigured
+      : raw.transport === PosPrintTransport.Browser || raw.transport === PosPrintTransport.PassPrnt,
     paperWidthDots: normalizePaperWidth(raw.paperWidthDots),
     lastTestAt: normalizeNullableString(raw.lastTestAt),
     lastTestCode: normalizeNullableString(raw.lastTestCode),
@@ -163,6 +168,7 @@ export function normalizePendingPrintJob(value: unknown): PosPendingPrintJob | n
   if (raw.kind === 'receipt' && !hasDocument) return null
 
   const firedAttempts = Number(raw.firedAttempts)
+  const ticketPrint = asRecord(raw.ticketPrint)
 
   return {
     jobId: raw.jobId,
@@ -176,6 +182,10 @@ export function normalizePendingPrintJob(value: unknown): PosPendingPrintJob | n
     ...(raw.workspaceRestored === true ? { workspaceRestored: true } : {}),
     ...(typeof raw.attemptId === 'string' && /^[a-zA-Z0-9-]+$/.test(raw.attemptId) ? { attemptId: raw.attemptId } : {}),
     ...(typeof raw.backPath === 'string' && raw.backPath.startsWith('/') ? { backPath: raw.backPath } : {}),
+    ...(typeof ticketPrint.businessId === 'string' && ticketPrint.businessId
+      && typeof ticketPrint.orderId === 'string' && ticketPrint.orderId
+      ? { ticketPrint: { businessId: ticketPrint.businessId, orderId: ticketPrint.orderId } }
+      : {}),
   }
 }
 
@@ -183,6 +193,18 @@ export function createPosPrinterSettingsRepository(
   store: PosPrinterDeviceStore = storage,
 ) {
   return {
+    wasTicketPrinted(ticket: NonNullable<PosPendingPrintJob['ticketPrint']>): boolean {
+      const history = asRecord(readJson(store, POS_TICKET_PRINT_HISTORY_STORAGE_KEY))
+      return history[JSON.stringify([ticket.businessId, ticket.orderId])] === true
+    },
+
+    markTicketPrinted(ticket: NonNullable<PosPendingPrintJob['ticketPrint']>): void {
+      if (!ticket.businessId || !ticket.orderId) return
+      const history = asRecord(readJson(store, POS_TICKET_PRINT_HISTORY_STORAGE_KEY))
+      history[JSON.stringify([ticket.businessId, ticket.orderId])] = true
+      writeJson(store, POS_TICKET_PRINT_HISTORY_STORAGE_KEY, history)
+    },
+
     getPrinterProfile(): PosPrinterProfile {
       return normalizePosPrinterProfile(readJson(store, POS_PRINTER_PROFILE_STORAGE_KEY))
     },
@@ -192,7 +214,13 @@ export function createPosPrinterSettingsRepository(
       const current = normalizePosPrinterProfile(
         readJson(store, POS_PRINTER_PROFILE_STORAGE_KEY),
       )
-      const next = normalizePosPrinterProfile({ ...current, ...patch })
+      const next = normalizePosPrinterProfile({
+        ...current,
+        ...patch,
+        transportConfigured: patch.transport === PosPrintTransport.Browser
+          || patch.transport === PosPrintTransport.PassPrnt
+          || current.transportConfigured,
+      })
       writeJson(store, POS_PRINTER_PROFILE_STORAGE_KEY, next)
       return next
     },

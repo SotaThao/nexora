@@ -18,5 +18,5 @@ export function formatAddressForMap(parts: MapAddressParts): string {
 export function buildGoogleMapsEmbedUrl(query: string): string | null {
   const trimmed = query.trim()
   if (!trimmed) return null
-  return `https://maps.google.com/maps?q=${encodeURIComponent(trimmed)}&t=&z=14&ie=UTF8&iwloc=&output=embed`
+  return `https://maps.google.com/maps?q=${encodeURIComponent(trimmed)}&t=&z=14&ie=UTF8&iwloc=A&output=embed`
 }

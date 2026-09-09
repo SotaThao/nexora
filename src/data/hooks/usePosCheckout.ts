@@ -229,6 +229,10 @@ export function useAddOrderServiceLine(businessId?: string) {
             lineTotalAfterDiscount: lineTotal,
             canAssignDiscountToStaff: false,
             completedAt: null,
+            // Stamped client-side so the line lands in the right place in the ticket order right
+            // away; the refetch below replaces it with the server's own timestamp.
+            addedAt: new Date().toISOString(),
+            assignedAt: null,
             addOns: [],
           }))
         : null
@@ -303,6 +307,10 @@ export function useAddOrderCustomServiceLine(businessId?: string) {
             note,
             assignedPosStaffProfileId: posStaffProfileId,
             technicianName,
+            // See above — a custom line may arrive with its technician already picked, so both
+            // timestamps matter to where it sits until the refetch lands.
+            addedAt: new Date().toISOString(),
+            assignedAt: posStaffProfileId ? new Date().toISOString() : null,
             addOns: [],
           }))
         : null
@@ -480,6 +488,7 @@ export function useAddOrderServiceAddOnLine(businessId?: string) {
     onSuccess: (_result, { orderId }) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
     },
   })
 }
@@ -512,6 +521,7 @@ export function useRemoveOrderServiceAddOnLine(businessId?: string) {
     onSuccess: (_result, { orderId }) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
     },
   })
 }

@@ -61,6 +61,14 @@ export function isDashboardStaffRole(
 export const BOOKING_HUB_PATH = `/dashboard/${DASHBOARD_MENU.BookingHub}`;
 /** AI Voice setup guide page under AI Hub. */
 export const BOOKING_HUB_SETUP_GUIDE_PATH = `${BOOKING_HUB_PATH}/setup-guide`;
+/**
+ * Account menu > My Certifications. Deliberately NOT a {@link DASHBOARD_MENU_ID}: a NEXORA TOUCH
+ * certificate belongs to the signed-in person rather than to the business, so it is reached from
+ * the avatar dropdown and must never show up in the POS / Tips / TaxIQ sidebar.
+ */
+export const MY_CERTIFICATIONS_PATH_SEGMENT = "certifications";
+export const MY_CERTIFICATIONS_PATH = `/dashboard/${MY_CERTIFICATIONS_PATH_SEGMENT}`;
+
 /** Legacy URL segment — redirect to {@link BOOKING_HUB_PATH}. */
 export const BOOKING_HUB_LEGACY_PATH_SEGMENT = "booking-hub";
 
@@ -327,9 +335,9 @@ export const MENU_ITEMS = [
       { id: 'report', labelKey: 'dashboard.menu.pos_report' },
       { id: 'products', labelKey: 'dashboard.menu.pos_products' },
       { id: 'promotions', labelKey: 'dashboard.menu.pos_promotions' },
+      { id: 'public-checkin', labelKey: 'dashboard.menu.pos_public_checkin' },
       { id: 'devices', labelKey: 'dashboard.menu.pos_devices' },
       { id: 'printer', labelKey: 'dashboard.menu.pos_printer' },
-      { id: 'public-checkin', labelKey: 'dashboard.menu.pos_public_checkin' },
     ]
   },
   {

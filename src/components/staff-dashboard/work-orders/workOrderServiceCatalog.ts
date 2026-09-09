@@ -44,7 +44,8 @@ export type WorkOrderEditableLine = {
   isMine?: boolean
 }
 
-export const WORK_ORDER_CUSTOM_SERVICE_MAX_DURATION = 10000
+export const WORK_ORDER_CUSTOM_SERVICE_MAX_NAME_LENGTH = 200
+export const WORK_ORDER_CUSTOM_SERVICE_MAX_DURATION = 720
 export const WORK_ORDER_CUSTOM_SERVICE_MAX_PRICE = 10000
 export const WORK_ORDER_APPROVAL_CODE_LENGTH = 4
 export const WORK_ORDER_PICKER_MODE = {
@@ -405,8 +406,7 @@ export type WorkOrderCustomServiceInput = {
   durationMinutes: number
 }
 
-function isOptionalCustomDuration(minutes: number): boolean {
-  if (!Number.isFinite(minutes) || minutes === 0) return true
+function isValidCustomDuration(minutes: number): boolean {
   return Number.isInteger(minutes)
     && minutes > 0
     && minutes <= WORK_ORDER_CUSTOM_SERVICE_MAX_DURATION
@@ -493,22 +493,30 @@ export function clampWorkOrderPriceInput(raw: string): string {
   if (!cleaned) return ''
   const [whole = '', ...fractionParts] = cleaned.split('.')
   const wholeCapped = whole.slice(0, String(WORK_ORDER_CUSTOM_SERVICE_MAX_PRICE).length)
-  if (fractionParts.length === 0) return wholeCapped
-  return `${wholeCapped}.${fractionParts.join('').slice(0, 2)}`
+  const normalized = fractionParts.length === 0
+    ? wholeCapped
+    : `${wholeCapped}.${fractionParts.join('').slice(0, 2)}`
+  return Number(normalized) > WORK_ORDER_CUSTOM_SERVICE_MAX_PRICE
+    ? String(WORK_ORDER_CUSTOM_SERVICE_MAX_PRICE)
+    : normalized
 }
 
 export function clampWorkOrderDurationInput(raw: string): string {
   const digits = raw.replace(/\D/g, '').replace(/^0+(?=\d)/, '')
   if (!digits) return ''
-  return digits.slice(0, String(WORK_ORDER_CUSTOM_SERVICE_MAX_DURATION).length)
+  const numericValue = Number(digits)
+  return numericValue > WORK_ORDER_CUSTOM_SERVICE_MAX_DURATION
+    ? String(WORK_ORDER_CUSTOM_SERVICE_MAX_DURATION)
+    : digits
 }
 
 export function isValidCustomWorkOrderService(input: WorkOrderCustomServiceInput): boolean {
   return Boolean(input.name.trim())
+    && input.name.trim().length <= WORK_ORDER_CUSTOM_SERVICE_MAX_NAME_LENGTH
     && Number.isFinite(input.price)
     && input.price > 0
     && input.price <= WORK_ORDER_CUSTOM_SERVICE_MAX_PRICE
-    && isOptionalCustomDuration(input.durationMinutes)
+    && isValidCustomDuration(input.durationMinutes)
 }
 
 export function canSubmitCustomWorkOrderService(raw: {
@@ -516,7 +524,7 @@ export function canSubmitCustomWorkOrderService(raw: {
   price: string
   durationMinutes: string
 }): boolean {
-  if (!raw.name.trim() || !raw.price.trim()) return false
+  if (!raw.name.trim() || !raw.price.trim() || !raw.durationMinutes.trim()) return false
   return isValidCustomWorkOrderService({
     name: raw.name,
     price: Number(raw.price),

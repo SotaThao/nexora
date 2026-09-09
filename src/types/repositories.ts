@@ -177,6 +177,9 @@ export interface PosAccessApiDto {
   // Gated on its own `view_pos_report` permission, not on the Operations area — the report exposes
   // every technician's earnings, so operating the front desk does not imply reading it.
   canViewReport?: boolean
+  // Reassigning the technician on a completed ticket moves earnings between two people, so it has
+  // its own `reassign_completed_order_staff` permission rather than riding on Operations.
+  canReassignCompletedOrderStaff?: boolean
 }
 
 // POS Merchant Ops — Check-in & Waitlist (US-12, refactored to Order in US-026)
@@ -266,6 +269,11 @@ export interface OrderListItemApiDto {
   hasUnassignedService: boolean
   hasNoServiceLine: boolean
   serviceLines: PosServiceLineRollupApiDto
+  /**
+   * True when this guest has never completed a visit at this business.
+   * The current open ticket does not count — that is their first visit in progress.
+   */
+  isNewCustomer: boolean
 }
 
 // POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filterable.
@@ -283,7 +291,8 @@ export interface CompletedOrderListItemApiDto {
   serviceNames: string[]
   technicianNames: string[]
   total: number
-  /** The order-level discount frozen at checkout — always absorbed by the salon. */
+  /** The order-level discount frozen at checkout. Whatever part of it the technicians carried is
+   *  inside staffDiscountTotal, not here. */
   orderDiscountAmount?: number
   appliedPromotionName?: string | null
   paymentMethodType?: string | null
@@ -433,6 +442,8 @@ export interface PosCustomerListItemApiDto {
   totalVisit: number
   lastVisit?: string | null
   createdAt: string
+  /** True when this customer has never completed a POS visit. Bookings alone do not count. */
+  isNewCustomer: boolean
 }
 
 export interface PosCustomerListQuery {
@@ -469,6 +480,8 @@ export interface PosCustomerDetailApiDto {
   totalVisit: number
   lastVisit?: string | null
   createdAt: string
+  /** True when this customer has never completed a POS visit. Bookings alone do not count. */
+  isNewCustomer: boolean
 }
 
 // A history row can be a completed/waiting/in-service order OR a not-yet-checked-in booking
@@ -824,6 +837,11 @@ export interface OrderServiceLineApiDto {
   canAssignDiscountToStaff: boolean
   assignedPosStaffProfileId?: string | null
   technicianName?: string | null
+  /** When the line was rung up — the reading order inside one technician's block. */
+  addedAt: string
+  /** When the technician was put on this line. Null while nobody is assigned. Restamped when the
+   *  technician changes on an open ticket, deliberately kept on a completed one (turn counting). */
+  assignedAt?: string | null
   note?: string | null
   /** See PosOrderItemStatus — Unassigned/PendingAcceptance/Assigned/Started/Completed. */
   lineStatus: string
@@ -873,6 +891,8 @@ export interface SetOrderDiscountPayload {
   /** 'Percent' | 'Amount'. Null with no promotionId clears the order-level discount. */
   discountType: string | null
   discountValue: number | null
+  /** 'Salon' | 'Staff' | 'Split' — see PosDiscountBearer. Null falls back to the salon. */
+  discountBearer?: string | null
   discountNote?: string | null
 }
 
@@ -967,6 +987,14 @@ export interface OrderDetailApiDto {
   /** The most an order-level discount can still take off: servicesSubtotal less discountAmount. */
   orderDiscountCap: number
   orderDiscountNote?: string | null
+  /** 'Salon' | 'Staff' | 'Split' — see PosDiscountBearer. Null when no discount is applied. */
+  orderDiscountBearer?: string | null
+  /** What the technicians on this ticket absorb of it in total, spread pro-rata across the
+   *  services they performed. Live while the order is open, frozen once Completed. */
+  orderDiscountStaffShare: number
+  /** False when no technician on the ticket is on commission-style pay, so the salon is the only
+   *  bearer the order-level discount can have. */
+  canAssignOrderDiscountToStaff: boolean
   /** Null when the cashier typed the discount instead of picking a promotion. */
   appliedPromotionId?: string | null
   appliedPromotionName?: string | null
@@ -1048,6 +1076,34 @@ export interface AssignableStaffApiDto {
   displayName: string
   photoUrl?: string | null
   isBusy: boolean
+}
+
+// Technician picker for reassigning a completed ticket. Wider than AssignableStaffApiDto on
+// purpose — the work is already done, so neither the skill list nor clock-in state narrows it —
+// and there is no isBusy: nobody is busy with work that finished days ago.
+export interface ReassignableStaffApiDto {
+  posStaffProfileId: string
+  displayName: string
+  photoUrl?: string | null
+}
+
+// Pre-confirmation warning: the salon week this ticket falls into, plus whichever of the two
+// technicians has already been paid for it. An empty list is the normal answer.
+export interface ReassignPayrollWarningApiDto {
+  weekStart: string
+  weekEnd: string
+  alreadyPaidStaff: { posStaffProfileId: string; displayName: string }[]
+}
+
+// One hand-over in a service line's history. Technicians are never notified when their earnings
+// move, so this is what the salon shows them.
+export interface ServiceLineReassignmentApiDto {
+  reassignedAt: string
+  reassignedByName?: string | null
+  fromStaffName?: string | null
+  toStaffName?: string | null
+  tipMovedAmount: number
+  reason?: string | null
 }
 
 // POS Booking — per-business booking rules (Ticket 2). Owner-configurable; Staff can
@@ -1147,6 +1203,41 @@ export interface ReceiptApiDto {
   salesTaxAmount: number
   total: number
   paymentMethodType: string | null
+}
+
+/**
+ * What the public certificate verify endpoint returns — deliberately the smallest payload that
+ * still proves a certificate is genuine. The certificate code printed on paper is sequential and
+ * therefore guessable, so everything not needed to verify is withheld server-side: no recipient
+ * email, no recipient user id, no internal notes, and no revoke reason.
+ */
+export interface CertificateVerificationApiDto {
+  /** The code printed on the certificate, e.g. "NXT-CS-2026-0001". */
+  certificateId: string
+  /** Snapshot of the holder's name taken when the certificate was written, not re-derived later. */
+  memberName: string
+  programCode: string
+  programName: string
+  programDescription?: string | null
+  /** Date-only (`YYYY-MM-DD`) — the date printed on the certificate, not the issue timestamp. */
+  certificationDate: string
+  /** Date-only. Null when the certificate does not expire. */
+  expiryDate?: string | null
+  /** `CertificateStatus` — the backend's effective status, so `Expired` arrives already computed. */
+  status: string
+  /** UTC instant the certificate was revoked. Null unless `status` is `Revoked`. */
+  revokedAt?: string | null
+  /**
+   * Score from the certification exam, e.g. 94 for the "94 / 100" printed on the certificate.
+   *
+   * **Not implemented backend-side yet** — there is no score column on the `Certificate` entity and
+   * no field for it in `CertificateVerificationDto` (verified against the live spec, 2026-09-08).
+   * It is optional here so the page renders the column the moment the backend starts sending it and
+   * simply omits it until then. See the "cần hỏi BE" section of US-048 for the shape to confirm.
+   */
+  examScore?: number | null
+  /** Denominator for `examScore`. Falls back to CERTIFICATE_EXAM_SCORE_MAX_DEFAULT when absent. */
+  examScoreMax?: number | null
 }
 
 export interface BookingListItemApiDto {
@@ -2341,6 +2432,8 @@ export type {
 
 export interface PosPrinterProfile {
   transport: PosPrintTransportType
+  /** Whether the device has explicitly chosen a print method. */
+  transportConfigured?: boolean
   /** Printer dots — see RECEIPT_PAPER_WIDTH_DOTS. */
   paperWidthDots: number
   /** ISO timestamp of the last test print, or null when never tested. */
@@ -2386,4 +2479,5 @@ export interface PosPendingPrintJob {
   attemptId?: string
   /** Canonical owner/staff salon route that owns this print job. */
   backPath?: string
+  ticketPrint?: { businessId: string; orderId: string }
 }

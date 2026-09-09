@@ -68,6 +68,8 @@ import type {
 } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
 import { getInitials, joinOrEmpty } from './posDisplay'
+import { formatCustomerPhone } from './customer/customerFormatters'
+import CustomerVisitTag from './CustomerVisitTag'
 import PosOrderWorkspace from './PosOrderWorkspace'
 import { usePassPrntReturn } from './receipt/usePassPrntReturn'
 import { readPassPrntReturnPath } from './receipt/passprntTransport'
@@ -93,14 +95,13 @@ import NewBookingForm from './booking/NewBookingForm'
 import BookingTab from './booking/BookingTab'
 import { formatBookingWallClockTime, resolveBookingWallClockParts } from './booking/bookingFormatters'
 import CustomerTab from './customer/CustomerTab'
-import { formatCustomerPhone } from './customer/customerFormatters'
 import TimeClockTab from './timeclock/TimeClockTab'
 import { beepCooldownUntil, useCooldownSeconds } from './timeclock/beepCooldown'
 import BeepInteractions from './timeclock/BeepInteractions'
 import BeepMessageModal from './timeclock/BeepMessageModal'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { formatCurrency } from '../../utils'
-import { compareNextTurnRows, nextTurnServiceAmount, selectNextTurnTechnician } from './posNextTurn'
+import { compareNextTurnRows, nextTurnServiceAmount, selectNextTurnTechnician, sortTurnBoardStations } from './posNextTurn'
 import {
   POS_TABLE_HEADER_CELL_CLASS,
   POS_TABLE_HEADER_ROW_CLASS,
@@ -467,12 +468,12 @@ export default function PosFrontDeskView({
   const turnBoard = turnBoardQuery.data ?? []
   const isTurnBoardLoading = turnBoardQuery.isLoading
   // Refresh clock-in eligibility with the next-turn balance while the board is visible.
-  const todayTurnWindow = getLocalDayWindow()
+  const todayTurnWindow = getLocalDayWindow(new Date(), reportBusinessTimeZone || 'America/Chicago')
   const todayRosterQuery = useTimeClockRoster(businessId, todayTurnWindow, {
     enabled:
       activeTab === PosFrontDeskTab.TurnBoard
       || activeTab === PosFrontDeskTab.Booking,
-    refetchInterval: 15000,
+    refetchInterval: 5000,
   })
   // Beep replies use their own polled feed for the station pill.
   const { data: turnBoardBeeps = [] } = useMerchantBeepFeed(businessId, todayTurnWindow, {
@@ -542,7 +543,8 @@ export default function PosFrontDeskView({
   )
   const serviceAmountsTodayByStaffId = todayNextTurnBalanceQuery.data?.completedAmounts ?? new Map<string, number>()
   const nextTurnTechnician = todayNextTurnBalanceQuery.data
-    && !todayNextTurnBalanceQuery.isFetching && !todayNextTurnBalanceQuery.isError
+    && !todayNextTurnBalanceQuery.isRecalculating
+    && !todayNextTurnBalanceQuery.isError && !todayRosterQuery.isError
     ? selectNextTurnTechnician(
         todayTurnRows,
         nextTurnSkilledTechnicianIds,
@@ -956,7 +958,10 @@ export default function PosFrontDeskView({
       <div
         key={station.posStaffProfileId}
         data-testid={`turn-board-station-${station.posStaffProfileId}`}
-        className="space-y-3 rounded-xl border border-nexoraBorder bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-nexoraBrand/40 hover:shadow-md"
+        className={`space-y-3 rounded-xl border p-4 transition-colors ${isNextTurn
+          ? 'border-violet-500 bg-violet-50 shadow-md shadow-violet-200/60 ring-2 ring-inset ring-violet-500'
+          : 'border-nexoraBorder bg-white shadow-sm hover:border-nexoraBrand/40 hover:shadow-md'
+        }`}
       >
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nexoraLavender/20 text-[11px] font-bold text-nexoraBrandDark">
@@ -967,7 +972,7 @@ export default function PosFrontDeskView({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold text-nexoraText">{station.displayName}</p>
+            <p className={`truncate font-bold ${isNextTurn ? 'text-base text-violet-950' : 'text-sm text-nexoraText'}`}>{station.displayName}</p>
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
               <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-extrabold ${
                 station.currentStatus === PosOrderStatus.InService
@@ -980,7 +985,7 @@ export default function PosFrontDeskView({
                 {t(tk('stationTurnsToday'), { count: turnsToday })}
               </span>
               {isNextTurn ? (
-                <span className="inline-flex rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-extrabold text-violet-700">
+                <span className="inline-flex rounded-full bg-violet-700 px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide text-white">
                   {t(tk('nextTurnBadge'))}
                 </span>
               ) : null}
@@ -1295,7 +1300,16 @@ export default function PosFrontDeskView({
                         </div>
                       </td>
                       <td className="px-3 py-2.5 text-right font-bold tabular-nums text-nexoraText">
-                        {row.turnsToday}
+                        <p>{t('components.dashboard.views.pos.PosOrderWorkspace.technicianAssignedTurns', {
+                          count: row.turnsToday,
+                        })}</p>
+                        {todayNextTurnBalanceQuery.data ? (
+                          <div className="mt-1 space-y-0.5 text-[10px] font-semibold text-nexoraMuted">
+                            <p>{t('components.dashboard.views.pos.PosOrderWorkspace.technicianCompletedTurns', {
+                              count: todayNextTurnBalanceQuery.data.completedTurns?.get(row.posStaffProfileId) ?? 0,
+                            })}</p>
+                          </div>
+                        ) : null}
                       </td>
                       <td className="whitespace-nowrap px-3 py-2.5 text-right font-bold tabular-nums text-nexoraText">
                         {todayNextTurnBalanceQuery.data
@@ -1649,7 +1663,10 @@ export default function PosFrontDeskView({
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-1.5">{renderRowFlags(order)}</div>
-                        <p className="pos-customer-name truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <p className="pos-customer-name truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
+                          <CustomerVisitTag isNewCustomer={order.isNewCustomer} />
+                        </div>
                         {renderServiceChips(order.serviceNames)}
                         <div>{renderTechnicianChip(order.technicianNames)}</div>
                         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-nexoraBorder pt-2">
@@ -1699,7 +1716,12 @@ export default function PosFrontDeskView({
                           }`}
                         >
                           <td className="px-4 py-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
-                          <td className="pos-customer-name px-4 py-3 font-bold text-nexoraText">{order.customerName}</td>
+                          <td className="px-4 py-3">
+                            <div className="flex min-w-0 flex-col items-start gap-1">
+                              <p className="pos-customer-name font-bold text-nexoraText">{order.customerName}</p>
+                              <CustomerVisitTag isNewCustomer={order.isNewCustomer} />
+                            </div>
+                          </td>
                           <td className="whitespace-nowrap px-4 py-3 font-semibold tabular-nums text-nexoraText">
                             {formatPosTime(order.checkedInAt, currentLanguage) || '—'}
                           </td>
@@ -1752,7 +1774,7 @@ export default function PosFrontDeskView({
             <div
               className={`grid ${SCROLL_PANEL_MAX_HEIGHT} grid-cols-1 gap-4 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
             >
-              {turnBoard.map(renderStationCard)}
+              {sortTurnBoardStations(turnBoard, nextTurnTechnician?.posStaffProfileId).map(renderStationCard)}
             </div>
           )}
           {renderTodayTurnsPanel()}
