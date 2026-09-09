@@ -13,6 +13,7 @@ import {
   Plus,
   Pointer,
   Search,
+  Settings,
   Star,
   UserCheck,
   Users,
@@ -335,6 +336,7 @@ export default function DashboardHeader({
             onClick={() => { onNavigateSettingsTab('profile'); setIsHeaderDropdownOpen(false) }}
             className="flex w-full items-center px-4 py-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition text-left"
           >
+            <Settings className="h-3.5 w-3.5 mr-2 shrink-0" />
             {t('dashboard.menu.business_setting')}
           </button>
         </div>
