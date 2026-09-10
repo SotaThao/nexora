@@ -190,7 +190,7 @@ export default function PublicServiceMenuPage() {
                       </div>
                       <div id={panelId} hidden={!expanded}>
                         {tagGroups.map(tagGroup => {
-                          const title = tagGroup.tag ?? (hasTags ? t(`${K}.other_category`) : undefined)
+                          const title = tagGroup.tag ?? undefined
                           return (
                             <section className="menu-tag-group" key={tagGroup.tag === null ? 'untagged' : `tag:${tagGroup.tag}`} aria-label={title}>
                               {title ? <h3 className="menu-tag-title">{title}</h3> : null}
