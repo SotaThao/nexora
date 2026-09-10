@@ -102,6 +102,7 @@ export interface PosStaffReportDetail {
   totalTips: number
   totalDiscount: number
   totalCommission: number
+  totalSupplyFee: number
   paymentTotals: PosStaffReportPaymentTotal[]
 }
 
@@ -524,9 +525,9 @@ export function createPosReportRepository(client: HttpClient = httpClient) {
         .sort(([left], [right]) => left.localeCompare(right))
         .map(([paymentMethod, amount]) => ({ paymentMethod, amount: roundCurrency(amount) }))
       const summary = await summaryPromise
-      const totalCommission = summary?.rows?.find(
+      const staffSummary = summary?.rows?.find(
         (row) => row.posStaffProfileId === params.posStaffProfileId,
-      )?.commission ?? 0
+      )
 
       return {
         mode: params.mode,
@@ -537,8 +538,9 @@ export function createPosReportRepository(client: HttpClient = httpClient) {
         days,
         totalAmount: roundCurrency(tickets.reduce((total, ticket) => total + ticket.amount, 0)),
         totalTips: roundCurrency(tickets.reduce((total, ticket) => total + ticket.tips, 0)),
-        totalDiscount: roundCurrency(tickets.reduce((total, ticket) => total + ticket.totalDiscount, 0)),
-        totalCommission: roundCurrency(totalCommission),
+        totalDiscount: roundCurrency(staffSummary?.discount ?? 0),
+        totalCommission: roundCurrency(staffSummary?.commission ?? 0),
+        totalSupplyFee: roundCurrency(staffSummary?.supplyFee ?? 0),
         paymentTotals,
       }
     },
