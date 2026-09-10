@@ -122,6 +122,7 @@ export function normalizeOneQrLanding(raw: unknown): OneQrLanding | null {
 export function resolveOneQrBookAiUrl(landing: OneQrLanding | null): string | null {
   if (!landing || landing.status !== 'active' || landing.requiresAuth) return null
   const rawUrl = landing.modules.find(module => module.moduleKey === OneQrModuleKey.VoiceBooking)?.url
+    ?? landing.modules.find(module => module.moduleKey === OneQrModuleKey.Booking)?.url
   if (!rawUrl || /[\u0000-\u001f\u007f]/.test(rawUrl)) return null
   const href = rawUrl.trim()
   if (!href || /[\\\u0000-\u0020\u007f]/.test(href) || href.startsWith('//')) return null

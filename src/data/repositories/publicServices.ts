@@ -15,6 +15,19 @@ function nonNegativeNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null
 }
 
+function normalizeImageUrl(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const url = value.trim()
+  if (!url || /[\\\u0000-\u0020\u007f]/.test(url) || url.startsWith('//')) return null
+  if (url.startsWith('/')) return url
+  try {
+    const parsed = new URL(url)
+    return ['http:', 'https:'].includes(parsed.protocol) && !parsed.username && !parsed.password ? url : null
+  } catch {
+    return null
+  }
+}
+
 function normalizeService(value: unknown): PublicServiceItem {
   const service = asRecord(value)
   if (typeof service.id !== 'string' || typeof service.name !== 'string') {
@@ -24,6 +37,7 @@ function normalizeService(value: unknown): PublicServiceItem {
   return {
     id: service.id,
     name: service.name,
+    imageUrl: normalizeImageUrl(service.imageUrl),
     description: typeof service.description === 'string' ? service.description : null,
     durationMinutes: nonNegativeNumber(service.durationMinutes) ?? 0,
     price: nonNegativeNumber(service.price),
