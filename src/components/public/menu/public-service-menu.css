@@ -45,11 +45,12 @@
 .public-service-menu .menu-tag-group + .menu-tag-group { margin-top: 8px; }
 .public-service-menu .menu-services { padding: 4px 12px 0; }
 .public-service-menu .menu-service-line { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.public-service-menu .menu-service-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; }
 .public-service-menu .menu-service :is(h3, h4) { flex: 0 1 auto; font-size: 14px; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
 .public-service-menu .menu-price { flex-shrink: 0; max-width: 40%; color: var(--menu-accent); font-size: 14px; font-weight: 800; line-height: 1.3; text-align: right; overflow-wrap: anywhere; }
 .public-service-menu .menu-description { width: 100%; margin-top: 4px; font-size: 14px; line-height: 1.5; color: #333; white-space: pre-line; overflow-wrap: anywhere; }
 .public-service-menu .menu-price-leader { flex: 1 1 24px; min-width: 16px; border-bottom: 1px dotted var(--menu-muted); opacity: .45; }
-.public-service-menu .menu-duration { display: inline-flex; margin-top: 4px; padding: 3px 7px; border-radius: 99px; background: rgb(247 147 26 / 12%); color: var(--menu-accent); font-size: 11px; font-weight: 700; line-height: 1.3; }
+.public-service-menu .menu-duration { display: inline-flex; flex-shrink: 0; white-space: nowrap; padding: 3px 7px; border-radius: 99px; background: rgb(247 147 26 / 12%); color: var(--menu-accent); font-size: 11px; font-weight: 700; line-height: 1.3; }
 .public-service-menu .menu-state { padding: 48px 16px; text-align: center; border: 1px solid var(--menu-line); }
 .public-service-menu .menu-state h2 { font-size: 20px; font-weight: 700; }
 .public-service-menu .menu-state p { margin-top: 8px; font-size: 13px; line-height: 1.6; color: var(--menu-muted); }
