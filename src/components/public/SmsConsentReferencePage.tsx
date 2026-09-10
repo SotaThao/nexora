@@ -10,7 +10,6 @@ import CountryCodeSelect, {
   getNationalPhonePlaceholder,
   isValidPhoneE164,
   normalizePhoneE164,
-  parsePhone,
   PhoneDialCode,
 } from '../CountryCodeSelect'
 
@@ -31,23 +30,25 @@ export default function SmsConsentReferencePage() {
   const [redirectSeconds, setRedirectSeconds] = useState<number | null>(null)
 
   useEffect(() => {
-    if (!businessSlug) return
-
     setSubmitted(false)
     setRedirectSeconds(null)
-    const saved = smsConsentLocalRepository.load(businessSlug)
-    if (!saved) {
-      setDialCode(PhoneDialCode.US)
-      setPhone('')
+    setDialCode(PhoneDialCode.US)
+    setPhone('')
+    setConsent({ transactional: false, marketing: false })
+  }, [businessSlug])
+
+  useEffect(() => {
+    if (!businessSlug || !isValidPhoneE164(phone, dialCode)) {
       setConsent({ transactional: false, marketing: false })
       return
     }
 
-    const parsedPhone = parsePhone(saved.phoneE164)
-    setDialCode(parsedPhone.countryCode)
-    setPhone(formatNationalNumber(parsedPhone.nationalNumber, parsedPhone.countryCode))
-    setConsent({ transactional: saved.transactional, marketing: saved.marketing })
-  }, [businessSlug])
+    const phoneE164 = normalizePhoneE164(phone, dialCode)
+    const saved = smsConsentLocalRepository.load(businessSlug, phoneE164)
+    setConsent(saved
+      ? { transactional: saved.transactional, marketing: saved.marketing }
+      : { transactional: false, marketing: false })
+  }, [businessSlug, dialCode, phone])
 
   useEffect(() => {
     if (redirectSeconds === null) return
