@@ -17,6 +17,13 @@ const formatPrice = (price: number) => new Intl.NumberFormat('en-US', {
   minimumFractionDigits: Number.isInteger(price) ? 0 : 2, maximumFractionDigits: 2,
 }).format(price)
 
+function ServiceImage({ src, name }: { src: string; name: string }) {
+  const [failed, setFailed] = useState(false)
+  if (failed) return null
+  return <img className="menu-service-image" src={src} alt={name} width={64} height={64}
+    loading="lazy" decoding="async" onError={() => setFailed(true)} />
+}
+
 export default function PublicServiceMenuPage() {
   const { businessSlug = '' } = useParams()
   const { t, currentLanguage } = useTranslation()
@@ -45,6 +52,7 @@ export default function PublicServiceMenuPage() {
   const serviceCount = new Set(categories.flatMap(group => group.services.map(service => service.id))).size
   const backPath = `${buildOneQrPath(businessSlug)}?${ONEQR_ROUTE.asQuery}=${ONEQR_ROUTE.asCustomerValue}`
   const showBookingLink = Boolean(bookingUrl && data && !isPending && !isError && serviceCount > 0)
+  const showFooterBooking = showBookingLink
   const resetFilters = () => { setSearch(''); setCategory(null) }
 
   return (
@@ -109,7 +117,7 @@ export default function PublicServiceMenuPage() {
             {visible.length ? (
               <div className="menu-grid">
                 {visible.map(group => {
-                  const expanded = expandedCategories[group.key] ?? Boolean(query || category !== null)
+                  const expanded = expandedCategories[group.key] ?? true
                   const panelId = `${panelIdPrefix}-${encodeURIComponent(group.key)}`
                   return (
                     <section className={`menu-category${expanded ? '' : ' is-collapsed'}`} key={group.key}>
@@ -124,24 +132,27 @@ export default function PublicServiceMenuPage() {
                             onClick={() => setExpandedCategories(previous => ({ ...previous, [group.key]: !expanded }))}
                           >
                             <span className="menu-category-title">
-                              <span className="menu-eyebrow" aria-hidden>{data.businessName}</span>
                               <span className="menu-category-name">{group.categoryName}</span>
                             </span>
                             <ChevronDown className="menu-category-chevron" aria-hidden />
                           </button>
                         </h2>
                       </div>
-                      <div id={panelId} hidden={!expanded}>
+                      <div className="menu-services" id={panelId} hidden={!expanded}>
                         {group.services.map(service => (
-                          <article className="menu-service" key={service.id}>
-                            <div className="menu-service-line">
-                              <h3>{service.name}</h3>
-                              <span className="menu-price">{service.price != null ? formatPrice(service.price) : t(`${K}.ask_price`)}</span>
+                          <article className={`menu-service${service.description?.trim() ? ' has-description' : ''}`} key={service.id}>
+                            {service.imageUrl ? <ServiceImage key={service.imageUrl} src={service.imageUrl} name={service.name} /> : null}
+                            <div className="menu-service-content">
+                              <div className="menu-service-line">
+                                <h3>{service.name}</h3>
+                                <span className="menu-price-leader" aria-hidden />
+                                <span className="menu-price">{service.price != null ? formatPrice(service.price) : t(`${K}.ask_price`)}</span>
+                              </div>
+                              {service.description?.trim() ? <p className="menu-description">{service.description}</p> : null}
+                              {service.durationMinutes > 0 ? (
+                                <span className="menu-duration">{t(`${K}.duration`, { count: service.durationMinutes })}</span>
+                              ) : null}
                             </div>
-                            {service.description ? <p className="menu-description">{service.description}</p> : null}
-                            {service.durationMinutes > 0 ? (
-                              <span className="menu-duration">{t(`${K}.duration`, { count: service.durationMinutes })}</span>
-                            ) : null}
                           </article>
                         ))}
                       </div>
@@ -159,24 +170,24 @@ export default function PublicServiceMenuPage() {
           </>
         )}
 
-        <div className={`menu-bottom${showBookingLink ? ' menu-booking' : ''}`}>
+        <div className={`menu-bottom${showFooterBooking ? ' menu-booking' : ''}`}>
           <div>
-            {showBookingLink ? (
+            {showFooterBooking ? (
               <>
                 <p className="menu-eyebrow">{t(`${K}.booking_eyebrow`)}</p>
-                <h2>{t(`${K}.booking_title_lead`)}{' '}<em>{t(`${K}.booking_title_accent`)}</em></h2>
+                <h2>{t(`${K}.booking_title_lead`)} <em>{t(`${K}.booking_title_accent`)}</em></h2>
               </>
             ) : <h2>{t(`${K}.footer_title`)}</h2>}
-            <p>{t(showBookingLink ? `${K}.booking_hint` : `${K}.footer_hint`)}</p>
           </div>
-          {showBookingLink ? (
-            <a href={bookingUrl!} className="menu-button" target="_blank" rel="noopener noreferrer">
-              {t(`${K}.book_appointment`)}
-              <ArrowUpRight className="h-4 w-4 shrink-0" aria-hidden />
-            </a>
-          ) : (
-            <Link to={backPath} className="menu-button">{t(`${K}.back`)}<ArrowLeft className="h-4 w-4" aria-hidden /></Link>
-          )}
+          <div className="menu-footer-action">
+            <p>{t(showFooterBooking ? `${K}.booking_hint` : `${K}.footer_hint`)}</p>
+            {showFooterBooking ? (
+              <a href={bookingUrl!} className="menu-button" target="_blank" rel="noopener noreferrer">
+                {t(`${K}.book_appointment`)}
+                <ArrowUpRight className="h-4 w-4 shrink-0" aria-hidden />
+              </a>
+            ) : null}
+          </div>
         </div>
       </main>
       <footer className="menu-brand" lang={currentLanguage}>
