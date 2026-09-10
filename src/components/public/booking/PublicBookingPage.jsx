@@ -846,7 +846,9 @@ export default function PublicBookingPage() {
                 {timeError}
               </p>
 
-              <div className="sticky-action">
+              <div
+                className="sticky-action"
+              >
                 <button
                   className="primary-button"
                   type="button"

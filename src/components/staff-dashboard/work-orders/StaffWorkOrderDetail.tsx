@@ -106,8 +106,9 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
   const catalogQuery = useStaffWorkOrderServiceCatalog(picker ? orderId : undefined)
   const catalogCategories = useMemo(
     () => buildWorkOrderCatalogCategories(
-      catalogQuery.data ?? [],
+      catalogQuery.data?.services ?? [],
       t(WORK_ORDERS_I18N.pickerUncategorized),
+      catalogQuery.data?.categories ?? [],
     ),
     [catalogQuery.data, t],
   )

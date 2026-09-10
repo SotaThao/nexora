@@ -101,6 +101,7 @@ export const WORK_ORDERS_I18N = {
   pickerUncategorized: 'staff_dashboard.work_orders.picker_uncategorized',
   pickerLoading: 'staff_dashboard.work_orders.picker_loading',
   pickerNoneAssignable: 'staff_dashboard.work_orders.picker_none_assignable',
+  pickerCategoryEmpty: 'staff_dashboard.work_orders.picker_category_empty',
   pickerConfirmAdd: 'staff_dashboard.work_orders.picker_confirm_add',
   pickerConfirmAddCount: 'staff_dashboard.work_orders.picker_confirm_add_count',
   pickerConfirmAddCountOne: 'staff_dashboard.work_orders.picker_confirm_add_count_one',
@@ -397,6 +398,8 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   pickerCategoryPanelInner: 'min-h-0 overflow-hidden opacity-0 -translate-y-1 transition-[opacity,transform] duration-200 ease-out',
   pickerCategoryPanelInnerOpen: 'translate-y-0 opacity-100',
   pickerOptions: 'space-y-1.5 bg-white p-2',
+  pickerCategoryEmpty: 'flex flex-col items-center gap-1.5 bg-white px-3 py-6 text-center text-[11px] font-medium text-nexoraSubtle',
+  pickerCategoryEmptyIcon: 'h-6 w-6 text-[#C4C8D6]',
   pickerOption:
     'grid w-full grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-2.5 rounded-[11px] border border-nexoraBorder bg-white px-2.5 py-2.5 text-left transition hover:border-nexoraBrand/40 hover:bg-[#FBFBFF]',
   pickerOptionSelected: 'border-nexoraBrand bg-[#F4F4FF] shadow-[0_0_0_1px_rgba(70,72,216,0.08)]',
