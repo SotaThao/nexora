@@ -39,6 +39,8 @@ export default function ServiceCatalogSection({
         name: service.name,
         price: service.price,
         categories: service.categories,
+        tags: service.tags,
+        displayOrder: service.displayOrder,
         durationMinutes: service.durationMinutes,
         description: service.description,
         photoUrl: service.photoUrl,
