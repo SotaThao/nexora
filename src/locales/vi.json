@@ -6695,7 +6695,12 @@
           "title": "Quản lý gói",
           "description": "Xem gói đang sở hữu, gói Tip Platform, gói AI Voice và lịch sử mua.",
           "ariaTabs": "Các mục quản lý gói",
+          "credits": {
+            "setupRequired": "Kích hoạt AI Voice để xem credit cuộc gọi và SMS.",
+            "retry": "Thử lại"
+          },
           "tabs": {
+            "credits": "Sử dụng credit",
             "overview": "Tổng quan",
             "subscriptions": "Gói đăng ký",
             "aiVoice": "Gói AI Voice",
