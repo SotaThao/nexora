@@ -28,6 +28,18 @@ function normalizeImageUrl(value: unknown): string | null {
   }
 }
 
+function normalizeTags(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  const tags = new Map<string, string>()
+  for (const item of value) {
+    if (typeof item !== 'string') continue
+    const tag = item.trim()
+    const key = tag.toLowerCase()
+    if (tag && !tags.has(key)) tags.set(key, tag)
+  }
+  return [...tags.values()]
+}
+
 function normalizeService(value: unknown): PublicServiceItem {
   const service = asRecord(value)
   if (typeof service.id !== 'string' || typeof service.name !== 'string') {
@@ -38,6 +50,7 @@ function normalizeService(value: unknown): PublicServiceItem {
     id: service.id,
     name: service.name,
     imageUrl: normalizeImageUrl(service.imageUrl),
+    tags: normalizeTags(service.tags),
     description: typeof service.description === 'string' ? service.description : null,
     durationMinutes: nonNegativeNumber(service.durationMinutes) ?? 0,
     price: nonNegativeNumber(service.price),
