@@ -86,6 +86,7 @@ export function useReorderPosServices() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosServices() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosCheckoutServiceCatalog().slice(0, -1) })
     },
   })
 }

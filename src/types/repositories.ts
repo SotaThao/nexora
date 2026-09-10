@@ -1019,11 +1019,14 @@ export interface UpdateServiceAddOnInput extends ServiceAddOnInput {
 }
 
 export interface CatalogCategoryApiDto {
+  displayOrder?: number
   id: string
   name: string
 }
 
 export interface CheckoutServiceCatalogItemApiDto {
+  tags?: string[]
+  displayOrder?: number
   id: string
   name: string
   price: number

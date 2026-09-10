@@ -31,7 +31,7 @@ export default function SelectServicesStep({
   disabledItemIds,
   primaryLabel,
 }: {
-  services: SelfCheckInServiceApiDto[]
+  services: (SelfCheckInServiceApiDto & { tags?: string[]; displayOrder?: number })[]
   isLoading: boolean
   selectedServiceIds: string[]
   isSubmitting: boolean
@@ -55,6 +55,8 @@ export default function SelectServicesStep({
         name: s.name,
         price: s.price,
         categories: s.categories,
+        tags: s.tags,
+        displayOrder: s.displayOrder,
         durationMinutes: s.durationMinutes,
         description: s.description,
         photoUrl: s.photoUrl,
