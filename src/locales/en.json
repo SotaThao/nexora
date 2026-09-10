@@ -2309,7 +2309,7 @@
     "nickname_badge": "Nickname",
     "nickname_value": "Nickname: {{name}}",
     "staff_level_value": "Level: {{name}}",
-    "open_work_orders": "Open Work Orders",
+    "open_work_orders": "Work Order",
     "status_previous": "Previous",
     "status_help_aria": "What this salon status means",
     "status_help": {
@@ -2343,6 +2343,8 @@
     "skill_save_error": "Could not save work skills. Please try again."
   },
   "staff_salon_report": {
+    "previousPeriod": "Previous period",
+    "nextPeriod": "Next period",
     "title": "Your Income",
     "scope": "Income Source",
     "all": "All Income Sources",

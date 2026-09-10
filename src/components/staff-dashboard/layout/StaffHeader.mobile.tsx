@@ -44,7 +44,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
           className={
             compact
               ? 'absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white'
-              : 'absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-black text-white ring-2 ring-white'
+              : 'absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-xs font-semibold text-white ring-2 ring-white'
           }
         >
           {!compact && (unreadCount > 99 ? '99+' : unreadCount)}
@@ -121,7 +121,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                       type="button"
                       onClick={() => markAllRead()}
                       disabled={isMarkAllPending}
-                      className="text-[10px] font-bold text-nexoraBrand hover:underline disabled:opacity-50"
+                      className="text-xs font-semibold text-nexoraBrand hover:underline disabled:opacity-50"
                     >
                       {t('staff_dashboard.notifications.mark_all_read')}
                     </button>
@@ -174,15 +174,15 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                             <IconComponent className="h-4 w-4" />
                           </span>
                           <div className="min-w-0 flex-grow">
-                            <div className="flex items-center justify-between gap-2">
-                              <span className={`truncate text-xs ${isUnread ? 'font-extrabold text-nexoraText' : 'font-bold text-nexoraMuted'}`}>
+                            <div className="flex flex-wrap items-start justify-between gap-2">
+                              <span className={`break-words text-sm ${isUnread ? 'font-extrabold text-nexoraText' : 'font-bold text-nexoraMuted'}`}>
                                 {item.title}
                               </span>
-                              <span className="shrink-0 text-[10px] font-medium text-nexoraSubtle">
+                              <span className="shrink-0 text-xs font-medium text-nexoraSubtle">
                                 {formatNotificationDateTime(item.createdAt || item.time, currentLanguage)}
                               </span>
                             </div>
-                            <p className={`mt-1 break-words text-[11px] leading-normal ${isUnread ? 'font-semibold text-nexoraText' : 'font-medium text-nexoraMuted'}`}>
+                            <p className={`mt-1 break-words text-sm leading-normal ${isUnread ? 'font-semibold text-nexoraText' : 'font-medium text-nexoraMuted'}`}>
                               {item.message}
                             </p>
                           </div>
@@ -210,7 +210,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
       {/* Desktop top bar */}
       <div className="hidden min-h-16 items-center justify-between gap-3 px-5 lg:flex">
         <div className="min-w-0">
-          <h1 className="truncate text-lg font-extrabold text-nexoraText">{t(`staff_dashboard.titles.${activeScreen}`)}</h1>
+          <h1 className="truncate text-nexoraText text-xl lg:text-2xl font-semibold leading-snug">{t(`staff_dashboard.titles.${activeScreen}`)}</h1>
         </div>
 
         <div className="flex shrink-0 items-center gap-3">
@@ -228,7 +228,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
             >
               <Bell className="h-5 w-5" aria-hidden="true" />
               {unreadCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-black text-white ring-2 ring-white">
+                <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-xs font-semibold text-white ring-2 ring-white">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
@@ -245,7 +245,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                       type="button"
                       onClick={() => markAllRead()}
                       disabled={isMarkAllPending}
-                      className="text-[10px] font-bold text-nexoraBrand hover:underline disabled:opacity-50"
+                      className="text-xs font-semibold text-nexoraBrand hover:underline disabled:opacity-50"
                     >
                       {t('staff_dashboard.notifications.mark_all_read')}
                     </button>
@@ -298,15 +298,15 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                             <IconComponent className="h-4 w-4" />
                           </span>
                           <div className="min-w-0 flex-grow">
-                            <div className="flex items-center justify-between gap-2">
-                              <span className={`truncate text-xs ${isUnread ? 'font-extrabold text-nexoraText' : 'font-bold text-nexoraMuted'}`}>
+                            <div className="flex flex-wrap items-start justify-between gap-2">
+                              <span className={`break-words text-sm ${isUnread ? 'font-extrabold text-nexoraText' : 'font-bold text-nexoraMuted'}`}>
                                 {item.title}
                               </span>
-                              <span className="shrink-0 text-[10px] font-medium text-nexoraSubtle">
+                              <span className="shrink-0 text-xs font-medium text-nexoraSubtle">
                                 {formatNotificationDateTime(item.createdAt || item.time, currentLanguage)}
                               </span>
                             </div>
-                            <p className={`mt-1 break-words text-[11px] leading-normal ${isUnread ? 'font-semibold text-nexoraText' : 'font-medium text-nexoraMuted'}`}>
+                            <p className={`mt-1 break-words text-sm leading-normal ${isUnread ? 'font-semibold text-nexoraText' : 'font-medium text-nexoraMuted'}`}>
                               {item.message}
                             </p>
                           </div>

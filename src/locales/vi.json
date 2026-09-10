@@ -2309,7 +2309,7 @@
     "nickname_badge": "Nickname",
     "nickname_value": "Nickname: {{name}}",
     "staff_level_value": "Cấp độ: {{name}}",
-    "open_work_orders": "Mở đơn công việc",
+    "open_work_orders": "Đơn công việc",
     "status_previous": "Trước đây",
     "status_help_aria": "Giải thích trạng thái salon",
     "status_help": {
@@ -2343,6 +2343,8 @@
     "skill_save_error": "Không thể lưu kỹ năng. Vui lòng thử lại."
   },
   "staff_salon_report": {
+    "previousPeriod": "Kỳ trước",
+    "nextPeriod": "Kỳ tiếp theo",
     "title": "Thu nhập của bạn",
     "scope": "Nguồn thu nhập",
     "all": "Tất cả nguồn",

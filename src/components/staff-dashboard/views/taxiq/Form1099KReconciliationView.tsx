@@ -115,14 +115,14 @@ export default function Form1099KReconciliationView({
     <div className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-extrabold text-nexoraText">{t('taxiq.form1099kReconciliation.title')}</h2>
-          <p className="mt-1 text-xs text-nexoraMuted">{t('taxiq.form1099kReconciliation.subtitle')}</p>
+          <h2 className="text-nexoraText text-xl lg:text-2xl font-semibold leading-snug">{t('taxiq.form1099kReconciliation.title')}</h2>
+          <p className="mt-1 text-nexoraMuted text-[13px] font-normal leading-5">{t('taxiq.form1099kReconciliation.subtitle')}</p>
         </div>
         <button
           type="button"
           onClick={openAddForm}
           disabled={isLocked || availablePlatforms.length === 0}
-          className="inline-flex items-center gap-1.5 self-start rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white disabled:opacity-60 sm:self-auto"
+          className="inline-flex items-center gap-1.5 self-start rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-semibold text-white disabled:opacity-60 sm:self-auto"
         >
           <Plus className="h-3.5 w-3.5" />
           {t('taxiq.form1099kReconciliation.add')}
@@ -136,7 +136,7 @@ export default function Form1099KReconciliationView({
           <button
             type="button"
             onClick={() => navigate('/staff/taxiq/export')}
-            className="ml-auto shrink-0 rounded-lg bg-nexoraBrand px-3 py-1.5 text-[11px] font-bold text-white"
+            className="ml-auto shrink-0 rounded-lg bg-nexoraBrand px-3 py-1.5 text-xs font-semibold text-white"
           >
             {t('taxiq.deductionCenter.errors.lockedAction')}
           </button>
@@ -145,7 +145,7 @@ export default function Form1099KReconciliationView({
 
       <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
         <table className="w-full min-w-[720px] text-left text-xs">
-          <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase text-nexoraMuted">
+          <thead className="bg-nexoraCanvas text-xs font-extrabold uppercase text-nexoraMuted">
             <tr>
               <th className="px-4 py-3">{t('taxiq.form1099kReconciliation.columns.platform')}</th>
               <th className="px-4 py-3">{t('taxiq.form1099kReconciliation.columns.selfReported')}</th>
@@ -179,7 +179,7 @@ export default function Form1099KReconciliationView({
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end">
                       {isLocked ? (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-nexoraBorder px-2 py-0.5 text-[10px] font-bold text-nexoraMuted">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-nexoraBorder px-2 py-0.5 text-xs font-bold text-nexoraMuted">
                           <Lock className="h-3 w-3" />
                           {t('taxiq.selfReportedIncome.status.locked')}
                         </span>
@@ -187,7 +187,7 @@ export default function Form1099KReconciliationView({
                         <button
                           type="button"
                           onClick={() => openEditForm(record)}
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline"
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-nexoraBrand hover:underline"
                         >
                           <Pencil className="h-3 w-3" />
                           {t('taxiq.selfReportedIncome.edit')}
@@ -206,7 +206,7 @@ export default function Form1099KReconciliationView({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
           <div className="nexora-modal-card max-w-md">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-extrabold text-nexoraText">
+              <h2 className="text-nexoraText text-base font-semibold leading-snug">
                 {editingRecord ? t('taxiq.form1099kReconciliation.edit') : t('taxiq.form1099kReconciliation.add')}
               </h2>
               <IconButton label={t('common.cancel')} onClick={closeForm}>
@@ -259,14 +259,14 @@ export default function Form1099KReconciliationView({
             </div>
 
             <div className="mt-6 flex items-center justify-end gap-2">
-              <button type="button" onClick={closeForm} className="rounded-lg px-4 py-2 text-xs font-bold text-nexoraMuted">
+              <button type="button" onClick={closeForm} className="rounded-lg px-4 py-2 text-xs font-semibold text-nexoraMuted">
                 {t('taxiq.selfReportedIncome.form.back')}
               </button>
               <button
                 type="button"
                 onClick={handleSubmit}
                 disabled={upsertAmount.isPending}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white disabled:opacity-60"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-semibold text-white disabled:opacity-60"
               >
                 {upsertAmount.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 {t('taxiq.selfReportedIncome.form.save')}

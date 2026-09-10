@@ -29,7 +29,7 @@ export default function StaffTaxIqLogsRoute() {
         <button
           type="button"
           onClick={() => navigate('/staff/taxiq')}
-          className="rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white"
+          className="rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-semibold text-white"
         >
           {t('taxiq.staffLogs.goToSetup')}
         </button>

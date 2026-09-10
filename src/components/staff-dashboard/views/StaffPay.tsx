@@ -235,7 +235,7 @@ export default function StaffPay() {
             <p className="text-sm font-semibold text-nexoraText">
               {t('staff_dashboard.pay.empty')}
             </p>
-            <p className="max-w-xs text-xs text-nexoraSubtle">
+            <p className="max-w-xs text-nexoraSubtle text-[13px] font-normal leading-5">
               {t(
                 isKYCVerified
                   ? 'staff_dashboard.pay.empty_hint_payment'
@@ -246,7 +246,7 @@ export default function StaffPay() {
               type="button"
               onClick={() => void handleEmptySetupClick()}
               disabled={createStaffProfileMutation.isPending}
-              className="mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-nexoraBrand px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-nexoraBrand/25 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
+              className="mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-nexoraBrand px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-nexoraBrand/25 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {createStaffProfileMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -264,7 +264,7 @@ export default function StaffPay() {
             {hasUnconfiguredPayout && (
               <div className="mb-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-                <p className="text-xs text-amber-700">{t('staff_dashboard.pay.setup_hint')}</p>
+                <p className="text-amber-700 text-[13px] font-normal leading-5">{t('staff_dashboard.pay.setup_hint')}</p>
               </div>
             )}
             <div className="divide-y divide-nexoraBorder">
@@ -289,7 +289,7 @@ export default function StaffPay() {
                       <div className="min-w-0 flex-1">
                         <div className="text-xs font-bold text-nexoraText">{label}</div>
                         {isPaymentMethodConfigured(method) ? (
-                          <div className="mt-0.5 min-w-0 truncate font-mono text-[10px] text-nexoraMuted">
+                          <div className="mt-0.5 min-w-0 truncate font-mono text-xs text-nexoraMuted">
                             {supportsPayoutAccountName(uiKey) && method.accountName ? (
                               <span className="font-sans font-semibold">{method.accountName} · </span>
                             ) : null}
@@ -300,7 +300,7 @@ export default function StaffPay() {
                             )}
                           </div>
                         ) : (
-                          <div className="mt-0.5 text-[10px] font-medium italic text-slate-300">
+                          <div className="mt-0.5 text-xs font-medium italic text-slate-300">
                             {t('staff_dashboard.pay.not_set')}
                           </div>
                         )}
@@ -313,7 +313,7 @@ export default function StaffPay() {
                       type="button"
                       onClick={() => setViewingMethod(method)}
                       aria-label={`View ${label} Payout Details`}
-                      className="flex min-w-0 items-center justify-center gap-1 rounded-lg border border-sky-200 bg-sky-50 px-2 py-1.5 text-[10px] font-bold text-sky-700 transition hover:text-sky-800"
+                      className="flex min-w-0 items-center justify-center gap-1 rounded-lg border border-sky-200 bg-sky-50 px-2 py-1.5 text-xs font-semibold text-sky-700 transition hover:text-sky-800"
                     >
                       <Eye className="h-3 w-3" />
                       <span className="truncate">{t('components.staff_dashboard.views.StaffPay.view')}</span>
@@ -322,7 +322,7 @@ export default function StaffPay() {
                       type="button"
                       onClick={() => handleEditPayout(method)}
                       aria-label={`Edit ${label} Payout Account`}
-                      className="flex min-w-0 items-center justify-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-[10px] font-bold text-amber-700 transition hover:text-amber-800"
+                      className="flex min-w-0 items-center justify-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs font-semibold text-amber-700 transition hover:text-amber-800"
                     >
                       <Edit2 className="h-3 w-3" />
                       <span className="truncate">{t('components.staff_dashboard.views.StaffPay.editAccount')}</span>
@@ -338,6 +338,7 @@ export default function StaffPay() {
 
       {activeMethod?.uiKey && (
         <PayoutSetupModal
+        className="[&_button]:text-xs [&_button]:font-semibold [&_button_span]:text-xs [&_button_span]:font-semibold [&_h3]:text-base [&_h3]:font-semibold [&_h3]:normal-case [&_h3]:tracking-normal [&_h3]:leading-snug"
           open={Boolean(activeMethod)}
           walletKey={activeMethod.uiKey}
           initialAccountName={activeMethod.accountName || ''}
@@ -355,6 +356,7 @@ export default function StaffPay() {
       )}
 
       <PayoutMethodDetailModal
+        className="[&_button]:text-xs [&_button]:font-semibold [&_button_span]:text-xs [&_button_span]:font-semibold [&_h3]:text-base [&_h3]:font-semibold [&_h3]:normal-case [&_h3]:tracking-normal [&_h3]:leading-snug"
         method={viewingMethod}
         logo={viewingMethod ? PayoutLogos[viewingMethod.uiKey || ''] : null}
         onClose={() => setViewingMethod(null)}

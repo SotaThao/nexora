@@ -160,16 +160,16 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
                 <div className="relative z-10 max-w-2xl">
                   <div className="inline-flex items-center gap-2 rounded-full bg-nexoraBrand/10 px-3 py-1 mb-4">
                     <AlertCircle className="h-4 w-4 text-nexoraBrand" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-nexoraBrand">
+                    <span className="text-xs font-black uppercase tracking-widest text-nexoraBrand">
                       {t('staff_dashboard.onboarding_banner_title')}
                     </span>
                   </div>
 
-                  <h2 className="text-xl md:text-2xl font-black text-nexoraText tracking-tight mb-2">
+                  <h2 className="text-nexoraText tracking-tight mb-2 text-xl lg:text-2xl font-semibold leading-snug">
                     {t('staff_dashboard.onboarding_banner_heading')}
                   </h2>
 
-                  <p className="text-sm text-nexoraMuted mb-6 leading-relaxed">
+                  <p className="text-nexoraMuted mb-6 text-[13px] font-normal leading-5">
                     {t(
                       onboardingBannerMode === 'payment'
                         ? 'staff_dashboard.onboarding_banner_description_payment'
@@ -181,7 +181,7 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
                     <button
                       type="button"
                       onClick={handleOnboardingBannerAction}
-                      className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-nexoraBrand px-6 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-nexoraBrand/25 active:scale-95"
+                      className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-nexoraBrand px-6 py-3 text-xs font-semibold uppercase tracking-wider text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-nexoraBrand/25 active:scale-95"
                     >
                       {onboardingBannerMode === 'payment' ? (
                         <Settings className="h-4 w-4 transition-transform group-hover:rotate-90" />
@@ -210,12 +210,12 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
                 <div className="relative z-10 max-w-2xl">
                   <div className="inline-flex items-center gap-2 rounded-full bg-nexoraBrand/10 px-3 py-1 mb-4">
                     <AlertCircle className="h-4 w-4 text-nexoraBrand" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-nexoraBrand">
+                    <span className="text-xs font-black uppercase tracking-widest text-nexoraBrand">
                       {t('staff_dashboard.missing_payout_title')}
                     </span>
                   </div>
                   
-                  <h2 className="text-xl md:text-2xl font-black text-nexoraText tracking-tight mb-2">
+                  <h2 className="text-nexoraText tracking-tight mb-2 text-xl lg:text-2xl font-semibold leading-snug">
                     {t('staff_dashboard.missing_payout_heading')}
                   </h2>
                   
@@ -227,7 +227,7 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
                     <button
                       type="button"
                       onClick={() => handleNavigate('pay')}
-                      className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-nexoraBrand px-6 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-nexoraBrand/25 active:scale-95"
+                      className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-nexoraBrand px-6 py-3 text-xs font-semibold uppercase tracking-wider text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-nexoraBrand/25 active:scale-95"
                     >
                       <Settings className="h-4 w-4 transition-transform group-hover:rotate-90" />
                       <span>{t('staff_dashboard.setup_payout_now')}</span>

@@ -220,7 +220,7 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
                     aria-label={t('components.dashboard.views.pos.serviceLineStatus.pendingBadge', {
                       count: pendingAcceptanceCount,
                     })}
-                    className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-400 px-1.5 text-[10px] font-black text-slate-900"
+                    className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-400 px-1.5 text-xs font-semibold text-slate-900"
                   >
                     {pendingAcceptanceCount}
                   </span>
@@ -261,7 +261,7 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
             )}
             <div className="min-w-0">
               <div className="truncate text-sm font-bold text-white">{account.fullName || staffMember.fullName || displayName}</div>
-              <div className="mt-0.5 truncate text-[11px] text-white/65">{t('staff_dashboard.staff_id')}: {account.staffCode || staffMember.id}</div>
+              <div className="mt-0.5 truncate text-xs text-white/65">{t('staff_dashboard.staff_id')}: {account.staffCode || staffMember.id}</div>
             </div>
           </div>
           <div className="text-white/85 hover:text-white transition ml-2">
@@ -296,11 +296,11 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
                     }
                     if (isMobile && onClose) onClose()
                   }}
-                  className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
+                  className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-semibold transition ${
                     disabled
                       ? 'cursor-not-allowed text-white/40 opacity-60'
                       : isSubActive
-                        ? 'text-brandCyan font-extrabold'
+                        ? 'text-brandCyan font-semibold'
                         : 'text-white/75 hover:bg-white/5 hover:text-white'
                   }`}
                 >
@@ -318,9 +318,9 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
                 onNavigate(MY_CERTIFICATIONS_PATH_SEGMENT)
                 if (isMobile && onClose) onClose()
               }}
-              className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
+              className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-semibold transition ${
                 activeScreen === MY_CERTIFICATIONS_PATH_SEGMENT
-                  ? 'text-brandCyan font-extrabold'
+                  ? 'text-brandCyan font-semibold'
                   : 'text-white/75 hover:bg-white/5 hover:text-white'
               }`}
             >
@@ -338,7 +338,7 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
         )}
       </div>
 
-      <nav className={SIDEBAR_NAV_CLASS}>
+      <nav className={`${SIDEBAR_NAV_CLASS} [&_button]:text-xs [&_button]:font-semibold [&_a]:text-xs [&_a]:font-semibold`}>
         <HomepageLink
           variant="menu"
           active={isHomeActive}
@@ -356,7 +356,7 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
         <button
           type="button"
           onClick={onLogout}
-          className="flex w-full items-center gap-2 px-3 py-2 text-sm font-bold text-white/65 transition hover:text-white"
+          className="flex w-full items-center gap-2 px-3 py-2 text-xs font-semibold text-white/65 transition hover:text-white"
         >
           <LogOut className="h-4 w-4" />
           {t('staff_dashboard.sign_out')}

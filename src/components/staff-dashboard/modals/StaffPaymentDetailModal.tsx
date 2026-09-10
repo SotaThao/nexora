@@ -66,10 +66,10 @@ export default function StaffPaymentDetailModal({
       <div className="relative max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-2xl border border-nexoraBorder bg-white p-4 shadow-2xl sm:rounded-2xl sm:p-6">
         <div className="mb-4 flex items-center justify-between border-b border-nexoraBorder pb-4">
           <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+            <span className="text-sm font-black uppercase tracking-wider text-nexoraMuted">
               {t('staff_payments.detail_title')}
             </span>
-            <p className="mt-0.5 text-xs text-nexoraMuted">{t('staff_payments.detail_desc')}</p>
+            <p className="mt-0.5 text-sm text-nexoraMuted">{t('staff_payments.detail_desc')}</p>
           </div>
           <button
             type="button"
@@ -87,31 +87,31 @@ export default function StaffPaymentDetailModal({
         ) : payment ? (
           <div className="space-y-5">
             <div className="flex flex-col items-center justify-center rounded-xl border border-slate-100 bg-slate-50 py-4">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-nexoraMuted">
+              <span className="text-sm font-bold uppercase tracking-wider text-nexoraMuted">
                 {t('dashboard.activity_log.col_amount')}
               </span>
-              <h3 className="mt-1 text-3xl font-black text-nexoraText">{formatCurrency(payment.amount)}</h3>
+              <h3 className="mt-1 text-xl font-semibold tabular-nums text-nexoraText sm:text-3xl sm:font-black">{formatCurrency(payment.amount)}</h3>
               <div className="mt-2 flex flex-col items-center gap-1">
                 <DirectPaymentStatusBadge status={paymentStatus} t={t} size="md" variant="staff" className="mt-0" />
                 {!completed ? (
-                  <p className="max-w-xs text-center text-[11px] leading-relaxed text-nexoraMuted">
+                  <p className="max-w-xs text-center text-sm leading-relaxed text-nexoraMuted">
                     {t(getDirectPaymentStatusDescKey(paymentStatus, 'staff'))}
                   </p>
                 ) : null}
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-x-4 gap-y-4 border-t border-nexoraBorder pt-4 text-xs">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-4 border-t border-nexoraBorder pt-4 text-sm">
               <div>
-                <span className="block text-[10px] font-bold text-nexoraMuted">
+                <span className="block text-sm font-bold text-nexoraMuted">
                   {t('dashboard.activity_log.col_id')}
                 </span>
-                <span className="mt-0.5 block font-mono text-[11px] font-semibold text-nexoraText" title={payment.id}>
+                <span className="mt-0.5 block font-mono text-sm font-semibold text-nexoraText" title={payment.id}>
                   {truncateMid(payment.id)}
                 </span>
               </div>
               <div>
-                <span className="block text-[10px] font-bold text-nexoraMuted">
+                <span className="block text-sm font-bold text-nexoraMuted">
                   {t('dashboard.activity_log.col_time')}
                 </span>
                 <span className="mt-0.5 block font-semibold text-nexoraText">
@@ -119,7 +119,7 @@ export default function StaffPaymentDetailModal({
                 </span>
               </div>
               <div>
-                <span className="block text-[10px] font-bold text-nexoraMuted">
+                <span className="block text-sm font-bold text-nexoraMuted">
                   {t('staff_payments.col_method')}
                 </span>
                 <div className="mt-1 flex items-center gap-1.5">
@@ -136,7 +136,7 @@ export default function StaffPaymentDetailModal({
               {payment.customerConfirmedAt || payment.staffConfirmedAt ? (
                 <>
                   <div>
-                    <span className="block text-[10px] font-bold text-nexoraMuted">
+                    <span className="block text-sm font-bold text-nexoraMuted">
                       {t('staff_payments.customer_confirmed_at')}
                     </span>
                     <span className="mt-0.5 block font-semibold text-nexoraText">
@@ -146,7 +146,7 @@ export default function StaffPaymentDetailModal({
                     </span>
                   </div>
                   <div>
-                    <span className="block text-[10px] font-bold text-nexoraMuted">
+                    <span className="block text-sm font-bold text-nexoraMuted">
                       {t('staff_payments.staff_confirmed_at')}
                     </span>
                     <span className="mt-0.5 block font-semibold text-nexoraText">
@@ -161,14 +161,14 @@ export default function StaffPaymentDetailModal({
 
             {canForce && onAcknowledge ? (
               <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50/70 p-4">
-                <p className="text-[11px] font-semibold leading-normal text-amber-800">
+                <p className="text-sm font-semibold leading-normal text-amber-800">
                   {t('staff_payments.force_confirm_warning')}
                 </p>
                 <button
                   type="button"
                   onClick={handleForceAcknowledge}
                   disabled={isAcknowledging}
-                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-3 text-xs font-black uppercase tracking-wider text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isAcknowledging ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -181,7 +181,7 @@ export default function StaffPaymentDetailModal({
             ) : waitingCustomer ? (
               <div className="flex items-center gap-2 rounded-xl border border-amber-100 bg-amber-50/70 px-3 py-2.5">
                 <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-amber-600" />
-                <p className="text-[11px] leading-normal text-amber-800">
+                <p className="text-sm leading-normal text-amber-800">
                   {t('staff_payments.waiting_customer_confirm')}
                 </p>
               </div>
@@ -189,14 +189,14 @@ export default function StaffPaymentDetailModal({
 
             {awaitingAck && onAcknowledge ? (
               <div className="space-y-3 rounded-xl border border-violet-100 bg-violet-50/50 p-4">
-                <p className="text-[11px] leading-normal text-violet-700">
+                <p className="text-sm leading-normal text-violet-700">
                   {t('staff_payments.confirm_receipt_help')}
                 </p>
                 <button
                   type="button"
                   onClick={handleAcknowledge}
                   disabled={isAcknowledging}
-                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-nexoraBrand px-4 py-3 text-xs font-black uppercase tracking-wider text-white transition hover:bg-nexoraBrand/90 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-nexoraBrand px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white transition hover:bg-nexoraBrand/90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isAcknowledging ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

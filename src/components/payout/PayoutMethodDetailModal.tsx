@@ -31,6 +31,7 @@ const PAY_TK = 'components.customer_flow.steps.WalletDetails'
 const PROFILE_TK = 'components.settings.tabs.ProfileTab'
 
 interface PayoutMethodDetailModalProps {
+  className?: string
   method: PaymentMethodDto | null
   logo?: ReactNode
   paymentAmount?: {
@@ -183,6 +184,7 @@ function VlinkpayAddressCards({ addresses }: { addresses: VlinkpayAddresses }) {
 }
 
 export default function PayoutMethodDetailModal({
+  className = '',
   method,
   logo,
   paymentAmount,
@@ -276,7 +278,7 @@ export default function PayoutMethodDetailModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={dialogTitleId}
-        className={`max-h-[calc(100dvh-1rem)] w-full overflow-x-hidden overflow-y-auto rounded-2xl border border-white/80 bg-white text-center shadow-2xl animate-scaleIn ${
+        className={`${className} max-h-[calc(100dvh-1rem)] w-full overflow-x-hidden overflow-y-auto rounded-2xl border border-white/80 bg-white text-center shadow-2xl animate-scaleIn ${
           isVlinkpay ? 'max-w-[400px] sm:max-w-[420px]' : 'max-w-[340px]'
         }`}
       >

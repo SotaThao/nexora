@@ -43,7 +43,7 @@ export default function StaffPayoutHistoryTab() {
 
       <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
         <table className="w-full min-w-[860px] text-left text-xs">
-          <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase text-nexoraMuted">
+          <thead className="bg-nexoraCanvas text-xs font-extrabold uppercase text-nexoraMuted">
             <tr>
               <th className="px-4 py-3">{t('taxiq.staffPayoutConfirmation.columns.payPeriod')}</th>
               <th className="px-4 py-3">{t('taxiq.staffPayoutConfirmation.columns.period')}</th>

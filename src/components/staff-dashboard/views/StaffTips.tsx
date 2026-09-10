@@ -113,9 +113,9 @@ export default function StaffTips() {
     <div className="space-y-4">
       <section className={panel}>
         <div className="mb-3 flex items-center justify-between gap-2">
-          <h3 className="text-base font-extrabold text-nexoraText">{t('staff_dashboard.tips.activity')}</h3>
+          <h3 className="text-nexoraText text-base font-semibold leading-snug">{t('staff_dashboard.tips.activity')}</h3>
           {tipsPage?.totalCount != null && tipsPage.totalCount > 0 ? (
-            <span className="text-[10px] font-bold uppercase tracking-wider text-nexoraSubtle">
+            <span className="text-sm font-bold uppercase tracking-wider text-nexoraSubtle">
               {t('staff_dashboard.tips.total_count', { count: tipsPage.totalCount })}
             </span>
           ) : null}
@@ -124,7 +124,7 @@ export default function StaffTips() {
         {isFetching ? (
           <SkeletonList count={5} lines={2} showAction />
         ) : tips.length === 0 ? (
-            <p className="py-4 text-center text-xs text-nexoraSubtle">{t('staff_dashboard.tips.empty')}</p>
+            <p className="py-4 text-center text-sm text-nexoraSubtle">{t('staff_dashboard.tips.empty')}</p>
           ) : (
             <div className="divide-y divide-nexoraBorder">
               {tips.map((tip) => (
@@ -145,7 +145,7 @@ export default function StaffTips() {
                         {formatTipAmount(tipDisplayAmount(tip))}
                       </span>
                       {tip.paymentMethod ? (
-                        <span className="flex items-center gap-1 text-[13px] font-medium text-nexoraMuted">
+                        <span className="flex items-center gap-1 text-sm font-medium text-nexoraMuted">
                           ·
                           {WalletLogos[payoutTypeToUiKey(tip.paymentMethod) as keyof typeof WalletLogos] ? (
                             <span className="flex items-center [&>svg]:h-3.5 [&>svg]:w-3.5 [&>img]:h-3.5 [&>img]:w-3.5">
@@ -157,10 +157,10 @@ export default function StaffTips() {
                       ) : null}
                     </div>
                     {tipMetaLine(tip) ? (
-                      <div className="mt-0.5 truncate text-xs text-nexoraMuted">{tipMetaLine(tip)}</div>
+                      <div className="mt-0.5 truncate text-sm text-nexoraMuted">{tipMetaLine(tip)}</div>
                     ) : null}
                     {tip.createdAt ? (
-                      <div className="mt-0.5 text-[10px] font-semibold text-nexoraSubtle">
+                      <div className="mt-0.5 text-sm font-semibold text-nexoraSubtle">
                         {formatTipDate(tip.createdAt, currentLanguage)}
                       </div>
                     ) : null}
@@ -168,7 +168,7 @@ export default function StaffTips() {
                   <div className="flex shrink-0 items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                     {tip.isMultiStaff ? (
                       <span
-                        className={`max-w-[140px] truncate rounded-full px-2.5 py-1 text-[11px] font-black ${
+                        className={`max-w-[140px] truncate rounded-full px-2.5 py-1 text-xs font-black ${
                           tip.merchantConfirmedAt
                             ? 'bg-emerald-50 text-emerald-600'
                             : 'bg-amber-50 text-amber-700'
@@ -183,7 +183,7 @@ export default function StaffTips() {
                       </span>
                     ) : (
                       <span
-                        className={`rounded-full px-2.5 py-1 text-[11px] font-black ${
+                        className={`rounded-full px-2.5 py-1 text-xs font-black ${
                           STATUS_STYLE[tip.status as TipStatus] || 'bg-nexoraCanvas text-nexoraMuted'
                         }`}
                       >
@@ -205,7 +205,7 @@ export default function StaffTips() {
                       e.stopPropagation()
                       setSelectedTip(tip)
                     }}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-50 py-2 text-[11px] font-black uppercase tracking-wider text-emerald-700 transition hover:bg-emerald-100"
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-50 py-2 text-xs font-semibold uppercase tracking-wider text-emerald-700 transition hover:bg-emerald-100"
                   >
                     <CheckCircle className="h-3.5 w-3.5" />
                     {t('staff_dashboard.home.confirm')}
