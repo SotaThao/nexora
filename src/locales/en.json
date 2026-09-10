@@ -6694,7 +6694,12 @@
           "title": "Package Management",
           "description": "Review owned packages, tip platform plans, AI Voice plans, and purchase history.",
           "ariaTabs": "Package management sections",
+          "credits": {
+            "setupRequired": "Activate AI Voice to view your Voice and SMS credits.",
+            "retry": "Try again"
+          },
           "tabs": {
+            "credits": "Credit Usage",
             "overview": "Overview",
             "subscriptions": "Subscriptions",
             "aiVoice": "AI Voice Plans",

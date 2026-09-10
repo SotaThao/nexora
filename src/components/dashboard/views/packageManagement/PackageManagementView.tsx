@@ -1,9 +1,10 @@
 import { useCallback, useEffect } from 'react'
-import { Boxes, History, LayoutGrid, Sparkles } from 'lucide-react'
+import { Boxes, History, LayoutGrid, Sparkles, Wallet } from 'lucide-react'
 import { useOutletContext, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import PackageHistoryPanel from '../plans/PackageHistoryPanel'
 import { PhoneTabIcon } from '../BookingHubIcons'
+import PackageCreditsPanel from './PackageCreditsPanel'
 import PackageAiVoicePlansPanel from './PackageAiVoicePlansPanel'
 import PackageOverviewPanel from './PackageOverviewPanel'
 import PackageSubscriptionsPanel from './PackageSubscriptionsPanel'
@@ -30,6 +31,7 @@ const TAB_ICON = {
   [PackageManagementTab.Subscriptions]: Sparkles,
   [PackageManagementTab.AiVoice]: PhoneTabIcon,
   [PackageManagementTab.History]: History,
+  [PackageManagementTab.Credits]: Wallet,
 } as const
 
 export default function PackageManagementView() {
@@ -91,6 +93,9 @@ export default function PackageManagementView() {
       break
     case PackageManagementTab.AiVoice:
       activePanel = <PackageAiVoicePlansPanel />
+      break
+    case PackageManagementTab.Credits:
+      activePanel = <PackageCreditsPanel />
       break
     case PackageManagementTab.History:
       activePanel = (
