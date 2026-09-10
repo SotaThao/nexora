@@ -1,3 +1,4 @@
+import { VoiceUnansweredPanel } from "./VoiceKnowledgePanel";
 import React, { useEffect, useMemo, useState } from "react";
 import { BOOKING_HUB_PAGE_SIZE } from "../../../constants/pagination";
 import { useTranslation } from "../../../contexts/LanguageContext";
@@ -267,6 +268,7 @@ export default function BookingCallLogPanel() {
       className="booking-sub-panel is-active panel-calllog"
       aria-busy={isStatisticsLoading || isListLoading}
     >
+      <VoiceUnansweredPanel />
       <div className="overview-kpis calllog-kpis" data-call-stats>
         <article className="overview-card kpi-card" style={BOOKING_KPI_ACCENTS.electric}>
           <div className="kpi-top">

@@ -1143,7 +1143,7 @@ export default function BookingSettingsPanel() {
   const [language, setLanguage] = useState<Language>(
     MerchantVoiceUiLanguage.Auto,
   );
-  const [assistantOnlyMode, setAssistantOnlyMode] = useState(false);
+<<<<<<< Updated upstream
   const voiceOptionsQuery = useMerchantVoiceOptions(mapUiLanguageToConfigLanguage(language), { enabled: voiceEnabled });
   const voiceLanguageScopeRef = useRef<{ language: string; languages?: string[] }>({ language: mapUiLanguageToConfigLanguage(language) });
   if (voiceLanguageScopeRef.current.language !== mapUiLanguageToConfigLanguage(language)) {
@@ -1160,6 +1160,9 @@ export default function BookingSettingsPanel() {
   const editRevisionRef = useRef(0);
   const hydratedConfigRef = useRef<typeof configData>(undefined);
   const markConfigDirty = () => { configDirtyRef.current = true; editRevisionRef.current += 1; };
+=======
+  const [assistantOnlyMode, setAssistantOnlyMode] = useState(false);
+>>>>>>> Stashed changes
   const [greeting, setGreeting] = useState(() => t(`${TK}.greetingEn`));
   const loadedGreetingRef = useRef("");
   const [selectedGreetingSuggestKey, setSelectedGreetingSuggestKey] =
@@ -4056,20 +4059,7 @@ export default function BookingSettingsPanel() {
                 {t(`${TK}.languageStatus.${language}`)}
               </div>
             </div>
-            <div className="settings-field settings-span-full">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={assistantOnlyMode}
-                  onChange={(event) => setAssistantOnlyMode(event.target.checked)}
-                />
-                {t("voiceKnowledge.assistantOnlyMode")}
-              </label>
-              <p>{t("voiceKnowledge.assistantOnlyModeDescription")}</p>
-              {assistantOnlyMode && (
-                <p role="status">{t("voiceKnowledge.assistantOnlyModeGreetingWarning")}</p>
-              )}
-            </div>
+<<<<<<< Updated upstream
             {voiceEnabled && (
               <div className="settings-field settings-span-full">
                 <span className="settings-label">{t(`${TK}.voiceFieldLabel`)}</span>
@@ -4089,6 +4079,22 @@ export default function BookingSettingsPanel() {
                 <div className="settings-language-status">{t(`${TK}.voiceFieldHint`)}</div>
               </div>
             )}
+=======
+            <div className="settings-field settings-span-full">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={assistantOnlyMode}
+                  onChange={(event) => setAssistantOnlyMode(event.target.checked)}
+                />
+                {t("voiceKnowledge.assistantOnlyMode")}
+              </label>
+              <p>{t("voiceKnowledge.assistantOnlyModeDescription")}</p>
+              {assistantOnlyMode && (
+                <p role="status">{t("voiceKnowledge.assistantOnlyModeGreetingWarning")}</p>
+              )}
+            </div>
+>>>>>>> Stashed changes
             <label
               className="settings-field settings-span-full"
               data-ai-hub-field="greeting"
