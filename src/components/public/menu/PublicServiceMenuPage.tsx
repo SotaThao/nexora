@@ -51,14 +51,16 @@ function MenuService({ service, grouped }: { service: PublicServiceItem; grouped
       {service.imageUrl ? <ServiceImage key={service.imageUrl} src={service.imageUrl} name={service.name} /> : null}
       <div className="menu-service-content">
         <div className="menu-service-line">
-          <Heading>{service.name}</Heading>
+          <div className="menu-service-title">
+            <Heading>{service.name}</Heading>
+            {service.durationMinutes > 0 ? (
+              <span className="menu-duration">{t(`${K}.duration`, { count: service.durationMinutes })}</span>
+            ) : null}
+          </div>
           <span className="menu-price-leader" aria-hidden />
           <span className="menu-price">{service.price != null ? formatPrice(service.price) : t(`${K}.ask_price`)}</span>
         </div>
         {service.description?.trim() ? <p className="menu-description">{service.description}</p> : null}
-        {service.durationMinutes > 0 ? (
-          <span className="menu-duration">{t(`${K}.duration`, { count: service.durationMinutes })}</span>
-        ) : null}
       </div>
     </article>
   )
