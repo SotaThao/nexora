@@ -3366,6 +3366,8 @@
           "resendInviteSuccess": "Đã gửi lại link thiết lập thành công tới {name}!",
           "resendInviteFailed": "Gửi lại thất bại: {error}",
           "joinAccepted": "Đã chấp nhận thợ {name} vào tiệm!",
+          "setupPosStaffAfterApproveTitle": "Thiết lập hồ sơ POS?",
+          "setupPosStaffAfterApproveMessage": "{name} đã được thêm vào tiệm. Bạn có muốn thiết lập vai trò, lương và tay nghề POS ngay không?",
           "joinDeclined": "Đã từ chối yêu cầu tham gia của {name}.",
           "acceptFailed": "Chấp nhận thất bại: {error}",
           "declineJoinConfirm": "Bạn có chắc chắn muốn từ chối yêu cầu tham gia của thợ {name}?",
