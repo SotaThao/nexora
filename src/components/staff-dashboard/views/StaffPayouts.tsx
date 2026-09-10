@@ -4,17 +4,21 @@ import { CheckCircle2, Eye, List, Loader2, X } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { PayoutStatus } from '../../../data/payoutConstants'
-import { getErrorI18nKey } from '../../../data/errorCodes'
+import { getErrorI18nKey, getErrorMessage } from '../../../data/errorCodes'
 import {
   useConfirmStaffPayout,
+  useSetStaffPayoutCategory,
   useStaffPayoutDetail,
   useStaffPayoutStats,
   useStaffPayoutsList,
   useStaffUnpaidDebt,
 } from '../../../data/hooks/useStaffPayouts'
+import { useCreateStaffCategory, useStaffCategories } from '../../../data/hooks/useTransactionCategories'
 import type { StaffPayoutsListQuery } from '../../../data/repositories/payouts'
 import type { TFunction } from '../../../types/contexts'
 import { getApiErrorCode, type PayoutRecord, type StaffPayoutDetailRecord } from '../../../types/domain'
+import CategorySelect from '../../dashboard/categories/CategorySelect'
+import AddEditCategoryModal from '../../dashboard/categories/AddEditCategoryModal'
 import { DEFAULT_PAGE_SIZE } from '../../../constants/pagination'
 import { usePagination } from '../../../hooks/usePagination'
 import { formatCurrency, formatTransactionDateTime, DateTimeCell } from '../../dashboard/utils'
@@ -200,9 +204,42 @@ function StaffPayoutDetailModal({
   onClose: () => void
   onConfirm: (payoutId: string) => void
 }) {
+  const { showToast } = useNotification()
+  const { data: categories = [] } = useStaffCategories()
+  const setCategoryMutation = useSetStaffPayoutCategory()
+  const createCategoryMutation = useCreateStaffCategory()
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false)
+  const [addCategoryError, setAddCategoryError] = useState<string | null>(null)
+
   if (!payout && !isLoading) return null
   const canConfirm = payout?.status === PayoutStatus.Pending
+
+  const handleCategoryChange = (categoryId: string | null) => {
+    if (!payout?.id) return
+    setCategoryMutation.mutate(
+      { payoutId: payout.id, categoryId },
+      { onError: (err) => showToast(getErrorMessage(err, t), 'error') },
+    )
+  }
+
+  const handleCreateCategory = (name: string) => {
+    createCategoryMutation.mutate(name, {
+      onSuccess: (category) => {
+        setIsAddCategoryOpen(false)
+        setAddCategoryError(null)
+        if (payout?.id) {
+          setCategoryMutation.mutate(
+            { payoutId: payout.id, categoryId: category.id },
+            { onError: (err) => showToast(getErrorMessage(err, t), 'error') },
+          )
+        }
+      },
+      onError: (err) => setAddCategoryError(getErrorMessage(err, t)),
+    })
+  }
+
   return createPortal(
+    <>
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
       <div className="max-h-[85dvh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-2xl border border-nexoraBorder bg-white pb-[max(1rem,env(safe-area-inset-bottom,0px))] shadow-2xl sm:max-h-[92dvh] sm:rounded-2xl sm:pb-0">
         <div className="flex items-start justify-between border-b border-nexoraBorder px-5 py-4">
@@ -297,6 +334,17 @@ function StaffPayoutDetailModal({
                   <dd className="text-nexoraText">{payout.notes}</dd>
                 </>
               ) : null}
+              <dt className="font-semibold text-nexoraMuted">{t('transaction_categories.category_label')}</dt>
+              <dd>
+                <CategorySelect
+                  categories={categories}
+                  value={payout.categoryId ?? null}
+                  onChange={handleCategoryChange}
+                  onRequestCreateNew={() => setIsAddCategoryOpen(true)}
+                  disabled={setCategoryMutation.isPending}
+                  className="h-9"
+                />
+              </dd>
             </dl>
 
             {payout.evidenceUrls.length > 0 ? (
@@ -340,7 +388,19 @@ function StaffPayoutDetailModal({
           </div>
         ) : null}
       </div>
-    </div>,
+    </div>
+    <AddEditCategoryModal
+      open={isAddCategoryOpen}
+      mode="create"
+      onSave={handleCreateCategory}
+      onClose={() => {
+        setIsAddCategoryOpen(false)
+        setAddCategoryError(null)
+      }}
+      isSaving={createCategoryMutation.isPending}
+      errorMessage={addCategoryError}
+    />
+    </>,
     document.body,
   )
 }

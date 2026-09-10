@@ -116,3 +116,17 @@ export function useAcknowledgeStaffPayment() {
     },
   })
 }
+
+/** Income/Payout Categories (issue #584) — Staff assigns a category to a StaffDirectPayment. */
+export function useSetStaffPaymentCategory() {
+  const queryClient = useQueryClient()
+
+  return useMutation<void, Error, { paymentId: string; categoryId: string | null }>({
+    mutationFn: ({ paymentId, categoryId }) => staffPaymentsRepository.setCategory(paymentId, categoryId),
+    onSuccess: (_data, { paymentId }) => {
+      queryClient.invalidateQueries({ queryKey: ['staffPayments'] })
+      queryClient.invalidateQueries({ queryKey: qk.staffPaymentDetail(paymentId) })
+      queryClient.invalidateQueries({ queryKey: ['staffTransactionCategories', 'stats'] })
+    },
+  })
+}

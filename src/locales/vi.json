@@ -11018,5 +11018,34 @@
       ],
       "hoursLabel": "Giờ mở cửa"
     }
+  },
+  "transaction_categories": {
+    "category_label": "Danh mục",
+    "uncategorized": "Chưa phân loại",
+    "create_new_option": "+ Tạo mới",
+    "modal_add_title": "Thêm danh mục",
+    "modal_edit_title": "Sửa danh mục",
+    "modal_name_label": "Tên danh mục",
+    "modal_name_placeholder": "vd: Tiền thuê",
+    "modal_save": "Lưu danh mục",
+    "modal_cancel": "Hủy",
+    "panel_title": "Thu nhập theo danh mục",
+    "panel_subtitle": "Toàn bộ tiền đã nhận",
+    "panel_empty": "Chưa có khoản thu nào được phân loại.",
+    "period_value_all": "Mọi kỳ",
+    "period_all_time": "Toàn thời gian",
+    "period_week": "Tuần",
+    "period_month": "Tháng",
+    "period_year": "Năm",
+    "manage_categories": "Quản lý danh mục",
+    "management_title": "Quản lý danh mục",
+    "management_subtitle_merchant": "Quản lý các danh mục dùng để phân loại khoản khách thanh toán cho tiệm của bạn.",
+    "management_subtitle_staff": "Quản lý các danh mục dùng để phân loại khoản tiền bạn nhận được.",
+    "add_category": "+ Thêm danh mục",
+    "edit_action": "Sửa",
+    "delete_action": "Xóa",
+    "delete_confirm_title": "Xóa danh mục này?",
+    "delete_confirm_action": "Xóa",
+    "empty_list": "Bạn chưa tạo danh mục nào."
   }
 }

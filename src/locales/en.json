@@ -11022,5 +11022,34 @@
       ],
       "hoursLabel": "Hours"
     }
+  },
+  "transaction_categories": {
+    "category_label": "Category",
+    "uncategorized": "Uncategorized",
+    "create_new_option": "+ Create new",
+    "modal_add_title": "Add category",
+    "modal_edit_title": "Edit category",
+    "modal_name_label": "Category name",
+    "modal_name_placeholder": "e.g. Rent",
+    "modal_save": "Save category",
+    "modal_cancel": "Cancel",
+    "panel_title": "Income by category",
+    "panel_subtitle": "All received money",
+    "panel_empty": "No categorized income yet.",
+    "period_value_all": "All periods",
+    "period_all_time": "All time",
+    "period_week": "Week",
+    "period_month": "Month",
+    "period_year": "Year",
+    "manage_categories": "Manage categories",
+    "management_title": "Category Management",
+    "management_subtitle_merchant": "Manage the categories used to tag your business's customer payments.",
+    "management_subtitle_staff": "Manage the categories used to tag the money you receive.",
+    "add_category": "+ Add category",
+    "edit_action": "Edit",
+    "delete_action": "Delete",
+    "delete_confirm_title": "Delete this category?",
+    "delete_confirm_action": "Delete",
+    "empty_list": "You haven't created any categories yet."
   }
 }

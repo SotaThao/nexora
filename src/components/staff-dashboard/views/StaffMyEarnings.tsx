@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   CircleDollarSign,
@@ -10,6 +10,7 @@ import {
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { formatCurrency } from '../../dashboard/utils'
 import TipsTrendChart from '../../dashboard/charts/TipsTrendChart'
+import IncomeByCategoryPanel from '../../dashboard/charts/IncomeByCategoryPanel'
 import ReportsView from '../../dashboard/views/ReportsView'
 import StaffPayouts from './StaffPayouts'
 import { useStaffEarningsData } from '../hooks/useStaffEarningsData'
@@ -232,7 +233,10 @@ export default function StaffMyEarnings() {
       </div>
 
       {activeTab === TAB_OVERVIEW ? (
-        <EarningsOverview {...earningsData} t={t} />
+        <>
+          <EarningsOverview {...earningsData} t={t} />
+          <IncomeByCategoryPanel scope="staff" onManageCategories={() => navigate('/staff/categories')} />
+        </>
       ) : null}
 
       {activeTab === TAB_TRANSACTIONS ? (

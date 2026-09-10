@@ -1,9 +1,12 @@
+import { useState } from 'react'
 import { CreditCard, CheckCircle, Loader2, X } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { useNotification } from '../../../contexts/NotificationContext'
 import { WalletLogos } from '../../dashboard/constants'
 import { formatCurrency, formatTransactionDateTime } from '../../dashboard/utils'
 import type { StaffPaymentRecord } from '../../../types/domain'
 import { PaymentStatus } from '../../../types/domain'
+import { getErrorMessage } from '../../../data/errorCodes'
 import DirectPaymentAccountField from '../../payout/DirectPaymentAccountField'
 import { DirectPaymentStatusBadge } from '../../dashboard/direct-payments/DirectPaymentStatusBadge'
 import {
@@ -13,6 +16,10 @@ import {
   canForceComplete,
   normalizePaymentStatusValue,
 } from '../../../utils/directPaymentStatus'
+import CategorySelect from '../../dashboard/categories/CategorySelect'
+import AddEditCategoryModal from '../../dashboard/categories/AddEditCategoryModal'
+import { useCreateStaffCategory, useStaffCategories } from '../../../data/hooks/useTransactionCategories'
+import { useSetStaffPaymentCategory } from '../../../data/hooks/useStaffPayments'
 
 function getPaymentMethodLogo(method: string) {
   const norm = (method || '').toLowerCase().replace(/\s+/g, '')
@@ -40,8 +47,38 @@ export default function StaffPaymentDetailModal({
   isAcknowledging?: boolean
 }) {
   const { t, currentLanguage } = useTranslation()
+  const { showToast } = useNotification()
+  const { data: categories = [] } = useStaffCategories()
+  const setCategoryMutation = useSetStaffPaymentCategory()
+  const createCategoryMutation = useCreateStaffCategory()
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false)
+  const [addCategoryError, setAddCategoryError] = useState<string | null>(null)
 
   if (!payment && !isLoading) return null
+
+  const handleCategoryChange = (categoryId: string | null) => {
+    if (!payment?.id) return
+    setCategoryMutation.mutate(
+      { paymentId: payment.id, categoryId },
+      { onError: (err) => showToast(getErrorMessage(err, t), 'error') },
+    )
+  }
+
+  const handleCreateCategory = (name: string) => {
+    createCategoryMutation.mutate(name, {
+      onSuccess: (category) => {
+        setIsAddCategoryOpen(false)
+        setAddCategoryError(null)
+        if (payment?.id) {
+          setCategoryMutation.mutate(
+            { paymentId: payment.id, categoryId: category.id },
+            { onError: (err) => showToast(getErrorMessage(err, t), 'error') },
+          )
+        }
+      },
+      onError: (err) => setAddCategoryError(getErrorMessage(err, t)),
+    })
+  }
 
   const paymentStatus = payment ? normalizePaymentStatusValue(payment.status) : PaymentStatus.Initiated
   const awaitingAck = payment ? needsStaffAcknowledge(payment) : false
@@ -62,6 +99,7 @@ export default function StaffPaymentDetailModal({
   }
 
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/60 p-0 backdrop-blur-sm sm:items-center sm:p-4">
       <div className="relative max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-2xl border border-nexoraBorder bg-white p-4 shadow-2xl sm:rounded-2xl sm:p-6">
         <div className="mb-4 flex items-center justify-between border-b border-nexoraBorder pb-4">
@@ -159,6 +197,19 @@ export default function StaffPaymentDetailModal({
               ) : null}
             </div>
 
+            <div className="border-t border-nexoraBorder pt-4">
+              <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-nexoraMuted">
+                {t('transaction_categories.category_label')}
+              </span>
+              <CategorySelect
+                categories={categories}
+                value={payment.categoryId ?? null}
+                onChange={handleCategoryChange}
+                onRequestCreateNew={() => setIsAddCategoryOpen(true)}
+                disabled={setCategoryMutation.isPending}
+              />
+            </div>
+
             {canForce && onAcknowledge ? (
               <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50/70 p-4">
                 <p className="text-[11px] font-semibold leading-normal text-amber-800">
@@ -211,5 +262,17 @@ export default function StaffPaymentDetailModal({
         ) : null}
       </div>
     </div>
+    <AddEditCategoryModal
+      open={isAddCategoryOpen}
+      mode="create"
+      onSave={handleCreateCategory}
+      onClose={() => {
+        setIsAddCategoryOpen(false)
+        setAddCategoryError(null)
+      }}
+      isSaving={createCategoryMutation.isPending}
+      errorMessage={addCategoryError}
+    />
+    </>
   )
 }
