@@ -32,6 +32,7 @@ export type PosStoreIncomeTransactionGroup = {
 
 export type PosStoreIncomeDaySummary = {
   paymentBreakdown: PosStoreIncomePaymentBreakdownItem[]
+  incomeService: number
   servicesSubtotal: number
   serviceDiscounts: number
   productsSubtotal: number
@@ -52,6 +53,7 @@ export type PosStoreIncomeBucket = {
   transactionCount: number
   paymentAmounts: Record<string, number>
   tipAmount: number
+  supplyFee: number
   totalCollected: number
 }
 
@@ -90,6 +92,8 @@ function normalizeReport(
   const daySummary = data?.daySummary
     ? {
         ...data.daySummary,
+        supplyFee: data.daySummary.supplyFee ?? 0,
+        incomeService: Math.round(((data.daySummary.servicesSubtotal ?? 0) - (data.daySummary.supplyFee ?? 0)) * 100) / 100,
         paymentBreakdown: data.daySummary.paymentBreakdown ?? [],
         transactionGroups: data.daySummary.transactionGroups ?? [],
       }
@@ -100,8 +104,8 @@ function normalizeReport(
     periodEnd: data?.periodEnd ?? '',
     generatedAtUtc: data?.generatedAtUtc ?? '',
     daySummary,
-    buckets: data?.buckets ?? [],
-    bucketsTotal: data?.bucketsTotal ?? null,
+    buckets: (data?.buckets ?? []).map((bucket) => ({ ...bucket, supplyFee: bucket.supplyFee ?? 0 })),
+    bucketsTotal: data?.bucketsTotal ? { ...data.bucketsTotal, supplyFee: data.bucketsTotal.supplyFee ?? 0 } : null,
   }
 }
 

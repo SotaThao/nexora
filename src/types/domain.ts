@@ -1012,7 +1012,7 @@ export interface PosTechnicianReportPrint {
     services?: string[]
     discount?: { label: string; value: string }
   }>
-  totals: Array<{ label: string; value: string }>
+  totals: Array<{ label: string; value: string; isDeduction?: boolean }>
 }
 
 export interface PosReceiptDocument {

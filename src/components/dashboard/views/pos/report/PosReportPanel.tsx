@@ -320,9 +320,10 @@ export default function PosReportPanel({
 
       {!reportQuery.isError && data ? (
         <>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
             <StatTile label={t(`${TK}.kpi.serviceAmount`)} value={formatCurrency(totals?.serviceAmount ?? 0)} />
             <StatTile label={t(`${TK}.kpi.tips`)} value={formatCurrency(totals?.tips ?? 0)} />
+            <StatTile label={t(`${TK}.kpi.supplyFee`)} value={formatCurrency(totals?.supplyFee ?? 0)} />
             <StatTile label={t(`${TK}.kpi.techTakes`)} value={formatCurrency(totals?.techTakes ?? 0)} />
             <StatTile label={t(`${TK}.kpi.turns`)} value={String(totals?.turns ?? 0)} />
           </div>

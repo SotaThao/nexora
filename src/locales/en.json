@@ -4828,12 +4828,15 @@
             "empty": "No data for this period.",
             "inactive": "Inactive",
             "kpi": {
+              "supplyFee": "Total supply fees",
               "serviceAmount": "Total service",
               "tips": "Total tips",
               "techTakes": "Total tech takes",
               "turns": "Total turns"
             },
             "columns": {
+              "supplyFee": "Supply Fee",
+              "supplyFeeHint": "Supply is deducted from service sales before commission is calculated. It is already reflected in tech takes.",
               "tech": "Tech",
               "turns": "Turns",
               "hours": "Hours",
@@ -4842,7 +4845,7 @@
               "commissionPercentHint": "The technician's rate as configured today — a past period may have been paid at a different rate.",
               "commission": "Commission",
               "tip": "Tip",
-              "discount": "Discount",
+              "discount": "Tech discount",
               "discountHint": "Only the share of a service discount this technician agreed to absorb.",
               "techTakes": "Tech takes",
               "weeklyGuarantee": "Weekly guarantee",
@@ -4867,6 +4870,7 @@
               "totalAmount": "Total amount",
               "totalTips": "Total tips",
               "totalDiscount": "Total discount",
+              "totalSupplyFee": "Total supply fee",
               "totalCommission": "Total commission",
               "collected": "{{method}} collected",
               "emailLabel": "Email",
@@ -4981,6 +4985,7 @@
               }
             },
             "storeIncome": {
+              "incomeService": "Income Service",
               "title": "Store Income",
               "actionsLabel": "Report actions",
               "print": "Print / PDF",
@@ -9677,6 +9682,7 @@
       }
     },
     "weeklyPayroll": {
+      "supplyFeeHint": "Supply is deducted from service sales before commission is calculated. It is already reflected in tech takes.",
       "title": "Weekly Payroll",
       "subtitle": "Review and pay staff on the Weekly pay schedule — every number comes from Pay Engine, not typed by hand.",
       "emptyState": "No staff on the Weekly pay schedule yet.",
@@ -9691,6 +9697,7 @@
         "totalBonus": "Total Bonus"
       },
       "columns": {
+        "supplyFeeBorne": "Supply Fee",
         "employee": "Employee",
         "type": "Type",
         "hours": "Hours",
@@ -9738,6 +9745,7 @@
       "dailyDetailModal": {
         "title": "Daily Detail — {{name}}",
         "columns": {
+          "supplyFeeBorne": "Supply Fee",
           "date": "Date",
           "services": "Services",
           "hours": "Hours",
