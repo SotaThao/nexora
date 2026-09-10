@@ -66,7 +66,7 @@ export default function StaffClockScan() {
 
   return (
     <div className="mx-auto max-w-md space-y-4 p-4">
-      <h1 className="flex items-center gap-2 text-xl font-black text-nexoraText">
+      <h1 className="flex items-center gap-2 text-nexoraText text-xl lg:text-2xl font-semibold leading-snug">
         <Clock className="h-5 w-5 text-nexoraBrand" />
         {t(tk('scanTitle'))}
       </h1>
@@ -115,7 +115,7 @@ export default function StaffClockScan() {
             type="button"
             onClick={handleScan}
             disabled={scan.isPending}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-nexoraBrand text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-nexoraBrand text-xs font-semibold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
           >
             {preview.isClockedIn ? <LogOut className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
             {preview.isClockedIn

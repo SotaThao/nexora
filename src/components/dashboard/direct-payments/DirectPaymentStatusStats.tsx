@@ -216,17 +216,19 @@ export default function DirectPaymentStatusStats({
             return (
             <div
               key={card.key}
-              className={`nexora-card flex min-h-[112px] flex-col justify-between border border-nexoraBorder bg-nexoraSurface p-3 sm:min-h-[140px] sm:p-5 ${
+              className={`nexora-card flex flex-col justify-between border border-nexoraBorder bg-nexoraSurface sm:min-h-[140px] sm:p-5 ${variant === 'staff' ? 'min-h-[88px] p-2.5' : 'min-h-[112px] p-3'} ${
                 card.key === 'completed' ? 'col-span-2 sm:col-span-1' : ''
               }`}
             >
               <div>
-                <div className="min-h-[2lh] text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
+                <div className={variant === 'staff' ? 'text-xs font-semibold leading-4 text-nexoraSubtle sm:min-h-[2lh] sm:text-[11px] sm:font-black sm:uppercase sm:tracking-wider' : 'min-h-[2lh] text-[11px] font-black uppercase tracking-wider text-nexoraSubtle'}>
                   {card.label}
                 </div>
                 <div
-                  className={`mt-2 font-black tracking-tight ${
-                    hasData ? 'text-2xl text-nexoraText' : 'text-lg text-nexoraMuted'
+                  className={`${variant === 'staff' ? 'mt-1 break-words font-semibold leading-6 tabular-nums sm:mt-2 sm:font-black' : 'mt-2 font-black tracking-tight'} ${
+                    hasData
+                      ? `${variant === 'staff' ? 'text-lg sm:text-2xl' : 'text-2xl'} text-nexoraText`
+                      : `${variant === 'staff' ? 'text-xs sm:text-lg' : 'text-lg'} text-nexoraMuted`
                   }`}
                 >
                   {hasData
@@ -235,7 +237,7 @@ export default function DirectPaymentStatusStats({
                 </div>
               </div>
               {hasData ? (
-                <div className="mt-4 text-xs font-semibold text-nexoraSubtle/80">
+                <div className={variant === 'staff' ? 'mt-2 text-[11px] font-normal leading-4 text-nexoraSubtle/80 sm:mt-4 sm:text-xs sm:font-semibold' : 'mt-4 text-xs font-semibold text-nexoraSubtle/80'}>
                   {t(`${prefix}.stats_transaction_count`, { count: card.bucket.count })}
                 </div>
               ) : null}

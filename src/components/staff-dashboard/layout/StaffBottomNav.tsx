@@ -26,7 +26,7 @@ export default function StaffBottomNav({ activeScreen, onNavigate }) {
           strokeWidth={isActive ? 2.4 : 2}
         />
         <span
-          className={`max-w-full truncate px-0.5 text-[11px] font-bold transition-colors duration-200 ${
+          className={`max-w-full px-0.5 text-center text-xs leading-tight font-semibold transition-colors duration-200 ${
             isActive ? 'text-nexoraBrand' : 'text-nexoraSubtle'
           }`}
         >

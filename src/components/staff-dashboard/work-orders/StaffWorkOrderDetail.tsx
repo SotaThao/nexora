@@ -335,17 +335,17 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
             aria-modal="true"
             className="w-full max-w-xs rounded-2xl bg-white p-5 shadow-xl"
           >
-            <h3 className="text-sm font-black text-nexoraText">
+            <h3 className="text-nexoraText text-sm font-semibold leading-snug">
               {t(`${LINE_STATUS_I18N}.declineConfirmTitle`)}
             </h3>
-            <p className="mt-2 text-xs leading-relaxed text-nexoraMuted">
+            <p className="mt-2 text-sm leading-relaxed text-nexoraMuted">
               {t(`${LINE_STATUS_I18N}.declineConfirmBody`)}
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setDeclineTarget(null)}
-                className="h-10 rounded-lg border border-nexoraBorder px-3 text-[11px] font-extrabold text-nexoraText"
+                className="h-10 rounded-lg border border-nexoraBorder px-3 text-xs font-semibold text-nexoraText"
               >
                 {t('common.cancel')}
               </button>
@@ -357,7 +357,7 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
                   setDeclineTarget(null)
                   runLineAction(rejectLine, target, 'decline')
                 }}
-                className="h-10 rounded-lg bg-rose-500 px-3 text-[11px] font-extrabold text-white disabled:opacity-60"
+                className="h-10 rounded-lg bg-rose-500 px-3 text-xs font-semibold text-white disabled:opacity-60"
               >
                 {t(`${LINE_STATUS_I18N}.declineAction`)}
               </button>

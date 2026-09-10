@@ -17,9 +17,9 @@ const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shado
 function KpiCard({ label, value, sub = null, subClass = 'text-nexoraMuted' }) {
   return (
     <div className={panel}>
-      <div className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">{label}</div>
-      <div className="mt-1.5 text-2xl font-extrabold text-nexoraText">{value}</div>
-      {sub ? <div className={`mt-0.5 text-xs font-bold ${subClass}`}>{sub}</div> : null}
+      <div className="text-xs font-semibold leading-4 text-nexoraSubtle">{label}</div>
+      <div className="mt-1.5 break-words text-lg font-semibold leading-6 tabular-nums text-nexoraText">{value}</div>
+      {sub ? <div className={`mt-0.5 text-[11px] font-medium leading-4 ${subClass}`}>{sub}</div> : null}
     </div>
   )
 }
@@ -91,61 +91,57 @@ export default function StaffHome() {
       </section>
 
       {/* Pending confirmations */}
-      <section className={panel}>
-        <div className="mb-3 flex items-center gap-1.5">
-          <h3 className="text-base font-extrabold text-nexoraText">{t('staff_dashboard.home.pending_confirmations')}</h3>
-          <Tooltip
-            content={t('staff_dashboard.home.confirm_all_tooltip')}
-            ariaLabel={t('staff_dashboard.home.confirm_all_tooltip')}
-          />
-        </div>
-        {isPendingTipsFetching && pendingTips.length > 0 ? (
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-nexoraSubtle">
-            {t('common.loading')}
-          </p>
-        ) : null}
-        {pendingTips.length === 0 ? (
-          <p className="py-4 text-center text-xs text-nexoraSubtle">{t('staff_dashboard.home.no_pending')}</p>
-        ) : (
-          <>
-            <div className="divide-y divide-nexoraBorder">
-              {pendingTips.map((tip) => (
-                <div key={tip.id} className="flex items-center justify-between gap-3 py-3">
-                  <div className="min-w-0">
-                    <div className="text-sm font-bold text-nexoraText">
-                      {formatTipAmount(tip.amount)} · {tip.paymentMethod}
-                    </div>
-                    <div className="truncate text-xs text-nexoraMuted">{tip.touchpoint}</div>
+      {pendingTips.length > 0 && (
+        <section className={panel}>
+          <div className="mb-3 flex items-center gap-1.5">
+            <h3 className="text-nexoraText text-sm font-semibold leading-5">{t('staff_dashboard.home.pending_confirmations')}</h3>
+            <Tooltip
+              content={t('staff_dashboard.home.confirm_all_tooltip')}
+              ariaLabel={t('staff_dashboard.home.confirm_all_tooltip')}
+            />
+          </div>
+          {isPendingTipsFetching ? (
+            <p className="mb-2 text-[11px] font-medium leading-4 text-nexoraSubtle">
+              {t('common.loading')}
+            </p>
+          ) : null}
+          <div className="divide-y divide-nexoraBorder">
+            {pendingTips.map((tip) => (
+              <div key={tip.id} className="flex items-center justify-between gap-3 py-3">
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold leading-4 text-nexoraText">
+                    {formatTipAmount(tip.amount)} · {tip.paymentMethod}
                   </div>
-                  <button
-                    type="button"
-                    disabled={isConfirming}
-                    onClick={() => confirmTipsMutation.mutate({ tipIds: [tip.id] })}
-                    className="shrink-0 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {t('staff_dashboard.home.confirm')}
-                  </button>
+                  <div className="truncate text-[11px] font-medium leading-4 text-nexoraMuted">{tip.touchpoint}</div>
                 </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              disabled={isConfirming}
-              onClick={() => confirmTipsMutation.mutate({ tipIds: pendingTips.map((tip) => tip.id) })}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 py-3 text-sm font-extrabold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <CheckCircle2 className="h-4 w-4" />
-              {t('staff_dashboard.home.confirm_all')}
-            </button>
-          </>
-        )}
-      </section>
+                <button
+                  type="button"
+                  disabled={isConfirming}
+                  onClick={() => confirmTipsMutation.mutate({ tipIds: [tip.id] })}
+                  className="shrink-0 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {t('staff_dashboard.home.confirm')}
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            disabled={isConfirming}
+            onClick={() => confirmTipsMutation.mutate({ tipIds: pendingTips.map((tip) => tip.id) })}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 py-3 text-xs font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            {t('staff_dashboard.home.confirm_all')}
+          </button>
+        </section>
+      )}
 
       {/* Linked businesses */}
       <section className={panel}>
-        <h3 className="mb-3 text-base font-extrabold text-nexoraText">{t('staff_dashboard.home.linked_businesses')}</h3>
+        <h3 className="mb-3 text-nexoraText text-sm font-semibold leading-5">{t('staff_dashboard.home.linked_businesses')}</h3>
         {activeLinkedBusinesses.length === 0 ? (
-          <p className="py-4 text-center text-xs text-nexoraSubtle">
+          <p className="py-4 text-center text-[11px] font-medium leading-4 text-nexoraSubtle">
             {t('staff_dashboard.qr.no_linked_businesses')}
           </p>
         ) : (
@@ -156,13 +152,13 @@ export default function StaffHome() {
               return (
               <div key={biz.businessStaffLinkId} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
-                  <div className="truncate text-sm font-bold text-nexoraText">{biz.businessName}</div>
-                  <div className="truncate text-xs text-nexoraMuted">
+                  <div className="truncate text-xs font-semibold leading-4 text-nexoraText">{biz.businessName}</div>
+                  <div className="truncate text-[11px] font-medium leading-4 text-nexoraMuted">
                     {t('staff_dashboard.home.display_name')}: {biz.displayName}
                   </div>
                 </div>
                 <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black ${statusPresentation.className}`}
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium leading-4 ${statusPresentation.className}`}
                 >
                   {statusPresentation.translationKey
                     ? t(statusPresentation.translationKey)
