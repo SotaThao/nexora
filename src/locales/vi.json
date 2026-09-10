@@ -4823,12 +4823,15 @@
             "empty": "Không có dữ liệu cho kỳ này.",
             "inactive": "Đã nghỉ",
             "kpi": {
+              "supplyFee": "Tổng phí supply",
               "serviceAmount": "Tổng dịch vụ",
               "tips": "Tổng tip",
               "techTakes": "Tổng thợ nhận",
               "turns": "Tổng lượt"
             },
             "columns": {
+              "supplyFee": "Phí supply",
+              "supplyFeeHint": "Supply được trừ khỏi doanh số dịch vụ trước khi tính hoa hồng và đã được tính trong tiền thợ nhận.",
               "tech": "Thợ",
               "turns": "Lượt",
               "hours": "Giờ",
@@ -4976,6 +4979,7 @@
               }
             },
             "storeIncome": {
+              "incomeService": "Thu nhập dịch vụ",
               "title": "Thu Nhập Cửa Hàng",
               "actionsLabel": "Thao tác báo cáo",
               "print": "In / PDF",
@@ -9667,6 +9671,7 @@
       }
     },
     "weeklyPayroll": {
+      "supplyFeeHint": "Supply được trừ khỏi doanh số dịch vụ trước khi tính hoa hồng và đã được tính trong tiền thợ nhận.",
       "title": "Weekly Payroll",
       "subtitle": "Xem và trả lương cho thợ theo nhịp Weekly — mọi con số đến từ Pay Engine, không nhập tay.",
       "emptyState": "Chưa có thợ nào theo nhịp lương Weekly.",
@@ -9681,6 +9686,7 @@
         "totalBonus": "Tổng thưởng"
       },
       "columns": {
+        "supplyFeeBorne": "Phí supply",
         "employee": "Thợ",
         "type": "Loại",
         "hours": "Giờ",
@@ -9728,6 +9734,7 @@
       "dailyDetailModal": {
         "title": "Chi tiết theo ngày — {{name}}",
         "columns": {
+          "supplyFeeBorne": "Phí supply",
           "date": "Ngày",
           "services": "Dịch vụ",
           "hours": "Giờ",

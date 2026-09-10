@@ -35,6 +35,7 @@ export interface PosReportRow {
   commission: number
   tips: number
   discount: number
+  supplyFee: number
   techTakes: number
   weeklyGuarantee?: number | null
 }
@@ -46,6 +47,7 @@ export interface PosReportTotals {
   commission: number
   tips: number
   discount: number
+  supplyFee: number
   techTakes: number
 }
 
@@ -346,9 +348,9 @@ export function createPosReportRepository(client: HttpClient = httpClient) {
       return {
         mode: data?.mode ?? params.mode,
         periods: data?.periods ?? [],
-        rows: data?.rows ?? [],
-        totals: data?.totals ?? {
-          turns: 0, hours: 0, serviceAmount: 0, commission: 0, tips: 0, discount: 0, techTakes: 0,
+        rows: (data?.rows ?? []).map((row) => ({ ...row, supplyFee: row.supplyFee ?? 0 })),
+        totals: data?.totals ? { ...data.totals, supplyFee: data.totals.supplyFee ?? 0 } : {
+          turns: 0, hours: 0, serviceAmount: 0, commission: 0, tips: 0, discount: 0, supplyFee: 0, techTakes: 0,
         },
         generatedAtUtc: data?.generatedAtUtc ?? '',
       }

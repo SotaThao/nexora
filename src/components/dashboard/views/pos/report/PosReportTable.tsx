@@ -32,7 +32,7 @@ export default function PosReportTable({ rows, mode, onView }: Props) {
 
   return (
     <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-nexoraSurface">
-      <table className={`w-full ${showActions ? 'min-w-[1080px]' : 'min-w-[980px]'} text-left text-xs`}>
+      <table className={`w-full ${showActions ? 'min-w-[1180px]' : 'min-w-[1080px]'} text-left text-xs`}>
         <thead className="bg-nexoraCanvas uppercase tracking-wide text-nexoraMuted">
           <tr>
             <th className="px-4 py-3 text-xs font-black">{t(`${TK}.columns.tech`)}</th>
@@ -47,6 +47,7 @@ export default function PosReportTable({ rows, mode, onView }: Props) {
             <th className="px-4 py-3 text-right text-xs font-black" title={t(`${TK}.columns.discountHint`)}>
               {t(`${TK}.columns.discount`)}
             </th>
+            <th className="px-4 py-3 text-right text-xs font-black" title={t(`${TK}.columns.supplyFeeHint`)}>{t(`${TK}.columns.supplyFee`)}</th>
             <th className="px-4 py-3 text-right text-xs font-black">{t(`${TK}.columns.techTakes`)}</th>
             <th className="px-4 py-3 text-right text-xs font-black">{t(`${TK}.columns.weeklyGuarantee`)}</th>
             {showActions ? (
@@ -108,6 +109,9 @@ export default function PosReportTable({ rows, mode, onView }: Props) {
                   {row.discount > 0
                     ? <span className="text-nexoraDanger">−{formatCurrency(row.discount)}</span>
                     : formatCurrency(0)}
+                </td>
+                <td className="px-4 py-3 text-right tabular-nums text-nexoraText">
+                  {row.supplyFee > 0 ? <span className="text-nexoraDanger">−{formatCurrency(row.supplyFee)}</span> : formatCurrency(0)}
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums font-bold text-nexoraText">
                   {formatCurrency(row.techTakes)}
