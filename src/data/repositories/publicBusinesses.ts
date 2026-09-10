@@ -5,6 +5,7 @@
 import httpClient from '../../lib/httpClient'
 import type { PaymentMethodDto } from '../../types/domain'
 import type { CreateMultiStaffTipVars } from '../../types/hooks'
+import type { SmsConsentBusinessDto } from '../../types/repositories'
 import {
   normalizePaymentMethodDto,
   type PaymentMethodApiDtoLike,
@@ -15,6 +16,25 @@ type HttpClient = typeof httpClient
 
 export function createPublicBusinessesRepository(client: HttpClient = httpClient) {
   return {
+    async getSmsConsentBusiness(businessSlug: string): Promise<SmsConsentBusinessDto> {
+      const slug = businessSlug.trim()
+      if (!slug) {
+        throw new Error('publicBusinessesRepository.getSmsConsentBusiness: businessSlug is required')
+      }
+
+      const res = await client.get<Partial<SmsConsentBusinessDto>>(
+        `/api/v1/public/businesses/${encodeURIComponent(slug)}/sms-consent`,
+        { anonymous: true },
+      )
+
+      return {
+        businessSlug: typeof res?.businessSlug === 'string' ? res.businessSlug.trim() : '',
+        businessName: typeof res?.businessName === 'string' ? res.businessName.trim() : '',
+        logoUrl: typeof res?.logoUrl === 'string' ? res.logoUrl.trim() || null : null,
+        businessPhone: typeof res?.businessPhone === 'string' ? res.businessPhone.trim() || null : null,
+      }
+    },
+
     async getPaymentMethods(businessId: string): Promise<PaymentMethodDto[]> {
       if (!businessId) {
         throw new Error('publicBusinessesRepository.getPaymentMethods: businessId is required')

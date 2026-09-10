@@ -1298,6 +1298,23 @@ export interface PublicBookingPageApiDto {
   technicians: PublicBookingTechnicianApiDto[]
 }
 
+export interface SmsConsentBusinessDto {
+  businessSlug: string
+  businessName: string
+  logoUrl: string | null
+  businessPhone: string | null
+}
+
+export interface LocalSmsConsentRecord {
+  schemaVersion: 1
+  businessSlug: string
+  phoneE164: string
+  transactional: boolean
+  marketing: boolean
+  disclosureVersion: string
+  savedAt: string
+}
+
 // POS Booking — Public availability + submission (Ticket 5)
 export interface PublicAvailabilityItemPayload {
   posServiceId: string
