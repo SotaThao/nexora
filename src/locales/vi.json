@@ -254,6 +254,7 @@
       "work-orders": "Đơn công việc",
       "calendar": "Lịch của tôi",
       "report": "Báo cáo",
+      "certifications": "Chứng chỉ của tôi",
       "profile": "Cài đặt",
       "notifications": "Thông báo",
       "clock-scan": "Vào ca / ra ca"
@@ -7520,7 +7521,32 @@
       }
     }
   },
+  "certifications": {
+    "menu": "Chứng chỉ của tôi",
+    "title": "Chứng chỉ của tôi",
+    "subtitle": "Các chứng chỉ NEXORA TOUCH đã cấp cho bạn. Tải về dạng ảnh, hoặc chia sẻ đường link.",
+    "emptyTitle": "Chưa có chứng chỉ nào",
+    "emptyBody": "Chứng chỉ bạn đạt được từ chương trình đào tạo sản phẩm NEXORA TOUCH sẽ hiện ở đây. Nếu bạn vừa thi xong, có thể cần một lúc để chứng chỉ được cấp.",
+    "download": "Tải chứng chỉ",
+    "renderFailed": "Không tạo được ảnh chứng chỉ trên trình duyệt này.",
+    "canvasAlt": "Chứng chỉ NEXORA TOUCH cấp cho {{name}} về {{program}}, mã chứng chỉ {{id}}.",
+    "revoked": "Chứng chỉ này đã bị thu hồi và không còn hiệu lực.",
+    "revokedOn": "Chứng chỉ này đã bị thu hồi ngày {{date}} và không còn hiệu lực.",
+    "expiredOn": "Chứng chỉ này đã hết hạn ngày {{date}}.",
+    "stampRevoked": "Đã thu hồi",
+    "stampExpired": "Đã hết hạn"
+  },
   "public": {
+    "certificate": {
+      "notFoundTitle": "Không có chứng chỉ nào mang mã này",
+      "notFoundBody": "Không tìm thấy chứng chỉ khớp với {{code}}. Hãy đối chiếu lại với chứng chỉ đã in — chữ hoa chữ thường không quan trọng, nhưng từng dấu gạch ngang thì có.",
+      "rateLimitTitle": "Quá nhiều lượt kiểm tra từ kết nối này",
+      "rateLimitBodyWait": "Mỗi phút chỉ được xác minh 10 lượt. Thử lại mã sau {{seconds}} giây — đây không phải kết quả về bản thân chứng chỉ.",
+      "rateLimitBody": "Mỗi phút chỉ được xác minh 10 lượt. Đợi một chút rồi thử lại mã — đây không phải kết quả về bản thân chứng chỉ.",
+      "networkTitle": "Không kết nối được dịch vụ xác minh",
+      "networkBody": "Đây là lỗi kết nối, không phải kết luận về chứng chỉ. Kiểm tra kết nối internet rồi thử lại mã.",
+      "loading": "Đang tải {{code}}…"
+    },
     "receipt": {
       "ticketNumber": "Phiếu #{{number}}",
       "servicesTitle": "Dịch vụ",

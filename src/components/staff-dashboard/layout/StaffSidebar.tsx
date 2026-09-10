@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { LogOut, ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react'
+import { MY_CERTIFICATIONS_PATH_SEGMENT } from '../../dashboard/constants'
 import { useStaffPendingAcceptanceCount } from '../../../data/hooks/useStaffPendingAcceptanceCount'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { STAFF_CALENDAR_LAYOUT_CLASS } from '../calendar/constants'
@@ -308,6 +309,30 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
                 </button>
               )
             })}
+            {/* Its own button rather than another entry in the list above: those two are tabs of
+                the profile screen, this is a screen of its own. Personal, not salon-scoped, so it
+                belongs in the account block and not in the workspace nav below. */}
+            <button
+              type="button"
+              onClick={() => {
+                onNavigate(MY_CERTIFICATIONS_PATH_SEGMENT)
+                if (isMobile && onClose) onClose()
+              }}
+              className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
+                activeScreen === MY_CERTIFICATIONS_PATH_SEGMENT
+                  ? 'text-brandCyan font-extrabold'
+                  : 'text-white/75 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <div
+                className={`h-1.5 w-1.5 rounded-full ${
+                  activeScreen === MY_CERTIFICATIONS_PATH_SEGMENT
+                    ? 'bg-brandCyan shadow-sm'
+                    : 'bg-white/30'
+                }`}
+              />
+              <span>{t('certifications.menu')}</span>
+            </button>
             <LanguageSwitcher variant="sidebar" className="w-full" />
           </div>
         )}
