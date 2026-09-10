@@ -6,6 +6,7 @@ import { usePublicServices } from '../../../data/hooks/usePublicServices'
 import { usePublicOneQrBookingLink } from '../../../data/hooks/usePublicOneQr'
 import { buildOneQrPath, ONEQR_ROUTE } from '../../../constants/oneQr'
 import { useMediaQuery } from '../../../hooks/useMediaQuery'
+import type { PublicServiceItem } from '../../../types/publicServices'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import './public-service-menu.css'
 
@@ -22,6 +23,45 @@ function ServiceImage({ src, name }: { src: string; name: string }) {
   if (failed) return null
   return <img className="menu-service-image" src={src} alt={name} width={64} height={64}
     loading="lazy" decoding="async" onError={() => setFailed(true)} />
+}
+
+function groupServicesByTag(services: PublicServiceItem[]) {
+  const tagged = new Map<string, { tag: string | null; services: PublicServiceItem[] }>()
+  const untagged: PublicServiceItem[] = []
+  for (const service of services) {
+    if (!service.tags?.length) {
+      untagged.push(service)
+      continue
+    }
+    for (const tag of service.tags) {
+      const key = tag.toLowerCase()
+      if (!tagged.has(key)) tagged.set(key, { tag, services: [] })
+      const group = tagged.get(key)!
+      if (!group.services.some(item => item.id === service.id)) group.services.push(service)
+    }
+  }
+  return [...tagged.values(), ...(untagged.length ? [{ tag: null, services: untagged }] : [])]
+}
+
+function MenuService({ service, grouped }: { service: PublicServiceItem; grouped: boolean }) {
+  const { t } = useTranslation()
+  const Heading = grouped ? 'h4' : 'h3'
+  return (
+    <article className={`menu-service${service.description?.trim() ? ' has-description' : ''}`}>
+      {service.imageUrl ? <ServiceImage key={service.imageUrl} src={service.imageUrl} name={service.name} /> : null}
+      <div className="menu-service-content">
+        <div className="menu-service-line">
+          <Heading>{service.name}</Heading>
+          <span className="menu-price-leader" aria-hidden />
+          <span className="menu-price">{service.price != null ? formatPrice(service.price) : t(`${K}.ask_price`)}</span>
+        </div>
+        {service.description?.trim() ? <p className="menu-description">{service.description}</p> : null}
+        {service.durationMinutes > 0 ? (
+          <span className="menu-duration">{t(`${K}.duration`, { count: service.durationMinutes })}</span>
+        ) : null}
+      </div>
+    </article>
+  )
 }
 
 export default function PublicServiceMenuPage() {
@@ -46,7 +86,7 @@ export default function PublicServiceMenuPage() {
   const visible = useMemo(() => categories
     .filter(group => category === null || group.key === category)
     .map(group => ({ ...group, services: group.services.filter(service =>
-      !query || normalizeSearch(`${group.categoryName} ${service.name} ${service.description ?? ''}`).includes(query),
+      !query || normalizeSearch(`${group.categoryName} ${service.name} ${service.description ?? ''} ${(service.tags ?? []).join(' ')}`).includes(query),
     ) }))
     .filter(group => group.services.length > 0), [categories, category, query])
   const serviceCount = new Set(categories.flatMap(group => group.services.map(service => service.id))).size
@@ -103,6 +143,12 @@ export default function PublicServiceMenuPage() {
                   <X className="h-4 w-4" aria-hidden />
                 </button> : null}
               </div>
+              {showBookingLink && isDesktop ? (
+                <a href={bookingUrl!} className="menu-button menu-search-booking" target="_blank" rel="noopener noreferrer">
+                  {t(`${K}.book_appointment`)}
+                  <ArrowUpRight className="h-4 w-4 shrink-0" aria-hidden />
+                </a>
+              ) : null}
               {isDesktop && <div className="menu-filters" role="group" aria-label={t(`${K}.categories`)}>
                 <button type="button" aria-pressed={category === null} onClick={() => setCategory(null)}>
                   {t(`${K}.all`)}
@@ -118,6 +164,8 @@ export default function PublicServiceMenuPage() {
               <div className="menu-grid">
                 {visible.map(group => {
                   const expanded = expandedCategories[group.key] ?? true
+                  const tagGroups = groupServicesByTag(group.services)
+                  const hasTags = tagGroups.some(item => item.tag !== null)
                   const panelId = `${panelIdPrefix}-${encodeURIComponent(group.key)}`
                   return (
                     <section className={`menu-category${expanded ? '' : ' is-collapsed'}`} key={group.key}>
@@ -138,23 +186,20 @@ export default function PublicServiceMenuPage() {
                           </button>
                         </h2>
                       </div>
-                      <div className="menu-services" id={panelId} hidden={!expanded}>
-                        {group.services.map(service => (
-                          <article className={`menu-service${service.description?.trim() ? ' has-description' : ''}`} key={service.id}>
-                            {service.imageUrl ? <ServiceImage key={service.imageUrl} src={service.imageUrl} name={service.name} /> : null}
-                            <div className="menu-service-content">
-                              <div className="menu-service-line">
-                                <h3>{service.name}</h3>
-                                <span className="menu-price-leader" aria-hidden />
-                                <span className="menu-price">{service.price != null ? formatPrice(service.price) : t(`${K}.ask_price`)}</span>
+                      <div id={panelId} hidden={!expanded}>
+                        {tagGroups.map(tagGroup => {
+                          const title = tagGroup.tag ?? (hasTags ? t(`${K}.other_category`) : undefined)
+                          return (
+                            <section className="menu-tag-group" key={tagGroup.tag === null ? 'untagged' : `tag:${tagGroup.tag}`} aria-label={title}>
+                              {title ? <h3 className="menu-tag-title">{title}</h3> : null}
+                              <div className="menu-services">
+                                {tagGroup.services.map(service => (
+                                  <MenuService key={service.id} service={service} grouped={hasTags} />
+                                ))}
                               </div>
-                              {service.description?.trim() ? <p className="menu-description">{service.description}</p> : null}
-                              {service.durationMinutes > 0 ? (
-                                <span className="menu-duration">{t(`${K}.duration`, { count: service.durationMinutes })}</span>
-                              ) : null}
-                            </div>
-                          </article>
-                        ))}
+                            </section>
+                          )
+                        })}
                       </div>
                     </section>
                   )

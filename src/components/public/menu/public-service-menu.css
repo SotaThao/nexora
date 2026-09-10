@@ -41,9 +41,11 @@
 .public-service-menu .menu-service-content { flex: 1; }
 .public-service-menu .menu-service-image { width: 64px; height: 64px; flex-shrink: 0; border-radius: 50%; object-fit: cover; }
 .public-service-menu .menu-service:last-child { border-bottom: 0; }
+.public-service-menu .menu-tag-title { margin: 14px 12px 2px; color: var(--menu-accent); font-size: 14px; font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; }
+.public-service-menu .menu-tag-group + .menu-tag-group { margin-top: 8px; }
 .public-service-menu .menu-services { padding: 4px 12px 0; }
 .public-service-menu .menu-service-line { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.public-service-menu .menu-service h3 { flex: 0 1 auto; font-size: 14px; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
+.public-service-menu .menu-service :is(h3, h4) { flex: 0 1 auto; font-size: 14px; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
 .public-service-menu .menu-price { flex-shrink: 0; max-width: 40%; color: var(--menu-accent); font-size: 14px; font-weight: 800; line-height: 1.3; text-align: right; overflow-wrap: anywhere; }
 .public-service-menu .menu-description { width: 100%; margin-top: 4px; font-size: 14px; line-height: 1.5; color: var(--menu-muted); white-space: pre-line; overflow-wrap: anywhere; }
 .public-service-menu .menu-price-leader { flex: 1 1 24px; min-width: 16px; border-bottom: 1px dotted var(--menu-muted); opacity: .45; }
@@ -52,6 +54,8 @@
 .public-service-menu .menu-state h2 { font-size: 20px; font-weight: 700; }
 .public-service-menu .menu-state p { margin-top: 8px; font-size: 13px; line-height: 1.6; color: var(--menu-muted); }
 .public-service-menu .menu-button { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 44px; padding: 10px 16px; margin-top: 14px; border-radius: 999px; background: var(--menu-ink); color: #fff; font-size: 12px; font-weight: 600; }
+.public-service-menu .menu-controls .menu-search-booking { margin-top: 0; flex-shrink: 0; background: var(--menu-accent); color: #fff; }
+.public-service-menu .menu-controls .menu-search-booking:hover { background: #a94708; }
 .public-service-menu .menu-bottom { display: flex; flex-direction: column; align-items: stretch; gap: 18px; margin-top: 24px; padding: 22px 20px; border-radius: 16px; background: var(--menu-ink); color: #ffb15e; }
 .public-service-menu .menu-bottom h2 { margin: 0; color: #ffb15e; font-size: 28px; font-weight: 750; line-height: 1.08; letter-spacing: -.045em; overflow-wrap: anywhere; }
 .public-service-menu .menu-booking h2 { font-size: clamp(24px, 2.4vw, 32px); }
@@ -86,6 +90,6 @@
   .public-service-menu .menu-services:not([hidden]) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 36px; }
   .public-service-menu .menu-service.has-description { grid-column: 1 / -1; }
   .public-service-menu .menu-service { padding: 10px 0; }
-  .public-service-menu .menu-service h3, .public-service-menu .menu-price { font-size: 15px; }
+  .public-service-menu .menu-service :is(h3, h4), .public-service-menu .menu-price { font-size: 15px; }
   .public-service-menu .menu-service:last-child { padding-bottom: 8px; }
 }
