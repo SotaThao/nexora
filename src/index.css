@@ -490,6 +490,16 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
     @apply rounded-xl border border-nexoraBorder bg-nexoraSurface shadow-nexora-card;
   }
 
+  @media (min-width: 768px) {
+    .pos-estimate-card {
+      /* Reserve the 64px header and 56px spacing, including Safari's browser chrome. */
+      max-height: calc(100vh - 120px);
+      max-height: calc(100dvh - 120px);
+      overflow-y: auto;
+      overscroll-behavior-y: contain;
+    }
+  }
+
   .nexora-modal-card {
     @apply nexora-card flex w-full flex-col p-6;
     max-height: 90vh;

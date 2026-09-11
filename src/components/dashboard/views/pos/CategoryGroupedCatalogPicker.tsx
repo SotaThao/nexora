@@ -3,13 +3,11 @@
 // Booking service pickers (NewBookingForm/RescheduleServicesEditor). Categories are derived
 // from catalog items so staff do not need access to the owner-only categories endpoint.
 //
-// `variant="grid"` (POS iPad redesign — Order Workspace only) swaps the thin item-row list
-// for a touch-sized card grid with sticky category headers, on the shared nexora* color
-// tokens — approved after 4 rounds of wireframe review (see project memory). `variant="list"`
-// (default) is untouched and keeps the Booking pickers pixel-identical, since they weren't
-// part of that review and live inside more space-constrained modals.
+// The grid variant is shared by Checkout/Edit POS and Estimate: compact service cards,
+// bordered category filters, and sticky section headings inside a scrollable list.
+// Booking uses the list variant; check-in uses the selected-item accordion.
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, ChevronDown, Search, X } from 'lucide-react'
+import { Check, ChevronDown, Plus, Search, X } from 'lucide-react'
 import IconButton from '../../../ui/IconButton'
 
 // Sentinel category id for "Others" (items with zero real categories) in Check-in Step
@@ -70,6 +68,9 @@ export default function CategoryGroupedCatalogPicker({
   disabledItemIds,
   viewDetailsLabel,
   closeDetailsLabel,
+  showDuration = false,
+  missingPriceLabel = '—',
+  scrollInParentOnTablet = false,
 }: {
   items: CatalogPickerItem[]
   onAdd: (itemId: string) => void
@@ -96,6 +97,10 @@ export default function CategoryGroupedCatalogPicker({
   // optional in the type only so callers that never pass selectedItemIds don't need it.
   viewDetailsLabel?: string
   closeDetailsLabel?: string
+  showDuration?: boolean
+  missingPriceLabel?: string
+  // Estimate caps the whole card on tablet; avoid a second scroll area inside it.
+  scrollInParentOnTablet?: boolean
 }) {
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
@@ -147,7 +152,7 @@ export default function CategoryGroupedCatalogPicker({
       className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-nexoraCanvas"
     >
       <span className="truncate font-semibold text-nexoraText">
-        {item.name} — ${item.price.toFixed(2)}
+        {item.name} — {item.price == null ? missingPriceLabel : `$${item.price.toFixed(2)}`}
       </span>
       <button
         type="button"
@@ -198,7 +203,7 @@ export default function CategoryGroupedCatalogPicker({
               </span>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[13px] font-bold text-nexoraText">${item.price.toFixed(2)}</span>
+              <span className="text-[13px] font-bold text-nexoraText">{item.price == null ? missingPriceLabel : `$${item.price.toFixed(2)}`}</span>
               {item.durationMinutes ? (
                 <span className="text-[10px] text-nexoraMuted">· {item.durationMinutes} min</span>
               ) : null}
@@ -223,17 +228,20 @@ export default function CategoryGroupedCatalogPicker({
         type="button"
         onClick={() => onAdd(item.id)}
         disabled={isDisabled}
-        className={`flex min-h-[76px] flex-col justify-between gap-2 rounded-xl border bg-white p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-40 disabled:hover:translate-y-0 disabled:hover:shadow-sm ${
-          isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder hover:border-nexoraBrand'
+        className={`group/service flex min-h-14 flex-col justify-center gap-1 rounded-lg border bg-nexoraSurface px-3 py-2.5 text-left transition-colors duration-150 disabled:opacity-40 ${
+          isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder enabled:hover:border-nexoraBrand/35 enabled:hover:bg-nexoraBrandSoft/20'
         }`}
       >
-        <span className="line-clamp-2 text-sm font-bold leading-snug text-nexoraText">{item.name}</span>
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-nexoraText">${item.price.toFixed(2)}</span>
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-nexoraCanvas text-base font-bold text-nexoraBrandDark">
-            +
+        <div className="grid w-full grid-cols-[minmax(0,1fr)_auto_auto] items-start gap-2">
+          <span className="min-w-0 break-words pt-1 text-xs font-bold leading-tight text-nexoraText">{item.name}</span>
+          <span className="whitespace-nowrap pt-0.5 text-xs font-bold tabular-nums leading-5 text-nexoraText">{item.price == null ? missingPriceLabel : `$${item.price.toFixed(2)}`}</span>
+          <span aria-hidden="true" className="flex h-6 w-6 items-center justify-center rounded-lg bg-nexoraBrandSoft/60 text-nexoraBrand ring-1 ring-inset ring-nexoraBrand/15 transition-colors duration-150 group-[:enabled:hover]/service:bg-nexoraBrandSoft group-[:enabled:hover]/service:text-nexoraBrandDark group-[:enabled:hover]/service:ring-nexoraBrand/25">
+            <Plus className="h-4 w-4" strokeWidth={2.5} />
           </span>
         </div>
+        {showDuration && item.durationMinutes != null ? (
+          <span className="text-[11px] font-semibold leading-tight text-nexoraMuted">{item.durationMinutes} min</span>
+        ) : null}
       </button>
     )
   }
@@ -298,7 +306,7 @@ export default function CategoryGroupedCatalogPicker({
           placeholder={searchPlaceholder}
           className={
             isGrid
-              ? `${isCheckinServiceMode ? 'h-9 text-xs' : 'h-11 text-sm'} w-full rounded-xl border border-nexoraBorder bg-white pl-8 pr-2.5 text-nexoraText outline-none focus:border-nexoraBrand`
+              ? `${isCheckinServiceMode ? 'h-9 text-xs' : 'h-11 text-xs'} w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas pl-8 pr-2.5 text-nexoraText outline-none focus:border-nexoraBrand`
               : 'h-8 w-full rounded-lg border border-nexoraBorder bg-white pl-8 pr-2.5 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand'
           }
         />
@@ -373,12 +381,13 @@ export default function CategoryGroupedCatalogPicker({
               <button
                 type="button"
                 onClick={() => setSelectedCategoryId('')}
+                aria-pressed={selectedCategoryId === ''}
                 className={
                   isGrid
-                    ? `rounded-full px-3.5 py-2 text-xs font-bold transition ${
+                    ? `min-h-8 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold transition-colors ${
                         selectedCategoryId === ''
-                          ? 'bg-nexoraBrand text-white'
-                          : 'bg-nexoraCanvas text-nexoraMuted hover:text-nexoraText'
+                          ? 'border-nexoraBrand/50 bg-nexoraBrandSoft/50 text-nexoraBrand'
+                          : 'border-nexoraBorder bg-nexoraSurface text-nexoraMuted hover:border-nexoraBrand/50 hover:text-nexoraText'
                       }`
                     : `rounded-full px-2.5 py-1 text-[10px] font-bold transition ${
                         selectedCategoryId === ''
@@ -394,12 +403,13 @@ export default function CategoryGroupedCatalogPicker({
                   key={category.id}
                   type="button"
                   onClick={() => setSelectedCategoryId(category.id)}
+                  aria-pressed={selectedCategoryId === category.id}
                   className={
                     isGrid
-                      ? `rounded-full px-3.5 py-2 text-xs font-bold transition ${
+                      ? `min-h-8 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold transition-colors ${
                           selectedCategoryId === category.id
-                            ? 'bg-nexoraBrand text-white'
-                            : 'bg-nexoraCanvas text-nexoraMuted hover:text-nexoraText'
+                            ? 'border-nexoraBrand/50 bg-nexoraBrandSoft/50 text-nexoraBrand'
+                            : 'border-nexoraBorder bg-nexoraSurface text-nexoraMuted hover:border-nexoraBrand/50 hover:text-nexoraText'
                         }`
                       : `rounded-full px-2.5 py-1 text-[10px] font-bold transition ${
                           selectedCategoryId === category.id
@@ -418,13 +428,13 @@ export default function CategoryGroupedCatalogPicker({
             <p className={isGrid ? 'text-xs text-nexoraMuted' : 'text-[11px] text-nexoraMuted'}>{emptyLabel}</p>
           ) : selectedCategoryId === '' ? (
             isGrid ? (
-              <div className="max-h-[480px] overflow-y-auto rounded-xl border border-nexoraBorder">
+              <div className={`max-h-[min(70dvh,744px)] space-y-4 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable] ${scrollInParentOnTablet ? 'md:max-h-none md:overflow-visible' : ''}`}>
                 {groupedSections!.map((section) => (
                   <div key={section.category.id}>
-                    <h4 className="sticky top-0 z-[1] border-b border-nexoraBorder bg-nexoraCanvas px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+                    <h4 className="sticky top-0 z-[1] mb-2 rounded-md bg-nexoraCanvas px-3 py-2 text-[10px] font-black uppercase text-nexoraMuted">
                       {section.category.name}
                     </h4>
-                    <div className="p-2">{renderServices(section.items, "grid grid-cols-2 gap-2 sm:grid-cols-3")}</div>
+                    {renderServices(section.items, "grid grid-cols-1 gap-2 sm:grid-cols-2")}
                   </div>
                 ))}
               </div>
@@ -441,8 +451,11 @@ export default function CategoryGroupedCatalogPicker({
               </div>
             )
           ) : isGrid ? (
-            <div className="max-h-[480px] overflow-y-auto rounded-xl border border-nexoraBorder p-2">
-              {renderServices(flatItems, "grid grid-cols-2 gap-2 sm:grid-cols-3")}
+            <div className={`max-h-[min(70dvh,744px)] overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable] ${scrollInParentOnTablet ? 'md:max-h-none md:overflow-visible' : ''}`}>
+              <h4 className="sticky top-0 z-[1] mb-2 rounded-md bg-nexoraCanvas px-3 py-2 text-[10px] font-black uppercase text-nexoraMuted">
+                {categories.find(category => category.id === selectedCategoryId)?.name}
+              </h4>
+              {renderServices(flatItems, "grid grid-cols-1 gap-2 sm:grid-cols-2")}
             </div>
           ) : (
             <div className="max-h-72 space-y-1 overflow-y-auto rounded-lg border border-nexoraBorder p-1.5 pr-3">

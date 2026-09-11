@@ -88,6 +88,7 @@ import {
   type PosReportSelection,
 } from './report/posReportPeriod'
 import PosCheckInTab from './PosCheckInTab'
+import PosEstimateTab from './PosEstimateTab'
 import PosCompletedOrdersPanel from './PosCompletedOrdersPanel'
 import NewBookingForm from './booking/NewBookingForm'
 import BookingTab from './booking/BookingTab'
@@ -425,6 +426,10 @@ export default function PosFrontDeskView({
   const initialTab: PosFrontDeskTab =
     tabFromUrl && availableTabs.includes(tabFromUrl) ? tabFromUrl : DEFAULT_POS_FRONT_DESK_TAB
   const [activeTab, setActiveTabState] = useState<PosFrontDeskTab>(initialTab)
+  const [estimateOpened, setEstimateOpened] = useState(initialTab === PosFrontDeskTab.Estimate)
+  useEffect(() => {
+    if (activeTab === PosFrontDeskTab.Estimate) setEstimateOpened(true)
+  }, [activeTab])
   const previousActiveTabRef = useRef<PosFrontDeskTab | null>(null)
   // Each Front Desk data set is loaded only while its tab is open. Leaving a tab disables its
   // observer; returning to it or reloading triggers a fresh request instead of background polls.
@@ -1334,7 +1339,7 @@ export default function PosFrontDeskView({
   }
 
   return (
-    <div className="pos-front-desk-action-surface flex h-full min-h-0 flex-col gap-4">
+    <div className="pos-front-desk-action-surface flex flex-col gap-4">
       {/* Hidden while an Order Workspace is open (Check-in draft or editing an existing
           order) — iPad space optimization: this title/description block is
           "where am I" chrome that's redundant once the staff is heads-down on one
@@ -1390,6 +1395,26 @@ export default function PosFrontDeskView({
           </button>
         ))}
       </ScrollableTabStrip>
+
+      {estimateOpened ? (
+        <div className={!updateWorkspace && activeTab === PosFrontDeskTab.Estimate ? '' : 'hidden'}>
+          <PosEstimateTab
+            key={businessId}
+            businessId={businessId}
+            onCheckedIn={refreshFrontDeskLists}
+            onFinished={() => {
+              setActiveTab(PosFrontDeskTab.OrderList)
+              setOrderListFilter(OrderListFilter.All)
+              refreshFrontDeskLists()
+            }}
+            onViewTickets={() => {
+              setActiveTab(PosFrontDeskTab.OrderList)
+              setOrderListFilter(OrderListFilter.All)
+              refreshFrontDeskLists()
+            }}
+          />
+        </div>
+      ) : null}
 
       {updateWorkspace ? (
         <PosOrderWorkspace
