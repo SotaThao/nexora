@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { QrCode } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { useNotification } from '../../contexts/NotificationContext'
 import {
@@ -34,10 +35,11 @@ export default function ReceivePaymentsQrContent({
 
   return (
     <div className="space-y-4">
-      <p className="text-xs leading-relaxed text-nexoraMuted">
-        {t('dashboard.touchpoints.stations_sections.payment_desc')}
-      </p>
       <section className="rounded-flox-cards border border-nexoraBorder bg-white p-4 shadow-premium dark:border-luxuryGold/18 dark:bg-luxuryCoal sm:p-6">
+        <h3 className="mb-4 flex items-center gap-2 border-b border-nexoraRule pb-3 text-xs font-black uppercase tracking-wider text-nexoraText">
+          <QrCode className="h-4 w-4 text-nexoraBrand" />
+          {t('components.settings.tabs.ProfileTab.paymentQrTab')}
+        </h3>
         <SettingsTipQrPanel
           variant="compact"
           businessName={businessName}

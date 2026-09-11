@@ -5,11 +5,15 @@
 import type { ChangeEvent, Dispatch, FormEvent, SetStateAction } from 'react'
 import { Building2, Camera, Edit2, ExternalLink, HelpCircle } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
-import { formatNationalNumber, getNationalPhonePlaceholder, PhoneDialCode } from '../CountryCodeSelect'
+import PhoneInput from '../ui/PhoneInput'
+import { formatAddressForMap, type MapAddressParts } from '../../utils/mapUrl'
+import { formatPhoneDisplay } from '../../utils/phoneDisplay'
 
 type SettingsFormErrors = Record<string, string>
 
 type BusinessInfoCardProps = {
+  businessAddress?: MapAddressParts
+  className?: string
   businessName?: string
   businessPhone?: string
   businessEmail?: string
@@ -36,6 +40,8 @@ type BusinessInfoCardProps = {
 }
 
 export default function BusinessInfoCard({
+  businessAddress,
+  className = 'md:col-span-2',
   businessName,
   businessPhone,
   businessEmail,
@@ -86,7 +92,7 @@ export default function BusinessInfoCard({
     ) : null
 
   return (
-    <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 relative md:col-span-2">
+    <div className={`rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 relative ${className}`}>
       <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
         <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
           <Building2 className="h-4 w-4 text-purple-500" />
@@ -161,21 +167,15 @@ export default function BusinessInfoCard({
             />
             <FieldError id="settings-business-name-error" error={businessErrors.businessName} />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-3">
             <div>
-              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.businessPhone')}</label>
-              <input
+              <label htmlFor="settings-business-phone" className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.businessPhone')}</label>
+              <PhoneInput
                 id="settings-business-phone"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                className={inputClass(businessErrors.businessPhone)}
                 value={businessForm.businessPhone}
-                placeholder={getNationalPhonePlaceholder(PhoneDialCode.US)}
-                aria-invalid={Boolean(businessErrors.businessPhone)}
-                aria-describedby={businessErrors.businessPhone ? 'settings-business-phone-error' : undefined}
-                onChange={(e) => {
-                  setBusinessForm({ ...businessForm, businessPhone: formatNationalNumber(e.target.value, PhoneDialCode.US) })
+                error={businessErrors.businessPhone}
+                onChange={(businessPhone) => {
+                  setBusinessForm({ ...businessForm, businessPhone })
                   clearError(setBusinessErrors, 'businessPhone')
                 }}
               />
@@ -218,6 +218,46 @@ export default function BusinessInfoCard({
             />
             <FieldError id="settings-business-website-error" error={businessErrors.businessWebsite} />
           </div>
+          <fieldset className="space-y-3 border-t border-nexoraRule pt-3">
+            <legend className="px-1 text-[10px] font-extrabold uppercase text-nexoraMuted">
+              {t('components.settings.tabs.ProfileTab.businessAddress')}
+            </legend>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { field: 'street', label: 'streetAddress', autoComplete: 'address-line1', maxLength: 300 },
+                { field: 'city', label: 'city', autoComplete: 'address-level2', maxLength: 100 },
+                { field: 'state', label: 'stateProvince', autoComplete: 'address-level1', maxLength: 50 },
+                { field: 'zipCode', label: 'zipCode', autoComplete: 'postal-code', maxLength: 20 },
+                { field: 'country', label: 'country', autoComplete: 'country-name', maxLength: 100 },
+              ].map(({ field, label, autoComplete, maxLength }) => {
+                const error = businessErrors[`businessAddress.${field}`]
+                const id = `settings-business-address-${field}`
+                return (
+                  <div key={field} className={field === 'street' ? 'sm:col-span-2' : ''}>
+                    <label htmlFor={id} className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+                      {t(`components.settings.tabs.ProfileTab.${label}`)}
+                    </label>
+                    <input
+                      id={id}
+                      type="text"
+                      autoComplete={`section-business ${autoComplete}`}
+                      maxLength={maxLength}
+                      placeholder={t(`components.settings.tabs.ProfileTab.businessAddressPlaceholders.${field}`)}
+                      className={inputClass(error)}
+                      value={businessForm.businessAddress?.[field] || ''}
+                      aria-invalid={Boolean(error)}
+                      aria-describedby={error ? `${id}-error` : undefined}
+                      onChange={(e) => {
+                        setBusinessForm({ ...businessForm, businessAddress: { ...businessForm.businessAddress, [field]: e.target.value } })
+                        clearError(setBusinessErrors, `businessAddress.${field}`)
+                      }}
+                    />
+                    <FieldError id={`${id}-error`} error={error} />
+                  </div>
+                )
+              })}
+            </div>
+          </fieldset>
           {showReviewLinks && (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -300,7 +340,7 @@ export default function BusinessInfoCard({
             </>
           )}
           <div>
-            <label className="flex items-center text-[10px] font-extrabold uppercase text-nexoraMuted gap-1">
+            <label htmlFor="settings-booking-notification-phone" className="flex items-center text-[10px] font-extrabold uppercase text-nexoraMuted gap-1">
               <span>{t('components.settings.tabs.ProfileTab.bookingNotificationPhone')}</span>
               <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
                 <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
@@ -310,18 +350,12 @@ export default function BusinessInfoCard({
                 </div>
               </div>
             </label>
-            <input
+            <PhoneInput
               id="settings-booking-notification-phone"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              className={inputClass(businessErrors.bookingNotificationPhone)}
               value={businessForm.bookingNotificationPhone}
-              placeholder={getNationalPhonePlaceholder(PhoneDialCode.US)}
-              aria-invalid={Boolean(businessErrors.bookingNotificationPhone)}
-              aria-describedby={businessErrors.bookingNotificationPhone ? 'settings-booking-notification-phone-error' : undefined}
-              onChange={(e) => {
-                setBusinessForm({ ...businessForm, bookingNotificationPhone: formatNationalNumber(e.target.value, PhoneDialCode.US) })
+              error={businessErrors.bookingNotificationPhone}
+              onChange={(bookingNotificationPhone) => {
+                setBusinessForm({ ...businessForm, bookingNotificationPhone })
                 clearError(setBusinessErrors, 'bookingNotificationPhone')
               }}
             />
@@ -378,11 +412,17 @@ export default function BusinessInfoCard({
             <span className="min-w-0 break-words text-nexoraText font-extrabold sm:text-right">{businessName}</span>
           </div>
           <div className="flex flex-col gap-1 border-t border-slate-50 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
-            <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.phone')}</span>
-            <span className="min-w-0 break-words text-nexoraText font-extrabold sm:text-right">{businessPhone}</span>
+            <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.businessPhone')}</span>
+            <span className="min-w-0 break-words text-nexoraText font-extrabold sm:text-right">{formatPhoneDisplay(businessPhone)}</span>
+          </div>
+          <div className="flex flex-col gap-1 border-t border-slate-50 py-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3 sm:py-1">
+            <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.businessAddress')}</span>
+            <span className="min-w-0 break-words text-nexoraText font-extrabold sm:text-right">
+              {formatAddressForMap(businessAddress || {}) || t('components.settings.tabs.ProfileTab.notConfigured')}
+            </span>
           </div>
           <div className="flex flex-col gap-1 border-t border-slate-50 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
-            <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.email')}</span>
+            <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.businessEmail')}</span>
             <span className="min-w-0 truncate text-nexoraText font-extrabold sm:text-right" title={businessEmail || undefined}>{businessEmail || '-'}</span>
           </div>
           <div className="flex flex-col gap-1 border-t border-slate-50 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
@@ -435,7 +475,7 @@ export default function BusinessInfoCard({
           )}
           <div className="flex flex-col gap-1 border-t border-slate-50 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
             <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.bookingNotificationPhone')}</span>
-            <span className="min-w-0 break-words text-nexoraText font-extrabold sm:text-right">{bookingNotificationPhone || '-'}</span>
+            <span className="min-w-0 break-words text-nexoraText font-extrabold sm:text-right">{formatPhoneDisplay(bookingNotificationPhone) || '-'}</span>
           </div>
           <div className="flex flex-col gap-1 border-t border-slate-50 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
             <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.salesTaxRatePercent')}</span>

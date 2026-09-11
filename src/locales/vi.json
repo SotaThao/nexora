@@ -6809,6 +6809,15 @@
       },
       "tabs": {
         "ProfileTab": {
+          "editPersonalInformation": "Chỉnh sửa thông tin cá nhân",
+          "businessAddress": "Địa chỉ doanh nghiệp",
+          "businessAddressPlaceholders": {
+            "street": "VD: 123 Main St, Suite 100",
+            "city": "VD: Austin",
+            "state": "VD: Texas",
+            "zipCode": "VD: 78701",
+            "country": "VD: United States"
+          },
           "edit": "Chỉnh sửa",
           "businessOwner": "Chủ doanh nghiệp",
           "username": "Tên đăng nhập",
@@ -6841,15 +6850,15 @@
           "methodNotConfigured": "Phương thức chưa được cấu hình.",
           "pleaseEnterAccountDetails": "Vui lòng nhập thông tin tài khoản.",
           "methodIdMissing": "Lỗi hệ thống: Thiếu ID phương thức",
-          "basicInformation": "Thông tin cơ bản",
+          "basicInformation": "Thông tin cá nhân",
           "specifyYourFullLegal": "Nhập đầy đủ họ và tên hợp pháp của bạn như trên giấy tờ tùy thân.",
           "requiredForIdentityVerification": "Ngày sinh của bạn (phải từ 18 tuổi trở lên để xác thực).",
           "primaryPhoneContactFor": "Số điện thoại chính để nhận thông báo và xác minh tài khoản.",
           "fullName": "Họ và tên",
           "dateOfBirth": "Ngày sinh",
-          "phoneNumber": "Số điện thoại",
-          "addressDetails": "Chi tiết địa chỉ",
-          "provideThePhysicalLocation": "Cung cấp địa chỉ thực của cửa hàng. Được sử dụng để bản địa hóa và xác minh.",
+          "phoneNumber": "Số điện thoại cá nhân",
+          "addressDetails": "Địa chỉ nhà riêng",
+          "provideThePhysicalLocation": "Nhập địa chỉ nhà riêng của người đại diện pháp luật.",
           "street": "Đường hoặc Phố",
           "state": "Bang hoặc Tỉnh",
           "country": "Quốc gia",
@@ -6878,9 +6887,9 @@
               "saturday": "Thứ Bảy"
             }
           },
-          "locationMap": "Bản đồ vị trí",
+          "locationMap": "Địa điểm doanh nghiệp",
           "locationMapEmpty": "Thêm địa chỉ để hiển thị vị trí cửa hàng trên bản đồ.",
-          "reviewLinks": "Liên kết đánh giá",
+          "reviewLinks": "Liên kết đánh giá doanh nghiệp",
           "emailPhone": "email hoặc SĐT",
           "details": "chi tiết",
           "cashAppIdentifier": "$cashtag, email hoặc SĐT",

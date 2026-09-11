@@ -6812,6 +6812,15 @@
       },
       "tabs": {
         "ProfileTab": {
+          "editPersonalInformation": "Edit personal information",
+          "businessAddress": "Business Address",
+          "businessAddressPlaceholders": {
+            "street": "e.g. 123 Main St, Suite 100",
+            "city": "e.g. Austin",
+            "state": "e.g. Texas",
+            "zipCode": "e.g. 78701",
+            "country": "e.g. United States"
+          },
           "edit": "Edit",
           "businessOwner": "Business Owner",
           "username": "Username",
@@ -6844,15 +6853,15 @@
           "methodNotConfigured": "Method is not configured.",
           "pleaseEnterAccountDetails": "Please enter account details.",
           "methodIdMissing": "System Error: Method ID missing",
-          "basicInformation": "Basic Information",
+          "basicInformation": "Personal Information",
           "specifyYourFullLegal": "Specify your full legal name as it appears on your official government identification documents.",
           "requiredForIdentityVerification": "Required for identity verification purposes (must be 18 years or older).",
           "primaryPhoneContactFor": "Primary phone contact for administrative account alerts and verification updates.",
           "fullName": "Full Name",
           "dateOfBirth": "Date of Birth",
-          "phoneNumber": "Phone Number",
-          "addressDetails": "Address Details",
-          "provideThePhysicalLocation": "Provide the physical location of your store. Used for localization and verification purposes.",
+          "phoneNumber": "Personal Phone",
+          "addressDetails": "Home Address",
+          "provideThePhysicalLocation": "Enter the home address of the legal representative.",
           "street": "Street",
           "state": "State",
           "country": "Country",
@@ -6881,9 +6890,9 @@
               "saturday": "Saturday"
             }
           },
-          "locationMap": "Location Map",
+          "locationMap": "Business Location",
           "locationMapEmpty": "Add your address to display your business location on the map.",
-          "reviewLinks": "Review Links",
+          "reviewLinks": "Business Review Links",
           "emailPhone": "email or phone",
           "details": "details",
           "cashAppIdentifier": "$cashtag, email, or phone",
