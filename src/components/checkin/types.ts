@@ -5,13 +5,15 @@
 // (see sources/), never here and never in a layout.
 
 export interface CheckInService {
+  tags?: string[]
+  displayOrder?: number
   id: string
   name: string
   price: number
   durationMinutes: number
   description: string | null
   photoUrl: string | null
-  categories: { id: string; name: string }[]
+  categories: { id: string; name: string; displayOrder?: number }[]
 }
 
 export interface CheckInTechnician {

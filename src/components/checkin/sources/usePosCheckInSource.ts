@@ -66,6 +66,8 @@ export default function createPosCheckInSource(businessId: string): CheckInSourc
           description: service.description ?? null,
           photoUrl: service.photoUrl ?? null,
           categories: service.categories,
+          tags: service.tags,
+          displayOrder: service.displayOrder,
         })),
       [catalogQuery.data],
     )

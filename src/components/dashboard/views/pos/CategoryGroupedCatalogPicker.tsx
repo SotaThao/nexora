@@ -1,9 +1,7 @@
 // Shared category-filterable, searchable catalog picker for POS Service/Product selection
 // — used by the Order Workspace's Services/Products catalog browser (US-17), and by the
 // Booking service pickers (NewBookingForm/RescheduleServicesEditor). Categories are derived
-// from the items themselves (each catalog item already carries its own Categories:
-// {id,name}[]) rather than a separate categories fetch, since GetPosCategoriesQuery is
-// Owner-only and this picker must also work for a Staff caller with Operations access.
+// from catalog items so staff do not need access to the owner-only categories endpoint.
 //
 // `variant="grid"` (POS iPad redesign — Order Workspace only) swaps the thin item-row list
 // for a touch-sized card grid with sticky category headers, on the shared nexora* color
@@ -23,12 +21,39 @@ export interface CatalogPickerItem {
   id: string
   name: string
   price: number
-  categories: { id: string; name: string }[]
+  categories: { id: string; name: string; displayOrder?: number }[]
+  displayOrder?: number
+  tags?: string[]
   // Check-in Step 2's service card redesign only (see selectedItemIds) — every other
   // caller's DTO either doesn't carry these or they're simply unused there.
   durationMinutes?: number
   description?: string | null
   photoUrl?: string | null
+}
+
+const normalizeSearch = (text: string) => text.toLocaleLowerCase()
+  .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd')
+
+const matchesSearch = (item: CatalogPickerItem, query: string) =>
+  normalizeSearch(`${item.name} ${item.description ?? ''} ${(item.tags ?? []).join(' ')}`).includes(query)
+
+function groupItemsByTag(items: CatalogPickerItem[]) {
+  const tagged = new Map<string, { tag: string | null; items: CatalogPickerItem[] }>()
+  const untagged: CatalogPickerItem[] = []
+  for (const item of items) {
+    const tags = (item.tags ?? []).filter((tag) => typeof tag === 'string').map((tag) => tag.trim()).filter(Boolean)
+    if (!tags.length) {
+      untagged.push(item)
+      continue
+    }
+    for (const tag of tags) {
+      const key = tag.toLowerCase()
+      if (!tagged.has(key)) tagged.set(key, { tag, items: [] })
+      const group = tagged.get(key)!
+      if (!group.items.some(member => member.id === item.id)) group.items.push(item)
+    }
+  }
+  return [...tagged.values(), ...(untagged.length ? [{ tag: null, items: untagged }] : [])]
 }
 
 export default function CategoryGroupedCatalogPicker({
@@ -81,14 +106,15 @@ export default function CategoryGroupedCatalogPicker({
   const disabledIdSet = useMemo(() => new Set(disabledItemIds ?? []), [disabledItemIds])
 
   const categories = useMemo(() => {
-    const byId = new Map<string, { name: string; count: number }>()
+    const byId = new Map<string, { name: string; count: number; displayOrder?: number }>()
     items.forEach((item) =>
       item.categories.forEach((c) => {
         const existing = byId.get(c.id)
-        byId.set(c.id, { name: c.name, count: (existing?.count ?? 0) + 1 })
+        byId.set(c.id, { name: c.name, displayOrder: c.displayOrder, count: (existing?.count ?? 0) + 1 })
       }),
     )
-    const result = Array.from(byId, ([id, v]) => ({ id, name: v.name, count: v.count }))
+    const result = Array.from(byId, ([id, v]) => ({ id, ...v }))
+      .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
     if (isCheckinServiceMode) {
       const uncategorizedCount = items.filter((item) => item.categories.length === 0).length
       if (uncategorizedCount > 0) {
@@ -108,8 +134,9 @@ export default function CategoryGroupedCatalogPicker({
   }, [isCheckinServiceMode, categories])
 
   const searchedItems = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase()
-    return query === '' ? items : items.filter((item) => item.name.toLowerCase().includes(query))
+    const query = normalizeSearch(searchQuery.trim())
+    const sorted = [...items].sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
+    return query === '' ? sorted : sorted.filter((item) => matchesSearch(item, query))
   }, [items, searchQuery])
 
   const isGrid = variant === 'grid'
@@ -211,6 +238,24 @@ export default function CategoryGroupedCatalogPicker({
     )
   }
 
+  const renderServices = (services: CatalogPickerItem[], layout: string) => {
+    const tagGroups = groupItemsByTag(services)
+    const renderItem = isGrid ? renderItemCard : renderItemRow
+    if (tagGroups.every((group) => group.tag === null)) {
+      return <div className={layout}>{services.map(renderItem)}</div>
+    }
+    return (
+      <div className="space-y-3">
+        {tagGroups.map((group) => (
+          <section key={group.tag === null ? 'untagged' : `tag:${group.tag.toLowerCase()}`} aria-label={group.tag ?? undefined}>
+            {group.tag !== null ? <h5 className="mb-1.5 px-1 text-xs font-bold text-nexoraBrandDark">{group.tag}</h5> : null}
+            <div className={layout}>{group.items.map(renderItem)}</div>
+          </section>
+        ))}
+      </div>
+    )
+  }
+
   const groupedSections = useMemo(() => {
     if (selectedCategoryId !== '') return null
     const sections = categories
@@ -229,20 +274,14 @@ export default function CategoryGroupedCatalogPicker({
     return sections
   }, [categories, searchedItems, selectedCategoryId, uncategorizedLabel])
 
-  const flatItems =
-    selectedCategoryId === ''
-      ? searchedItems
-      : selectedCategoryId === UNCATEGORIZED_CHIP_ID
-        ? searchedItems.filter((item) => item.categories.length === 0)
-        : searchedItems.filter((item) => item.categories.some((c) => c.id === selectedCategoryId))
-
-  const isEmpty =
-    selectedCategoryId === '' ? (groupedSections?.length ?? 0) === 0 : flatItems.length === 0
-
-  const itemsForCategory = (categoryId: string) =>
-    categoryId === UNCATEGORIZED_CHIP_ID
+  const itemsForCategory = (categoryId: string) => {
+    return categoryId === UNCATEGORIZED_CHIP_ID
       ? searchedItems.filter((item) => item.categories.length === 0)
       : searchedItems.filter((item) => item.categories.some((category) => category.id === categoryId))
+  }
+
+  const flatItems = selectedCategoryId === '' ? searchedItems : itemsForCategory(selectedCategoryId)
+  const isEmpty = selectedCategoryId === '' ? (groupedSections?.length ?? 0) === 0 : flatItems.length === 0
 
   return (
     <div className="space-y-2">
@@ -316,8 +355,8 @@ export default function CategoryGroupedCatalogPicker({
                       {categoryItems.length === 0 ? (
                         <p className="px-2 py-1.5 text-xs text-nexoraMuted">{emptyLabel}</p>
                       ) : (
-                        <div className="grid max-h-[320px] grid-cols-2 gap-1.5 overflow-y-auto sm:grid-cols-4">
-                          {categoryItems.map(renderItemCard)}
+                        <div className="max-h-[320px] overflow-y-auto">
+                          {renderServices(categoryItems, "grid grid-cols-2 gap-1.5 sm:grid-cols-4")}
                         </div>
                       )}
                     </div>
@@ -385,7 +424,7 @@ export default function CategoryGroupedCatalogPicker({
                     <h4 className="sticky top-0 z-[1] border-b border-nexoraBorder bg-nexoraCanvas px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
                       {section.category.name}
                     </h4>
-                    <div className="grid grid-cols-2 gap-2 p-2 sm:grid-cols-3">{section.items.map(renderItemCard)}</div>
+                    <div className="p-2">{renderServices(section.items, "grid grid-cols-2 gap-2 sm:grid-cols-3")}</div>
                   </div>
                 ))}
               </div>
@@ -396,18 +435,18 @@ export default function CategoryGroupedCatalogPicker({
                     <h4 className="mb-1 px-1.5 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
                       {section.category.name}
                     </h4>
-                    <div className="space-y-1">{section.items.map(renderItemRow)}</div>
+                    {renderServices(section.items, "space-y-1")}
                   </div>
                 ))}
               </div>
             )
           ) : isGrid ? (
-            <div className="grid max-h-[480px] grid-cols-2 gap-2 overflow-y-auto rounded-xl border border-nexoraBorder p-2 sm:grid-cols-3">
-              {flatItems.map(renderItemCard)}
+            <div className="max-h-[480px] overflow-y-auto rounded-xl border border-nexoraBorder p-2">
+              {renderServices(flatItems, "grid grid-cols-2 gap-2 sm:grid-cols-3")}
             </div>
           ) : (
             <div className="max-h-72 space-y-1 overflow-y-auto rounded-lg border border-nexoraBorder p-1.5 pr-3">
-              {flatItems.map(renderItemRow)}
+              {renderServices(flatItems, "space-y-1")}
             </div>
           )}
         </>
