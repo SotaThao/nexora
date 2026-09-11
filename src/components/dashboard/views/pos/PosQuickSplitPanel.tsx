@@ -295,6 +295,8 @@ export default function PosQuickSplitPanel({
     setTipBearerKey(fresh[0].key)
   }
 
+  const hasStartedSplit = rows.some((row) => row.method !== null)
+
   const isBalanced = outstandingCents === 0 && allocatedCents > 0
   // "Saved" means what is on screen is what the server holds — not merely that a request once
   // succeeded, and never when there is nothing stored at all.
@@ -369,7 +371,7 @@ export default function PosQuickSplitPanel({
             const methodMissing = row.method === null
             const amountMissing = !methodMissing && rowCents === 0
             const tipExceedsAmount = carriesMoreTipThanAmount(row)
-            const hasError = methodMissing || amountMissing || cashShort || tipExceedsAmount
+            const hasError = hasStartedSplit && (methodMissing || amountMissing || cashShort || tipExceedsAmount)
 
             return (
               <section
