@@ -329,6 +329,8 @@ export interface StaffWorkOrderListItemApiDto {
   orderNumber?: string
   customerName?: string
   status?: string
+  /** Caller-local progress — see PosOrderStatus. Falls back to `status` when absent. */
+  myStatus?: string
   checkedInAt?: string
   scheduledAt?: string | null
   serviceNames?: string[]
@@ -363,6 +365,8 @@ export interface StaffWorkOrderDetailApiDto {
   orderNumber?: string
   customerName?: string
   status?: string
+  /** Caller-local progress — see PosOrderStatus. Falls back to `status` when absent. */
+  myStatus?: string
   checkedInAt?: string
   scheduledAt?: string | null
   stationNumber?: number | null
