@@ -62,6 +62,30 @@ type Branch = 'none' | 'busy' | 'decline'
 // makes a dismissed or minimised call resurface.
 const beepKey = (beep: ActiveStaffBeepApiDto) => `${beep.beepId}:${beep.nudgeCount}`
 
+// Persisted so an explicit X survives a reload (bug: reload was resurrecting a call the tech had
+// just closed). sessionStorage, not localStorage: it should still clear itself between shifts
+// rather than accumulate forever, and a nudge already gets a fresh key via beepKey above.
+const DISMISSED_KEYS_STORAGE_KEY = 'staffBeepDismissedKeys'
+const DISMISSED_KEYS_MAX = 50
+
+const readDismissedKeys = (): string[] => {
+  try {
+    const raw = sessionStorage.getItem(DISMISSED_KEYS_STORAGE_KEY)
+    const parsed = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+const writeDismissedKeys = (keys: string[]) => {
+  try {
+    sessionStorage.setItem(DISMISSED_KEYS_STORAGE_KEY, JSON.stringify(keys.slice(-DISMISSED_KEYS_MAX)))
+  } catch {
+    // Storage unavailable/full — dismissal just won't survive reload, not fatal.
+  }
+}
+
 export default function StaffBeepAlert() {
   const { t } = useTranslation()
   const { showToast } = useNotification()
@@ -74,7 +98,7 @@ export default function StaffBeepAlert() {
   const [note, setNote] = useState('')
   // Dismissed by key, not a single "hidden" flag: the tech closing one call must not hide the next
   // one, and a nudge (which bumps nudgeCount, so a new key) has to bring that same call back.
-  const [dismissedKeys, setDismissedKeys] = useState<string[]>([])
+  const [dismissedKeys, setDismissedKeys] = useState<string[]>(() => readDismissedKeys())
   const seenBeepKeysRef = useRef<Set<string>>(new Set())
 
   const beeps = data?.beeps ?? []
@@ -128,6 +152,7 @@ export default function StaffBeepAlert() {
   // call at a time (oldest unanswered first) anyway, so restoring the queue lands on the same one.
   useEffect(() => {
     const handleOpenRequest = () => {
+      writeDismissedKeys([])
       setDismissedKeys([])
       setMinimized(false)
       setBranch('none')
@@ -149,9 +174,15 @@ export default function StaffBeepAlert() {
   const othersCount = visibleBeeps.length - 1
 
   // Local only — nothing is sent, so the front desk still shows this tech as not having answered.
-  // That is the point: the sheet is in the way, not the call. Deliberately not persisted either;
-  // a reload should bring an unanswered call back rather than lose it.
-  const handleDismiss = () => setDismissedKeys((keys) => [...keys, beepKey(current)])
+  // That is the point: the sheet is in the way, not the call. Persisted to sessionStorage so a
+  // page reload does not resurrect the same call the tech just closed; a nudge still brings it
+  // back because that bumps nudgeCount into a new key.
+  const handleDismiss = () =>
+    setDismissedKeys((keys) => {
+      const next = [...keys, beepKey(current)]
+      writeDismissedKeys(next)
+      return next
+    })
 
   // The bell only swings while a call is genuinely unanswered. Once the tech has replied the sheet
   // can still be open (Busy/On my way), and a bell still ringing there would be a lie.
@@ -263,9 +294,11 @@ export default function StaffBeepAlert() {
       </div>
 
       <div className="mt-3 flex-1 space-y-2 overflow-y-auto">
-        <p className="text-[13px] font-normal leading-5 text-nexoraText">
-          {current.message?.trim() || t('staff_dashboard.beep.noMessage')}
-        </p>
+        {current.message?.trim() ? (
+          <p className="text-[13px] font-normal leading-5 text-nexoraText">
+            {current.message.trim()}
+          </p>
+        ) : null}
         <p className="text-xs text-nexoraSubtle">
           {t('staff_dashboard.beep.sentAgo', { ago: elapsedLabel(current.beepedAt) })}
         </p>
