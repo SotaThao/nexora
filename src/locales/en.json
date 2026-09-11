@@ -289,7 +289,8 @@
       "certifications": "My Certifications",
       "profile": "Settings",
       "notifications": "Notifications",
-      "clock-scan": "Clock in / out"
+      "clock-scan": "Clock in / out",
+      "categories": "Categories"
     },
     "work_orders": {
       "breadcrumb_workspace": "My workspace",
@@ -11045,7 +11046,7 @@
     "management_title": "Category Management",
     "management_subtitle_merchant": "Manage the categories used to tag your business's customer payments.",
     "management_subtitle_staff": "Manage the categories used to tag the money you receive.",
-    "add_category": "+ Add category",
+    "add_category": "Add category",
     "edit_action": "Edit",
     "delete_action": "Delete",
     "delete_confirm_title": "Delete this category?",

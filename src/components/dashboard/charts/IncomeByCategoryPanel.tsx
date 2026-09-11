@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Plus } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { formatCurrency } from '../utils'
 import {
@@ -117,9 +117,14 @@ export default function IncomeByCategoryPanel({
             <button
               type="button"
               onClick={onManageCategories}
-              className="h-9 shrink-0 whitespace-nowrap rounded-lg bg-nexoraBrand px-3 text-xs font-black uppercase tracking-wider text-white transition hover:bg-nexoraBrand/90"
+              aria-label={t('transaction_categories.manage_categories')}
+              title={t('transaction_categories.manage_categories')}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-nexoraBrand text-white transition hover:bg-nexoraBrand/90 sm:w-auto sm:gap-1.5 sm:whitespace-nowrap sm:px-3"
             >
-              {t('transaction_categories.manage_categories')}
+              <Plus className="h-4 w-4 shrink-0 sm:hidden" />
+              <span className="hidden text-xs font-black uppercase tracking-wider sm:inline">
+                {t('transaction_categories.manage_categories')}
+              </span>
             </button>
           ) : null}
         </div>

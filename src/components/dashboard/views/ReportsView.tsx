@@ -137,7 +137,7 @@ function ReportsView({
     event.stopPropagation()
     // Open TransactionDetailModal for confirmation popup instead of calling API directly.
     // The modal will show transaction details and a Confirm button.
-    setSelectedTx(tx)
+    setSelectedTxId(tx.id)
   }, [])
 
   const requestedTab = searchParams.get('tab')
@@ -243,7 +243,9 @@ function ReportsView({
   const [selectedStatus, setSelectedStatus] = useState(initialStatus)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [selectedTx, setSelectedTx] = useState<any | null>(null)
+  // Tracks the id, not the transaction object, so the modal re-reads the live list item after a
+  // category mutation invalidates it — a snapshot copy would keep showing the pre-mutation value.
+  const [selectedTxId, setSelectedTxId] = useState<string | null>(null)
   const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({
     // Widen the page when deep-linking a specific tip so it's more likely to
     // be on page 1 alongside the date-narrowed filter above.
@@ -406,6 +408,7 @@ function ReportsView({
   const isFetching = isStaffAudience ? isStaffFetching : isMerchantFetching
 
   const transactions = transactionsPage?.items ?? []
+  const selectedTx = transactions.find((tx) => tx.id === selectedTxId) ?? null
   const totalCount = transactionsPage?.totalCount ?? 0
   const totalPages = Math.max(1, transactionsPage?.totalPages ?? 1)
   const hasNextPage = transactionsPage?.hasNextPage ?? false
@@ -433,7 +436,7 @@ function ReportsView({
     attemptedDeepLinkRef.current = deepLinkTransactionId
 
     const match = transactions.find((tx) => tx.id === deepLinkTransactionId)
-    if (match) setSelectedTx(match)
+    if (match) setSelectedTxId(match.id)
 
     const next = new URLSearchParams(searchParams)
     next.delete('transactionId')
@@ -649,7 +652,7 @@ function ReportsView({
               filtered.map((tx) => (
                 <tr
                   key={tx.id}
-                  onClick={() => setSelectedTx(tx)}
+                  onClick={() => setSelectedTxId(tx.id)}
                   className="border-t border-nexoraRule hover:bg-slate-50 transition-colors cursor-pointer select-none"
                 >
                   <td className="px-4 py-3 w-[9.5rem] max-w-[9.5rem]">
@@ -694,7 +697,7 @@ function ReportsView({
                         title={t('components.dashboard.views.ReportsView.details')}
                         onClick={(e) => {
                           e.stopPropagation()
-                          setSelectedTx(tx)
+                          setSelectedTxId(tx.id)
                         }}
                         className="inline-flex items-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2.5 py-1.5 text-[11px] font-bold text-nexoraText transition-colors hover:bg-nexoraCanvas"
                       >
@@ -727,7 +730,7 @@ function ReportsView({
       {selectedTx ? (
         <TransactionDetailModal
           selectedTx={selectedTx}
-          onClose={() => setSelectedTx(null)}
+          onClose={() => setSelectedTxId(null)}
           businessName={businessName}
           businessSlug={businessSlug}
           touchpoints={touchpoints}

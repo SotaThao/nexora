@@ -1,12 +1,13 @@
-// StaffHome — KPI overview, pending tip confirmations, linked businesses.
+// StaffHome — KPI overview, pending tip confirmations, income by category, linked businesses.
 import { CheckCircle2, Star } from 'lucide-react'
-import { useOutletContext } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useConfirmStaffTipsReceipt } from '../../../data/hooks/useStaffSelf'
 import { useStaffHomeData } from '../hooks/useStaffHomeData'
 import { SkeletonLayout } from '../../ui/skeleton'
 import Tooltip from '../../ui/Tooltip'
 import { STAFF_HOME_SKELETON } from '../skeletons/staffDashboardSkeletons'
+import IncomeByCategoryPanel from '../../dashboard/charts/IncomeByCategoryPanel'
 import {
   getStaffBusinessLinkStatusPresentation,
   resolveStaffBusinessLinkStatusLabel,
@@ -44,6 +45,7 @@ function renderStars(rating) {
 
 export default function StaffHome() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { onNavigate } = useOutletContext<any>() || {}
   const confirmTipsMutation = useConfirmStaffTipsReceipt()
   const { kpis, isHomeLoading, isPendingTipsFetching, pendingTips, linkedBusinesses } =
@@ -140,6 +142,9 @@ export default function StaffHome() {
           </>
         )}
       </section>
+
+      {/* Income by category */}
+      <IncomeByCategoryPanel scope="staff" onManageCategories={() => navigate('/staff/categories')} />
 
       {/* Linked businesses */}
       <section className={panel}>

@@ -299,7 +299,8 @@
       "certifications": "Chứng chỉ của tôi",
       "profile": "Cài đặt",
       "notifications": "Thông báo",
-      "clock-scan": "Vào ca / ra ca"
+      "clock-scan": "Vào ca / ra ca",
+      "categories": "Danh mục"
     },
     "work_orders": {
       "breadcrumb_workspace": "Không gian của tôi",
@@ -11041,7 +11042,7 @@
     "management_title": "Quản lý danh mục",
     "management_subtitle_merchant": "Quản lý các danh mục dùng để phân loại khoản khách thanh toán cho tiệm của bạn.",
     "management_subtitle_staff": "Quản lý các danh mục dùng để phân loại khoản tiền bạn nhận được.",
-    "add_category": "+ Thêm danh mục",
+    "add_category": "Thêm danh mục",
     "edit_action": "Sửa",
     "delete_action": "Xóa",
     "delete_confirm_title": "Xóa danh mục này?",

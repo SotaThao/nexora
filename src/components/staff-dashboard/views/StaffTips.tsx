@@ -39,6 +39,8 @@ function toTransactionDetail(tip: StaffTipItem) {
     staffConfirmedAt: tip.staffConfirmedAt,
     touchpoint: tip.touchPointName || '',
     tipItems: [],
+    categoryId: tip.categoryId ?? null,
+    categoryName: tip.categoryName ?? null,
   }
 }
 
@@ -72,7 +74,9 @@ function tipMetaLine(tip: StaffTipItem) {
 export default function StaffTips() {
   const { t, currentLanguage } = useTranslation()
   const [pageNumber, setPageNumber] = useState(1)
-  const [selectedTip, setSelectedTip] = useState<StaffTipItem | null>(null)
+  // Tracks the id, not the tip object, so the modal re-reads the live list item after a
+  // category mutation invalidates it — a snapshot copy would keep showing the pre-mutation value.
+  const [selectedTipId, setSelectedTipId] = useState<string | null>(null)
   const {
     data: tipsPage = null,
     isPending,
@@ -105,6 +109,7 @@ export default function StaffTips() {
   }
 
   const tips = tipsPage?.items ?? []
+  const selectedTip = tips.find((tip) => tip.id === selectedTipId) ?? null
   const totalPages = tipsPage?.totalPages ?? 0
   const canGoPrev = tipsPage?.hasPreviousPage ?? pageNumber > 1
   const canGoNext = tipsPage?.hasNextPage ?? (totalPages > 0 && pageNumber < totalPages)
@@ -132,9 +137,9 @@ export default function StaffTips() {
                 key={tip.id}
                 role="button"
                 tabIndex={0}
-                onClick={() => setSelectedTip(tip)}
+                onClick={() => setSelectedTipId(tip.id)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') setSelectedTip(tip)
+                  if (e.key === 'Enter' || e.key === ' ') setSelectedTipId(tip.id)
                 }}
                 className="flex cursor-pointer select-none flex-col gap-2 rounded-lg py-3 transition-colors hover:bg-nexoraCanvas/40"
               >
@@ -203,7 +208,7 @@ export default function StaffTips() {
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation()
-                      setSelectedTip(tip)
+                      setSelectedTipId(tip.id)
                     }}
                     className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-50 py-2 text-[11px] font-black uppercase tracking-wider text-emerald-700 transition hover:bg-emerald-100"
                   >
@@ -232,7 +237,7 @@ export default function StaffTips() {
       {selectedTip ? (
         <TransactionDetailModal
           selectedTx={toTransactionDetail(selectedTip)}
-          onClose={() => setSelectedTip(null)}
+          onClose={() => setSelectedTipId(null)}
           businessName={selectedTip.businessName || ''}
           audience="staff"
         />
