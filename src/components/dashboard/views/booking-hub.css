@@ -16236,3 +16236,191 @@ body.booking-appointment-panel-modal-open {
     font-size: 16px;
   }
 }
+
+/* Merchant voice catalog: native dialog supplies focus containment and Escape handling. */
+.voice-selection-cards { display: grid; gap: 12px; }
+.voice-selection-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border: 1px solid color-mix(in srgb, var(--nexora-brand) 16%, var(--nexora-border));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--nexora-brand) 4%, var(--nexora-surface));
+  box-shadow: var(--nexora-card-shadow);
+}
+.voice-library-avatar { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; background: var(--nexora-surface-muted); color: var(--nexora-brand); font-weight: 700; }
+.voice-selection-card .voice-library-avatar {
+  width: 48px;
+  height: 48px;
+  color: #fff;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--nexora-brand-dark) 55%, var(--nexora-text)) 0%, var(--nexora-brand) 52%, var(--nexora-electric) 100%);
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--nexora-brand) 32%, transparent);
+}
+.voice-library-avatar-icon { width: 22px; height: 22px; display: block; }
+.voice-library-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 4px; overflow-wrap: anywhere; }
+.voice-selection-card .voice-library-heading { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.voice-library-name { font-size: 16px; font-weight: 700; color: var(--nexora-text); }
+.voice-selection-card .voice-library-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.voice-library-gender, .voice-library-description { font-size: 13px; font-weight: 400; color: var(--nexora-muted); }
+.voice-library-description { display: block; margin: 0; line-height: 1.5; }
+.voice-library-gender { margin-left: 4px; }
+.voice-selection-card .voice-library-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--nexora-muted);
+}
+.voice-selection-card .voice-library-gender { margin-left: 0; flex-shrink: 0; font-size: 12px; }
+.voice-selection-card .voice-library-meta-separator { flex-shrink: 0; }
+.voice-selection-card .voice-library-description {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.voice-library-badge { display: inline-block; margin-left: 8px; padding: 3px 8px; border-radius: 999px; background: var(--nexora-surface-muted); color: var(--nexora-muted); font-size: 11px; font-weight: 600; }
+.voice-selection-card .voice-library-badge {
+  flex-shrink: 0;
+  margin-left: 0;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+.voice-library-badge.is-active { color: var(--nexora-success); }
+.voice-selection-card .voice-library-badge.is-active {
+  background: color-mix(in srgb, var(--nexora-success) 16%, white);
+  color: var(--nexora-success);
+}
+.voice-library-badge.is-unsaved, .voice-library-badge.is-fallback { color: var(--nexora-brand); }
+.voice-selection-card .voice-library-badge.is-unsaved,
+.voice-selection-card .voice-library-badge.is-fallback {
+  background: color-mix(in srgb, var(--nexora-brand) 12%, white);
+}
+.voice-selection-card .voice-library-badge.is-default {
+  background: var(--nexora-surface-muted);
+}
+.voice-selection-card > .booking-secondary-button {
+  flex-shrink: 0;
+  min-height: 44px;
+  font-weight: 700;
+}
+.voice-selection-card > .booking-secondary-button:focus-visible {
+  outline: 2px solid var(--nexora-brand);
+  outline-offset: 2px;
+}
+.voice-library-modal { width: min(720px, calc(100% - 24px)); max-height: 90vh; max-height: 90dvh; padding: 0; border: 1px solid var(--nexora-border); border-radius: 16px; background: var(--nexora-surface); color: var(--nexora-text); box-shadow: var(--nexora-soft-shadow); font-family: inherit; }
+.voice-library-modal[open] { display: flex; flex-direction: column; }
+.voice-library-modal::backdrop { background: color-mix(in srgb, var(--nexora-text) 45%, transparent); }
+.voice-library-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 24px 24px 12px; }
+.voice-library-header h2 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--nexora-text); }
+.voice-library-header p { margin: 6px 0 0; font-size: 14px; font-weight: 400; line-height: 1.45; color: var(--nexora-muted); }
+.voice-library-close { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; flex-shrink: 0; border: 0; background: transparent; color: var(--nexora-subtle); border-radius: 8px; }
+.voice-library-close:hover { background: var(--nexora-surface-muted); color: var(--nexora-text); }
+.voice-library-filters { display: flex; align-items: center; gap: 10px; padding: 0 24px 16px; }
+.voice-library-search { display: flex; flex: 1; min-width: 0; align-items: center; gap: 10px; padding: 0 14px; border: 1px solid color-mix(in srgb, var(--nexora-brand) 28%, var(--nexora-border)); border-radius: 12px; color: var(--nexora-subtle); background: var(--nexora-surface); }
+.voice-library-search:focus-within { border-color: color-mix(in srgb, var(--nexora-brand) 55%, var(--nexora-border)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--nexora-brand) 12%, transparent); }
+.voice-library-search input { min-width: 0; width: 100%; height: 42px; border: 0; background: transparent; color: var(--nexora-text); font-size: 14px; font-weight: 400; outline: none; }
+.voice-library-search input::placeholder { color: var(--nexora-subtle); }
+.voice-library-gender-filter { flex: 0 0 auto; min-width: 132px; max-width: 180px; min-height: 42px; padding: 8px 12px; border: 1px solid var(--nexora-border); border-radius: 12px; background: var(--nexora-surface); color: var(--nexora-text); font-size: 13px; font-weight: 500; }
+.voice-library-list { overflow-y: auto; flex: 1; min-height: 0; display: grid; align-content: start; gap: 8px; padding: 0 24px 16px; }
+.voice-library-row { display: flex; align-items: center; gap: 10px; margin: 0; border: 1px solid transparent; border-radius: 14px; padding: 12px 14px; background: transparent; }
+.voice-library-row.is-selected { border-color: color-mix(in srgb, var(--nexora-brand) 42%, white); background: color-mix(in srgb, var(--nexora-brand) 8%, white); }
+.voice-library-choice { display: flex; flex: 1; align-items: center; min-width: 0; gap: 12px; cursor: pointer; }
+.voice-library-row .voice-library-avatar {
+  width: 44px;
+  height: 44px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: var(--voice-avatar, var(--nexora-brand));
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--nexora-brand) 18%, transparent);
+}
+.voice-library-row.is-selected .voice-library-avatar { background: var(--nexora-brand); }
+.voice-library-row .voice-library-copy { gap: 2px; }
+.voice-library-row .voice-library-heading { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.voice-library-row .voice-library-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; font-weight: 700; line-height: 1.3; color: var(--nexora-text); }
+.voice-library-row .voice-library-gender { margin-left: 0; flex-shrink: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; line-height: 1.2; text-transform: uppercase; color: var(--nexora-subtle); }
+.voice-library-row .voice-library-description { font-size: 13px; font-weight: 400; line-height: 1.4; color: var(--nexora-muted); }
+.voice-library-radio {
+  order: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--nexora-border);
+  border-radius: 50%;
+  background: #fff;
+  color: #fff;
+}
+.voice-library-row.is-selected .voice-library-radio { border-color: var(--nexora-brand); background: var(--nexora-brand); }
+.voice-library-choice:focus-within .voice-library-radio { box-shadow: 0 0 0 3px color-mix(in srgb, var(--nexora-brand) 18%, transparent); }
+.voice-library-modal .voice-library-play {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
+  gap: 0;
+  flex-shrink: 0;
+  border-radius: 10px;
+  font-weight: 700;
+  color: var(--nexora-text);
+  box-shadow: none;
+}
+.voice-library-modal .voice-library-play:hover { transform: none; background: var(--nexora-surface-muted); }
+.voice-library-modal .voice-library-play svg { width: 16px; height: 16px; }
+.voice-library-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid var(--nexora-border);
+  padding: 14px 24px;
+  background: var(--nexora-canvas);
+}
+.voice-library-modal .voice-library-footer .booking-secondary-button,
+.voice-library-modal .voice-library-footer .booking-primary-button { min-height: 40px; font-size: 13px; font-weight: 700; box-shadow: none; }
+.voice-library-modal .voice-library-footer .booking-secondary-button { color: var(--nexora-text); }
+.voice-library-modal .voice-library-footer .booking-primary-button { min-width: 138px; }
+.voice-library-modal .voice-library-footer .booking-secondary-button:hover,
+.voice-library-modal .voice-library-footer .booking-primary-button:hover { transform: none; }
+.voice-library-empty { text-align: center; padding: 32px 12px; color: var(--nexora-muted); }
+.voice-library-modal button:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 600px) {
+  .voice-selection-card { flex-wrap: wrap; padding: 16px; gap: 12px; min-height: 0; }
+  .voice-selection-card > button { width: 100%; }
+  .voice-selection-card .voice-library-heading { flex-wrap: wrap; }
+  .voice-selection-card .voice-library-name { white-space: normal; }
+  .voice-selection-card .voice-library-meta { flex-wrap: wrap; }
+  .voice-selection-card .voice-library-description { white-space: normal; overflow: visible; }
+  .voice-library-header { padding: 16px; }
+  .voice-library-filters { padding: 0 16px 12px; }
+  .voice-library-list { padding: 0 16px 12px; }
+  .voice-library-row { flex-wrap: wrap; padding: 12px; }
+  .voice-library-choice { flex: 1 0 100%; }
+  .voice-library-play { margin-left: auto; }
+  .voice-library-footer { justify-content: stretch; padding: 16px; }
+  .voice-library-footer > button { flex: 1; }
+}

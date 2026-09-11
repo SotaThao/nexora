@@ -162,6 +162,9 @@ export default function useBusinessInfoForm({
           yelpUrl: next.yelpReview || undefined,
           facebookUrl: next.facebookReview || undefined,
           instagramUrl: next.instagramReview || undefined,
+          // Round-trip FeedbackEmail: omitting it used to bind as null on the API and wipe the
+          // value (same defect BookingSettingsPanel hit when saving Voice config).
+          feedbackEmail: next.businessEmail || undefined,
         }),
       )
     }

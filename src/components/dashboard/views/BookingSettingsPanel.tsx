@@ -16,6 +16,7 @@ import {
   useUpdateMerchantVoiceService,
 } from "../../../data/hooks/useMerchantVoiceBookings";
 import { useReorderPosCategories } from "../../../data/hooks/usePosCategories";
+import { useMerchantVoiceOptions } from "../../../data/hooks/useMerchantVoiceOptions";
 import { useMerchantSetup } from "../../../data/hooks/useMerchantSetup";
 import {
   useBookingSettings,
@@ -34,7 +35,6 @@ import {
   type SaveCategoryBatchItem,
   type SaveServiceBatchItem,
 } from "../../../data/repositories/merchantVoice";
-import { merchantsRepository } from "../../../data/repositories/merchants";
 import { qk } from "../../../data/queryKeys";
 import { useQueryClient } from "@tanstack/react-query";
 import { getApiErrorCode } from "../../../types/domain";
@@ -82,6 +82,8 @@ import {
   StarsIcon,
 } from "./BookingHubIcons";
 import { BookingSettingsSkeleton } from "./BookingHubSkeletons";
+import { prepareVoiceSelectionsForSave, voiceSelectionsForSave } from "./voiceLibrary/voiceSelectionDraft";
+import { VoiceSelectionCard } from "./voiceLibrary/VoiceSelectionCard";
 import HolidayClosuresCard from "./HolidayClosuresCard";
 import BookingTeamPanel from "./BookingTeamPanel";
 import ServicesPricingPanel, {
@@ -568,6 +570,10 @@ const AI_LANGUAGE_OPTIONS = [
 ] as const;
 
 const PROMO_MAX_LENGTH = 1000;
+// Mirrors Constants.VoiceTenantContentLimits on the backend: both columns are unbounded text and
+// the ceiling is enforced by the command validators.
+const DESCRIPTION_MAX_LENGTH = 10000;
+const BUSINESS_FAQ_MAX_LENGTH = 10000;
 const FIRST_CALL_SMS_MAX_LENGTH = 320;
 
 // Booking SMS Notifications — the setting itself now lives on PosBookingSettings
@@ -723,24 +729,24 @@ const FIRST_CALL_SMS_TEMPLATES = {
   "thanks-booking": {
     labelKey: "firstCallSmsTemplateThanksLabel",
     enText:
-      "Thanks for booking with Bitcoin Nail Bar! We're excited to see you. Reply to this text with any questions or to learn about our current promotions.",
+      "Thanks for choosing Bitcoin Nail Bar! As a special welcome, enjoy an exclusive discount on your next visit. Book your appointment and treat yourself!",
     viText:
-      "Cảm ơn bạn đã đặt lịch tại Bitcoin Nail Bar! Chúng tôi rất mong được gặp bạn. Bạn có thể trả lời tin nhắn này nếu có câu hỏi, hoặc để biết thêm về các ưu đãi hiện tại của tiệm.",
+      "Cảm ơn bạn đã chọn Bitcoin Nail Bar! Ưu đãi đặc biệt dành cho bạn: nhận giảm giá độc quyền cho lần ghé tiếp theo. Đặt lịch và tận hưởng dịch vụ nhé!",
   },
   "first-time-welcome": {
     labelKey: "firstCallSmsTemplateWelcomeLabel",
     enText:
-      "Thanks for calling Bitcoin Nail Bar! We're glad to have you. Reply here anytime with questions, or ask about booking your next visit.",
+      "Welcome to Bitcoin Nail Bar! As a first-time customer, you can enjoy a special discount on your next visit. We look forward to seeing you soon!",
     viText:
-      "Cảm ơn bạn đã gọi đến Bitcoin Nail Bar! Chúng tôi rất vui khi được phục vụ bạn. Bạn cứ trả lời tin nhắn này bất cứ lúc nào nếu có câu hỏi, hoặc nhờ chúng tôi hỗ trợ đặt lịch cho lần ghé tiếp theo nhé.",
+      "Chào mừng bạn đến với Bitcoin Nail Bar! Là khách hàng lần đầu, bạn sẽ nhận được ưu đãi giảm giá đặc biệt cho lần ghé tiếp theo. Hẹn gặp bạn sớm!",
   },
   "promo-teaser": {
     labelKey: "firstCallSmsTemplatePromoLabel",
     enText:
-      "Thanks for calling Bitcoin Nail Bar! Ask us about this month's promotions on your next visit — reply to this text with any questions.",
+      "A special offer is waiting for you at Bitcoin Nail Bar! Enjoy an exclusive first-time customer discount on your next visit. Treat yourself and save!",
     viText:
-      "Cảm ơn bạn đã gọi đến Bitcoin Nail Bar! Lần ghé tới bạn hỏi giúp chúng tôi về các ưu đãi trong tháng này nhé — bạn cứ trả lời tin nhắn này nếu có câu hỏi.",
-  },
+      "Một ưu đãi đặc biệt đang chờ bạn tại Bitcoin Nail Bar! Tận hưởng giảm giá độc quyền dành cho khách hàng lần đầu trong lần ghé tiếp theo. Làm đẹp và tiết kiệm hơn!",
+  }
 } as const;
 
 const AI_HUB_SUGGESTIONS = {
@@ -1136,6 +1142,22 @@ export default function BookingSettingsPanel() {
   const [language, setLanguage] = useState<Language>(
     MerchantVoiceUiLanguage.Auto,
   );
+  const voiceOptionsQuery = useMerchantVoiceOptions(mapUiLanguageToConfigLanguage(language), { enabled: voiceEnabled });
+  const voiceLanguageScopeRef = useRef<{ language: string; languages?: string[] }>({ language: mapUiLanguageToConfigLanguage(language) });
+  if (voiceLanguageScopeRef.current.language !== mapUiLanguageToConfigLanguage(language)) {
+    voiceLanguageScopeRef.current = { language: mapUiLanguageToConfigLanguage(language) };
+  }
+  useEffect(() => {
+    if (voiceOptionsQuery.data && !voiceLanguageScopeRef.current.languages) {
+      voiceLanguageScopeRef.current.languages = voiceOptionsQuery.data.languages.map((group) => group.languageCode);
+    }
+  }, [voiceOptionsQuery.data, language]);
+  const [draftVoiceSelections, setDraftVoiceSelections] = useState<Record<string, string>>({});
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const configDirtyRef = useRef(false);
+  const editRevisionRef = useRef(0);
+  const hydratedConfigRef = useRef<typeof configData>(undefined);
+  const markConfigDirty = () => { configDirtyRef.current = true; editRevisionRef.current += 1; };
   const [greeting, setGreeting] = useState(() => t(`${TK}.greetingEn`));
   const loadedGreetingRef = useRef("");
   const [selectedGreetingSuggestKey, setSelectedGreetingSuggestKey] =
@@ -1161,6 +1183,7 @@ export default function BookingSettingsPanel() {
   const [facebookUrl, setFacebookUrl] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
   const [description, setDescription] = useState("");
+  const [businessFaq, setBusinessFaq] = useState("");
   const [timeZone, setTimeZone] = useState<string>(DEFAULT_SETTINGS_TIMEZONE);
   const [timeZoneManual, setTimeZoneManual] = useState(false);
   const timeZoneManualRef = useRef(false);
@@ -1249,6 +1272,7 @@ export default function BookingSettingsPanel() {
   timeZoneManualRef.current = timeZoneManual;
 
   const applyGeocodedAddress = (result: GeocodedSalonAddress) => {
+    markConfigDirty();
     ensureCountryOption(result.location.country, result.countryLabel);
 
     // 1) Fill structured location fields from address geocode.
@@ -1355,6 +1379,7 @@ export default function BookingSettingsPanel() {
   );
 
   const patchLocation = (partial: Partial<LocationParts>) => {
+    markConfigDirty();
     setLocation((prev) => ({ ...prev, ...partial }));
   };
 
@@ -1440,6 +1465,7 @@ export default function BookingSettingsPanel() {
   };
 
   const toggleHour = (day: DayKey) => {
+    markConfigDirty();
     setHours((prev) => {
       const nextOpen = !prev[day].open;
       setStatus(t(`${TK}.hourUpdated`, { day: t(`${TK}.days.${day}`) }));
@@ -1463,7 +1489,8 @@ export default function BookingSettingsPanel() {
   }, []);
 
   useEffect(() => {
-    if (!configData) return;
+    if (!configData || configDirtyRef.current || hydratedConfigRef.current === configData) return;
+    hydratedConfigRef.current = configData;
 
     setSalonName(configData.name || "");
     setSalonPhone(formatPhoneInput(configData.forwardPhoneNumber || ""));
@@ -1479,12 +1506,12 @@ export default function BookingSettingsPanel() {
     );
     const locationParts = hasStructuredLocation
       ? {
-          street: (configData.address || "").trim(),
-          city: (configData.city || "").trim(),
-          state: (configData.state || "").trim(),
-          zip: (configData.zipCode || "").trim(),
-          country: normalizeSettingsCountry(configData.country || "US"),
-        }
+        street: (configData.address || "").trim(),
+        city: (configData.city || "").trim(),
+        state: (configData.state || "").trim(),
+        zip: (configData.zipCode || "").trim(),
+        country: normalizeSettingsCountry(configData.country || "US"),
+      }
       : splitSettingsAddress(configData.address || "");
     setLocation(locationParts);
     if (locationParts.country) {
@@ -1515,7 +1542,8 @@ export default function BookingSettingsPanel() {
     setFacebookUrl(configData.facebookUrl || "");
     setInstagramUrl(configData.instagramUrl || "");
     setWebsite(configData.website || "");
-    setDescription(configData.description || "");
+    setDescription((configData.description || "").slice(0, DESCRIPTION_MAX_LENGTH));
+    setBusinessFaq((configData.businessFaq || "").slice(0, BUSINESS_FAQ_MAX_LENGTH));
     setPromoSms(
       (configData.promoSms || "").slice(0, FIRST_CALL_SMS_MAX_LENGTH),
     );
@@ -1558,9 +1586,9 @@ export default function BookingSettingsPanel() {
       next.services.length > 0
         ? next.services
         : mergeFlatServicesIntoCategories(
-            next.categories,
-            flatServicesData || [],
-          );
+          next.categories,
+          flatServicesData || [],
+        );
     setCategories((prev) => unionSettingsCategories(prev, next.categories));
     if (!servicesDirtyRef.current) {
       setServices(mergedServices);
@@ -2176,21 +2204,21 @@ export default function BookingSettingsPanel() {
     setCategoryDrafts(
       categories.length
         ? categories.map((category) => ({
-            id: category.id,
-            draftKey: category.id,
-            name: category.name,
-            isSystem: category.isSystem,
-            isNew: false,
-          }))
+          id: category.id,
+          draftKey: category.id,
+          name: category.name,
+          isSystem: category.isSystem,
+          isNew: false,
+        }))
         : [
-            {
-              id: OTHER_SERVICES_CATEGORY_ID,
-              draftKey: OTHER_SERVICES_CATEGORY_ID,
-              name: DEFAULT_SERVICE_CATEGORY,
-              isSystem: true,
-              isNew: false,
-            },
-          ],
+          {
+            id: OTHER_SERVICES_CATEGORY_ID,
+            draftKey: OTHER_SERVICES_CATEGORY_ID,
+            name: DEFAULT_SERVICE_CATEGORY,
+            isSystem: true,
+            isNew: false,
+          },
+        ],
     );
     setCategoryModalError("");
     setCategoryModalErrorIndex(null);
@@ -2275,9 +2303,9 @@ export default function BookingSettingsPanel() {
           next.services.length > 0
             ? next.services
             : mergeFlatServicesIntoCategories(
-                mergedCategories,
-                await merchantVoiceRepository.getServices(),
-              ),
+              mergedCategories,
+              await merchantVoiceRepository.getServices(),
+            ),
         );
       }
       syncCategoryDraftsFromApi(mergedCategories);
@@ -2330,9 +2358,9 @@ export default function BookingSettingsPanel() {
           next.services.length > 0
             ? next.services
             : mergeFlatServicesIntoCategories(
-                mergedCategories,
-                await merchantVoiceRepository.getServices(),
-              ),
+              mergedCategories,
+              await merchantVoiceRepository.getServices(),
+            ),
         );
       } else {
         // Remap dirty services that lived under deleted category → Other.
@@ -2566,6 +2594,7 @@ export default function BookingSettingsPanel() {
   };
 
   const handleLanguageSelect = (next: Language) => {
+    markConfigDirty();
     const resolved = next;
     setLanguage(resolved);
 
@@ -2641,6 +2670,7 @@ export default function BookingSettingsPanel() {
   };
 
   const handlePromoSuggest = (key: PromoSuggestKey) => {
+    markConfigDirty();
     const template = AI_HUB_SUGGESTIONS.promo[key];
     if (!template) return;
     const nextText =
@@ -2655,6 +2685,7 @@ export default function BookingSettingsPanel() {
   };
 
   const handleGreetingSuggest = (key: GreetingSuggestKey) => {
+    markConfigDirty();
     const template = AI_HUB_SUGGESTIONS.greeting[key];
     if (!template) return;
     const nextText =
@@ -2671,6 +2702,7 @@ export default function BookingSettingsPanel() {
   };
 
   const handleFirstCallSmsSuggest = (key: FirstCallSmsSuggestKey) => {
+    markConfigDirty();
     const template = AI_HUB_SUGGESTIONS.firstCallSms[key];
     if (!template) return;
     setPromoSms(
@@ -2724,6 +2756,11 @@ export default function BookingSettingsPanel() {
     }
   };
   const handleSave = async () => {
+    if (isSavingSettings || updateConfigMutation.isPending || updateBookingSettingsMutation.isPending) return;
+    const saveRevision = editRevisionRef.current;
+    const activeLanguage = mapUiLanguageToConfigLanguage(language);
+    const expectedVoiceLanguages = voiceLanguageScopeRef.current.languages;
+    let submittedVoiceSelections: Array<{ languageCode: string; voiceTtsVoiceId: string }> = [];
     const requiredMessage = t(
       "components.dashboard.views.BookingHubView.team.requiredField",
     );
@@ -2887,13 +2924,13 @@ export default function BookingSettingsPanel() {
     const persistedDirtyServices = hasInvalidServiceRows
       ? []
       : validDirtyInlineServices.filter(({ service }) =>
-          isPersistedServiceId(service.id),
-        );
+        isPersistedServiceId(service.id),
+      );
     const localOnlyDirtyServices = hasInvalidServiceRows
       ? []
       : validDirtyInlineServices.filter(
-          ({ service }) => !isPersistedServiceId(service.id),
-        );
+        ({ service }) => !isPersistedServiceId(service.id),
+      );
     const newServiceDraftsToSave = hasInvalidServiceRows
       ? []
       : newServiceDrafts;
@@ -2907,7 +2944,20 @@ export default function BookingSettingsPanel() {
       setIsSavingService(true);
     }
 
+    setIsSavingSettings(true);
     try {
+      const activeDrafts = voiceSelectionsForSave(draftVoiceSelections, activeLanguage, Object.keys(draftVoiceSelections));
+      if (voiceEnabled && activeDrafts.length > 0) {
+        const refreshed = await voiceOptionsQuery.refetch();
+        if (refreshed.error) throw refreshed.error;
+        const groups = refreshed.data?.languages || [];
+        const prepared = prepareVoiceSelectionsForSave(draftVoiceSelections, activeLanguage, expectedVoiceLanguages, groups);
+        submittedVoiceSelections = prepared.selections;
+        if (prepared.unavailable) {
+          showToast(t(`${TK}.voiceLibrary.draftUnavailable`), "error");
+          return;
+        }
+      }
       const salonPhonePayload = normalizePhoneForApi(
         salonPhone,
         parsePhone(salonPhone).countryCode,
@@ -2932,13 +2982,15 @@ export default function BookingSettingsPanel() {
           instagramUrl: instagramUrl.trim() || null,
           yelpUrl: yelpReviewUrl.trim() || null,
           website: website.trim() || null,
-          description: description.trim() || null,
+          description: description.trim().slice(0, DESCRIPTION_MAX_LENGTH) || null,
+          businessFaq: businessFaq.trim().slice(0, BUSINESS_FAQ_MAX_LENGTH) || null,
           promotion: promotion.trim().slice(0, PROMO_MAX_LENGTH) || null,
           promoSms: promoSms.trim().slice(0, FIRST_CALL_SMS_MAX_LENGTH) || null,
           sendSmsPromoEnabled,
           timeZone: timeZone.trim() || null,
           language: mapUiLanguageToConfigLanguage(language),
           welcomeGreeting: greeting.trim(),
+          voiceSelections: submittedVoiceSelections,
           operatingHours: DAY_KEYS.map((day) => {
             const row = hours[day];
             if (!row.open) {
@@ -2954,16 +3006,17 @@ export default function BookingSettingsPanel() {
               closeTime: `${row.closeTime}:00`,
             };
           }),
+        }).then(() => {
+          setDraftVoiceSelections((current) => Object.fromEntries(Object.entries(current).filter(([code, id]) =>
+            !submittedVoiceSelections.some((saved) => saved.languageCode === code && saved.voiceTtsVoiceId === id))));
+          if (saveRevision === editRevisionRef.current) configDirtyRef.current = false;
         }),
       ];
 
-      savePromises.push(
-        merchantsRepository.updateReviewLinks({
-          googleReviewUrl: googleReviewUrl.trim() || null,
-          yelpUrl: yelpReviewUrl.trim() || null,
-          facebookUrl: facebookUrl.trim() || null,
-        }),
-      );
+      // Review URLs (Google / Yelp / Facebook / Instagram) are already written onto Business
+      // by UpdateMerchantVoiceConfig (+ profile sync for GoogleReviewUrl). A second
+      // updateReviewLinks call that omitted feedbackEmail was wiping Business.FeedbackEmail
+      // on every save — do not re-post review-links from this panel.
 
       // Booking SMS Notifications live on PosBookingSettings now — saved as a second,
       // independent request alongside the Nexora Voice config above. Non-SMS fields on
@@ -3083,6 +3136,7 @@ export default function BookingSettingsPanel() {
         hasSkippedServiceRows ? "warning" : "success",
       );
     } catch (error) {
+      if (submittedVoiceSelections.length > 0) void queryClient.invalidateQueries({ queryKey: qk.merchantVoiceOptionsRoot() });
       const message = t(getErrorI18nKey(getApiErrorCode(error)));
       // createdNewServiceDraftIds/updatedServiceIds are only non-empty once the batch
       // call itself has succeeded — a failure after that point (e.g. refreshServicesCatalog
@@ -3128,6 +3182,7 @@ export default function BookingSettingsPanel() {
       ) {
         setIsSavingService(false);
       }
+      setIsSavingSettings(false);
     }
   };
 
@@ -3136,7 +3191,7 @@ export default function BookingSettingsPanel() {
   }
 
   return (
-    <div className="settings-shell" ref={settingsShellRef}>
+    <div className="settings-shell" ref={settingsShellRef} onChangeCapture={(event) => { if (!(event.target as HTMLElement).closest(".voice-library-modal")) markConfigDirty(); }}>
       <div className="settings-hero is-compact">
         <div className="settings-eyebrow">{t(`${TK}.eyebrow`)}</div>
         <h2 className="settings-title">{t(`${TK}.oneSourceTitle`)}</h2>
@@ -3224,6 +3279,7 @@ export default function BookingSettingsPanel() {
                   value={salonPhoneParsed.countryCode}
                   embedded
                   onChange={(nextCode) => {
+                    markConfigDirty();
                     const formatted = formatNationalNumber(
                       salonPhoneParsed.nationalNumber,
                       nextCode,
@@ -3292,7 +3348,7 @@ export default function BookingSettingsPanel() {
                   value={aiPhoneParsed.countryCode}
                   embedded
                   disabled
-                  onChange={() => {}}
+                  onChange={() => { }}
                 />
                 <input
                   className="settings-input phone-mask-input"
@@ -3328,6 +3384,7 @@ export default function BookingSettingsPanel() {
                   value={bookingNotifyPhoneParsed.countryCode}
                   embedded
                   onChange={(nextCode) => {
+                    markConfigDirty();
                     const formatted = formatNationalNumber(
                       bookingNotifyPhoneParsed.nationalNumber,
                       nextCode,
@@ -3936,11 +3993,11 @@ export default function BookingSettingsPanel() {
                             setStatus(
                               next
                                 ? t(`${TK}.bookingSmsRecipientEnabled`, {
-                                    recipient: t(`${TK}.${item.titleKey}`),
-                                  })
+                                  recipient: t(`${TK}.${item.titleKey}`),
+                                })
                                 : t(`${TK}.bookingSmsRecipientDisabled`, {
-                                    recipient: t(`${TK}.${item.titleKey}`),
-                                  }),
+                                  recipient: t(`${TK}.${item.titleKey}`),
+                                }),
                             );
                             return { ...prev, [item.id]: next };
                           });
@@ -3993,6 +4050,25 @@ export default function BookingSettingsPanel() {
                 {t(`${TK}.languageStatus.${language}`)}
               </div>
             </div>
+            {voiceEnabled && (
+              <div className="settings-field settings-span-full">
+                <span className="settings-label">{t(`${TK}.voiceFieldLabel`)}</span>
+                <VoiceSelectionCard key={language} language={mapUiLanguageToConfigLanguage(language)}
+                  drafts={draftVoiceSelections} disabled={isSavingSettings || updateConfigMutation.isPending}
+                  onOpen={() => { stopBookingPreview(); setIsPreviewPlaying(false); }}
+                  onConfirm={(code, id) => {
+                    markConfigDirty();
+                    voiceLanguageScopeRef.current.languages = [...new Set([...(voiceLanguageScopeRef.current.languages || []), code])];
+                    setDraftVoiceSelections((current) => {
+                      const next = { ...current };
+                      if (configData?.voiceSelections?.some((saved) => saved.languageCode === code && saved.voiceTtsVoiceId === id)) delete next[code];
+                      else next[code] = id;
+                      return next;
+                    });
+                  }} />
+                <div className="settings-language-status">{t(`${TK}.voiceFieldHint`)}</div>
+              </div>
+            )}
             <label
               className="settings-field settings-span-full"
               data-ai-hub-field="greeting"
@@ -4023,33 +4099,30 @@ export default function BookingSettingsPanel() {
               <div className="settings-promo-suggest-row">
                 <SettingsSuggestLabel />
                 <button
-                  className={`settings-promo-suggest${
-                    selectedGreetingSuggestKey === "warm-welcome"
+                  className={`settings-promo-suggest${selectedGreetingSuggestKey === "warm-welcome"
                       ? " is-active"
                       : ""
-                  }`}
+                    }`}
                   type="button"
                   onClick={() => handleGreetingSuggest("warm-welcome")}
                 >
                   {t(`${TK}.greetingSuggestWarm`)}
                 </button>
                 <button
-                  className={`settings-promo-suggest${
-                    selectedGreetingSuggestKey === "quick-booking"
+                  className={`settings-promo-suggest${selectedGreetingSuggestKey === "quick-booking"
                       ? " is-active"
                       : ""
-                  }`}
+                    }`}
                   type="button"
                   onClick={() => handleGreetingSuggest("quick-booking")}
                 >
                   {t(`${TK}.greetingSuggestQuick`)}
                 </button>
                 <button
-                  className={`settings-promo-suggest${
-                    selectedGreetingSuggestKey === "bilingual"
+                  className={`settings-promo-suggest${selectedGreetingSuggestKey === "bilingual"
                       ? " is-active"
                       : ""
-                  }`}
+                    }`}
                   type="button"
                   onClick={() => handleGreetingSuggest("bilingual")}
                 >
@@ -4090,38 +4163,99 @@ export default function BookingSettingsPanel() {
                 <div className="settings-promo-suggest-row">
                   <SettingsSuggestLabel />
                   <button
-                    className={`settings-promo-suggest${
-                      selectedPromoSuggestKey === "reward-yourself"
+                    className={`settings-promo-suggest${selectedPromoSuggestKey === "reward-yourself"
                         ? " is-active"
                         : ""
-                    }`}
+                      }`}
                     type="button"
                     onClick={() => handlePromoSuggest("reward-yourself")}
                   >
                     {t(`${TK}.promoSuggestReward`)}
                   </button>
                   <button
-                    className={`settings-promo-suggest${
-                      selectedPromoSuggestKey === "first-visit"
+                    className={`settings-promo-suggest${selectedPromoSuggestKey === "first-visit"
                         ? " is-active"
                         : ""
-                    }`}
+                      }`}
                     type="button"
                     onClick={() => handlePromoSuggest("first-visit")}
                   >
                     {t(`${TK}.promoSuggestFirstVisit`)}
                   </button>
                   <button
-                    className={`settings-promo-suggest${
-                      selectedPromoSuggestKey === "refer-a-friend"
+                    className={`settings-promo-suggest${selectedPromoSuggestKey === "refer-a-friend"
                         ? " is-active"
                         : ""
-                    }`}
+                      }`}
                     type="button"
                     onClick={() => handlePromoSuggest("refer-a-friend")}
                   >
                     {t(`${TK}.promoSuggestRefer`)}
                   </button>
+                </div>
+              </div>
+            </label>
+
+            <label className="settings-field settings-span-full">
+              <span className="settings-label settings-label-with-tooltip">
+                {t(`${TK}.businessDescriptionLabel`)}
+                <SettingsInfoTooltip
+                  id="business-description-help"
+                  ariaLabel={t(`${TK}.businessDescriptionInfoAria`)}
+                >
+                  {t(`${TK}.businessDescriptionHelp`)}
+                </SettingsInfoTooltip>
+              </span>
+              <textarea
+                className="settings-textarea settings-textarea-promo"
+                value={description}
+                maxLength={DESCRIPTION_MAX_LENGTH}
+                placeholder={t(`${TK}.businessDescriptionPlaceholder`)}
+                aria-describedby="settings-business-description-count"
+                onChange={(event) =>
+                  setDescription(
+                    event.target.value.slice(0, DESCRIPTION_MAX_LENGTH),
+                  )
+                }
+              />
+              <div className="settings-promo-meta">
+                <div
+                  id="settings-business-description-count"
+                  className={`settings-promo-count ${description.length >= DESCRIPTION_MAX_LENGTH ? "is-max" : ""}`}
+                >
+                  <span>{description.length}</span>/{DESCRIPTION_MAX_LENGTH}
+                </div>
+              </div>
+            </label>
+
+            <label className="settings-field settings-span-full">
+              <span className="settings-label settings-label-with-tooltip">
+                {t(`${TK}.businessFaqLabel`)}
+                <SettingsInfoTooltip
+                  id="business-faq-help"
+                  ariaLabel={t(`${TK}.businessFaqInfoAria`)}
+                >
+                  {t(`${TK}.businessFaqHelp`)}
+                </SettingsInfoTooltip>
+              </span>
+              <textarea
+                className="settings-textarea settings-textarea-promo"
+                value={businessFaq}
+                maxLength={BUSINESS_FAQ_MAX_LENGTH}
+                placeholder={t(`${TK}.businessFaqPlaceholder`)}
+                aria-describedby="settings-business-faq-count"
+                onChange={(event) =>
+                  setBusinessFaq(
+                    event.target.value.slice(0, BUSINESS_FAQ_MAX_LENGTH),
+                  )
+                }
+              />
+              <div className="settings-promo-meta">
+                <div
+                  id="settings-business-faq-count"
+                  className={`settings-promo-count ${businessFaq.length >= BUSINESS_FAQ_MAX_LENGTH ? "is-max" : ""}`}
+                >
+                  <span>{businessFaq.length}</span>/{BUSINESS_FAQ_MAX_LENGTH}
                 </div>
               </div>
             </label>
@@ -4159,6 +4293,7 @@ export default function BookingSettingsPanel() {
                         : t(`${TK}.firstCallSmsEnableAria`)
                     }
                     onClick={() => {
+                      markConfigDirty();
                       setSendSmsPromoEnabled((prev) => {
                         const next = !prev;
                         setStatus(
@@ -4189,22 +4324,20 @@ export default function BookingSettingsPanel() {
                 <div className="settings-promo-suggest-row">
                   <SettingsSuggestLabel />
                   <button
-                    className={`settings-promo-suggest${
-                      selectedFirstCallSmsSuggestKey === "thanks-booking"
+                    className={`settings-promo-suggest${selectedFirstCallSmsSuggestKey === "thanks-booking"
                         ? " is-active"
                         : ""
-                    }`}
+                      }`}
                     type="button"
                     onClick={() => handleFirstCallSmsSuggest("thanks-booking")}
                   >
                     {t(`${TK}.firstCallSmsSuggestThanks`)}
                   </button>
                   <button
-                    className={`settings-promo-suggest${
-                      selectedFirstCallSmsSuggestKey === "first-time-welcome"
+                    className={`settings-promo-suggest${selectedFirstCallSmsSuggestKey === "first-time-welcome"
                         ? " is-active"
                         : ""
-                    }`}
+                      }`}
                     type="button"
                     onClick={() =>
                       handleFirstCallSmsSuggest("first-time-welcome")
@@ -4213,11 +4346,10 @@ export default function BookingSettingsPanel() {
                     {t(`${TK}.firstCallSmsSuggestWelcome`)}
                   </button>
                   <button
-                    className={`settings-promo-suggest${
-                      selectedFirstCallSmsSuggestKey === "promo-teaser"
+                    className={`settings-promo-suggest${selectedFirstCallSmsSuggestKey === "promo-teaser"
                         ? " is-active"
                         : ""
-                    }`}
+                      }`}
                     type="button"
                     onClick={() => handleFirstCallSmsSuggest("promo-teaser")}
                   >
@@ -4235,7 +4367,7 @@ export default function BookingSettingsPanel() {
           >
             {isPreviewPlaying
               ? t(`${TK}.previewVoiceStop`)
-              : t(`${TK}.previewVoice`)}
+              : t(`${TK}.voiceLibrary.devicePreview`)}
           </button>
         </SettingsCard>
       </div>
@@ -4366,52 +4498,52 @@ export default function BookingSettingsPanel() {
                   extensionRows={
                     categoryNewServiceDrafts.length > 0
                       ? categoryNewServiceDrafts.map((draft) => {
-                          const draftError = newServiceDraftErrors[draft.id];
-                          const invalidFields: ServicesPricingServiceField[] =
-                            draftError?.fields.length
-                              ? draftError.fields
-                              : draftError
-                                ? ["name", "price", "duration"]
-                                : [];
-                          return (
-                            <ServicesPricingServiceRow
-                              key={draft.id}
-                              item={draft}
-                              dragHandle={<span aria-hidden="true" />}
-                              adapter={{
-                                getId: (item) => item.id,
-                                getName: (item) => item.name,
-                                getPrice: (item) => item.price,
-                                getDuration: (item) => item.duration,
-                                getPhotoUrl: () => null,
-                                getTone: () => "tone-violet",
-                              }}
-                              controller={{
-                                onChange: (item, field, value) =>
-                                  updateNewServiceDraft(item.id, field, value),
-                                onRemove: (item) => cancelNewServiceDraft(item.id),
-                                isDirty: () => true,
-                                isPending: () => isSavingService,
-                              }}
-                              labels={{
-                                name: t(`${TK}.serviceNameAria`),
-                                namePlaceholder: t(`${TK}.placeholderServiceName`),
-                                price: t(`${TK}.servicePriceAria`),
-                                pricePlaceholder: t(`${TK}.placeholderServicePrice`),
-                                duration: t(`${TK}.serviceDurationAria`),
-                                durationPlaceholder: t(`${TK}.placeholderServiceDuration`),
-                                durationUnit: t(`${TK}.durationUnit`),
-                                edit: t(`${TK}.serviceEditAria`),
-                                remove: t(`${TK}.serviceModalCancel`),
-                                save: t(`${TK}.saveButton`),
-                              }}
-                              error={draftError?.message}
-                              invalidFields={invalidFields}
-                              isNew
-                              autoFocusName
-                            />
-                          );
-                        })
+                        const draftError = newServiceDraftErrors[draft.id];
+                        const invalidFields: ServicesPricingServiceField[] =
+                          draftError?.fields.length
+                            ? draftError.fields
+                            : draftError
+                              ? ["name", "price", "duration"]
+                              : [];
+                        return (
+                          <ServicesPricingServiceRow
+                            key={draft.id}
+                            item={draft}
+                            dragHandle={<span aria-hidden="true" />}
+                            adapter={{
+                              getId: (item) => item.id,
+                              getName: (item) => item.name,
+                              getPrice: (item) => item.price,
+                              getDuration: (item) => item.duration,
+                              getPhotoUrl: () => null,
+                              getTone: () => "tone-violet",
+                            }}
+                            controller={{
+                              onChange: (item, field, value) =>
+                                updateNewServiceDraft(item.id, field, value),
+                              onRemove: (item) => cancelNewServiceDraft(item.id),
+                              isDirty: () => true,
+                              isPending: () => isSavingService,
+                            }}
+                            labels={{
+                              name: t(`${TK}.serviceNameAria`),
+                              namePlaceholder: t(`${TK}.placeholderServiceName`),
+                              price: t(`${TK}.servicePriceAria`),
+                              pricePlaceholder: t(`${TK}.placeholderServicePrice`),
+                              duration: t(`${TK}.serviceDurationAria`),
+                              durationPlaceholder: t(`${TK}.placeholderServiceDuration`),
+                              durationUnit: t(`${TK}.durationUnit`),
+                              edit: t(`${TK}.serviceEditAria`),
+                              remove: t(`${TK}.serviceModalCancel`),
+                              save: t(`${TK}.saveButton`),
+                            }}
+                            error={draftError?.message}
+                            invalidFields={invalidFields}
+                            isNew
+                            autoFocusName
+                          />
+                        );
+                      })
                       : undefined
                   }
                 />
@@ -4434,6 +4566,7 @@ export default function BookingSettingsPanel() {
           disabled={
             updateConfigMutation.isPending ||
             isSavingCategories ||
+            isSavingSettings ||
             isSavingService
           }
           onClick={handleSave}
@@ -4472,17 +4605,15 @@ export default function BookingSettingsPanel() {
         }}
         labels={{
           title: t(
-            `${TK}.${
-              serviceModalDraft.mode === "edit"
-                ? "serviceModalEditTitle"
-                : "serviceModalTitle"
+            `${TK}.${serviceModalDraft.mode === "edit"
+              ? "serviceModalEditTitle"
+              : "serviceModalTitle"
             }`,
           ),
           subtitle: t(
-            `${TK}.${
-              serviceModalDraft.mode === "edit"
-                ? "serviceModalEditSub"
-                : "serviceModalSub"
+            `${TK}.${serviceModalDraft.mode === "edit"
+              ? "serviceModalEditSub"
+              : "serviceModalSub"
             }`,
           ),
           categories: t(`${TK}.serviceModalCategories`),
@@ -4511,10 +4642,9 @@ export default function BookingSettingsPanel() {
           close: t(`${TK}.serviceModalCloseAria`),
           cancel: t(`${TK}.serviceModalCancel`),
           submit: t(
-            `${TK}.${
-              serviceModalDraft.mode === "edit"
-                ? "serviceModalUpdate"
-                : "serviceModalSave"
+            `${TK}.${serviceModalDraft.mode === "edit"
+              ? "serviceModalUpdate"
+              : "serviceModalSave"
             }`,
           ),
         }}
