@@ -243,6 +243,38 @@ export function workOrderCallerWorkDone(lines: WorkOrderEditableLine[]): boolean
     && callerLines.every((line) => line.lineStatus === PosOrderItemStatus.Completed)
 }
 
+/**
+ * Badge/filter status from this technician's own parent lines — not the shared ticket status.
+ * Cancelled / checkout-Completed stay order-level. Otherwise: all Done → Completed, any
+ * Started → InService, else Waiting (UI "Assigned").
+ */
+export function deriveWorkOrderCallerDisplayStatus(
+  orderStatus: PosOrderStatus,
+  lines: Array<Pick<WorkOrderEditableLine, 'isAddOn' | 'isMine' | 'lineStatus' | 'pendingRemoval'>>,
+): PosOrderStatus {
+  if (orderStatus === PosOrderStatus.Cancelled || orderStatus === PosOrderStatus.Completed) {
+    return orderStatus
+  }
+
+  const callerParents = lines.filter((line) => (
+    !line.isAddOn && Boolean(line.isMine) && !line.pendingRemoval
+  ))
+  if (callerParents.length === 0) {
+    if (orderStatus === PosOrderStatus.Pending || orderStatus === PosOrderStatus.Confirmed) {
+      return PosOrderStatus.Waiting
+    }
+    return orderStatus
+  }
+
+  if (callerParents.every((line) => line.lineStatus === PosOrderItemStatus.Completed)) {
+    return PosOrderStatus.Completed
+  }
+  if (callerParents.some((line) => line.lineStatus === PosOrderItemStatus.Started)) {
+    return PosOrderStatus.InService
+  }
+  return PosOrderStatus.Waiting
+}
+
 // A service can sit in more than one category — grouping is just a way to find it, not a
 // statement about where a service "really" belongs. Anything with no category still has to
 // be reachable, hence the trailing bucket.
@@ -406,7 +438,7 @@ export function addWorkOrderCatalogService(
   lines: WorkOrderEditableLine[],
   service: WorkOrderCatalogService,
 ): WorkOrderEditableLine[] {
-  return [...lines, lineFromCatalog(service)]
+  return [...lines, lineFromCatalog(service, { isMine: true })]
 }
 
 // Keeps the line's identity (id/key) so the save swaps the existing service rather than deleting
@@ -456,6 +488,7 @@ export function addWorkOrderCustomService(
       isAddOn: false,
       technicianName: null,
       approval: WORK_ORDER_SERVICE_APPROVAL.pending,
+      isMine: true,
     },
   ]
 }

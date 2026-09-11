@@ -377,7 +377,7 @@
       "picker_empty": "No services match your search.",
       "picker_uncategorized": "Other services",
       "picker_loading": "Loading the salon menu…",
-      "picker_none_assignable": "The salon menu has no services yet.",
+      "picker_none_assignable": "No services in your work skills yet. Ask the front desk to update what you can perform.",
       "picker_category_empty": "No services in this category yet.",
       "picker_confirm_add": "Add service",
       "picker_confirm_add_count": "Add services ({{count}})",

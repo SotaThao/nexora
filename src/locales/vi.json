@@ -387,7 +387,7 @@
       "picker_empty": "Không có dịch vụ khớp tìm kiếm.",
       "picker_uncategorized": "Dịch vụ khác",
       "picker_loading": "Đang tải menu salon…",
-      "picker_none_assignable": "Tiệm chưa có dịch vụ nào trên menu.",
+      "picker_none_assignable": "Chưa có dịch vụ nào trong Work Skill của bạn. Nhờ quầy cập nhật dịch vụ bạn được làm.",
       "picker_category_empty": "Danh mục này chưa có dịch vụ.",
       "picker_confirm_add": "Thêm dịch vụ",
       "picker_confirm_add_count": "Thêm dịch vụ ({{count}})",

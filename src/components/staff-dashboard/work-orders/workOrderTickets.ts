@@ -256,7 +256,7 @@ export function newestAssignedWorkOrder(
   tickets: WorkOrderListItem[],
 ): WorkOrderListItem | null {
   return tickets.reduce<WorkOrderListItem | null>((newest, ticket) => {
-    if (!isWorkOrderAssignedStatus(ticket.status)) return newest
+    if (!isWorkOrderAssignedStatus(ticket.myStatus)) return newest
     if (!newest) return ticket
     const newestTime = Date.parse(newest.checkedInAt)
     const ticketTime = Date.parse(ticket.checkedInAt)
@@ -270,7 +270,7 @@ export function countWorkOrdersByFilter(
   tickets: WorkOrderListItem[],
   filter: WorkOrderTicketFilter,
 ): number {
-  return tickets.filter((ticket) => workOrderTicketMatchesFilter(ticket.status, filter)).length
+  return tickets.filter((ticket) => workOrderTicketMatchesFilter(ticket.myStatus, filter)).length
 }
 
 export function formatWorkOrderStationNumber(stationNumber: number): string {

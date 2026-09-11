@@ -65,7 +65,10 @@ export type StaffWorkOrderListItem = {
   id: string
   orderNumber: string
   customerName: string
+  /** Shared ticket status (front desk). */
   status: PosOrderStatus
+  /** Caller-local badge/filter status from their own parent lines. */
+  myStatus: PosOrderStatus
   checkedInAt: string
   scheduledAt: string | null
   serviceNames: string[]
@@ -100,7 +103,10 @@ export type StaffWorkOrderDetail = {
   businessId: string
   orderNumber: string
   customerName: string
+  /** Shared ticket status (front desk). */
   status: PosOrderStatus
+  /** Caller-local progress from their own parent lines. */
+  myStatus: PosOrderStatus
   checkedInAt: string
   scheduledAt: string | null
   stationNumber: number | null
@@ -180,11 +186,14 @@ function toPosOrderStatus(raw: string): PosOrderStatus {
 function normalizeListItem(dto: StaffWorkOrderListItemApiDto): StaffWorkOrderListItem | null {
   const id = readText(dto, 'id', 'Id')
   if (!id) return null
+  const status = toPosOrderStatus(readText(dto, 'status', 'Status'))
+  const myStatusRaw = readText(dto, 'myStatus', 'MyStatus')
   return {
     id,
     orderNumber: readText(dto, 'orderNumber', 'OrderNumber'),
     customerName: readText(dto, 'customerName', 'CustomerName'),
-    status: toPosOrderStatus(readText(dto, 'status', 'Status')),
+    status,
+    myStatus: myStatusRaw ? toPosOrderStatus(myStatusRaw) : status,
     checkedInAt: readText(dto, 'checkedInAt', 'CheckedInAt'),
     scheduledAt: readOptionalText(dto, 'scheduledAt', 'ScheduledAt'),
     serviceNames: readTextList(dto, 'serviceNames', 'ServiceNames'),
@@ -217,12 +226,15 @@ function normalizeDetail(dto: StaffWorkOrderDetailApiDto | null): StaffWorkOrder
   const id = readText(dto, 'id', 'Id')
   if (!id) return null
   const items = readValue<StaffWorkOrderItemApiDto[]>(dto, 'items', 'Items') ?? []
+  const status = toPosOrderStatus(readText(dto, 'status', 'Status'))
+  const myStatusRaw = readText(dto, 'myStatus', 'MyStatus')
   return {
     id,
     businessId: readText(dto, 'businessId', 'BusinessId'),
     orderNumber: readText(dto, 'orderNumber', 'OrderNumber'),
     customerName: readText(dto, 'customerName', 'CustomerName'),
-    status: toPosOrderStatus(readText(dto, 'status', 'Status')),
+    status,
+    myStatus: myStatusRaw ? toPosOrderStatus(myStatusRaw) : status,
     checkedInAt: readText(dto, 'checkedInAt', 'CheckedInAt'),
     scheduledAt: readOptionalText(dto, 'scheduledAt', 'ScheduledAt'),
     stationNumber: readOptionalNumber(dto, 'stationNumber', 'StationNumber'),
