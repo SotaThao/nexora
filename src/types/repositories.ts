@@ -97,6 +97,26 @@ export interface PosCategoryApiDto {
   displayOrder: number
 }
 
+/** Income/Payout Categories (issue #584) — GET/POST/PUT .../transaction-categories. */
+export interface TransactionCategoryApiDto {
+  id: string
+  name: string
+  displayOrder: number
+}
+
+export interface IncomeByCategoryStatApiDto {
+  categoryId?: string | null
+  categoryName?: string
+  amount?: number
+  transactionCount?: number
+}
+
+/** GET .../transaction-categories/stats */
+export interface IncomeByCategoryStatsApiDto {
+  items?: IncomeByCategoryStatApiDto[]
+  totalAmount?: number
+}
+
 // POS Owner Setup — Services (US-017); shape now shared with Booking Hub's catalog.
 export type PosServiceStatus = 'Active' | 'Inactive'
 
@@ -2254,6 +2274,9 @@ export interface TipApiDto {
   isMultiStaff?: boolean
   isLocalStaff?: boolean
   tipItems?: unknown[]
+  /** Income/Payout Categories (issue #584) — Staff-assigned category on this Tip. */
+  categoryId?: string | null
+  categoryName?: string | null
 }
 
 export interface TipsPaginatedApiDto {

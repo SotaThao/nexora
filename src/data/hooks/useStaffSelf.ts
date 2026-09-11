@@ -313,6 +313,20 @@ export function useConfirmStaffTipsReceipt() {
   })
 }
 
+/** Income/Payout Categories (issue #584) — Staff assigns a category to a Tip they received. */
+export function useSetTipCategory() {
+  const queryClient = useQueryClient()
+
+  return useMutation<void, Error, { tipId: string; categoryId: string | null }>({
+    mutationFn: ({ tipId, categoryId }) => staffSelfRepository.setTipCategory(tipId, categoryId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staffTips'] })
+      queryClient.invalidateQueries({ queryKey: ['staffTransactions', 'paginated'] })
+      queryClient.invalidateQueries({ queryKey: ['staffTransactionCategories', 'stats'] })
+    },
+  })
+}
+
 // BE now exposes GET /staff/link-requests (list, filterable by Status) — use that
 // directly instead of deriving link-request ids from the notifications feed and
 // probing each one individually (the old approach re-checked every historical,

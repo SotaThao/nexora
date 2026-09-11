@@ -1,7 +1,7 @@
 // StaffHome — personal staff home (mobile-first "Pro" layout):
 // greeting, KPI cards, quick actions, pending tip confirmations, linked
 // businesses. All data is real (empty states when missing).
-import { useOutletContext } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 import {
   QrCode,
   Banknote,
@@ -24,6 +24,7 @@ import { SkeletonLayout } from '../../ui/skeleton'
 import Tooltip from '../../ui/Tooltip'
 import { STAFF_HOME_SKELETON } from '../skeletons/staffDashboardSkeletons'
 import ActiveBannersCarousel from '../../dashboard/overview/ActiveBannersCarousel'
+import IncomeByCategoryPanel from '../../dashboard/charts/IncomeByCategoryPanel'
 import {
   getStaffBusinessLinkStatusPresentation,
   resolveStaffBusinessLinkStatusLabel,
@@ -109,6 +110,7 @@ function SectionHeader({ title, action = null, onAction = null }: any) {
 
 export default function StaffHome() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { onNavigate } = useOutletContext<any>() || {}
   const { account } = useStaffAccount()
   const confirmTipsMutation = useConfirmStaffTipsReceipt()
@@ -281,6 +283,9 @@ export default function StaffHome() {
           </button>
         </section>
       )}
+
+      {/* ── Income by category ───────────────────────────────────────────── */}
+      <IncomeByCategoryPanel scope="staff" onManageCategories={() => navigate('/staff/categories')} />
 
       {/* ── Linked Businesses ────────────────────────────────────────────── */}
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">

@@ -443,6 +443,12 @@ export const qk = {
   staffPayoutStats: () => ['staffPayouts', 'stats'],
   staffUnpaidDebt: () => ['staffPayouts', 'unpaidDebt'],
 
+  // Income/Payout Categories (issue #584)
+  merchantTransactionCategories: () => ['merchantTransactionCategories'],
+  merchantIncomeByCategoryStats: (filters = EMPTY) => ['merchantTransactionCategories', 'stats', filters],
+  staffTransactionCategories: () => ['staffTransactionCategories'],
+  staffIncomeByCategoryStats: (filters = EMPTY) => ['staffTransactionCategories', 'stats', filters],
+
   // Staff Payment Methods
   staffPaymentMethods: ()      => ['staffPaymentMethods'],
   staffPaymentQr: ()          => ['staffPaymentQr'],

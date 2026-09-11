@@ -58,6 +58,8 @@ function normalizeMerchantPayment(raw: Record<string, unknown> | null | undefine
     accountInfo: readField<string | null>(raw, 'accountInfo', 'AccountInfo') ?? null,
     imageUrl: readField<string | null>(raw, 'imageUrl', 'ImageUrl') ?? null,
     cryptoWallet: parsePaymentCryptoWallet(readField(raw, 'cryptoWallet', 'CryptoWallet')),
+    categoryId: readField<string | null>(raw, 'categoryId', 'CategoryId') ?? null,
+    categoryName: readField<string | null>(raw, 'categoryName', 'CategoryName') ?? null,
   }
 }
 
@@ -148,6 +150,15 @@ export function createMerchantPaymentsRepository(client: HttpClient = httpClient
         `/api/v1/merchant/payments/${encodeURIComponent(paymentId)}/acknowledge`,
         body,
       )
+    },
+
+    /**
+     * Income/Payout Categories (issue #584) — Merchant assigns a category to a Customer Payment
+     * (`Payment.Type === DirectPayment` only). Endpoint per the technical design doc; not yet on
+     * Swagger.
+     */
+    async setCategory(paymentId: string, categoryId: string | null): Promise<void> {
+      await client.put<void>(`/api/v1/merchant/payments/${encodeURIComponent(paymentId)}/category`, { categoryId })
     },
 
     async getStats(query: MerchantPaymentStatsQuery = {}): Promise<MerchantPaymentStats> {

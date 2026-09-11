@@ -40,6 +40,7 @@ import {
   PosStaffProfileRoute, PosFrontDeskRoute, PosReportsRoute, PosDevicesRoute, PosPublicCheckInRoute,
   PosPrinterSetupRoute,
   MyCertificationsRoute,
+  CategoryManagementRoute,
 } from "../components/dashboard/routes";
 import { DASHBOARD_MENU_ID, DASHBOARD_SETTINGS_TAB, BOOKING_HUB_PATH, BOOKING_HUB_LEGACY_PATH_SEGMENT, buildDashboardReportsPath, DASHBOARD_REPORTS_TAB, MY_CERTIFICATIONS_PATH_SEGMENT } from "../components/dashboard/constants";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
@@ -118,6 +119,9 @@ const PosDevicePairPage = lazyWithRetry(() => import('../components/posDevice/Po
 const SelfCheckInPage = lazyWithRetry(() => import('../components/posDevice/SelfCheckInPage'))
 const StaffMyEarnings = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffMyEarnings"),
+);
+const StaffCategoryManagement = lazyWithRetry(
+  () => import("../components/staff-dashboard/views/StaffCategoryManagement"),
 );
 const StaffMySalons = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffMySalons"),
@@ -421,6 +425,7 @@ export default function AppRouter() {
             <Route path={`${DASHBOARD_MENU_ID.payments}/:paymentId`} element={<PaymentsRedirect />} />
             <Route path={DASHBOARD_MENU_ID.reviews} element={<ReviewsRoute />} />
             <Route path={DASHBOARD_MENU_ID.reports} element={<ReportsRoute />} />
+            <Route path={DASHBOARD_MENU_ID.categoryManagement} element={<CategoryManagementRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.bookingHub}/setup-guide`} element={<AiVoiceSetupGuideRoute />} />
             <Route path={DASHBOARD_MENU_ID.bookingHub} element={<BookingHubRoute />} />
             <Route path={BOOKING_HUB_LEGACY_PATH_SEGMENT} element={<BookingHubLegacyRedirect />} />
@@ -511,6 +516,7 @@ export default function AppRouter() {
             <Route path="taxiq/export" element={<StaffTaxIqExportRoute />} />
             <Route path="taxiq/cpa-access" element={<StaffTaxIqCpaAccessRoute />} />
             <Route path="earnings" element={<StaffMyEarnings />} />
+            <Route path="categories" element={<StaffCategoryManagement />} />
             <Route path="salons" element={<StaffMySalons />} />
             <Route path="salons/report" element={<StaffSalonReport />} />
             <Route path="salons/:businessId/front-desk" element={<StaffFrontDesk />} />
