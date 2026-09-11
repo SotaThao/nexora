@@ -729,24 +729,24 @@ const FIRST_CALL_SMS_TEMPLATES = {
   "thanks-booking": {
     labelKey: "firstCallSmsTemplateThanksLabel",
     enText:
-      "Thanks for booking with Bitcoin Nail Bar! We're excited to see you. Reply to this text with any questions or to learn about our current promotions.",
+      "Thanks for choosing Bitcoin Nail Bar! As a special welcome, enjoy an exclusive discount on your next visit. Book your appointment and treat yourself!",
     viText:
-      "Cảm ơn bạn đã đặt lịch tại Bitcoin Nail Bar! Chúng tôi rất mong được gặp bạn. Bạn có thể trả lời tin nhắn này nếu có câu hỏi, hoặc để biết thêm về các ưu đãi hiện tại của tiệm.",
+      "Cảm ơn bạn đã chọn Bitcoin Nail Bar! Ưu đãi đặc biệt dành cho bạn: nhận giảm giá độc quyền cho lần ghé tiếp theo. Đặt lịch và tận hưởng dịch vụ nhé!",
   },
   "first-time-welcome": {
     labelKey: "firstCallSmsTemplateWelcomeLabel",
     enText:
-      "Thanks for calling Bitcoin Nail Bar! We're glad to have you. Reply here anytime with questions, or ask about booking your next visit.",
+      "Welcome to Bitcoin Nail Bar! As a first-time customer, you can enjoy a special discount on your next visit. We look forward to seeing you soon!",
     viText:
-      "Cảm ơn bạn đã gọi đến Bitcoin Nail Bar! Chúng tôi rất vui khi được phục vụ bạn. Bạn cứ trả lời tin nhắn này bất cứ lúc nào nếu có câu hỏi, hoặc nhờ chúng tôi hỗ trợ đặt lịch cho lần ghé tiếp theo nhé.",
+      "Chào mừng bạn đến với Bitcoin Nail Bar! Là khách hàng lần đầu, bạn sẽ nhận được ưu đãi giảm giá đặc biệt cho lần ghé tiếp theo. Hẹn gặp bạn sớm!",
   },
   "promo-teaser": {
     labelKey: "firstCallSmsTemplatePromoLabel",
     enText:
-      "Thanks for calling Bitcoin Nail Bar! Ask us about this month's promotions on your next visit — reply to this text with any questions.",
+      "A special offer is waiting for you at Bitcoin Nail Bar! Enjoy an exclusive first-time customer discount on your next visit. Treat yourself and save!",
     viText:
-      "Cảm ơn bạn đã gọi đến Bitcoin Nail Bar! Lần ghé tới bạn hỏi giúp chúng tôi về các ưu đãi trong tháng này nhé — bạn cứ trả lời tin nhắn này nếu có câu hỏi.",
-  },
+      "Một ưu đãi đặc biệt đang chờ bạn tại Bitcoin Nail Bar! Tận hưởng giảm giá độc quyền dành cho khách hàng lần đầu trong lần ghé tiếp theo. Làm đẹp và tiết kiệm hơn!",
+  }
 } as const;
 
 const AI_HUB_SUGGESTIONS = {
@@ -1506,12 +1506,12 @@ export default function BookingSettingsPanel() {
     );
     const locationParts = hasStructuredLocation
       ? {
-          street: (configData.address || "").trim(),
-          city: (configData.city || "").trim(),
-          state: (configData.state || "").trim(),
-          zip: (configData.zipCode || "").trim(),
-          country: normalizeSettingsCountry(configData.country || "US"),
-        }
+        street: (configData.address || "").trim(),
+        city: (configData.city || "").trim(),
+        state: (configData.state || "").trim(),
+        zip: (configData.zipCode || "").trim(),
+        country: normalizeSettingsCountry(configData.country || "US"),
+      }
       : splitSettingsAddress(configData.address || "");
     setLocation(locationParts);
     if (locationParts.country) {
@@ -1586,9 +1586,9 @@ export default function BookingSettingsPanel() {
       next.services.length > 0
         ? next.services
         : mergeFlatServicesIntoCategories(
-            next.categories,
-            flatServicesData || [],
-          );
+          next.categories,
+          flatServicesData || [],
+        );
     setCategories((prev) => unionSettingsCategories(prev, next.categories));
     if (!servicesDirtyRef.current) {
       setServices(mergedServices);
@@ -2204,21 +2204,21 @@ export default function BookingSettingsPanel() {
     setCategoryDrafts(
       categories.length
         ? categories.map((category) => ({
-            id: category.id,
-            draftKey: category.id,
-            name: category.name,
-            isSystem: category.isSystem,
-            isNew: false,
-          }))
+          id: category.id,
+          draftKey: category.id,
+          name: category.name,
+          isSystem: category.isSystem,
+          isNew: false,
+        }))
         : [
-            {
-              id: OTHER_SERVICES_CATEGORY_ID,
-              draftKey: OTHER_SERVICES_CATEGORY_ID,
-              name: DEFAULT_SERVICE_CATEGORY,
-              isSystem: true,
-              isNew: false,
-            },
-          ],
+          {
+            id: OTHER_SERVICES_CATEGORY_ID,
+            draftKey: OTHER_SERVICES_CATEGORY_ID,
+            name: DEFAULT_SERVICE_CATEGORY,
+            isSystem: true,
+            isNew: false,
+          },
+        ],
     );
     setCategoryModalError("");
     setCategoryModalErrorIndex(null);
@@ -2303,9 +2303,9 @@ export default function BookingSettingsPanel() {
           next.services.length > 0
             ? next.services
             : mergeFlatServicesIntoCategories(
-                mergedCategories,
-                await merchantVoiceRepository.getServices(),
-              ),
+              mergedCategories,
+              await merchantVoiceRepository.getServices(),
+            ),
         );
       }
       syncCategoryDraftsFromApi(mergedCategories);
@@ -2358,9 +2358,9 @@ export default function BookingSettingsPanel() {
           next.services.length > 0
             ? next.services
             : mergeFlatServicesIntoCategories(
-                mergedCategories,
-                await merchantVoiceRepository.getServices(),
-              ),
+              mergedCategories,
+              await merchantVoiceRepository.getServices(),
+            ),
         );
       } else {
         // Remap dirty services that lived under deleted category → Other.
@@ -2924,13 +2924,13 @@ export default function BookingSettingsPanel() {
     const persistedDirtyServices = hasInvalidServiceRows
       ? []
       : validDirtyInlineServices.filter(({ service }) =>
-          isPersistedServiceId(service.id),
-        );
+        isPersistedServiceId(service.id),
+      );
     const localOnlyDirtyServices = hasInvalidServiceRows
       ? []
       : validDirtyInlineServices.filter(
-          ({ service }) => !isPersistedServiceId(service.id),
-        );
+        ({ service }) => !isPersistedServiceId(service.id),
+      );
     const newServiceDraftsToSave = hasInvalidServiceRows
       ? []
       : newServiceDrafts;
@@ -3182,7 +3182,6 @@ export default function BookingSettingsPanel() {
       ) {
         setIsSavingService(false);
       }
-
       setIsSavingSettings(false);
     }
   };
@@ -3349,7 +3348,7 @@ export default function BookingSettingsPanel() {
                   value={aiPhoneParsed.countryCode}
                   embedded
                   disabled
-                  onChange={() => {}}
+                  onChange={() => { }}
                 />
                 <input
                   className="settings-input phone-mask-input"
@@ -3994,11 +3993,11 @@ export default function BookingSettingsPanel() {
                             setStatus(
                               next
                                 ? t(`${TK}.bookingSmsRecipientEnabled`, {
-                                    recipient: t(`${TK}.${item.titleKey}`),
-                                  })
+                                  recipient: t(`${TK}.${item.titleKey}`),
+                                })
                                 : t(`${TK}.bookingSmsRecipientDisabled`, {
-                                    recipient: t(`${TK}.${item.titleKey}`),
-                                  }),
+                                  recipient: t(`${TK}.${item.titleKey}`),
+                                }),
                             );
                             return { ...prev, [item.id]: next };
                           });
@@ -4100,33 +4099,30 @@ export default function BookingSettingsPanel() {
               <div className="settings-promo-suggest-row">
                 <SettingsSuggestLabel />
                 <button
-                  className={`settings-promo-suggest${
-                    selectedGreetingSuggestKey === "warm-welcome"
+                  className={`settings-promo-suggest${selectedGreetingSuggestKey === "warm-welcome"
                       ? " is-active"
                       : ""
-                  }`}
+                    }`}
                   type="button"
                   onClick={() => handleGreetingSuggest("warm-welcome")}
                 >
                   {t(`${TK}.greetingSuggestWarm`)}
                 </button>
                 <button
-                  className={`settings-promo-suggest${
-                    selectedGreetingSuggestKey === "quick-booking"
+                  className={`settings-promo-suggest${selectedGreetingSuggestKey === "quick-booking"
                       ? " is-active"
                       : ""
-                  }`}
+                    }`}
                   type="button"
                   onClick={() => handleGreetingSuggest("quick-booking")}
                 >
                   {t(`${TK}.greetingSuggestQuick`)}
                 </button>
                 <button
-                  className={`settings-promo-suggest${
-                    selectedGreetingSuggestKey === "bilingual"
+                  className={`settings-promo-suggest${selectedGreetingSuggestKey === "bilingual"
                       ? " is-active"
                       : ""
-                  }`}
+                    }`}
                   type="button"
                   onClick={() => handleGreetingSuggest("bilingual")}
                 >
@@ -4167,33 +4163,30 @@ export default function BookingSettingsPanel() {
                 <div className="settings-promo-suggest-row">
                   <SettingsSuggestLabel />
                   <button
-                    className={`settings-promo-suggest${
-                      selectedPromoSuggestKey === "reward-yourself"
+                    className={`settings-promo-suggest${selectedPromoSuggestKey === "reward-yourself"
                         ? " is-active"
                         : ""
-                    }`}
+                      }`}
                     type="button"
                     onClick={() => handlePromoSuggest("reward-yourself")}
                   >
                     {t(`${TK}.promoSuggestReward`)}
                   </button>
                   <button
-                    className={`settings-promo-suggest${
-                      selectedPromoSuggestKey === "first-visit"
+                    className={`settings-promo-suggest${selectedPromoSuggestKey === "first-visit"
                         ? " is-active"
                         : ""
-                    }`}
+                      }`}
                     type="button"
                     onClick={() => handlePromoSuggest("first-visit")}
                   >
                     {t(`${TK}.promoSuggestFirstVisit`)}
                   </button>
                   <button
-                    className={`settings-promo-suggest${
-                      selectedPromoSuggestKey === "refer-a-friend"
+                    className={`settings-promo-suggest${selectedPromoSuggestKey === "refer-a-friend"
                         ? " is-active"
                         : ""
-                    }`}
+                      }`}
                     type="button"
                     onClick={() => handlePromoSuggest("refer-a-friend")}
                   >
@@ -4331,22 +4324,20 @@ export default function BookingSettingsPanel() {
                 <div className="settings-promo-suggest-row">
                   <SettingsSuggestLabel />
                   <button
-                    className={`settings-promo-suggest${
-                      selectedFirstCallSmsSuggestKey === "thanks-booking"
+                    className={`settings-promo-suggest${selectedFirstCallSmsSuggestKey === "thanks-booking"
                         ? " is-active"
                         : ""
-                    }`}
+                      }`}
                     type="button"
                     onClick={() => handleFirstCallSmsSuggest("thanks-booking")}
                   >
                     {t(`${TK}.firstCallSmsSuggestThanks`)}
                   </button>
                   <button
-                    className={`settings-promo-suggest${
-                      selectedFirstCallSmsSuggestKey === "first-time-welcome"
+                    className={`settings-promo-suggest${selectedFirstCallSmsSuggestKey === "first-time-welcome"
                         ? " is-active"
                         : ""
-                    }`}
+                      }`}
                     type="button"
                     onClick={() =>
                       handleFirstCallSmsSuggest("first-time-welcome")
@@ -4355,11 +4346,10 @@ export default function BookingSettingsPanel() {
                     {t(`${TK}.firstCallSmsSuggestWelcome`)}
                   </button>
                   <button
-                    className={`settings-promo-suggest${
-                      selectedFirstCallSmsSuggestKey === "promo-teaser"
+                    className={`settings-promo-suggest${selectedFirstCallSmsSuggestKey === "promo-teaser"
                         ? " is-active"
                         : ""
-                    }`}
+                      }`}
                     type="button"
                     onClick={() => handleFirstCallSmsSuggest("promo-teaser")}
                   >
@@ -4508,52 +4498,52 @@ export default function BookingSettingsPanel() {
                   extensionRows={
                     categoryNewServiceDrafts.length > 0
                       ? categoryNewServiceDrafts.map((draft) => {
-                          const draftError = newServiceDraftErrors[draft.id];
-                          const invalidFields: ServicesPricingServiceField[] =
-                            draftError?.fields.length
-                              ? draftError.fields
-                              : draftError
-                                ? ["name", "price", "duration"]
-                                : [];
-                          return (
-                            <ServicesPricingServiceRow
-                              key={draft.id}
-                              item={draft}
-                              dragHandle={<span aria-hidden="true" />}
-                              adapter={{
-                                getId: (item) => item.id,
-                                getName: (item) => item.name,
-                                getPrice: (item) => item.price,
-                                getDuration: (item) => item.duration,
-                                getPhotoUrl: () => null,
-                                getTone: () => "tone-violet",
-                              }}
-                              controller={{
-                                onChange: (item, field, value) =>
-                                  updateNewServiceDraft(item.id, field, value),
-                                onRemove: (item) => cancelNewServiceDraft(item.id),
-                                isDirty: () => true,
-                                isPending: () => isSavingService,
-                              }}
-                              labels={{
-                                name: t(`${TK}.serviceNameAria`),
-                                namePlaceholder: t(`${TK}.placeholderServiceName`),
-                                price: t(`${TK}.servicePriceAria`),
-                                pricePlaceholder: t(`${TK}.placeholderServicePrice`),
-                                duration: t(`${TK}.serviceDurationAria`),
-                                durationPlaceholder: t(`${TK}.placeholderServiceDuration`),
-                                durationUnit: t(`${TK}.durationUnit`),
-                                edit: t(`${TK}.serviceEditAria`),
-                                remove: t(`${TK}.serviceModalCancel`),
-                                save: t(`${TK}.saveButton`),
-                              }}
-                              error={draftError?.message}
-                              invalidFields={invalidFields}
-                              isNew
-                              autoFocusName
-                            />
-                          );
-                        })
+                        const draftError = newServiceDraftErrors[draft.id];
+                        const invalidFields: ServicesPricingServiceField[] =
+                          draftError?.fields.length
+                            ? draftError.fields
+                            : draftError
+                              ? ["name", "price", "duration"]
+                              : [];
+                        return (
+                          <ServicesPricingServiceRow
+                            key={draft.id}
+                            item={draft}
+                            dragHandle={<span aria-hidden="true" />}
+                            adapter={{
+                              getId: (item) => item.id,
+                              getName: (item) => item.name,
+                              getPrice: (item) => item.price,
+                              getDuration: (item) => item.duration,
+                              getPhotoUrl: () => null,
+                              getTone: () => "tone-violet",
+                            }}
+                            controller={{
+                              onChange: (item, field, value) =>
+                                updateNewServiceDraft(item.id, field, value),
+                              onRemove: (item) => cancelNewServiceDraft(item.id),
+                              isDirty: () => true,
+                              isPending: () => isSavingService,
+                            }}
+                            labels={{
+                              name: t(`${TK}.serviceNameAria`),
+                              namePlaceholder: t(`${TK}.placeholderServiceName`),
+                              price: t(`${TK}.servicePriceAria`),
+                              pricePlaceholder: t(`${TK}.placeholderServicePrice`),
+                              duration: t(`${TK}.serviceDurationAria`),
+                              durationPlaceholder: t(`${TK}.placeholderServiceDuration`),
+                              durationUnit: t(`${TK}.durationUnit`),
+                              edit: t(`${TK}.serviceEditAria`),
+                              remove: t(`${TK}.serviceModalCancel`),
+                              save: t(`${TK}.saveButton`),
+                            }}
+                            error={draftError?.message}
+                            invalidFields={invalidFields}
+                            isNew
+                            autoFocusName
+                          />
+                        );
+                      })
                       : undefined
                   }
                 />
@@ -4615,17 +4605,15 @@ export default function BookingSettingsPanel() {
         }}
         labels={{
           title: t(
-            `${TK}.${
-              serviceModalDraft.mode === "edit"
-                ? "serviceModalEditTitle"
-                : "serviceModalTitle"
+            `${TK}.${serviceModalDraft.mode === "edit"
+              ? "serviceModalEditTitle"
+              : "serviceModalTitle"
             }`,
           ),
           subtitle: t(
-            `${TK}.${
-              serviceModalDraft.mode === "edit"
-                ? "serviceModalEditSub"
-                : "serviceModalSub"
+            `${TK}.${serviceModalDraft.mode === "edit"
+              ? "serviceModalEditSub"
+              : "serviceModalSub"
             }`,
           ),
           categories: t(`${TK}.serviceModalCategories`),
@@ -4654,10 +4642,9 @@ export default function BookingSettingsPanel() {
           close: t(`${TK}.serviceModalCloseAria`),
           cancel: t(`${TK}.serviceModalCancel`),
           submit: t(
-            `${TK}.${
-              serviceModalDraft.mode === "edit"
-                ? "serviceModalUpdate"
-                : "serviceModalSave"
+            `${TK}.${serviceModalDraft.mode === "edit"
+              ? "serviceModalUpdate"
+              : "serviceModalSave"
             }`,
           ),
         }}
