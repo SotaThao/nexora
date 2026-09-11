@@ -194,6 +194,10 @@ export interface PosStaffProfileApiDto {
   status: string
   // Count of PosOrderItems completed today for this staff member — computed inline server-side.
   turnsToday: number
+  /** Today's turns weighted by what each service was worth — same figure the Turn Board shows. */
+  weightedTurnsToday?: number
+  /** The service dollars behind those turns. */
+  serviceTotalToday?: number
 }
 
 // POS Staff Level — business-scoped lookup list (Basic/Advanced/Senior by default), optionally
@@ -584,6 +588,29 @@ export interface TurnBoardStationApiDto {
   // present) reads as "not local staff", not as a false positive block on every station's Beep.
   isLocalStaff?: boolean
   email?: string | null
+  /** Whether this technician is on shift right now — the board also lists ones who have not clocked in. */
+  isClockedIn?: boolean
+  /** Services this technician is assigned to perform — the board's search matches these too. */
+  serviceSkillNames?: string[]
+  /** Today's turns weighted by what each service was worth. */
+  weightedTurnsToday?: number
+  /** The service dollars behind those turns. */
+  serviceTotalToday?: number
+  /** Today's turns one by one, oldest first — one Turn Grid cell per entry. */
+  turnEntries?: TurnBoardEntryApiDto[]
+}
+
+export interface TurnBoardEntryApiDto {
+  posOrderItemId: string
+  posOrderId: string
+  orderNumber: string
+  serviceName: string
+  turnCreditAmount: number
+  turnCredit: number
+  /** False while the visit is open: the credit is provisional and can still change. */
+  isRecorded: boolean
+  assignedAt?: string | null
+  completedAt?: string | null
 }
 
 // POS Front Desk — Time Clock tab
@@ -736,7 +763,12 @@ export interface TimeClockRosterRowApiDto {
   hoursToday: number
   // Null for anyone who has not clocked in today; fixed for the rest of the day once set.
   turnRank?: number | null
+  /** Customers served today. Kept next to the weighted figure — they answer different questions. */
   turnsToday: number
+  /** Today's turns weighted by what each service was worth. */
+  weightedTurnsToday?: number
+  /** The service dollars behind those turns. */
+  serviceTotalToday?: number
   currentOrderId?: string | null
   currentOrderNumber?: string | null
   currentCustomerName?: string | null
@@ -1179,6 +1211,22 @@ export interface PosOrderSettingsApiDto {
   warnOnServiceLineStatusMismatch: boolean
   allowStaffManageOwnServiceLines: boolean
 }
+
+/** One service-value band: `thresholdAmount` is the band's lower bound, in dollars. */
+export interface PosTurnTierApiDto {
+  thresholdAmount: number
+  turnCredit: number
+}
+
+export interface PosTurnSettingsApiDto {
+  bookingTurnCredit: number
+  serviceTurnTiers: PosTurnTierApiDto[]
+  /** Reading is open to the whole front desk; saving needs the Manage Turn Rules permission. */
+  canManage: boolean
+}
+
+/** PUT payload — `canManage` is server-decided and never sent back. */
+export type PosTurnSettingsUpdateApiDto = Omit<PosTurnSettingsApiDto, 'canManage'>
 
 export interface PosBookingSettingsApiDto {
   autoConfirmEnabled: boolean

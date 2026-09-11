@@ -7,6 +7,7 @@ import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import { getApiErrorCode } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
+import { formatTurnCredit } from '../TurnGridView'
 import { usePosRoles } from '../../../../../data/hooks/usePosRoles'
 import { usePosStaffLevels } from '../../../../../data/hooks/usePosStaffLevels'
 import { usePosCategories } from '../../../../../data/hooks/usePosCategories'
@@ -482,7 +483,10 @@ export default function PosStaffProfileDetailModal({
                       <span className="text-[10px] font-bold uppercase text-nexoraMuted">
                         {t('components.dashboard.views.pos.PosStaffProfileView.turnsTodayLabel')}
                       </span>
-                      <div className="mt-1 text-sm font-bold text-nexoraText">{profile?.turnsToday ?? 0}</div>
+                      {/* Weighted, so this reads the same as the Turn Board badge for this tech. */}
+                      <div className="mt-1 text-sm font-bold text-nexoraText">
+                        {`${formatTurnCredit(profile?.weightedTurnsToday)}T`}
+                      </div>
                     </div>
                   </div>
                 )}

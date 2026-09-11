@@ -9,9 +9,14 @@ type NextTurnRosterRow = Pick<
 >
 
 export function sortTurnBoardStations<
-  TStation extends Pick<TurnBoardStationApiDto, 'posStaffProfileId' | 'currentStatus'>,
+  TStation extends Pick<TurnBoardStationApiDto, 'posStaffProfileId' | 'currentStatus' | 'isClockedIn'>,
 >(stations: readonly TStation[], nextTurnStaffId?: string): TStation[] {
   return [...stations].sort((a, b) => {
+    // Off-shift technicians sit below everyone on the floor: the board now lists them so the front
+    // desk can chase a clock-in, not so they compete for space with people ready to take a guest.
+    // `isClockedIn` is optional in the contract — an absent value reads as on shift.
+    const offShiftDifference = Number(a.isClockedIn === false) - Number(b.isClockedIn === false)
+    if (offShiftDifference !== 0) return offShiftDifference
     // Display busy stations last without changing the money-based recommendation.
     const busyDifference = Number(a.currentStatus === PosOrderStatus.InService)
       - Number(b.currentStatus === PosOrderStatus.InService)
