@@ -16,6 +16,7 @@ import useBusinessHoursForm from './hooks/useBusinessHoursForm'
 import PosBookingSettingsPanel from './PosBookingSettingsPanel'
 import PosCheckInSettingsPanel from './PosCheckInSettingsPanel'
 import PosOrderSettingsPanel from './PosOrderSettingsPanel'
+import PosTurnSettingsPanel from './PosTurnSettingsPanel'
 import HolidayClosuresCard from '../HolidayClosuresCard'
 import { formatPosClockTime } from './posDateTime'
 import { TWELVE_HOUR_INPUT_LANG } from '../../../../constants/timeFormat'
@@ -215,6 +216,8 @@ export default function PosGeneralSettingsView({
         <PosCheckInSettingsPanel businessId={businessId} />
 
         <PosOrderSettingsPanel businessId={businessId} />
+
+        <PosTurnSettingsPanel businessId={businessId} />
 
         <PosBookingSettingsPanel businessId={businessId} businessSlug={businessSlug} />
       </div>

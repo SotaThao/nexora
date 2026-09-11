@@ -5196,6 +5196,12 @@
             "save": "Save Rules",
             "openButton": "Weighted Turn Settings"
           },
+          "PosTurnSettingsPanel": {
+            "title": "Turn rules",
+            "description": "How much a service is worth in turns on the Turn Board, and the credit a booking earns.",
+            "turnsUnit": "{{turns}} turns",
+            "edit": "Edit turn rules"
+          },
           "PosOrderSettingsPanel": {
             "title": "Service rules",
             "description": "How services on a ticket move from assigned to done.",

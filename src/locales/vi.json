@@ -5197,6 +5197,12 @@
             "save": "Lưu quy tắc",
             "openButton": "Cài đặt lượt theo giá trị"
           },
+          "PosTurnSettingsPanel": {
+            "title": "Quy tắc tính lượt",
+            "description": "Một dịch vụ đáng bao nhiêu lượt trên bảng lượt, và lịch hẹn được cộng bao nhiêu lượt.",
+            "turnsUnit": "{{turns}} lượt",
+            "edit": "Sửa quy tắc tính lượt"
+          },
           "PosOrderSettingsPanel": {
             "title": "Quy tắc dịch vụ",
             "description": "Cách các dịch vụ trên một phiếu đi từ lúc giao thợ đến lúc hoàn tất.",

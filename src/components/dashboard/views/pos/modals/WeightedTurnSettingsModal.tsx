@@ -1,7 +1,7 @@
 // Weighted Turn Settings — how much a turn is worth for each service-value band, plus the
-// default booking turn credit. Opened from the Turn Board and from the Bookings calendar; both
-// entry points render THIS component against the same endpoint, so the salon only ever maintains
-// one set of numbers.
+// default booking turn credit. Opened from the Turn Board, the Bookings calendar and Salon
+// Settings > Salon Information; every entry point renders THIS component against the same
+// endpoint, so the salon only ever maintains one set of numbers.
 //
 // Two rules the copy in here is not decoration:
 //  - the service value is what the customer pays (discounts included, tips/tax/products/gift
@@ -13,31 +13,9 @@ import { Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useTurnSettings, useUpdateTurnSettings } from '../../../../../data/hooks/usePosTurnSettings'
 import { SkeletonList } from '../../../../ui/skeleton'
-import type { PosTurnTierApiDto } from '../../../../../types/repositories'
+import { formatTurnTierRange, MAX_TURN_CREDIT } from '../posTurnTiers'
 
 const K = 'components.dashboard.views.pos.WeightedTurnSettingsModal.'
-
-const MAX_TURN_CREDIT = 100
-
-const currency = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-})
-
-/**
- * Band label built from the thresholds themselves rather than four hardcoded strings, so opening
- * the thresholds for editing later does not need this component rewritten. The upper bound is the
- * next band's threshold minus a cent; the last band is open-ended.
- */
-function tierLabel(tiers: readonly PosTurnTierApiDto[], index: number) {
-  const from = tiers[index].thresholdAmount
-  const next = tiers[index + 1]?.thresholdAmount
-  return next === undefined
-    ? `${currency.format(from)}+`
-    : `${currency.format(from)}–${currency.format(next - 0.01)}`
-}
 
 /** Empty string is kept as-is so a cleared field reads as "required", not as zero. */
 function isValidCredit(value: string) {
@@ -168,7 +146,7 @@ export default function WeightedTurnSettingsModal({
                       className="grid grid-cols-1 items-center gap-2 sm:grid-cols-[1fr_auto]"
                     >
                       <span className="text-sm font-bold text-nexoraText">
-                        {tierLabel(tiers, index)}
+                        {formatTurnTierRange(tiers, index)}
                       </span>
                       <div>
                         <input
@@ -186,7 +164,7 @@ export default function WeightedTurnSettingsModal({
                             )
                           }}
                           placeholder={t(K + 'creditPlaceholder')}
-                          aria-label={t(K + 'tierCreditAria', { range: tierLabel(tiers, index) })}
+                          aria-label={t(K + 'tierCreditAria', { range: formatTurnTierRange(tiers, index) })}
                           className={creditInputClass(showFieldErrors && tierCreditInvalid(index))}
                         />
                         {showFieldErrors && tierCreditInvalid(index) ? (
