@@ -48,9 +48,16 @@ export function createPosTimeClockRepository(client: HttpClient = httpClient) {
       return res ?? []
     },
 
-    async beepStaff(businessId: string, posStaffProfileId: string): Promise<BeepStaffResultApiDto> {
+    // `message` is not yet in the live Swagger contract for this endpoint (path params only, no
+    // body) — sent optimistically pending a BE field; the server currently ignores an unknown body.
+    async beepStaff(
+      businessId: string,
+      posStaffProfileId: string,
+      message?: string,
+    ): Promise<BeepStaffResultApiDto> {
       return client.post<BeepStaffResultApiDto>(
         `/api/v1/merchant/pos/${businessId}/time-clock/${posStaffProfileId}/beep`,
+        message ? { message } : undefined,
       )
     },
 

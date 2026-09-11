@@ -20,10 +20,14 @@ export default function RescheduleServicesEditor({
   businessId,
   lines,
   onChange,
+  scheduledAt,
 }: {
   businessId: string
   lines: RescheduleLineDraft[]
   onChange: (lines: RescheduleLineDraft[]) => void
+  // The slot being rescheduled to — the technician list is filtered by each technician's
+  // own working hours for it, the same window the reschedule save re-checks.
+  scheduledAt?: string
 }) {
   const { t } = useTranslation()
   const { data: serviceCatalog = [] } = useCheckoutServiceCatalog(businessId)
@@ -68,6 +72,8 @@ export default function RescheduleServicesEditor({
                     value={line.posStaffProfileId}
                     onChange={(staffId) => handleStaffChange(line.key, staffId)}
                     unassignedLabel={t(nb + 'unassigned')}
+                    noAvailableLabel={t(nb + 'noAvailableTechnician')}
+                    scheduledAt={scheduledAt}
                   />
                 </div>
               </div>

@@ -1,4 +1,6 @@
 /** Match Booking Today compact / mobile breakpoint. */
+import type { ToastType } from '../../../types/contexts'
+
 export const AI_HUB_MOBILE_MEDIA_QUERY = '(max-width: 767px)' as const
 
 /** Mark form fields so validation can resolve viewport vs below-fold. */
@@ -192,7 +194,7 @@ export function buildAiHubRequiredFieldsToast(
 
 type NotifyOptions = {
   root: ParentNode | null | undefined
-  showToast: (message: string, type?: string) => void
+  showToast: (message: string, type?: ToastType) => void
   message: string
   /** When false, field errors are in-viewport — no toast / scroll. */
   revealOffscreen?: boolean
@@ -245,7 +247,7 @@ export function applyAiHubProgressiveValidation<T extends ErrorMap>(options: {
   allErrors: T
   root: ParentNode | null | undefined
   setErrors: (errors: T) => void
-  showToast: (message: string, type?: string) => void
+  showToast: (message: string, type?: ToastType) => void
   /** fieldKey → display label for the offscreen toast. */
   fieldLabels?: Record<string, string>
   /** Build toast when revealing offscreen fields. Receives joined labels + keys. */

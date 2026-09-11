@@ -10,12 +10,12 @@ import posCheckInRepository from '../repositories/posCheckIn'
 import { useSessionRole } from '../../auth/useSessionRole'
 import type { CheckInTechnicianApiDto, PosCheckInSettingsApiDto } from '../../types/repositories'
 
-export function useCheckInTechnicians(businessId?: string) {
+export function useCheckInTechnicians(businessId?: string, options?: { enabled?: boolean }) {
   const { isAuthenticated } = useSessionRole()
   return useQuery<CheckInTechnicianApiDto[]>({
     queryKey: qk.merchantPosCheckInTechnicians(businessId),
     queryFn: () => posCheckInRepository.getTechnicians(businessId as string),
-    enabled: isAuthenticated && Boolean(businessId),
+    enabled: isAuthenticated && Boolean(businessId) && (options?.enabled ?? true),
     retry: false,
     // Who is clocked in changes through the day, and the desk must not offer someone who went
     // home an hour ago.

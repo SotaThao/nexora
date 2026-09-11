@@ -16,10 +16,19 @@ import { Skeleton } from '../../../../ui/skeleton'
 
 const K = 'components.dashboard.views.pos.devices.PosDevicePairingQrPanel'
 
-function secondsUntil(expiresAt?: string | null): number {
-  if (!expiresAt) return 0
-  const remainingMs = new Date(expiresAt).getTime() - Date.now()
-  return Math.max(0, Math.ceil(remainingMs / 1000))
+function windowSeconds(token?: { issuedAt: string; expiresAt: string } | null): number {
+  if (!token) return 1
+  const spanMs = new Date(token.expiresAt).getTime() - new Date(token.issuedAt).getTime()
+  return Math.max(1, Math.round(spanMs / 1000))
+}
+
+// Bounded by the token's own window rather than trusting expiresAt against the browser clock
+// alone: a dashboard running behind the server would otherwise show a code as living longer than
+// the window it belongs to.
+function secondsLeftOf(token?: { issuedAt: string; expiresAt: string } | null): number {
+  if (!token) return 0
+  const remainingMs = new Date(token.expiresAt).getTime() - Date.now()
+  return Math.min(windowSeconds(token), Math.max(0, Math.ceil(remainingMs / 1000)))
 }
 
 // Minutes now that a code lives fifteen of them — a bare "873s" is not a duration anyone reads.
@@ -45,18 +54,12 @@ export default function PosDevicePairingQrPanel({ businessId }: { businessId: st
   usePosDevicePairingQrUsed(businessId, token?.token, Boolean(token))
 
   useEffect(() => {
-    setSecondsLeft(secondsUntil(token?.expiresAt))
-    const timer = window.setInterval(() => setSecondsLeft(secondsUntil(token?.expiresAt)), 1000)
+    setSecondsLeft(secondsLeftOf(token))
+    const timer = window.setInterval(() => setSecondsLeft(secondsLeftOf(token)), 1000)
     return () => window.clearInterval(timer)
-  }, [token?.expiresAt])
+  }, [token?.issuedAt, token?.expiresAt])
 
-  const totalWindowSeconds = token
-    ? Math.max(
-        1,
-        Math.round((new Date(token.expiresAt).getTime() - new Date(token.issuedAt).getTime()) / 1000),
-      )
-    : 1
-  const progressPercent = Math.min(100, Math.max(0, (secondsLeft / totalWindowSeconds) * 100))
+  const progressPercent = Math.min(100, Math.max(0, (secondsLeft / windowSeconds(token)) * 100))
 
   return (
     <section className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-4">

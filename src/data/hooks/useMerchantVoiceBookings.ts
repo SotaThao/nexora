@@ -17,6 +17,11 @@ import {
   type UpdateMerchantVoiceServiceCategoryRequest,
   type CreateMerchantVoiceServiceRequest,
   type UpdateMerchantVoiceServiceRequest,
+  type SaveServiceBatchItem,
+  type SaveServicesBatchResult,
+  type ReorderMerchantVoiceServiceItem,
+  type SaveCategoryBatchItem,
+  type SaveCategoriesBatchResult,
   MerchantVoiceLeadStatus,
   MerchantVoiceStaffStatus,
   type CreateMerchantVoiceBookingRequest,
@@ -187,6 +192,7 @@ export function useCreateMerchantVoiceStaff() {
     mutationFn: (body: CreateMerchantVoiceStaffRequest) => merchantVoiceRepository.createStaff(body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['merchantVoice', 'staff'] })
+      queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
     },
   })
 }
@@ -363,6 +369,38 @@ export function useUpdateMerchantVoiceService() {
   })
 }
 
+// Saves multiple services in one atomic JSON request instead of one multipart
+// request per item — used by the "Save settings" bulk-draft-rows flow. No onSuccess
+// invalidation here: the caller always calls refreshServicesCatalog() right after,
+// which already refetches + invalidates the same 2 query keys — invalidating here too
+// would just trigger a redundant extra services/categories GET round-trip.
+export function useSaveServicesBatch() {
+  return useMutation<SaveServicesBatchResult, Error, SaveServiceBatchItem[]>({
+    mutationFn: (items) => merchantVoiceRepository.saveServicesBatch(items),
+  })
+}
+
+export function useReorderMerchantVoiceServices() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, ReorderMerchantVoiceServiceItem[]>({
+    mutationFn: (items) => merchantVoiceRepository.reorderServices(items),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServices() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServiceCategories() })
+    },
+  })
+}
+
+// Saves multiple categories (create + rename) in one atomic JSON request instead of
+// one create/update request per row. No onSuccess invalidation here: the caller
+// (saveCategoryModal in BookingSettingsPanel.tsx) always refetches categories right
+// after and rebuilds local state from the fresh response.
+export function useSaveCategoriesBatch() {
+  return useMutation<SaveCategoriesBatchResult, Error, SaveCategoryBatchItem[]>({
+    mutationFn: (items) => merchantVoiceRepository.saveCategoriesBatch(items),
+  })
+}
+
 export function useDeleteMerchantVoiceService() {
   const queryClient = useQueryClient()
   return useMutation<void, Error, string>({
@@ -488,4 +526,3 @@ export function useMerchantVoiceUsageActivity(
     enabled,
   })
 }
-

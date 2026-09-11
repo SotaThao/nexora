@@ -1,208 +1,309 @@
-// BookingCalendar — Ticket 9, month view for the Booking tab. Uses the DayPilot Month
-// component (same @daypilot/daypilot-lite-react library NexoraVoice's Booking Hub uses for its
-// own calendar) instead of a hand-rolled grid, for consistency across the codebase. Clicking a
-// day header or an event reveals that day's bookings as an agenda list below, reusing the same
-// actions as the other two views (Table/Cards).
-import { useMemo } from 'react'
-import { DayPilotMonth } from '@daypilot/daypilot-lite-react'
-import type { DayPilot } from '@daypilot/daypilot-lite-react'
+// POS Front Desk's booking calendar deliberately reuses AI Hub's resource calendar so the
+// receptionist sees the same time grid and technician columns as the booking team.
+import { useMemo, useState } from 'react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
-import { PosOrderStatus } from '../../../../../constants/posOrderStatus'
-import type { BookingListItemApiDto } from '../../../../../types/repositories'
-import { bookingDateKey, formatBookingWallClock, resolveBookingWallClockParts, statusLabelKey } from './bookingFormatters'
-import { BOOKING_CALENDAR_COLORS } from '../../../views/bookingTodayConstants'
-import { formatPosDateTime } from '../posDateTime'
+import type { BookingListItemApiDto, TimeClockRosterRowApiDto } from '../../../../../types/repositories'
+import BookingTeamCalendar from '../../BookingTeamCalendar'
+import type { BookingCalendarSlotSelect } from '../../BookingTeamCalendar'
+import {
+  escapeBookingCalendarHtml,
+  formatBookingCalendarNavLabel,
+  type BookingCalendarColumn,
+  type BookingCalendarSource,
+} from '../../bookingCalendarUtils'
+import {
+  BOOKING_CALENDAR_UNASSIGNED_TECH,
+  BookingCalendarStatusGroup,
+  POS_BOOKING_CALENDAR_STATUS_COLORS,
+} from '../../bookingTodayConstants'
+import '../../booking-hub.css'
+import { formatLocalDateIso } from '../../../../../utils/localDate'
+import { bookingCalendarWallClock, bookingDateKey, statusLabelKey } from './bookingFormatters'
+import {
+  getBookingCalendarStatusGroup,
+  PosBookingCalendarStaffScope,
+  PosBookingCalendarViewMode,
+  shiftBookingCalendarAnchor,
+  type BookingCalendarOverviewDay,
+  type BookingCalendarRange,
+} from './bookingCalendarView'
+import BookingOverviewCalendar from './BookingOverviewCalendar'
 
-function pad(value: number): string {
-  return String(value).padStart(2, '0')
+function staffInitials(displayName: string): string {
+  return displayName
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('')
 }
 
-const STATUS_COLOR_INDEX: Record<string, number> = {
-  Confirmed: 0,
-  Waiting: 1,
-  InService: 1,
-  Completed: 2,
-  Pending: 3,
-  Cancelled: 4,
+function staffColumnHtml(row: TimeClockRosterRowApiDto, workingTodayLabel: string): string {
+  const displayName = escapeBookingCalendarHtml(row.displayName.trim())
+  const avatar = row.photoUrl
+    ? `<img class="pos-booking-staff-avatar" src="${escapeBookingCalendarHtml(row.photoUrl)}" alt="" />`
+    : `<span class="pos-booking-staff-initials">${escapeBookingCalendarHtml(staffInitials(row.displayName))}</span>`
+  const working = row.isClockedIn
+    ? (
+      `<span class="pos-booking-staff-working">`
+      + `<span class="pos-booking-staff-working-dot"></span>`
+      + `${escapeBookingCalendarHtml(workingTodayLabel)}`
+      + `</span>`
+    )
+    : ''
+
+  return (
+    `<div class="pos-booking-staff-header">`
+    + avatar
+    + `<span class="pos-booking-staff-copy">`
+    + `<span class="pos-booking-staff-name">${displayName} · ${Math.max(0, row.turnsToday ?? 0)}</span>`
+    + working
+    + `</span>`
+    + `</div>`
+  )
 }
 
-function colorForStatus(status: string) {
-  const index = STATUS_COLOR_INDEX[status] ?? 0
-  return BOOKING_CALENDAR_COLORS[index % BOOKING_CALENDAR_COLORS.length]
-}
-
-// DayPilot needs a naive "yyyy-MM-ddTHH:mm:ss" string representing the wall-clock the
-// appointment was actually booked for — resolveBookingWallClockParts already picks the right
-// reading (naive vs UTC-converted) based on the booking's source, see bookingFormatters.ts.
-function toDayPilotWallClock(iso: string, source?: string): string {
-  const { year, month, day, hours, minutes } = resolveBookingWallClockParts(iso, source)
-  return `${year}-${pad(month)}-${pad(day)}T${pad(hours)}:${pad(minutes)}:00`
+function calendarRangeLabel(
+  mode: PosBookingCalendarViewMode,
+  anchorDate: string,
+  range: BookingCalendarRange,
+  locale: string,
+): string {
+  if (mode === PosBookingCalendarViewMode.Day) {
+    return formatBookingCalendarNavLabel(anchorDate, locale)
+  }
+  if (mode === PosBookingCalendarViewMode.Month) {
+    const [year, month] = anchorDate.split('-').map(Number)
+    return new Intl.DateTimeFormat(locale.toLowerCase().startsWith('vi') ? 'vi-VN' : 'en-US', {
+      month: 'long',
+      year: 'numeric',
+    }).format(new Date(year, month - 1, 1, 12))
+  }
+  return `${formatBookingCalendarNavLabel(range.dateFrom, locale)} – ${formatBookingCalendarNavLabel(range.dateTo, locale)}`
 }
 
 export default function BookingCalendar({
   bookings,
-  monthDate,
-  onMonthChange,
-  selectedDayKey,
-  onSelectDay,
-  onCheckIn,
-  onCancel,
-  onReschedule,
+  mode,
+  anchorDate,
+  range,
+  overviewDays,
+  loading,
+  error,
+  onRetry,
+  onModeChange,
+  onAnchorDateChange,
+  rosterRows,
+  onNewBooking,
   onViewDetail,
-  checkingInId,
 }: {
   bookings: BookingListItemApiDto[]
-  monthDate: Date
-  onMonthChange: (next: Date) => void
-  selectedDayKey: string | null
-  onSelectDay: (dayKey: string) => void
-  onCheckIn: (bookingId: string) => void
-  onCancel: (bookingId: string) => void
-  onReschedule: (bookingId: string) => void
+  mode: PosBookingCalendarViewMode
+  anchorDate: string
+  range: BookingCalendarRange
+  overviewDays: BookingCalendarOverviewDay[]
+  loading: boolean
+  error: boolean
+  onRetry: () => void
+  onModeChange: (mode: PosBookingCalendarViewMode) => void
+  onAnchorDateChange: (nextDate: string) => void
+  rosterRows: TimeClockRosterRowApiDto[]
+  onNewBooking: (slot?: BookingCalendarSlotSelect) => void
   onViewDetail: (bookingId: string) => void
-  checkingInId: string | null
 }) {
   const { t, currentLanguage } = useTranslation()
   const p = 'components.dashboard.views.pos.BookingTab.'
+  const [staffScope, setStaffScope] = useState(PosBookingCalendarStaffScope.WorkingToday)
 
-  const year = monthDate.getUTCFullYear()
-  const month = monthDate.getUTCMonth()
-  const monthStartIso = `${year}-${pad(month + 1)}-01`
-  const monthLabel = new Date(Date.UTC(year, month, 1)).toLocaleDateString(undefined, {
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  })
-
-  const events = useMemo(
-    () =>
-      bookings.map((booking) => {
-        const color = colorForStatus(booking.status)
-        const start = toDayPilotWallClock(booking.scheduledAt, booking.source)
-        return {
-          id: booking.bookingId,
-          text: booking.customerName,
-          start,
-          end: start,
-          backColor: color.bg,
-          borderColor: color.border,
-          barColor: color.border,
-          fontColor: color.text,
-          toolTip: `${booking.customerName} · ${formatBookingWallClock(booking.scheduledAt, booking.source)}`,
-        }
-      }),
-    [bookings],
+  const visibleRosterRows = useMemo(
+    () => staffScope === PosBookingCalendarStaffScope.WorkingToday
+      ? rosterRows.filter((row) => row.isClockedIn)
+      : rosterRows,
+    [rosterRows, staffScope],
   )
 
-  const selectedBookings = selectedDayKey
-    ? bookings.filter((b) => bookingDateKey(b.scheduledAt, b.source) === selectedDayKey)
-    : []
+  const columns = useMemo<BookingCalendarColumn[]>(() => {
+    const seen = new Set<string>()
+    const staffColumns = visibleRosterRows.flatMap((row) => {
+      const displayName = row.displayName.trim()
+      if (!displayName || seen.has(displayName)) return []
+      seen.add(displayName)
+      const label = `${displayName} · ${Math.max(0, row.turnsToday ?? 0)}`
+      return [{
+        id: displayName,
+        name: label,
+        toolTip: row.isClockedIn ? `${label} · ${t(p + 'calendarWorkingToday')}` : label,
+        html: staffColumnHtml(row, t(p + 'calendarWorkingToday')),
+      }]
+    })
+    return [
+      ...staffColumns,
+      {
+        id: BOOKING_CALENDAR_UNASSIGNED_TECH,
+        name: t(p + 'unassigned'),
+        toolTip: t(p + 'unassigned'),
+      },
+    ]
+  }, [p, t, visibleRosterRows])
+
+  const staffIdsByName = useMemo(
+    () => Object.fromEntries(
+      visibleRosterRows.map((row) => [
+        row.displayName.trim().toLocaleLowerCase(),
+        row.posStaffProfileId,
+      ]),
+    ),
+    [visibleRosterRows],
+  )
+
+  const calendarBookings = useMemo<BookingCalendarSource[]>(
+    () =>
+      bookings.map((booking) => ({
+        id: booking.bookingId,
+        name: booking.customerName,
+        // A booking can carry several service-line technicians. The calendar represents the
+        // appointment in its primary technician column; the event itself still lists all services.
+        tech: booking.technicianNames[0] ?? '',
+        date: bookingDateKey(booking.scheduledAt, booking.source),
+        services: booking.serviceNames,
+        statusLabel: t(p + statusLabelKey(booking.status)),
+        statusGroup: getBookingCalendarStatusGroup(booking.status),
+        startAtUtc: booking.scheduledAt,
+        startAtWallClock: bookingCalendarWallClock(booking.scheduledAt, booking.source),
+        // The list DTO has no end time, so the shared calendar's standard 60-minute fallback
+        // applies until the booking endpoint exposes service duration.
+        endAtUtc: null,
+      })),
+    [bookings, p, t],
+  )
+
+  const modeOptions = [
+    [PosBookingCalendarViewMode.Day, 'calendarModeDay'],
+    [PosBookingCalendarViewMode.Week, 'calendarModeWeek'],
+    [PosBookingCalendarViewMode.TwoWeeks, 'calendarModeTwoWeeks'],
+    [PosBookingCalendarViewMode.ThreeWeeks, 'calendarModeThreeWeeks'],
+    [PosBookingCalendarViewMode.Month, 'calendarModeMonth'],
+  ] as const
+
+  const rangeLabel = calendarRangeLabel(mode, anchorDate, range, currentLanguage)
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <button
-          type="button"
-          aria-label={t(p + 'calendarPrevMonth')}
-          onClick={() => onMonthChange(new Date(Date.UTC(year, month - 1, 1)))}
-          className="h-8 w-8 rounded-lg border border-nexoraBorder text-nexoraText hover:border-nexoraBrand"
-        >
-          ‹
-        </button>
-        <p className="text-sm font-bold text-nexoraText">{monthLabel}</p>
-        <button
-          type="button"
-          aria-label={t(p + 'calendarNextMonth')}
-          onClick={() => onMonthChange(new Date(Date.UTC(year, month + 1, 1)))}
-          className="h-8 w-8 rounded-lg border border-nexoraBorder text-nexoraText hover:border-nexoraBrand"
-        >
-          ›
-        </button>
-      </div>
-
-      <div className="overflow-x-auto rounded-lg border border-nexoraBorder">
-        <DayPilotMonth
-          startDate={monthStartIso}
-          events={events}
-          cellHeight={84}
-          eventHeight={20}
-          weekStarts="Auto"
-          onCellHeaderClick={(args: DayPilot.MonthCellHeaderClickArgs) => {
-            onSelectDay(args.start.toStringSortable().slice(0, 10))
-          }}
-          onEventClick={(args: DayPilot.MonthEventClickArgs) => {
-            onSelectDay(args.e.start().toStringSortable().slice(0, 10))
-          }}
-          onBeforeCellRender={(args: DayPilot.MonthBeforeCellRenderArgs) => {
-            const key = args.cell.start.toStringSortable().slice(0, 10)
-            if (key === selectedDayKey) {
-              args.cell.properties.backColor = '#eef2ff'
-            }
-          }}
-        />
-      </div>
-
-      {selectedDayKey ? (
-        <div className="space-y-2 border-t border-nexoraBorder pt-3">
-          {selectedBookings.length === 0 ? (
-            <p className="text-center text-xs text-nexoraMuted">{t(p + 'emptyState')}</p>
-          ) : (
-            selectedBookings.map((booking) => {
-              const canAct = booking.status === PosOrderStatus.Pending || booking.status === PosOrderStatus.Confirmed
-              return (
-                <div key={booking.bookingId} className="rounded-lg border border-nexoraBorder p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-xs font-bold text-nexoraText">{booking.customerName}</p>
-                    <span className="rounded-full bg-nexoraCanvas px-2 py-0.5 text-[10px] font-bold text-nexoraText">
-                      {t(p + statusLabelKey(booking.status))}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-nexoraMuted">{formatBookingWallClock(booking.scheduledAt, booking.source)}</p>
-                  <p className="text-[11px] text-nexoraMuted">
-                    {t(p + 'columnCreated')}: {formatPosDateTime(booking.createdAt, currentLanguage)}
-                  </p>
-                  <p className="text-[11px] text-nexoraMuted">{booking.serviceNames.join(', ')}</p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {canAct ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => onCheckIn(booking.bookingId)}
-                          disabled={checkingInId === booking.bookingId}
-                          className="rounded-lg bg-nexoraBrand px-2 py-1 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
-                        >
-                          {t(p + 'checkInAction')}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onReschedule(booking.bookingId)}
-                          className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand"
-                        >
-                          {t(p + 'rescheduleAction')}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onCancel(booking.bookingId)}
-                          className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-rose-500 hover:text-rose-500"
-                        >
-                          {t(p + 'cancelAction')}
-                        </button>
-                      </>
-                    ) : null}
-                    <button
-                      type="button"
-                      onClick={() => onViewDetail(booking.bookingId)}
-                      className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand"
-                    >
-                      {t(p + 'viewDetailAction')}
-                    </button>
-                  </div>
-                </div>
-              )
-            })
-          )}
+    <div className="booking-hub-view pos-booking-calendar">
+      <div className="pos-booking-calendar-toolbar">
+        <div className="pos-booking-calendar-navigation">
+          <button
+            type="button"
+            aria-label={t(p + 'calendarPrevious')}
+            onClick={() => onAnchorDateChange(shiftBookingCalendarAnchor(anchorDate, mode, -1))}
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            onClick={() => onAnchorDateChange(formatLocalDateIso(new Date()))}
+          >
+            {t(p + 'calendarToday')}
+          </button>
+          <button
+            type="button"
+            aria-label={t(p + 'calendarNext')}
+            onClick={() => onAnchorDateChange(shiftBookingCalendarAnchor(anchorDate, mode, 1))}
+          >
+            ›
+          </button>
+          <strong className="pos-booking-calendar-range-label">{rangeLabel}</strong>
         </div>
-      ) : null}
+        <div className="pos-booking-calendar-modes" aria-label={t(p + 'calendarViewModeLabel')}>
+          {modeOptions.map(([optionMode, labelKey]) => (
+            <button
+              key={optionMode}
+              type="button"
+              aria-pressed={mode === optionMode}
+              onClick={() => onModeChange(optionMode)}
+            >
+              {t(p + labelKey)}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="pos-booking-calendar-controls">
+        {mode === PosBookingCalendarViewMode.Day ? (
+          <select
+            value={staffScope}
+            onChange={(event) => setStaffScope(event.target.value as PosBookingCalendarStaffScope)}
+            aria-label={t(p + 'calendarStaffScopeLabel')}
+            className="pos-booking-calendar-staff-scope"
+          >
+            <option value={PosBookingCalendarStaffScope.WorkingToday}>
+              {t(p + 'calendarWorkingToday')}
+            </option>
+            <option value={PosBookingCalendarStaffScope.AllTechnicians}>
+              {t(p + 'calendarAllTechnicians')}
+            </option>
+          </select>
+        ) : <span />}
+        <div className="pos-booking-calendar-legend" aria-label={t(p + 'calendarStatusLegend')}>
+          {([
+            [BookingCalendarStatusGroup.Completed, 'calendarLegendCompleted'],
+            [BookingCalendarStatusGroup.Upcoming, 'calendarLegendUpcoming'],
+            [BookingCalendarStatusGroup.Pending, 'calendarLegendPending'],
+          ] as const).map(([statusGroup, labelKey]) => (
+            <span key={statusGroup} className="pos-booking-calendar-legend-item">
+              <span
+                className="pos-booking-calendar-legend-dot"
+                style={{ backgroundColor: POS_BOOKING_CALENDAR_STATUS_COLORS[statusGroup].border }}
+              />
+              {t(p + labelKey)}
+            </span>
+          ))}
+        </div>
+      </div>
+      {mode === PosBookingCalendarViewMode.Day ? (
+        error ? (
+          <div className="pos-booking-overview-state" role="alert">
+            <span>{t(p + 'calendarOverviewLoadError')}</span>
+            <button type="button" onClick={onRetry}>{t(p + 'retry')}</button>
+          </div>
+        ) : (
+          <div aria-busy={loading}>
+            <BookingTeamCalendar
+              bookings={calendarBookings}
+              columnsOverride={columns}
+              staffIdsByName={staffIdsByName}
+              calendarDate={anchorDate}
+              onCalendarDateChange={onAnchorDateChange}
+              onEventClick={onViewDetail}
+              onSlotSelect={onNewBooking}
+              todayIso={formatLocalDateIso(new Date())}
+              locale={currentLanguage}
+              title={t(p + 'calendarTitle')}
+              subtitle={t(p + 'calendarSubtitle')}
+              todayLabel={t(p + 'calendarToday')}
+              prevAriaLabel={t(p + 'calendarPrevDay')}
+              nextAriaLabel={t(p + 'calendarNextDay')}
+              unassignedLabel={t(p + 'unassigned')}
+              hideBuiltInHeader
+              showHalfHourLabels
+            />
+          </div>
+        )
+      ) : (
+        <BookingOverviewCalendar
+          mode={mode}
+          anchorDate={anchorDate}
+          days={overviewDays}
+          locale={currentLanguage}
+          loading={loading}
+          error={error}
+          onRetry={onRetry}
+          onDayClick={(date) => {
+            onAnchorDateChange(date)
+            onModeChange(PosBookingCalendarViewMode.Day)
+          }}
+          onBookingClick={onViewDetail}
+        />
+      )}
     </div>
   )
 }

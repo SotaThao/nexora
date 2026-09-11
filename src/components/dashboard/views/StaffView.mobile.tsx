@@ -3,6 +3,10 @@ import { createPortal } from 'react-dom'
 import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Eye, Link, Copy, X, Share2, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
+import { canStaffMemberUseCommunityChat } from '../../staff/staffCommunityChatUtils'
+import StaffCommunityChatActionButton from '../../staff/StaffCommunityChatActionButton'
+import { useStaffCommunityChatUnreadByPeerId } from '../../staff/useStaffCommunityChatUnreadByPeerId'
+import { useStaffListChatStartHint } from '../../staff/useStaffChatStartHint'
 import { StatusFilter } from '../../../data/hooks/useMerchantStaff'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
@@ -15,7 +19,6 @@ import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
 import ToggleSwitch from '../../ui/ToggleSwitch'
-import { SkeletonList } from '../../ui/skeleton'
 import QrImage from '../../ui/QrImage'
 
 function isPendingMember(member) {
@@ -74,7 +77,10 @@ function StaffMemberCard({
   onAcceptUnlink,
   onDeclineUnlink,
   onQr,
-  onViewStaff
+  onViewStaff,
+  chatUnreadCount = 0,
+  showStartHint = false,
+  onStartHintDismiss,
 }) {
   const waitingStaffResponse = isWaitingStaffAcceptance(member)
   const isLocalStaffMember = Boolean(member.isLocalStaff)
@@ -296,6 +302,14 @@ function StaffMemberCard({
           )}
           {!isPending && (
             <>
+              {canStaffMemberUseCommunityChat(member) && (
+                <StaffCommunityChatActionButton
+                  member={member}
+                  unreadCount={chatUnreadCount}
+                  showStartHint={showStartHint}
+                  onStartHintDismiss={onStartHintDismiss}
+                />
+              )}
               <IconButton label={t('components.dashboard.views.StaffView.manage_edit_profile')} onClick={() => onViewDetail(member)} className="hover:text-nexoraBrand">
                 <User className="h-4 w-4" />
               </IconButton>
@@ -354,6 +368,7 @@ function StaffView({
   const { showToast } = useNotification()
   const [largeJoinQrOpen, setLargeJoinQrOpen] = useState(false)
   const [sortBy, setSortBy] = useState('name-asc') // 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest' | 'status-active'
+  const { getUnreadCount: getStaffChatUnreadCount } = useStaffCommunityChatUnreadByPeerId()
 
   const publicInviteEnabled = Boolean(inviteLinkSetting?.isEnabled && inviteLinkSetting?.referralCode)
   const publicInviteLink = useMemo(
@@ -405,6 +420,8 @@ function StaffView({
       return 0
     })
   }, [staff, sortBy])
+
+  const { showStartHintForMember, dismissChatStartHint } = useStaffListChatStartHint(sortedStaff)
 
   const handleShare = () => {
     if (!publicInviteEnabled) {
@@ -715,8 +732,6 @@ function StaffView({
                 {t('components.dashboard.views.StaffView.noStaffProfileFound')}
               </p>
             </div>
-          ) : isFetching ? (
-            <SkeletonList count={pageSize} showAvatar lines={2} />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
               {sortedStaff.map((member) => {
@@ -750,6 +765,9 @@ function StaffView({
                     onDeclineUnlink={onDeclineUnlink}
                     onQr={onQr}
                     onViewStaff={onViewStaff}
+                    chatUnreadCount={getStaffChatUnreadCount(member)}
+                    showStartHint={showStartHintForMember(member)}
+                    onStartHintDismiss={dismissChatStartHint}
                   />
                 )
               })}
@@ -828,7 +846,6 @@ function StaffView({
         </div>,
         document.body,
       )}
-
 
     </div>
   )

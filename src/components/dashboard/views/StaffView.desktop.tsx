@@ -3,6 +3,10 @@ import { createPortal } from 'react-dom'
 import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Eye, Link, Copy, X, Share2, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
+import { canStaffMemberUseCommunityChat } from '../../staff/staffCommunityChatUtils'
+import StaffCommunityChatActionButton from '../../staff/StaffCommunityChatActionButton'
+import { useStaffCommunityChatUnreadByPeerId } from '../../staff/useStaffCommunityChatUnreadByPeerId'
+import { useStaffListChatStartHint } from '../../staff/useStaffChatStartHint'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
@@ -67,6 +71,7 @@ function StaffView({
   const { showToast } = useNotification()
   const [largeJoinQrOpen, setLargeJoinQrOpen] = useState(false)
   const [sortBy, setSortBy] = useState('name-asc') // 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest' | 'status-active'
+  const { getUnreadCount: getStaffChatUnreadCount } = useStaffCommunityChatUnreadByPeerId()
 
   const publicInviteEnabled = Boolean(inviteLinkSetting?.isEnabled && inviteLinkSetting?.referralCode)
   const publicInviteLink = useMemo(
@@ -118,6 +123,8 @@ function StaffView({
       return 0
     })
   }, [staff, sortBy])
+
+  const { showStartHintForMember, dismissChatStartHint } = useStaffListChatStartHint(sortedStaff)
 
   const handleShare = () => {
     if (!publicInviteEnabled) {
@@ -587,6 +594,14 @@ function StaffView({
 
                       {!isPending && (
                         <div className="flex justify-end gap-1.5">
+                          {canStaffMemberUseCommunityChat(member) && (
+                            <StaffCommunityChatActionButton
+                              member={member}
+                              unreadCount={getStaffChatUnreadCount(member)}
+                              showStartHint={showStartHintForMember(member)}
+                              onStartHintDismiss={dismissChatStartHint}
+                            />
+                          )}
                           <IconButton label={t('components.dashboard.views.StaffView.manage_edit_profile')} onClick={() => onViewDetail(member)} className="hover:text-nexoraBrand">
                             <User className="h-4 w-4" />
                           </IconButton>
@@ -681,7 +696,6 @@ function StaffView({
         </div>,
         document.body,
       )}
-
 
     </div>
   )

@@ -70,13 +70,32 @@ const COPY_BY_LANG = {
   [PUBLIC_BOOKING_LANG.en]: {
     documentTitleSuffix: 'Book',
     brandKicker: 'Book online',
+    promotionsHeading: 'Current offers',
+    promotionSlideAria: (index, total) => `Offer ${index} of ${total}`,
+    promotionRateOff: (rate) => `${rate} off`,
+    promotionAllWeek: 'Every day',
+    dayShort: {
+      Sunday: 'Sun',
+      Monday: 'Mon',
+      Tuesday: 'Tue',
+      Wednesday: 'Wed',
+      Thursday: 'Thu',
+      Friday: 'Fri',
+      Saturday: 'Sat',
+    },
     brandIcon: '💅',
-    step1PhoneHeading: 'Please enter your phone number',
+    customerStepHeading: 'Please enter your phone number',
     step1ServiceHeading: 'Which services would you like?',
     serviceSearchPlaceholder: 'Search services',
     serviceSearchAria: 'Search services',
     serviceSearchClearAria: 'Clear search',
     serviceSearchEmpty: 'No services match your search.',
+    serviceViewDetails: 'View details',
+    serviceDescriptionEyebrow: 'Service details',
+    serviceDescriptionPriceLabel: 'Price',
+    serviceDescriptionDurationLabel: 'Duration',
+    serviceDescriptionClose: 'Close',
+    serviceDescriptionCloseAria: 'Close service details',
     phoneLabel: 'Phone number',
     phonePlaceholder: '(832) 555-0198',
     nameLabel: 'Full name',
@@ -120,6 +139,8 @@ const COPY_BY_LANG = {
       `${businessName || 'The salon'} will confirm by text or contact you as soon as possible.`,
     newBooking: '＋ New booking',
     staffAvailable: 'Available',
+    returningCustomer: (name) =>
+      `Welcome back, ${name}. We already have your details on file.`,
     catalogLoading: 'Loading service catalog…',
     phoneError: 'Enter a valid phone number.',
     nameError: 'Please enter your full name.',
@@ -145,6 +166,17 @@ const COPY_BY_LANG = {
     staffNotFound: 'That technician is no longer available. Please choose another.',
     tooManyRequests: 'Too many requests. Please wait a moment and try again.',
     validationError: 'Some booking details are invalid. Please check and try again.',
+    staffNotActive: 'That technician is not available. Please choose another.',
+    staffOutsideSchedule:
+      'The selected technician is not scheduled to work at this time.',
+    slotConflict:
+      'This technician already has a booking that overlaps with the selected time.',
+    outsideBusinessHours: "The selected time is outside the salon's operating hours.",
+    businessClosedOnDate: 'The salon is closed on this date. Please choose another date.',
+    leadTimeViolation: 'This booking is too soon — please pick a later time.',
+    advanceLimitExceeded:
+      'This booking is too far in advance — please pick a closer date.',
+    phoneAlreadyActive: 'This phone number already has an active booking.',
     unexpectedError: 'Something went wrong. Please try again.',
     emptyServices: 'No services are available for booking right now.',
     emptyStaff: 'No technicians are available right now.',
@@ -152,13 +184,32 @@ const COPY_BY_LANG = {
   [PUBLIC_BOOKING_LANG.vi]: {
     documentTitleSuffix: 'Đặt lịch',
     brandKicker: 'Đặt lịch trực tuyến',
+    promotionsHeading: 'Ưu đãi đang áp dụng',
+    promotionSlideAria: (index, total) => `Ưu đãi ${index} trên ${total}`,
+    promotionRateOff: (rate) => `Giảm ${rate}`,
+    promotionAllWeek: 'Mỗi ngày',
+    dayShort: {
+      Sunday: 'CN',
+      Monday: 'T2',
+      Tuesday: 'T3',
+      Wednesday: 'T4',
+      Thursday: 'T5',
+      Friday: 'T6',
+      Saturday: 'T7',
+    },
     brandIcon: '💅',
-    step1PhoneHeading: 'Vui lòng nhập số điện thoại',
+    customerStepHeading: 'Vui lòng nhập số điện thoại',
     step1ServiceHeading: 'Quý khách muốn sử dụng dịch vụ nào?',
     serviceSearchPlaceholder: 'Tìm dịch vụ',
     serviceSearchAria: 'Tìm kiếm dịch vụ',
     serviceSearchClearAria: 'Xóa tìm kiếm',
     serviceSearchEmpty: 'Không có dịch vụ khớp với tìm kiếm.',
+    serviceViewDetails: 'Xem chi tiết',
+    serviceDescriptionEyebrow: 'Mô tả dịch vụ',
+    serviceDescriptionPriceLabel: 'Giá',
+    serviceDescriptionDurationLabel: 'Thời gian',
+    serviceDescriptionClose: 'Đóng',
+    serviceDescriptionCloseAria: 'Đóng mô tả dịch vụ',
     phoneLabel: 'Số điện thoại',
     phonePlaceholder: '(832) 555-0198',
     nameLabel: 'Họ và tên',
@@ -200,6 +251,8 @@ const COPY_BY_LANG = {
       `${businessName || 'Tiệm'} sẽ gửi xác nhận qua tin nhắn hoặc liên hệ với quý khách trong thời gian sớm nhất.`,
     newBooking: '＋ Đặt lịch mới',
     staffAvailable: 'Còn lịch trống',
+    returningCustomer: (name) =>
+      `Chào mừng quý khách trở lại, ${name}. Hệ thống đã nhận diện thông tin của quý khách.`,
     catalogLoading: 'Đang tải danh mục dịch vụ…',
     phoneError: 'Nhập số điện thoại hợp lệ.',
     nameError: 'Vui lòng nhập họ và tên.',
@@ -226,6 +279,16 @@ const COPY_BY_LANG = {
     staffNotFound: 'Chuyên viên này không còn khả dụng. Vui lòng chọn lại.',
     tooManyRequests: 'Bạn thao tác quá nhanh. Vui lòng chờ một chút rồi thử lại.',
     validationError: 'Thông tin đặt lịch chưa hợp lệ. Vui lòng kiểm tra lại.',
+    staffNotActive: 'Kỹ thuật viên này hiện không nhận lịch. Vui lòng chọn người khác.',
+    staffOutsideSchedule:
+      'Kỹ thuật viên đã chọn không có lịch làm việc vào thời gian này.',
+    slotConflict: 'Kỹ thuật viên này đã có lịch hẹn trùng với thời gian đã chọn.',
+    outsideBusinessHours: 'Thời gian đã chọn nằm ngoài giờ hoạt động của salon.',
+    businessClosedOnDate: 'Salon đóng cửa vào ngày này. Vui lòng chọn ngày khác.',
+    leadTimeViolation: 'Lịch hẹn này quá gấp — vui lòng chọn thời gian trễ hơn.',
+    advanceLimitExceeded:
+      'Lịch hẹn này đặt trước quá xa — vui lòng chọn ngày gần hơn.',
+    phoneAlreadyActive: 'Số điện thoại này đã có một lịch hẹn đang hoạt động.',
     unexpectedError: 'Đã xảy ra lỗi. Vui lòng thử lại.',
     emptyServices: 'Hiện chưa có dịch vụ nào để đặt lịch.',
     emptyStaff: 'Hiện chưa có chuyên viên nào để chọn.',
@@ -248,12 +311,21 @@ export const PUBLIC_BOOKING_VALIDATION_ERROR = {
   closedDay: 'closedDay',
 }
 
+/** Errors owned by the customer step (2); every other key gates step 1. */
+export const PUBLIC_BOOKING_CUSTOMER_ERRORS = [
+  PUBLIC_BOOKING_VALIDATION_ERROR.phone,
+  PUBLIC_BOOKING_VALIDATION_ERROR.name,
+]
+
 export const PUBLIC_BOOKING_STEP = {
   form: 1,
   review: 2,
   success: 3,
 }
 
+// Submit runs BookingAvailabilityService on the backend, so every POS_BOOKING_* rule it
+// enforces can come back here — each needs its own bilingual line, otherwise the page falls
+// back to the raw backend message (English only) or, with no message, to unexpectedError.
 export const PUBLIC_BOOKING_SUBMIT_ERROR_COPY = {
   VOICE_TENANT_NOT_FOUND: 'businessNotFound',
   VOICE_TENANT_SERVICE_NOT_FOUND: 'serviceNotFound',
@@ -261,4 +333,14 @@ export const PUBLIC_BOOKING_SUBMIT_ERROR_COPY = {
   COMMON_VALIDATION_ERROR: 'validationError',
   COMMON_BAD_REQUEST: 'validationError',
   COMMON_RATE_LIMIT_EXCEEDED: 'tooManyRequests',
+  POS_BOOKING_SERVICE_INVALID: 'serviceNotFound',
+  POS_STAFF_PROFILE_NOT_FOUND: 'staffNotFound',
+  POS_STAFF_STATUS_NOT_ACTIVE: 'staffNotActive',
+  POS_BOOKING_STAFF_OUTSIDE_SCHEDULE: 'staffOutsideSchedule',
+  POS_BOOKING_SLOT_CONFLICT: 'slotConflict',
+  POS_BOOKING_OUTSIDE_BUSINESS_HOURS: 'outsideBusinessHours',
+  POS_BOOKING_BUSINESS_CLOSED_ON_DATE: 'businessClosedOnDate',
+  POS_BOOKING_LEAD_TIME_VIOLATION: 'leadTimeViolation',
+  POS_BOOKING_ADVANCE_LIMIT_EXCEEDED: 'advanceLimitExceeded',
+  POS_BOOKING_PHONE_ALREADY_ACTIVE: 'phoneAlreadyActive',
 }

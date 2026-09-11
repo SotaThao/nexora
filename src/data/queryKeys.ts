@@ -30,6 +30,7 @@ export const qk = {
   dashboardTipsChart:       () => ['dashboard', 'tipsChart'],
   dashboardAnalytics:       (filters = EMPTY) => ['dashboard', 'analytics', filters],
   dashboardReviews:         (filters = EMPTY) => ['dashboard', 'reviews', filters],
+  dashboardReviewsCollected: (filters = EMPTY) => ['dashboard', 'reviews', 'collected', filters],
   
   // Notifications
   notificationsUnreadCount: () => ['notifications', 'unreadCount'],
@@ -82,6 +83,17 @@ export const qk = {
   // POS Owner Setup — Services (US-017)
   merchantPosServices: ()      => ['merchantSettings', 'posServices'],
   merchantPosTags: ()          => ['merchantSettings', 'posTags'],
+  // POS Owner Setup — Service Add-Ons (owned per service, never shared)
+  merchantPosServiceAddOns: (serviceId?: string) =>
+    ['merchantSettings', 'posServiceAddOns', serviceId ?? ''],
+  merchantPosServiceAddOnCopySources: (serviceId?: string) =>
+    ['merchantSettings', 'posServiceAddOnCopySources', serviceId ?? ''],
+  /**
+   * Prefix — adding or removing an add-on on one service changes every OTHER service's copy-source
+   * list, so the whole set has to be invalidated, not just the edited service's own entry.
+   */
+  merchantPosServiceAddOnCopySourcesRoot: () =>
+    ['merchantSettings', 'posServiceAddOnCopySources'] as const,
   // POS Owner Setup — Products (US-018)
   merchantPosProducts: ()      => ['merchantSettings', 'posProducts'],
   // POS Owner Setup — Staff Profile (US-019)
@@ -110,6 +122,26 @@ export const qk = {
     if (weekStart) key.push(weekStart)
     return key
   },
+  // POS Front Desk -> Report. `selection` encodes mode + the exact periods chosen (sorted), so two
+  // different day sets are two different cache entries; omitting it yields a prefix that matches
+  // every selection for this business, same convention as merchantPosWeeklyPayroll above.
+  merchantPosReport: (businessId?: string, selection?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posReport', businessId ?? '']
+    if (selection) key.push(selection)
+    return key
+  },
+  merchantPosStoreIncomeReport: (businessId?: string, selection?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posStoreIncomeReport', businessId ?? '']
+    if (selection) key.push(selection)
+    return key
+  },
+  merchantPosReportDetail: (businessId?: string, posStaffProfileId?: string, selection?: string) => [
+    'merchantSettings',
+    'posReportDetail',
+    businessId ?? '',
+    posStaffProfileId ?? '',
+    selection ?? '',
+  ],
   merchantPosWeeklyPayrollDailyDetail: (businessStaffLinkId?: string, weekStart?: string) => {
     const key: unknown[] = ['merchantSettings', 'posWeeklyPayrollDailyDetail', businessStaffLinkId ?? '']
     if (weekStart) key.push(weekStart)
@@ -150,11 +182,20 @@ export const qk = {
   merchantPosWaitlist: (businessId?: string) => ['merchantSettings', 'posWaitlist', businessId ?? ''],
   // POS Merchant Ops — Order List tab (US-17), Waiting + InService combined.
   merchantPosOrderList: (businessId?: string) => ['merchantSettings', 'posOrderList', businessId ?? ''],
+  // Order mutations invalidate the list prefix, so the next-turn balance refreshes with it.
+  merchantPosNextTurnBalance: (businessId: string | undefined, day: string, timeZone: string) =>
+    ['merchantSettings', 'posOrderList', businessId ?? '', 'nextTurnBalance', day, timeZone],
   // POS iPad redesign, Ticket 2 — Check-in "returning customer" lookup by phone.
   merchantPosCustomerLookup: (businessId?: string, phone?: string) =>
     ['merchantSettings', 'posCustomerLookup', businessId ?? '', phone ?? ''],
+  // POS receipt printing (US-047) - device-scoped, deliberately without a businessId: the printer
+  // is attached to this iPad, so these are not business settings and must not be keyed as such.
+  posPrinterProfile: () => ['posDevice', 'printerProfile'],
+  posReceiptSettings: () => ['posDevice', 'receiptSettings'],
   // POS Booking — per-business settings (Ticket 2)
   merchantPosBookingSettings: (businessId?: string) => ['merchantSettings', 'posBookingSettings', businessId ?? ''],
+  merchantPosOrderSettings: (businessId?: string) => ['merchantSettings', 'posOrderSettings', businessId ?? ''],
+  staffPosPendingAcceptanceCount: () => ['staff', 'posPendingAcceptanceCount'],
   // POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filtered.
   // `filters` is only appended when explicitly passed — omitting it (e.g. from an
   // invalidateQueries call after Complete/edit) yields a short prefix that matches every
@@ -209,18 +250,58 @@ export const qk = {
     if (dayKey) key.push(dayKey)
     return key
   },
+  // Two-way beep feed. Same optional-dayKey shape as the roster/log keys above so the shared
+  // businessId prefix invalidates whichever local day is on screen.
+  merchantPosBeepFeed: (businessId?: string, dayKey?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posBeepFeed', businessId ?? '']
+    if (dayKey) key.push(dayKey)
+    return key
+  },
+  // Scoped by the caller's token, not by business — a tech linked to two salons polls one list.
+  staffActiveBeeps: () => ['staffBeeps', 'active'],
+  // Staff Work Orders — list/detail plus start/complete. No polling. Prefix
+  // `staffWorkOrdersRoot` invalidates every list/detail combination. `filter` is
+  // only appended when passed so invalidateQueries({ queryKey: qk.staffWorkOrders(businessId) })
+  // still prefixes every date/status combination currently on screen.
+  staffWorkOrdersRoot: () => ['staffWorkOrders'] as const,
+  staffWorkOrders: (businessId?: string, date?: string, filter?: string) => {
+    const key: unknown[] = ['staffWorkOrders', 'list', businessId ?? '']
+    if (date) key.push(date)
+    if (filter) key.push(filter)
+    return key
+  },
+  staffWorkOrderDetail: (orderId?: string) => ['staffWorkOrders', 'detail', orderId ?? ''],
+  // Under the same root so starting/completing a service also refreshes My Calendar.
+  staffBookingCalendar: (businessId?: string, date?: string) =>
+    ['staffWorkOrders', 'calendar', businessId ?? '', date ?? ''],
+  // Under the same root so one invalidation after a save refreshes the picker too — a service the
+  // owner just retired must stop being offered.
+  staffWorkOrderServiceCatalog: (orderId?: string) =>
+    ['staffWorkOrders', 'serviceCatalog', orderId ?? ''],
   staffClockScanPreview: (businessId?: string, token?: string) =>
     ['staffClockScanPreview', businessId ?? '', token ?? ''],
   // POS Merchant Ops — Checkout (US-14 / US-025, refactored to Order in US-026)
   merchantPosInServiceOrders: (businessId?: string) => ['merchantSettings', 'posInServiceOrders', businessId ?? ''],
   merchantPosOrderDetail: (businessId?: string, orderId?: string) =>
     ['merchantSettings', 'posOrderDetail', businessId ?? '', orderId ?? ''],
+  // Promotion catalog (Owner settings) and the per-visit eligible list (counter) are separate:
+  // the eligible list depends on the order's check-in time, so it is keyed by orderId.
+  merchantPosPromotions: (businessId?: string) =>
+    ['merchantSettings', 'posPromotions', businessId ?? ''],
+  merchantPosEligiblePromotions: (businessId?: string, orderId?: string) =>
+    ['merchantSettings', 'posEligiblePromotions', businessId ?? '', orderId ?? ''],
   merchantPosCheckoutServiceCatalog: (businessId?: string) =>
     ['merchantSettings', 'posCheckoutServiceCatalog', businessId ?? ''],
   merchantPosCheckoutProductCatalog: (businessId?: string) =>
     ['merchantSettings', 'posCheckoutProductCatalog', businessId ?? ''],
-  merchantPosAssignableStaff: (businessId?: string, posServiceId?: string) =>
-    ['merchantSettings', 'posAssignableStaff', businessId ?? '', posServiceId ?? ''],
+  // scheduledAt is part of the key: the eligible technicians for a booking depend on the
+  // slot (each technician's own weekly working hours are checked server-side).
+  merchantPosAssignableStaff: (businessId?: string, posServiceId?: string, scheduledAt?: string) =>
+    ['merchantSettings', 'posAssignableStaff', businessId ?? '', posServiceId ?? '', scheduledAt ?? ''],
+  // Add-on picker — keyed by the service LINE, not the service: the options are scoped to the
+  // line the picker was opened from.
+  merchantPosServiceLineAddOnOptions: (businessId?: string, orderId?: string, serviceLineId?: string) =>
+    ['merchantSettings', 'posServiceLineAddOnOptions', businessId ?? '', orderId ?? '', serviceLineId ?? ''],
   // POS Booking — Booking Management screen (Ticket 9)
   merchantPosBookingList: (businessId?: string, filters?: object) => {
     const key: unknown[] = ['merchantSettings', 'posBookingList', businessId ?? '']
@@ -245,6 +326,30 @@ export const qk = {
 
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],
+
+  // Merchant OneQR (one master QR per business)
+  merchantOneQr: ()            => ['merchantOneQr'],
+  // Deliberately NOT nested under `merchantOneQr`: the module catalog is static
+  // registry data, not part of the business's OneQR record. Nesting it would
+  // make every save/toggle invalidation refetch it for no reason.
+  merchantOneQrModuleCatalog: () => ['merchantOneQrModuleCatalog'],
+
+  // Public OneQR landing. `authMode` sits in the key because the same slug
+  // renders a different audience once a session exists — signing in/out must
+  // refetch rather than reuse the anonymous Customer view.
+  publicOneQrLanding: (
+    businessSlug?: string | null,
+    sessionId?: string | null,
+    authMode?: string | null,
+    // Raw `?as=` value — each requested view is a distinct server response.
+    viewAs?: string | null,
+  ) => [
+    'publicOneQrLanding',
+    businessSlug ?? '',
+    sessionId ?? '',
+    authMode ?? '',
+    viewAs ?? '',
+  ],
 
   // Merchant Physical Cards (QR/NFC hardware)
   merchantPhysicalCards: (filters = EMPTY) => ['merchantPhysicalCards', filters],
@@ -311,6 +416,11 @@ export const qk = {
   staffProfile:        ()      => ['staffProfile'],
   staffBusinesses:     ()      => ['staffBusinesses'],
   staffDashboardSummary: ()    => ['staffDashboardSummary'],
+  staffIncomeReport: (sessionId: string, params: unknown) => [
+    'staffIncomeReport',
+    sessionId,
+    params,
+  ],
   staffDashboardStatistics: () => ['staffDashboardStatistics'],
   staffReviews:          (filters = EMPTY) => ['staffReviews', filters],
   staffTips:             (filters = EMPTY) => ['staffTips', filters],
@@ -526,20 +636,45 @@ export const qk = {
   /** Prefix — invalidate all usage-activity filter variants. */
   merchantVoiceUsageActivityRoot: () => ['merchantVoice', 'usage', 'activity'] as const,
 
+  // Community Chat (US-101 → US-107)
+  communityChatSessions: () => ['communityChat', 'sessions'] as const,
+  communityChatSession: (sessionId?: string | null) => ['communityChat', 'session', sessionId ?? ''] as const,
+  communityChatMessagesRoot: (sessionId?: string | null) => ['communityChat', 'messages', sessionId ?? ''] as const,
+  communityChatMessages: (sessionId?: string | null, filters = EMPTY) =>
+    ['communityChat', 'messages', sessionId ?? '', filters] as const,
+  communityChatMessagesInfinite: (sessionId?: string | null, pageSize?: number) =>
+    ['communityChat', 'messages', sessionId ?? '', 'infinite', pageSize ?? 20] as const,
+
   // Nexora Voice trial (merchant)
   voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],
 
   // Public Customer Touch
   customerTouch: (businessSlug, touchPointSlug, sessionId) => ['customerTouch', businessSlug, touchPointSlug, sessionId],
   publicBusinessPaymentMethods: (businessId) => ['publicBusinessPaymentMethods', businessId],
+  publicSmsConsentBusiness: (businessSlug?: string) =>
+    ['publicSmsConsentBusiness', businessSlug ?? ''] as const,
   publicDirectPaymentPage: (businessId) => ['publicDirectPaymentPage', businessId],
   publicStaffDirectPaymentPage: (staffProfileId: string) => ['publicStaffDirectPaymentPage', staffProfileId],
   // POS Booking — Public Booking Page discovery (Ticket 4)
   publicReceipt: (receiptToken?: string) => ['publicReceipt', receiptToken ?? ''],
+  // Certifications — public certificate page. Keyed on the uppercased code so the same certificate
+  // reached in lower case reuses the cached answer instead of spending another rate-limited request.
+  publicCertificate: (certificateId?: string) => ['publicCertificate', certificateId ?? ''],
+  // Certifications — the signed-in account's own certificates (My Certifications).
+  myCertificates: () => ['myCertificates'],
   publicBookingPage: (businessSlug?: string) => ['publicBookingPage', businessSlug ?? ''],
   // Customer entity unification — public contact-step "returning customer" lookup by phone.
   publicBookingCustomerLookup: (businessSlug?: string, phone?: string) =>
     ['publicBookingPage', 'customerLookup', businessSlug ?? '', phone ?? ''],
+  // POS Public Check-In — customer's own phone, anonymous by businessSlug (POS-Public-Check-In-Technical.md)
+  publicCheckInPage: (businessSlug?: string) => ['publicCheckInPage', businessSlug ?? ''],
+  publicCheckInCustomerLookup: (businessSlug?: string, phone?: string) =>
+    ['publicCheckInPage', 'customerLookup', businessSlug ?? '', phone ?? ''],
+  publicCheckInActiveVisit: (businessSlug?: string, phone?: string) =>
+    ['publicCheckInPage', 'activeVisit', businessSlug ?? '', phone ?? ''],
+  publicCheckInBooking: (businessSlug?: string, phone?: string) =>
+    ['publicCheckInPage', 'booking', businessSlug ?? '', phone ?? ''],
+  publicCheckInStatus: (receiptToken?: string) => ['publicCheckInStatus', receiptToken ?? ''],
   // POS Booking — customer self-service Manage Booking page (Ticket 8)
   manageBooking: (manageToken?: string) => ['manageBooking', manageToken ?? ''],
   // Nested under the manageBooking prefix so invalidating the booking also refreshes consent.

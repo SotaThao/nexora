@@ -2,10 +2,16 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { LogOut, ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react'
+import { MY_CERTIFICATIONS_PATH_SEGMENT } from '../../dashboard/constants'
+import { useStaffPendingAcceptanceCount } from '../../../data/hooks/useStaffPendingAcceptanceCount'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { STAFF_CALENDAR_LAYOUT_CLASS } from '../calendar/constants'
+import { useStaffCalendarTodayCount } from '../calendar/useStaffCalendarSalon'
 import {
+  STAFF_CALENDAR_SCREEN,
   STAFF_MENU_ITEMS,
   STAFF_WORKSPACE_MENU_ITEM,
+  STAFF_WORK_ORDERS_SCREEN,
   STAFF_WORKSPACE_SUBMENU,
   STAFF_TAXIQ_MENU_CHILD_MODULE,
   isStaffTopLevelMenuItemActive,
@@ -40,6 +46,7 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
   const displayName = account.defaultDisplayName || staffMember.fullName || 'Staff'
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
   const tabParam = searchParams.get('tab')
+  const pendingAcceptanceCount = useStaffPendingAcceptanceCount().data ?? 0
 
   const isWorkspaceSectionActive = isStaffWorkspaceRouteActive(activeScreen, tabParam)
 
@@ -53,6 +60,8 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
   // /staff/taxiq route itself, so this fires no extra network request.
   const { data: staffTaxYearPage } = useStaffTaxYearByYear(new Date().getFullYear())
   const enabledTaxiqModules = staffTaxYearPage?.items?.[0]?.enabledModules
+  // Shares the My Calendar screen's own queries, so the badge costs no extra request.
+  const calendarTodayCount = useStaffCalendarTodayCount()
 
   useEffect(() => {
     setIsTaxIqExpanded(activeScreen === 'taxiq')
@@ -157,6 +166,17 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
       >
         <MenuIcon item={item} active={isActive} />
         <span className="truncate">{t(item.labelKey)}</span>
+        {item.id === STAFF_CALENDAR_SCREEN && calendarTodayCount > 0 ? (
+          <span
+            className={`${STAFF_CALENDAR_LAYOUT_CLASS.navCount} ${
+              isActive
+                ? STAFF_CALENDAR_LAYOUT_CLASS.navCountActive
+                : STAFF_CALENDAR_LAYOUT_CLASS.navCountIdle
+            }`}
+          >
+            {calendarTodayCount}
+          </span>
+        ) : null}
       </button>
     )
   }
@@ -180,7 +200,12 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
       {isWorkspaceExpanded && (
         <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
           {STAFF_WORKSPACE_SUBMENU.map((item) => {
-            const isSubActive = isStaffWorkspaceSubActive(activeScreen, tabParam, item)
+            const isSubActive = isStaffWorkspaceSubActive(
+              activeScreen,
+              tabParam,
+              item,
+              location.pathname,
+            )
             return (
               <button
                 key={item.id}
@@ -190,6 +215,16 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
               >
                 <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
                 <span>{t(item.labelKey)}</span>
+                {item.screen === STAFF_WORK_ORDERS_SCREEN && pendingAcceptanceCount > 0 ? (
+                  <span
+                    aria-label={t('components.dashboard.views.pos.serviceLineStatus.pendingBadge', {
+                      count: pendingAcceptanceCount,
+                    })}
+                    className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-400 px-1.5 text-[10px] font-black text-slate-900"
+                  >
+                    {pendingAcceptanceCount}
+                  </span>
+                ) : null}
               </button>
             )
           })}
@@ -274,6 +309,30 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
                 </button>
               )
             })}
+            {/* Its own button rather than another entry in the list above: those two are tabs of
+                the profile screen, this is a screen of its own. Personal, not salon-scoped, so it
+                belongs in the account block and not in the workspace nav below. */}
+            <button
+              type="button"
+              onClick={() => {
+                onNavigate(MY_CERTIFICATIONS_PATH_SEGMENT)
+                if (isMobile && onClose) onClose()
+              }}
+              className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
+                activeScreen === MY_CERTIFICATIONS_PATH_SEGMENT
+                  ? 'text-brandCyan font-extrabold'
+                  : 'text-white/75 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <div
+                className={`h-1.5 w-1.5 rounded-full ${
+                  activeScreen === MY_CERTIFICATIONS_PATH_SEGMENT
+                    ? 'bg-brandCyan shadow-sm'
+                    : 'bg-white/30'
+                }`}
+              />
+              <span>{t('certifications.menu')}</span>
+            </button>
             <LanguageSwitcher variant="sidebar" className="w-full" />
           </div>
         )}

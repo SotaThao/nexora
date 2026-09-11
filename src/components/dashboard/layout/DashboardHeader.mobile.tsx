@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   AlertTriangle,
+  Award,
   Bell,
   ClipboardList,
   CreditCard,
@@ -12,6 +13,7 @@ import {
   Plus,
   Pointer,
   Search,
+  Settings,
   Star,
   UserCheck,
   Users,
@@ -23,9 +25,15 @@ import IconButton from '../../ui/IconButton'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import { truncateTransactionId } from '../../ui/CopyableTransactionId'
 import HeaderEcosystem from './HeaderEcosystem'
+import { HeaderMessages, HeaderMessagesVariant } from '../../header-messages'
+import {
+  isCommunityChatNotificationLinkTab,
+  openCommunityChatFromNotification,
+} from '../../header-messages/openCommunityChatSession'
 import {
   buildDashboardReportsPath,
   DASHBOARD_REPORTS_TAB,
+  MY_CERTIFICATIONS_PATH,
 } from '../constants'
 
 export default function DashboardHeader({
@@ -123,6 +131,8 @@ export default function DashboardHeader({
       }
       if (item.paymentId) params.paymentId = String(item.paymentId)
       navigate(buildDashboardReportsPath(params))
+    } else if (isCommunityChatNotificationLinkTab(item.linkTab)) {
+      openCommunityChatFromNotification(item)
     } else if (item.linkTab) {
       onNavigateMenu(item.linkTab)
     }
@@ -326,10 +336,23 @@ export default function DashboardHeader({
             onClick={() => { onNavigateSettingsTab('profile'); setIsHeaderDropdownOpen(false) }}
             className="flex w-full items-center px-4 py-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition text-left"
           >
+            <Settings className="h-3.5 w-3.5 mr-2 shrink-0" />
             {t('dashboard.menu.business_setting')}
           </button>
         </div>
       )}
+      {/* Personal, not business-scoped — a NEXORA TOUCH certificate belongs to whoever is signed
+          in, so it lives here rather than in the POS / Tips / TaxIQ sidebar. */}
+      <div className="py-1">
+        <button
+          type="button"
+          onClick={() => { navigate(MY_CERTIFICATIONS_PATH); setIsHeaderDropdownOpen(false) }}
+          className="flex w-full items-center px-4 py-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition text-left"
+        >
+          <Award className="h-3.5 w-3.5 mr-2 shrink-0" />
+          {t('certifications.menu')}
+        </button>
+      </div>
       <div className="py-1">
         <button
           type="button"
@@ -378,6 +401,8 @@ export default function DashboardHeader({
             </button>
             {notificationPanel}
           </div>
+
+          <HeaderMessages variant={HeaderMessagesVariant.Mobile} />
 
           <LanguageSwitcher variant="header-plain" />
 
@@ -511,6 +536,8 @@ export default function DashboardHeader({
             </IconButton>
             {notificationPanel}
           </div>
+
+          <HeaderMessages variant={HeaderMessagesVariant.Desktop} />
 
           <div className="order-4">
             <LanguageSwitcher />

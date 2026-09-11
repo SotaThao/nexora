@@ -14,8 +14,9 @@ import {
 import type { UserSubscription } from '../../../types/domain'
 import {
   getSubscriptionPlanRenewLabel,
-  isTipPlatformPlanBelowCurrent,
-  isTipPlatformPlanCurrent,
+  isTipPlatformPlanCurrentCycle,
+  isTipPlatformUpgradeMove,
+  periodInMonthsFromBillingCycle,
   resolveTipPlatformPlanId,
 } from '../../../utils/subscriptionDisplay'
 import { PACKAGE_MANAGEMENT_TK as PACKAGE_MGMT_TK, TipPlatformUiPlanId } from './packageManagement/constants'
@@ -27,6 +28,12 @@ export type ManagePlanBillingCycle = 'monthly' | 'yearly'
 interface ManagePlanViewProps {
   /** Active TipPlatform subscription from /userprofile/me. */
   currentSubscription?: UserSubscription | null
+  /**
+   * Billing-cycle length (months) of the active TipPlatform subscription — sourced from
+   * my-packages, since `/userprofile/me`'s SubscriptionDto has no `periodInMonths`. Needed
+   * to gate upgrades cycle-first-then-tier the same way the backend does.
+   */
+  currentPeriodInMonths?: number | null
   /** Invoked with the chosen plan id + billing cycle when a CTA is pressed. */
   onSelectPlan?: (planId: PlanId, billingCycle: SubscriptionBillingCycle) => void
   /** Packages from the API — undefined while loading. */
@@ -59,6 +66,7 @@ const PLAN_CONFIG: PlanConfig[] = [
 
 function ManagePlanView({
   currentSubscription = null,
+  currentPeriodInMonths = null,
   onSelectPlan,
   packages,
   wide = false,
@@ -199,8 +207,16 @@ function ManagePlanView({
             : pkg && pkg.periodInMonths !== 1
               ? t('manage_plan.price_note_months', { count: pkg.periodInMonths })
               : t(`${base}.price_note`)
-          const isCurrent = isTipPlatformPlanCurrent(currentSubscription, plan.id)
-          const isLocked = isTipPlatformPlanBelowCurrent(plan.id, currentPlanId)
+          const targetPeriodInMonths = periodInMonthsFromBillingCycle(billingCycle)
+          const isCurrent = isTipPlatformPlanCurrentCycle(
+            plan.id,
+            targetPeriodInMonths,
+            currentPlanId,
+            currentPeriodInMonths,
+          )
+          const isLocked =
+            !isCurrent
+            && !isTipPlatformUpgradeMove(plan.id, targetPeriodInMonths, currentPlanId, currentPeriodInMonths)
           const yearlyCheckoutDisabled =
             isYearly && !!pkg && pkg.yearlyPrice == null && plan.id !== TipPlatformUiPlanId.Enterprise
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { DASHBOARD_MENU_ID } from '../../components/dashboard/constants'
+import { STAFF_WORK_ORDERS_SCREEN } from '../../components/staff-dashboard/constants'
 import { qk } from '../queryKeys'
 
 type QueryKeyPrefix = readonly unknown[]
@@ -61,6 +62,7 @@ const STAFF_MENU_QUERIES: Record<string, QueryKeyPrefix[]> = {
     ['staffTips'],
   ],
   salons: [qk.staffBusinesses()],
+  [STAFF_WORK_ORDERS_SCREEN]: [qk.staffWorkOrdersRoot(), qk.staffBusinesses()],
   profile: [qk.userProfile(), qk.staffProfile(), qk.staffBusinesses()],
   notifications: [
     qk.notifications(),

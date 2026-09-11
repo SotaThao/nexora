@@ -9,6 +9,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { scrollToPageTop } from "../utils/scrollToPageTop";
+import { searchHasStaffChatStartHint, isStaffChatStartHintOnlySearchChange } from "../components/staff/constants";
 import { useAuth } from "../auth/useAuth";
 import {
   AnalyticsRoute,
@@ -34,10 +35,13 @@ import {
   TaxIqPayEngineRoute, TaxIqWeeklyPayrollRoute, TaxIqPayrollRunsRoute, TaxIqTaxLedgerRoute,
   TaxIqExceptionsRoute, TaxIqDataQualityRoute, TaxIqJurisdictionsRoute, TaxIqShareLinksRoute,
   TaxIqForm1099NecRoute, TaxIqTipLedgerRoute, TaxIqFormsReportsRoute, TaxIqTaxEstimateRoute,
-  PosGeneralSettingsRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
-  PosStaffProfileRoute, PosFrontDeskRoute, PosDevicesRoute
+  PosSalonSettingsRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
+  PosPromotionsRoute,
+  PosStaffProfileRoute, PosFrontDeskRoute, PosReportsRoute, PosDevicesRoute, PosPublicCheckInRoute,
+  PosPrinterSetupRoute,
+  MyCertificationsRoute,
 } from "../components/dashboard/routes";
-import { DASHBOARD_MENU_ID, DASHBOARD_SETTINGS_TAB, BOOKING_HUB_PATH, BOOKING_HUB_LEGACY_PATH_SEGMENT, buildDashboardReportsPath, DASHBOARD_REPORTS_TAB } from "../components/dashboard/constants";
+import { DASHBOARD_MENU_ID, DASHBOARD_SETTINGS_TAB, BOOKING_HUB_PATH, BOOKING_HUB_LEGACY_PATH_SEGMENT, buildDashboardReportsPath, DASHBOARD_REPORTS_TAB, MY_CERTIFICATIONS_PATH_SEGMENT } from "../components/dashboard/constants";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { isDemoToolsEnabled } from "./demoTools";
 import lazyWithRetry from "./lazyWithRetry";
@@ -49,6 +53,9 @@ import PosOnboardingLayout from "./PosOnboardingLayout";
 import RootRedirect from "./RootRedirect";
 import { VoiceCallPlanRoute } from "../data/voiceTrial/domain";
 import { PUBLIC_BOOKING_ROUTE } from "../components/public/booking/constants";
+import { ONEQR_ROUTE } from "../constants/oneQr";
+
+const OneQrArtworkPage = lazyWithRetry(() => import("../components/touchpoints/oneqr/OneQrArtworkPage"));
 
 const SetupWizard = lazyWithRetry(() => import("../components/SetupWizard"));
 const DashboardOwnerShell = lazyWithRetry(
@@ -115,11 +122,25 @@ const StaffMyEarnings = lazyWithRetry(
 const StaffMySalons = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffMySalons"),
 );
+const StaffSalonReport = lazyWithRetry(
+  () => import("../components/staff-dashboard/views/StaffSalonReport"),
+);
 const StaffClockScan = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffClockScan"),
 );
 const StaffFrontDesk = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffFrontDesk"),
+);
+const StaffWorkOrders = lazyWithRetry(
+  () => import("../components/staff-dashboard/work-orders/StaffWorkOrders"),
+);
+const StaffMyCalendar = lazyWithRetry(
+  () => import("../components/staff-dashboard/calendar/StaffMyCalendar"),
+);
+// My Certifications is one screen shared by both dashboards: a certificate is issued to a person,
+// and both a merchant account and a staff account are people with a UserProfile.
+const MyCertificationsView = lazyWithRetry(
+  () => import("../components/certificate/MyCertificationsView"),
 );
 const ForgotPassword = lazyWithRetry(
   () => import("../components/ForgotPassword"),
@@ -130,6 +151,9 @@ const ResetPassword = lazyWithRetry(
 const LoginScreen = lazyWithRetry(() => import("./LoginScreen"));
 const QrRedirectPage = lazyWithRetry(
   () => import("../components/public/QrRedirectPage"),
+);
+const OneQrLandingPage = lazyWithRetry(
+  () => import("../components/public/oneqr/OneQrLandingPage"),
 );
 const PrivacyPolicyPage = lazyWithRetry(
   () => import("../components/legal/PrivacyPolicyPage"),
@@ -149,8 +173,17 @@ const ManageBookingPage = lazyWithRetry(
 const ReceiptPage = lazyWithRetry(
   () => import("../components/public/ReceiptPage"),
 );
+const CertificatePage = lazyWithRetry(
+  () => import("../components/public/certificate/CertificatePage"),
+);
 const PublicBookingPage = lazyWithRetry(
   () => import("../components/public/booking/PublicBookingPage"),
+);
+const PublicCheckInPage = lazyWithRetry(
+  () => import("../components/public/checkin/PublicCheckInPage"),
+);
+const PublicCheckInStatusPage = lazyWithRetry(
+  () => import("../components/public/checkin/PublicCheckInStatusPage"),
 );
 const VoiceCallPlanPage = lazyWithRetry(
   () => import("../components/public/VoiceCallPlanPage"),
@@ -270,8 +303,16 @@ function ScrollToTop() {
     if (
       previousLocation?.pathname === pathname &&
       previousLocation.hash === hash &&
-      isTabOnlySearchChange(previousLocation.search, search)
+      (
+        isTabOnlySearchChange(previousLocation.search, search)
+        || isStaffChatStartHintOnlySearchChange(previousLocation.search, search)
+      )
     ) {
+      return undefined;
+    }
+
+    if (searchHasStaffChatStartHint(search)) {
+      window.scrollTo(0, 0);
       return undefined;
     }
 
@@ -306,10 +347,18 @@ export default function AppRouter() {
           <Route path="/merchant/payments/:paymentId" element={<PaymentsRedirect />} />
           <Route path="/qr/:code" element={<QrRedirectPage />} />
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
+          <Route path={ONEQR_ROUTE.path} element={<OneQrLandingPage />} />
           <Route path={PUBLIC_BOOKING_ROUTE.path} element={<PublicBookingPage />} />
           <Route path="/booking/:businessSlug" element={<PublicPosBookingPage />} />
           <Route path="/booking/manage/:manageToken" element={<ManageBookingPage />} />
           <Route path="/receipt/:receiptToken" element={<ReceiptPage />} />
+          {/* Certifications — the address the QR code on a printed NEXORA TOUCH certificate points
+              at. Must match SystemOptions.FrontEndUrl + "/certificate/{certificateId}" on the
+              backend, which is the only place that builds the link. */}
+          <Route path="/certificate/:certificateId" element={<CertificatePage />} />
+          {/* POS Public Check-In — customer checks in from their own phone (POS-Public-Check-In-Technical.md §9). */}
+          <Route path="/checkin/status/:receiptToken" element={<PublicCheckInStatusPage />} />
+          <Route path="/checkin/:businessSlug" element={<PublicCheckInPage />} />
           <Route path="/cpa/access" element={<CpaViewerPage />} />
           <Route path="/share/access" element={<ShareLinkViewerPage />} />
           <Route path="/w4-invite" element={<StaffW4InvitePage />} />
@@ -318,6 +367,7 @@ export default function AppRouter() {
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           <Route path="/sms-consent" element={<SmsConsentReferencePage />} />
+          <Route path="/:businessSlug/sms-consent" element={<SmsConsentReferencePage />} />
           <Route path="/news-library" element={<PublicNewsLibraryPage />} />
           <Route
             path={VoiceCallPlanRoute.path}
@@ -395,15 +445,26 @@ export default function AppRouter() {
             <Route path={DASHBOARD_MENU_ID.productManagement} element={<ProductManagementRoute />} />
             <Route element={<PosOnboardingLayout />}>
               <Route path={DASHBOARD_MENU_ID.pos} element={<PosFrontDeskRoute />} />
-              <Route path={`${DASHBOARD_MENU_ID.pos}/settings`} element={<PosGeneralSettingsRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/print-return/:printAttemptId`} element={<PosFrontDeskRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/settings/:settingsTab?`} element={<PosSalonSettingsRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/report/:reportTab?`} element={<PosReportsRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/roles`} element={<PosRolesRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/categories`} element={<PosCategoriesRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/services`} element={<PosServicesRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/products`} element={<PosProductsRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/promotions`} element={<PosPromotionsRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/staff`} element={<PosStaffProfileRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/devices`} element={<PosDevicesRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/printer`} element={<PosPrinterSetupRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/printer/print-return/:printAttemptId`} element={<PosPrinterSetupRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/public-checkin`} element={<PosPublicCheckInRoute />} />
             </Route>
+            {/* Account menu > My Certifications. Not a sidebar menu id: a certificate belongs to
+                the signed-in person, not the business, so it is reached from the avatar dropdown
+                and never appears under POS, Tips or TaxIQ. */}
+            <Route path={MY_CERTIFICATIONS_PATH_SEGMENT} element={<MyCertificationsRoute />} />
             <Route path={DASHBOARD_MENU_ID.touchpoints} element={<TouchpointsRoute />} />
+            <Route path="touchpoints/oneqr/artwork" element={<OneQrArtworkPage />} />
             <Route path={DASHBOARD_MENU_ID.analytics} element={<AnalyticsRoute />} />
             <Route path={DASHBOARD_MENU_ID.settings} element={<SettingsRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.settings}/:tab`} element={<SettingsRoute />} />
@@ -447,10 +508,19 @@ export default function AppRouter() {
             <Route path="taxiq/cpa-access" element={<StaffTaxIqCpaAccessRoute />} />
             <Route path="earnings" element={<StaffMyEarnings />} />
             <Route path="salons" element={<StaffMySalons />} />
+            <Route path="salons/report" element={<StaffSalonReport />} />
             <Route path="salons/:businessId/front-desk" element={<StaffFrontDesk />} />
+            <Route path="salons/:businessId/front-desk/print-return/:printAttemptId" element={<StaffFrontDesk />} />
+            <Route path="work-orders/:salonId?/:ticketId?" element={<StaffWorkOrders />} />
+            <Route path="calendar" element={<StaffMyCalendar />} />
             {/* Landing page for the rotating clock-in QR — salon id and token arrive as ?b=&t= */}
             <Route path="clock-scan" element={<StaffClockScan />} />
             <Route path="profile" element={<StaffProfile />} />
+            {/* Staff account menu > My Certifications. Same screen the merchant dashboard uses. */}
+            <Route
+              path={MY_CERTIFICATIONS_PATH_SEGMENT}
+              element={<MyCertificationsView />}
+            />
             <Route path="notifications" element={<StaffNotifications />} />
             <Route path="*" element={<StaffFallbackRoute />} />
           </Route>

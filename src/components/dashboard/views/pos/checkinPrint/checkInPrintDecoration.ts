@@ -1,0 +1,77 @@
+import type { CheckInPalette } from './checkInPrintCatalog'
+import type { PrintNode, TemplateId } from './checkInPrintTypes'
+
+/** Print artwork in physical points: fine rules and restrained architectural framing. */
+export function createCheckInPrintDecoration(template: TemplateId, width: number, height: number, palette: CheckInPalette): PrintNode[] {
+  const nodes: PrintNode[] = []
+  if (template === 'simple') return nodes
+
+  const accent = palette.accent
+  const inset = Math.min(width, height) * .035
+  const rule = .45
+  const rect = (x: number, y: number, w: number, h: number, fill = accent) => {
+    nodes.push({ kind: 'rect', x, y, width: w, height: h, fill })
+  }
+  const frame = (offset: number, weight = rule, fill = accent) => {
+    rect(offset, offset, width - offset * 2, weight, fill)
+    rect(offset, height - offset - weight, width - offset * 2, weight, fill)
+    rect(offset, offset, weight, height - offset * 2, fill)
+    rect(width - offset - weight, offset, weight, height - offset * 2, fill)
+  }
+  if (template === 'classic-gold') {
+    // An ivory invitation-style frame. Foil accents stay at the trim, away from text.
+    frame(inset, rule)
+    frame(inset + 3, .25)
+    rect(inset, inset, width * .19, 1.1)
+    rect(width - inset - width * .19, height - inset - 1.1, width * .19, 1.1)
+  }
+
+  if (template === 'soft-sage') {
+    const radius = width * .10
+    const archFrame = (offset: number, fill: string) => {
+      const right = width - offset
+      const bottom = height - offset
+      nodes.push({ kind: 'path', x: 0, y: 0, fill,
+        d: `M ${offset} ${bottom} L ${offset} ${offset + radius} Q ${offset} ${offset} ${offset + radius} ${offset} L ${right - radius} ${offset} Q ${right} ${offset} ${right} ${offset + radius} L ${right} ${bottom} Z` })
+    }
+    archFrame(inset, accent)
+    archFrame(inset + .7, palette.background)
+    rect(width * .42, height - inset - 5, width * .16, 1)
+  }
+
+  if (template === 'modern-navy') {
+    // Architectural double rules; no simulated marble, brush strokes or clip-art curves.
+    frame(inset, .4)
+    const length = Math.min(width, height) * .16
+    for (const offset of [inset + 3, inset + 6]) {
+      rect(offset, offset, length, .3)
+      rect(offset, offset, .3, length)
+      rect(width - offset - length, height - offset, length, .3)
+      rect(width - offset, height - offset - length, .3, length)
+    }
+    rect(width * .44, inset - .65, width * .12, 1.3)
+    rect(width * .44, height - inset - .65, width * .12, 1.3)
+  }
+
+  if (template === 'minimal-clean') {
+    // Editorial crop-like corner rules keep the central field entirely clear.
+    const length = width * .12
+    const quiet = palette.id === 'gold' ? '#ded5c5' : '#cbd3d8'
+    for (const [x, y, direction] of [[inset, inset, 1], [width - inset, height - inset, -1]]) {
+      rect(direction > 0 ? x : x - length, y, length, .55, quiet)
+      rect(x, direction > 0 ? y : y - length, .55, length, quiet)
+    }
+    rect(width * .46, inset, width * .08, .75)
+  }
+
+  if (template === 'wide-counter') {
+    const split = width * .51
+    rect(split, 0, width - split, height, palette.id === 'navy' ? '#0c192b' : '#f3f3ee')
+    frame(inset, .45)
+    rect(split, inset, .45, height - inset * 2)
+    // A pair of short horizontal rules anchors the two panels without competing with QR.
+    rect(inset, inset, width * .12, 1.1)
+    rect(width - inset - width * .12, height - inset - 1.1, width * .12, 1.1)
+  }
+  return nodes
+}

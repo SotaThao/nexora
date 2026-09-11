@@ -8,13 +8,13 @@ import posRolesRepository from '../repositories/posRoles'
 import { AuthContext } from '../../auth/AuthContext'
 import type { PosRoleApiDto } from '../../types/repositories'
 
-export function usePosRoles() {
+export function usePosRoles({ enabled = true }: { enabled?: boolean } = {}) {
   const auth = useContext(AuthContext)
   const isOwner = auth?.status === 'authenticated' && auth?.session?.role === 'owner'
   return useQuery<PosRoleApiDto[]>({
     queryKey: qk.merchantPosRoles(),
     queryFn: () => posRolesRepository.getPosRoles(),
-    enabled: isOwner,
+    enabled: enabled && isOwner,
     retry: false,
   })
 }

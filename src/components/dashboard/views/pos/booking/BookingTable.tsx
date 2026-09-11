@@ -10,6 +10,12 @@ import {
   formatBookingHubTimeDisplay,
 } from '../../bookingHubFormatters'
 import { resolveBookingWallClockParts, statusLabelKey } from './bookingFormatters'
+import {
+  POS_TABLE_HEADER_CELL_CLASS,
+  POS_TABLE_HEADER_ROW_CLASS,
+  POS_TABLE_STICKY_ACTION_CELL_CLASS,
+  POS_TABLE_STICKY_ACTION_HEADER_CLASS,
+} from '../posTableStyles'
 
 const STATUS_STYLES: Record<string, { row: string; badge: string }> = {
   [PosOrderStatus.Pending]: {
@@ -82,26 +88,17 @@ export default function BookingTable({
   const p = 'components.dashboard.views.pos.BookingTab.'
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-nexoraBorder bg-white shadow-sm">
-      <table className="w-full min-w-[980px] table-fixed text-left text-xs">
-        <colgroup>
-          <col className="w-[17%]" />
-          <col className="w-[11%]" />
-          <col className="w-[14%]" />
-          <col className="w-[15%]" />
-          <col className="w-[10%]" />
-          <col className="w-[8%]" />
-          <col className="w-[25%]" />
-        </colgroup>
+    <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
+      <table className="w-full min-w-[980px] table-auto text-left text-xs">
         <thead>
-          <tr className="border-b border-nexoraBorder bg-nexoraCanvas/70 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-            <th className="px-4 py-3">{t(p + 'columnCustomer')}</th>
-            <th className="px-4 py-3">{t(p + 'columnCreated')}</th>
-            <th className="px-4 py-3">{t(p + 'columnDateTime')}</th>
-            <th className="px-4 py-3">{t(p + 'columnServices')}</th>
-            <th className="px-4 py-3">{t(p + 'columnTechnician')}</th>
-            <th className="px-4 py-3">{t(p + 'columnStatus')}</th>
-            <th className="px-4 py-3 text-right">{t(p + 'columnActions')}</th>
+          <tr className={POS_TABLE_HEADER_ROW_CLASS}>
+            <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnCustomer')}</th>
+            <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnCreated')}</th>
+            <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnDateTime')}</th>
+            <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnServices')}</th>
+            <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnTechnician')}</th>
+            <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnStatus')}</th>
+            <th className={`${POS_TABLE_HEADER_CELL_CLASS} ${POS_TABLE_STICKY_ACTION_HEADER_CLASS} text-right`}>{t(p + 'columnActions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -120,36 +117,36 @@ export default function BookingTable({
                 <td className="px-4 py-3 align-middle">
                   <div className="grid min-w-0 gap-1">
                     <div className="flex min-w-0 items-center gap-2">
-                      <span className="truncate font-extrabold text-nexoraText">{booking.customerName}</span>
+                      <span className="pos-customer-name truncate font-extrabold text-nexoraText">{booking.customerName}</span>
                       {booking.orderNumber ? (
                         <span className="shrink-0 rounded-full border border-nexoraBorder bg-white px-1.5 py-0.5 text-[9px] font-bold text-nexoraMuted">
                           #{booking.orderNumber}
                         </span>
                       ) : null}
                     </div>
-                    <span className="truncate text-[11px] font-semibold text-nexoraMuted">
+                    <span className="whitespace-nowrap text-[11px] font-semibold tabular-nums text-nexoraMuted">
                       {phone ?? '—'}
                     </span>
                   </div>
                 </td>
                 <td className="px-4 py-3 align-middle">
                   <div className="grid gap-0.5 whitespace-nowrap">
-                    <span className="font-normal text-nexoraText">{created?.date ?? '—'}</span>
-                    <span className="text-[11px] font-semibold text-nexoraMuted">{created?.time ?? '—'}</span>
+                    <span className="font-semibold text-nexoraText">{created?.date ?? '—'}</span>
+                    <span className="text-[11px] font-semibold text-nexoraText">{created?.time ?? '—'}</span>
                   </div>
                 </td>
                 <td className="px-4 py-3 align-middle">
                   <div className="grid gap-0.5 whitespace-nowrap">
-                    <span className="font-normal text-nexoraText">{appointment.date}</span>
-                    <span className="text-[11px] font-semibold text-nexoraMuted">{appointment.time}</span>
+                    <span className="font-semibold text-nexoraText">{appointment.date}</span>
+                    <span className="text-[11px] font-semibold text-nexoraText">{appointment.time}</span>
                   </div>
                 </td>
                 <td className="px-4 py-3 align-middle">
                   <div className="flex flex-wrap gap-1.5">
                     {booking.serviceNames.length > 0 ? (
-                      booking.serviceNames.map((service) => (
+                      booking.serviceNames.map((service, index) => (
                         <span
-                          key={service}
+                          key={`${service}-${index}`}
                           className="inline-flex max-w-full items-center rounded-full border border-nexoraBrand/15 bg-white px-2 py-1 text-[11px] font-bold text-nexoraText"
                         >
                           <span className="truncate">{service}</span>
@@ -161,7 +158,7 @@ export default function BookingTable({
                   </div>
                 </td>
                 <td className="px-4 py-3 align-middle">
-                  <span className="inline-flex max-w-full items-center rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-[11px] font-bold text-cyan-700">
+                  <span className="inline-flex max-w-full items-center rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-[11px] font-bold text-nexoraText">
                     <span className="truncate">
                       {booking.technicianNames.length > 0 ? booking.technicianNames.join(', ') : t(p + 'unassigned')}
                     </span>
@@ -172,8 +169,8 @@ export default function BookingTable({
                     {t(p + statusLabelKey(booking.status))}
                   </span>
                 </td>
-                <td className="px-4 py-3 align-middle">
-                  <div className="flex flex-wrap justify-end gap-1.5">
+                <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} px-4 py-3 align-middle`}>
+                  <div className="inline-flex w-max justify-end gap-1.5">
                     {canAct ? (
                       <>
                         <button
@@ -209,7 +206,7 @@ export default function BookingTable({
                       className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-2.5 text-[10px] font-extrabold text-violet-700 transition-colors hover:border-violet-300 hover:bg-violet-100"
                     >
                       <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>{t(p + 'viewDetailAction')}</span>
+                      <span>{t('common.view')}</span>
                     </button>
                   </div>
                 </td>

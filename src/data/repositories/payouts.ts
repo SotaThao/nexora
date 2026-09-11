@@ -59,6 +59,7 @@ export interface CreateMerchantPayoutPayload {
 export interface UpdateMerchantPayoutPayload {
   payoutMethodType: string
   payoutMethodTypeName?: string | null
+  amount?: number | null
   payoutTypes: number
   periodStart: string
   periodEnd: string

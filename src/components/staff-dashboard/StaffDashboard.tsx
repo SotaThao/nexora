@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { AlertCircle, Wallet, ArrowRight, Settings, UserRound, X } from 'lucide-react'
 import { StaffAccountProvider } from '../../contexts/StaffAccountContext'
 
+import StaffBeepAlert from './StaffBeepAlert'
 import StaffSidebar from './layout/StaffSidebar'
 import StaffHeader from './layout/StaffHeader'
 import StaffBottomNav from './layout/StaffBottomNav'
@@ -13,6 +14,7 @@ import { isPaymentMethodConfigured } from '../../data/paymentMethodTypes'
 import { useRefetchStaffMenuQueries } from '../../data/hooks/useRefetchOnMenuChange'
 import { useAuth } from '../../auth/useAuth'
 import { useProfileSettings } from '../../data/hooks/useProfileSettings'
+import { resolveStaffDashboardPresentation } from './staffDashboardPresentation'
 
 export default function StaffDashboard({ staffId = null, onLogout }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -30,10 +32,11 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
   useRefetchStaffMenuQueries(activeScreen)
   const isVerificationSection =
     activeScreen === 'profile' && new URLSearchParams(location.search).get('section') === 'verification'
-  const mainWidthClass =
-    activeScreen === 'payments' || activeScreen === 'earnings' || isVerificationSection
-      ? 'w-full max-w-6xl xl:max-w-7xl'
-      : 'max-w-3xl'
+  const { headerScreen, mainWidthClass, mainPaddingClass } = resolveStaffDashboardPresentation(
+    location.pathname,
+    activeScreen,
+    isVerificationSection,
+  )
   const isKYCVerified =
     userProfile?.isKYCVerified === true || userProfile?.isKycVerified === true
   const hasConfiguredPayout = Boolean(
@@ -128,12 +131,12 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
 
         <div className="flex min-h-dvh flex-col lg:pl-72">
           <StaffHeader
-            activeScreen={activeScreen}
+            activeScreen={headerScreen}
             onNavigate={handleNavigate}
             onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
             onLogout={onLogout}
           />
-          <main className={`mx-auto w-full flex-1 ${mainWidthClass} px-4 py-5 sm:px-6`}>
+          <main className={`mx-auto w-full flex-1 ${mainWidthClass} ${mainPaddingClass}`}>
             {activeScreen === 'home' && showOnboardingBanner && (
               <div className="mb-6 relative overflow-hidden rounded-2xl bg-gradient-to-br from-nexoraBrand/10 via-white to-nexoraBrandSoft border border-nexoraBrand/20 p-6 md:p-8 shadow-sm animate-fadeIn">
                 <div className="absolute -right-10 -top-10 opacity-10">
@@ -247,6 +250,9 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
         </div>
 
         <StaffBottomNav activeScreen={activeScreen} onNavigate={handleNavigate} />
+
+        {/* Shell-level so an incoming beep reaches the tech on whatever staff screen they are on. */}
+        <StaffBeepAlert />
       </div>
     </StaffAccountProvider>
   )

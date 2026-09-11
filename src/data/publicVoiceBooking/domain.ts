@@ -1,4 +1,5 @@
 /** Public Nexora Voice online booking — domain types & route helpers. */
+import { PosServiceDiscountType } from '../../constants/posDiscount'
 
 export const PUBLIC_VOICE_BOOKING_BASE = '/api/v1/public/nexora-voice'
 
@@ -39,6 +40,7 @@ export enum VoiceLeadStatus {
   Done = 'Done',
   Confirmed = 'Confirmed',
   NoShow = 'NoShow',
+  Cancelled = 'Cancelled',
 }
 
 export const BOOKING_DAY_OF_WEEK = [
@@ -87,6 +89,22 @@ export interface BookingOperatingHourDto {
   closeTime: string | null
 }
 
+/**
+ * Salon promotion advertised on the booking page — the same offer the POS promotion catalog
+ * holds (`PosPromotionDto` minus its owner-only `isActive` / `canDelete` flags), so `discountType`
+ * is the shared `PosServiceDiscountType`.
+ */
+export interface BookingPromotionDto {
+  id: string
+  name: string
+  badgeLabel: string | null
+  discountType: string
+  discountValue: number
+  daysOfWeek: (BookingDayOfWeek | string)[]
+  startTime: string
+  endTime: string
+}
+
 export interface BookingCustomerDto {
   name: string | null
   phoneNumber: string
@@ -101,6 +119,8 @@ export interface BookingPageDataDto {
   staff: BookingStaffDto[]
   operatingHours: BookingOperatingHourDto[]
   holidays?: BookingHolidayDto[]
+  /** Offers to advertise above the form; omitted by older backends. */
+  promotions?: BookingPromotionDto[]
   /** Recognised active customer when `phone` query matches; otherwise null/omitted. */
   customer?: BookingCustomerDto | null
 }
@@ -176,6 +196,19 @@ export interface PublicBookingOperatingHour {
   closeTime: string | null
 }
 
+export interface PublicBookingPromotion {
+  id: string
+  name: string
+  badgeLabel: string
+  /** Always a recognised `PosServiceDiscountType` — see `normalizePromotion`. */
+  discountType: PosServiceDiscountType
+  discountValue: number
+  /** Week-ordered, unknown day names dropped. */
+  daysOfWeek: BookingDayOfWeek[]
+  startTime: string
+  endTime: string
+}
+
 export interface PublicBookingCustomer {
   name: string
   phoneNumber: string
@@ -198,6 +231,7 @@ export interface PublicBookingPageData {
   staff: PublicBookingStaff[]
   operatingHours: PublicBookingOperatingHour[]
   holidays: PublicBookingHoliday[]
+  promotions: PublicBookingPromotion[]
   customer: PublicBookingCustomer | null
 }
 

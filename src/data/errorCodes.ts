@@ -36,6 +36,10 @@ export const errorCodeToI18nKey = {
   USER_NOT_MERCHANT: 'errors.user_not_merchant',
   TOUCHPOINT_STARTER_LIMIT_REACHED: 'errors.touchpoint_starter_limit_reached',
 
+  // OneQR — a module the platform admin deactivated cannot be saved into a
+  // landing page. The response also carries the offending keys.
+  ONEQR_MODULE_DISABLED: 'errors.oneqr_module_disabled',
+
   // Direct payment (US-60 / direct-payment-qr-flow)
   PAYMENT_NOT_FOUND: 'errors.payment_not_found',
   PAYMENT_INVALID_STATUS: 'errors.payment_invalid_status',
@@ -87,6 +91,12 @@ export const errorCodeToI18nKey = {
   // for any other caller that only shows a message.
   [LOCAL_STAFF_HAS_ACTIVE_WORK]: 'errors.local_staff_has_active_work',
   STAFF_LINK_HAS_OUTSTANDING_DEBT: 'errors.staff_link_has_outstanding_debt',
+  STAFF_LINK_HAS_POS_PROFILE: 'errors.staff_link_has_pos_profile',
+  STAFF_LINK_HAS_PAYOUT_DESTINATION: 'errors.staff_link_has_payout_destination',
+  STAFF_LINK_HAS_TAX_DATA: 'errors.staff_link_has_tax_data',
+  STAFF_LINK_HAS_W4_INVITE_LINK: 'errors.staff_link_has_w4_invite_link',
+  STAFF_LINK_HAS_TAX_EXCEPTION_MEMBERSHIP: 'errors.staff_link_has_tax_exception_membership',
+  STAFF_LINK_HAS_DEPENDENT_DATA: 'errors.staff_link_has_dependent_data',
   STAFF_PAYMENT_METHOD_NOT_FOUND: 'errors.staff_payment_method_not_found',
   STAFF_PAYMENT_METHOD_ACCESS_DENIED: 'errors.staff_payment_method_access_denied',
   STAFF_PAYMENT_METHOD_CRYPTO_ADDRESSES_ONLY_FOR_VLINKPAY:
@@ -161,7 +171,44 @@ export const errorCodeToI18nKey = {
 
   // Shared Catalog — Categories & Services (delete guards)
   [CatalogErrorCode.ServiceInUse]: 'errors.catalog_service_in_use',
+  [CatalogErrorCode.ServiceDeleted]: 'errors.catalog_service_deleted',
   [CatalogErrorCode.CategoryInUse]: 'errors.catalog_category_in_use',
+
+  // Shared Catalog — Services batch save (POST services/batch)
+  [CatalogErrorCode.ServiceBatchItemsRequired]: 'errors.catalog_service_batch_items_required',
+  [CatalogErrorCode.ServiceBatchTooManyItems]: 'errors.catalog_service_batch_too_many_items',
+  [CatalogErrorCode.ServiceBatchNameRequired]: 'errors.pos_service_name_required',
+  [CatalogErrorCode.ServiceBatchNameTooLong]: 'errors.pos_service_name_too_long',
+  [CatalogErrorCode.ServiceBatchPriceInvalid]: 'errors.pos_service_price_invalid',
+  [CatalogErrorCode.ServiceSupplyFeeInvalid]: 'errors.catalog_service_supply_fee_invalid',
+  [CatalogErrorCode.ServiceBatchDurationInvalid]: 'errors.pos_service_duration_invalid',
+  [CatalogErrorCode.ServiceBatchDescriptionTooLong]: 'errors.pos_service_description_too_long',
+  [CatalogErrorCode.ServiceBatchIconTooLong]: 'errors.catalog_service_icon_too_long',
+  [CatalogErrorCode.ServiceBatchTagTooLong]: 'errors.pos_service_tag_too_long',
+  [CatalogErrorCode.ServiceBatchCategoryInvalid]: 'errors.pos_service_category_invalid',
+  [CatalogErrorCode.ServiceBatchInvalidId]: 'errors.catalog_service_batch_invalid_id',
+  [CatalogErrorCode.ServiceBatchDuplicateId]: 'errors.catalog_service_batch_duplicate_id',
+
+  // Shared Catalog — Service Add-Ons
+  [CatalogErrorCode.ServiceAddOnNotFound]: 'errors.catalog_service_addon_not_found',
+  [CatalogErrorCode.ServiceAddOnNameRequired]: 'errors.catalog_service_addon_name_required',
+  [CatalogErrorCode.ServiceAddOnNameTooLong]: 'errors.catalog_service_addon_name_too_long',
+  [CatalogErrorCode.ServiceAddOnNameDuplicate]: 'errors.catalog_service_addon_name_duplicate',
+  [CatalogErrorCode.ServiceAddOnPriceInvalid]: 'errors.catalog_service_addon_price_invalid',
+  [CatalogErrorCode.ServiceAddOnInUse]: 'errors.catalog_service_addon_in_use',
+  [CatalogErrorCode.ServiceAddOnCopySourceInvalid]: 'errors.catalog_service_addon_copy_source_invalid',
+
+  // Shared Catalog — Categories batch save (POST categories/batch)
+  [CatalogErrorCode.CategoryBatchItemsRequired]: 'errors.catalog_category_batch_items_required',
+  [CatalogErrorCode.CategoryBatchTooManyItems]: 'errors.catalog_category_batch_too_many_items',
+  [CatalogErrorCode.CategoryBatchDuplicateId]: 'errors.catalog_category_batch_duplicate_id',
+  [CatalogErrorCode.CategoryBatchInvalidId]: 'errors.catalog_category_batch_invalid_id',
+  [CatalogErrorCode.CategoryBatchItemNotFound]: 'errors.catalog_category_batch_item_not_found',
+  [CatalogErrorCode.CategoryNameRequired]: 'errors.pos_category_name_required',
+  [CatalogErrorCode.CategoryNameTooLong]: 'errors.pos_category_name_too_long',
+  [CatalogErrorCode.CategoryNameDuplicate]: 'errors.catalog_category_name_duplicate',
+  [CatalogErrorCode.CategoryDescriptionTooLong]: 'errors.catalog_category_description_too_long',
+  [CatalogErrorCode.CategoryCannotModifyDefault]: 'errors.voice_service_category_cannot_modify_default',
 
   // POS Owner Setup — Products (US-018)
   POS_PRODUCT_NOT_FOUND: 'errors.pos_product_not_found',
@@ -208,9 +255,18 @@ export const errorCodeToI18nKey = {
   POS_STAFF_CLOCK_QR_BUSINESS_MISMATCH: 'errors.pos_staff_clock_qr_business_mismatch',
   POS_STAFF_CLOCK_TOO_SOON: 'errors.pos_staff_clock_too_soon',
   POS_STAFF_CLOCK_BEEP_TARGET_INVALID: 'errors.pos_staff_clock_beep_target_invalid',
+  POS_STAFF_CLOCK_BEEP_NOT_FOUND: 'errors.pos_staff_clock_beep_not_found',
+  POS_STAFF_CLOCK_BEEP_ALREADY_RESOLVED: 'errors.pos_staff_clock_beep_already_resolved',
+  POS_STAFF_CLOCK_BEEP_EXPIRED: 'errors.pos_staff_clock_beep_expired',
+  POS_STAFF_CLOCK_BEEP_NUDGE_TOO_SOON: 'errors.pos_staff_clock_beep_nudge_too_soon',
+  POS_STAFF_CLOCK_BEEP_RESPONSE_FORBIDDEN: 'errors.pos_staff_clock_beep_response_forbidden',
+  POS_STAFF_CLOCK_BEEP_DELAY_INVALID: 'errors.pos_staff_clock_beep_delay_invalid',
 
   // POS Merchant Ops — Check-in, Turn Board & Checkout (US-12..US-17)
   POS_ORDER_NOT_FOUND: 'errors.pos_order_not_found',
+  POS_WORK_ORDER_ACCESS_DENIED: 'errors.pos_work_order_access_denied',
+  POS_WORK_ORDER_NOTHING_TO_COMPLETE: 'errors.pos_work_order_nothing_to_complete',
+  POS_WORK_ORDER_START_DATE_NOT_REACHED: 'errors.pos_work_order_start_date_not_reached',
   POS_ORDER_NOT_WAITING: 'errors.pos_order_not_waiting',
   POS_ORDER_CUSTOMER_NAME_REQUIRED: 'errors.pos_order_customer_name_required',
   POS_ORDER_CUSTOMER_NAME_TOO_LONG: 'errors.pos_order_customer_name_too_long',
@@ -222,14 +278,35 @@ export const errorCodeToI18nKey = {
   POS_ORDER_NUMBER_CONFLICT: 'errors.pos_order_number_conflict',
   STATION_NOT_EMPTY: 'errors.pos_station_not_empty',
   ORDER_NOT_WAITING_OR_IN_SERVICE: 'errors.pos_order_not_waiting_or_in_service',
+  ORDER_NOT_CHECKED_IN: 'errors.pos_order_not_checked_in',
   ORDER_CLOSED_FOR_EDITS: 'errors.pos_order_closed_for_edits',
+  POS_ORDER_DISCOUNT_INVALID: 'errors.pos_order_discount_invalid',
+  POS_ORDER_DISCOUNT_NOTE_TOO_LONG: 'errors.pos_order_discount_note_too_long',
+  POS_PROMOTION_NOT_FOUND: 'errors.pos_promotion_not_found',
+  POS_PROMOTION_NOT_ELIGIBLE: 'errors.pos_promotion_not_eligible',
+  POS_PROMOTION_INACTIVE: 'errors.pos_promotion_inactive',
+  POS_PROMOTION_SCHEDULE_INVALID: 'errors.pos_promotion_schedule_invalid',
+  POS_PROMOTION_NAME_REQUIRED: 'errors.pos_promotion_name_required',
+  POS_PROMOTION_NAME_TOO_LONG: 'errors.pos_promotion_name_too_long',
+  POS_PROMOTION_BADGE_TOO_LONG: 'errors.pos_promotion_badge_too_long',
+  POS_PROMOTION_VALUE_INVALID: 'errors.pos_promotion_value_invalid',
+  POS_PROMOTION_IN_USE: 'errors.pos_promotion_in_use',
   ORDER_NOT_IN_SERVICE: 'errors.pos_order_not_in_service',
   ORDER_ALREADY_COMPLETED: 'errors.pos_order_already_completed',
+  POS_ORDER_HAS_NO_LINES: 'errors.pos_order_has_no_lines',
   SERVICE_LINE_NOT_FOUND: 'errors.pos_service_line_not_found',
   SERVICE_LINE_ALREADY_ASSIGNED: 'errors.pos_service_line_already_assigned',
   SERVICE_LINE_NOT_ASSIGNED: 'errors.pos_service_line_not_assigned',
   SERVICE_LINE_ALREADY_COMPLETED: 'errors.pos_service_line_already_completed',
   SERVICE_LINE_NOTE_TOO_LONG: 'errors.pos_service_line_note_too_long',
+  SERVICE_LINE_NOT_OWNED_BY_STAFF: 'errors.pos_service_line_not_owned_by_staff',
+  SERVICE_LINE_NOT_STARTABLE: 'errors.pos_service_line_not_startable',
+  POS_STAFF_SERVICE_LINE_EDIT_DISABLED: 'errors.pos_staff_service_line_edit_disabled',
+  POS_CUSTOMER_VERIFICATION_FAILED: 'errors.pos_customer_verification_failed',
+  POS_CUSTOM_SERVICE_NAME_REQUIRED: 'errors.pos_custom_service_name_required',
+  POS_CUSTOM_SERVICE_PRICE_INVALID: 'errors.pos_custom_service_price_invalid',
+  POS_CUSTOM_SERVICE_DURATION_INVALID: 'errors.pos_custom_service_duration_invalid',
+  POS_SERVICE_NOT_ASSIGNABLE_TO_STAFF: 'errors.pos_service_not_assignable_to_staff',
   PRODUCT_LINE_NOT_FOUND: 'errors.pos_product_line_not_found',
   NO_STAFF_ASSIGNED_TO_START_SERVICE: 'errors.pos_no_staff_assigned_to_start_service',
   NOT_ALL_SERVICE_LINES_ASSIGNED: 'errors.pos_not_all_service_lines_assigned',
@@ -338,6 +415,10 @@ export const errorCodeToI18nKey = {
   POS_BOOKING_PHONE_ALREADY_ACTIVE: 'errors.pos_booking_phone_already_active',
   POS_BOOKING_CUSTOMER_PHONE_REQUIRED: 'errors.pos_booking_customer_phone_required',
   POS_BOOKING_NOT_FOUND: 'errors.pos_booking_not_found',
+
+  // POS Public Check-In — booking convert window [ScheduledAt − 60′, ScheduledAt + 120′] (§6)
+  POS_BOOKING_CHECK_IN_TOO_EARLY: 'errors.pos_booking_check_in_too_early',
+  POS_BOOKING_CHECK_IN_TOO_LATE: 'errors.pos_booking_check_in_too_late',
 
   // Tax IQ / POS — Weekly Payroll (mục 14, backend US-25)
   POS_PAYROLL_NOT_READY: 'errors.pos_payroll_not_ready',
@@ -484,6 +565,18 @@ export const errorCodeToI18nKey = {
   SMS_CAMPAIGN_SCHEDULED_AT_IN_PAST: 'errors.sms_campaign_scheduled_at_in_past',
   SMS_CREDIT_INVALID_PACKAGE: 'errors.sms_credit_invalid_package',
 
+  // Community Chat (US-101 → US-107)
+  CHAT_SESSION_NOT_FOUND: 'errors.chat_session_not_found',
+  CHAT_NOT_A_PARTICIPANT: 'errors.chat_not_a_participant',
+  CHAT_NOT_ALLOWED_TO_MANAGE_GROUP: 'errors.chat_not_allowed_to_manage_group',
+  CHAT_PARTICIPANT_MUST_HAVE_ACCOUNT: 'errors.chat_participant_must_have_account',
+  CHAT_MESSAGE_NOT_FOUND: 'errors.chat_message_not_found',
+  CHAT_CANNOT_DELETE_OTHERS_MESSAGE: 'errors.chat_cannot_delete_others_message',
+  CHAT_IMAGE_INVALID_EXTENSION: 'errors.chat_image_invalid_extension',
+  CHAT_IMAGE_TOO_LARGE: 'errors.chat_image_too_large',
+  CHAT_CANNOT_REMOVE_SELF: 'errors.chat_cannot_remove_self',
+  CHAT_RENAME_ONLY_FOR_GROUP: 'errors.chat_rename_only_for_group',
+
   // Subscription wallet payment
   SUBSCRIPTION_ALREADY_ON_PAID_PLAN: 'errors.subscription_already_on_paid_plan',
   SUBSCRIPTION_PLAN_NOT_PURCHASABLE: 'errors.subscription_plan_not_purchasable',
@@ -510,20 +603,22 @@ export function getErrorI18nKey(errorCode) {
  * - Otherwise, falls back to the raw message the backend returned (errorDetail[].message,
  *   or the RFC 7807 detail/title) so an unmapped error code still shows something useful
  *   instead of the generic "unknown error" text.
- * - Only falls back to the generic translation when the backend gave no message at all.
+ * - Only falls back to a generic message when the backend gave no message at all —
+ *   `fallbackMessage` when the caller has screen-specific copy, else the generic translation.
  *
  * @param {unknown} err
  * @param {(key: string) => string} t
  * @param {string} [fallbackCode]
+ * @param {string} [fallbackMessage]
  * @returns {string}
  */
-export function getErrorMessage(err, t, fallbackCode = 'ERROR') {
+export function getErrorMessage(err, t, fallbackCode = 'ERROR', fallbackMessage = '') {
   const errorCode = getApiErrorCode(err, fallbackCode)
   const mappedKey = errorCodeToI18nKey[errorCode]
   if (mappedKey) return t(mappedKey)
 
   const rawMessage = isApiError(err) ? err.message : ''
-  return rawMessage || t('errors.unknown_error')
+  return rawMessage || fallbackMessage || t('errors.unknown_error')
 }
 
 export default errorCodeToI18nKey

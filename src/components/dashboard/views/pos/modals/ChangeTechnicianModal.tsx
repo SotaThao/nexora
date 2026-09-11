@@ -54,7 +54,7 @@ export default function ChangeTechnicianModal({
           </IconButton>
         </div>
 
-        <div className="flex-1 space-y-3 overflow-y-auto">
+        <div className="flex-1 space-y-3 overflow-y-auto p-0.5">
           <TechnicianPickerGrid
             technicians={technicians}
             isLoading={isLoading}
@@ -65,6 +65,8 @@ export default function ChangeTechnicianModal({
             emptyLabel={t(`${K}.noTechnicians`)}
             busyLabel={t(`${K}.technicianBusy`)}
             availableLabel={t(`${K}.technicianAvailable`)}
+            turnsLabel={(count) => t(`${K}.technicianTurnsToday`, { count })}
+            nextTurnLabel={t(`${K}.technicianNextTurn`)}
           />
 
           <div>

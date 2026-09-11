@@ -17,6 +17,103 @@ html.capacitor-native {
   --app-safe-area-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
 }
 
+.pos-front-desk-action-surface .pos-customer-name {
+  text-transform: uppercase;
+}
+
+/* POS Front Desk interaction contract. Keep every actionable control visibly
+   discoverable without changing its existing semantic/status color. */
+body:has(.pos-front-desk-action-surface)
+  :is(
+    button:not(:disabled),
+    a[href],
+    [role="button"]:not([aria-disabled="true"]),
+    summary,
+    select:not(:disabled),
+    input[type="checkbox"]:not(:disabled),
+    input[type="radio"]:not(:disabled)
+  ) {
+  cursor: pointer;
+  touch-action: manipulation;
+  transition-property: color, background-color, border-color, box-shadow, filter, opacity, translate, scale;
+  transition-duration: 160ms;
+  transition-timing-function: ease-out;
+}
+
+/* Hover lift only belongs on devices with a real hover pointer. This avoids
+   sticky hover feedback after a tap on iPad and phone. */
+@media (hover: hover) and (pointer: fine) {
+  body:has(.pos-front-desk-action-surface)
+    :is(
+      button:not(:disabled),
+      a[href],
+      [role="button"]:not([aria-disabled="true"]),
+      summary,
+      select:not(:disabled),
+      input[type="checkbox"]:not(:disabled),
+      input[type="radio"]:not(:disabled)
+    ):hover {
+    filter: brightness(0.97) saturate(1.06);
+    box-shadow: 0 0 0 2px rgba(70, 72, 216, 0.16), 0 5px 14px rgba(15, 23, 42, 0.12);
+    translate: 0 -1px;
+  }
+
+  /* Composite controls such as service cards own the elevation. Their inner
+     action still changes tone, but must not draw a second floating frame. */
+  body:has(.pos-front-desk-action-surface)
+    [data-pos-hover-surface]
+    :is(
+      button:not(:disabled),
+      a[href],
+      [role="button"]:not([aria-disabled="true"]),
+      summary,
+      select:not(:disabled),
+      input[type="checkbox"]:not(:disabled),
+      input[type="radio"]:not(:disabled)
+    ):hover {
+    box-shadow: none;
+    translate: 0 0;
+  }
+}
+
+body:has(.pos-front-desk-action-surface)
+  :is(
+    button:not(:disabled),
+    a[href],
+    [role="button"]:not([aria-disabled="true"]),
+    summary,
+    select:not(:disabled),
+    input[type="checkbox"]:not(:disabled),
+    input[type="radio"]:not(:disabled)
+  ):active {
+  filter: brightness(0.93);
+  scale: 0.98;
+  translate: 0 0;
+}
+
+body:has(.pos-front-desk-action-surface)
+  :is(
+    button,
+    a[href],
+    [role="button"],
+    summary,
+    select,
+    input[type="checkbox"],
+    input[type="radio"]
+  ):focus-visible {
+  outline: 2px solid rgba(70, 72, 216, 0.72);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(70, 72, 216, 0.14);
+}
+
+body:has(.pos-front-desk-action-surface)
+  :is(button:disabled, [role="button"][aria-disabled="true"], select:disabled) {
+  cursor: not-allowed;
+  filter: none;
+  scale: 1;
+  translate: 0 0;
+}
+
 @keyframes app-fade-in {
   from {
     opacity: 0;
@@ -44,6 +141,24 @@ html.capacitor-native {
   .mobile-drawer-safe {
     padding-top: calc(1.5rem + var(--app-safe-area-top));
     padding-bottom: calc(1.5rem + var(--app-safe-area-bottom));
+  }
+
+  /* Docks the staff beep surfaces (the sheet and its minimised bell) just above StaffBottomNav:
+     68px of nav, plus the home indicator, plus a gap. Both surfaces share it, and the lg override
+     below drops the nav clearance once the sidebar layout takes over.
+
+     A real utility rather than the Tailwind arbitrary `bottom-[calc(68px+var(--app-safe-area-bottom,
+     env(safe-area-inset-bottom,0px))+0.75rem)]` this replaces — that class did compile correctly,
+     it was just unreadable at a glance and duplicated across two call sites. */
+  .staff-beep-dock {
+    bottom: calc(68px + var(--app-safe-area-bottom) + 0.75rem);
+  }
+
+  /* Sidebar layout at lg — no bottom nav to clear. */
+  @media (min-width: 1024px) {
+    .staff-beep-dock {
+      bottom: 1.5rem;
+    }
   }
 
   /* Modal overlay padding that keeps the dialog clear of the notch / status bar
@@ -303,6 +418,11 @@ body:not(.homepage-active):not(.public-booking-active) input.vlinkpay-address-in
     font-size: 13px !important;
     font-weight: 600;
   }
+}
+
+/* Staff work-order inputs — beat the 16px mobile/iOS floor so typed text stays compact. */
+body:not(.homepage-active):not(.public-booking-active) input.nexora-work-order-input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]) {
+  font-size: 12px !important;
 }
 
 /* Keyboard focus visibility for buttons and links */
@@ -765,8 +885,25 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   padding: 14px 14px;
   background: #ffffff;
   color: #000000;
+  font-size: 12px;
+  line-height: 1.4;
   font-weight: 400;
   font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.pos-ticket-print-page {
+  width: min(100%, 80mm);
+}
+
+.pos-ticket-print-page + .pos-ticket-print-page {
+  margin-top: 16px;
+}
+
+@media print {
+  .pos-ticket-print-page + .pos-ticket-print-page {
+    break-before: page;
+    page-break-before: always;
+  }
 }
 
 .pos-receipt-business {
@@ -789,9 +926,9 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 .pos-receipt-business p {
   margin: 0;
   color: #000000;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 400;
-  line-height: 1.2;
+  line-height: 1.4;
   white-space: pre-line;
 }
 
@@ -844,6 +981,11 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   padding: 18px;
 }
 
+.pos-report-detail-modal {
+  max-height: min(92vh, 900px);
+  max-height: min(92dvh, 900px);
+}
+
 .pos-receipt-print-header {
   padding-bottom: 8px;
   text-align: center;
@@ -852,9 +994,9 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 .pos-receipt-print-header p {
   margin: 0;
   color: #000000;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 400;
-  line-height: 1.2;
+  line-height: 1.4;
 }
 
 .pos-receipt-print-header .pos-receipt-ticket {
@@ -879,6 +1021,7 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 
 .pos-receipt-meta > div,
 .pos-receipt-group-lines > div,
+.pos-receipt-line-row,
 .pos-receipt-totals > div {
   display: flex;
   align-items: baseline;
@@ -888,7 +1031,7 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 
 .pos-receipt-meta dt {
   color: #000000;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .pos-receipt-meta dd {
@@ -916,10 +1059,10 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   gap: 6px;
   margin: 0;
   color: #000000;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.06em;
-  line-height: 1.2;
+  line-height: 1.4;
 }
 
 .pos-receipt-tech-heading::before {
@@ -941,17 +1084,25 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   gap: 3px;
 }
 
-.pos-receipt-group-lines > div > span:first-child {
+.pos-receipt-group-lines > div > span:first-child,
+.pos-receipt-line-row > span:first-child {
   min-width: 0;
   overflow-wrap: anywhere;
   color: #000000;
   font-weight: 400;
 }
 
-.pos-receipt-group-lines > div > span:last-child {
+.pos-receipt-group-lines > div > span:first-child .pos-receipt-line-discount {
+  color: #f43f5e;
+  font-weight: 600;
+}
+
+.pos-receipt-group-lines > div > span:last-child,
+.pos-receipt-line-row > span:last-child {
+  white-space: nowrap;
   flex-shrink: 0;
   color: #000000;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .pos-receipt-lines > p {
@@ -964,7 +1115,7 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   display: grid;
   gap: 5px;
   margin: 10px 0 0;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .pos-receipt-totals dt {
@@ -977,10 +1128,14 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   font-weight: 600;
 }
 
+.pos-receipt-totals dd.pos-receipt-discount {
+  color: #e11d48;
+}
+
 .pos-receipt-totals .pos-receipt-total {
   margin-top: 5px;
   padding-top: 9px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -990,13 +1145,26 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   font-weight: 700;
 }
 
+.pos-receipt-masked-phone {
+  display: inline-flex;
+  align-items: baseline;
+  font: inherit;
+  white-space: nowrap;
+}
+
+.pos-receipt-masked-phone > span {
+  display: inline-block;
+  width: 0.65em;
+  font: inherit;
+  text-align: center;
+}
+
 .pos-receipt-payment {
   margin: 10px 0 0;
-  border-top: 1px solid #cbd5e1;
   padding-top: 10px;
   color: #000000;
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 400;
   text-align: center;
 }
 
@@ -1004,9 +1172,34 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   margin: 16px 0 0;
   padding-top: 8px;
   color: #000000;
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 400;
   text-align: center;
+}
+
+/* The checkout completion card is viewed at dashboard distance, so its receipt copy is one
+   step larger than the print-preview paper while keeping the shared receipt layout intact. */
+.pos-checkout-customer-receipt .pos-receipt-ticket,
+.pos-checkout-customer-receipt .pos-receipt-business h2 {
+  font-size: 16px;
+}
+
+.pos-checkout-customer-receipt .pos-receipt-business p {
+  font-size: 11px;
+}
+
+.pos-checkout-customer-receipt .pos-receipt-lines {
+  font-size: 13px;
+}
+
+.pos-checkout-customer-receipt .pos-receipt-tech-heading,
+.pos-checkout-customer-receipt .pos-receipt-totals,
+.pos-checkout-customer-receipt .pos-receipt-thank-you {
+  font-size: 12px;
+}
+
+.pos-checkout-customer-receipt .pos-receipt-totals .pos-receipt-total {
+  font-size: 14px;
 }
 
 /* Print styles for QR Code Stand
@@ -1045,6 +1238,12 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   body.printing-pos-invoice .pos-receipt-ink-black,
   body.printing-pos-invoice .pos-receipt-ink-black * {
     color: #000000 !important;
+  }
+
+  body.printing-pos-invoice .pos-receipt-ink-black .pos-receipt-line-discount {
+    color: #f43f5e !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   /* Keep the ticket number's high-contrast badge readable while all normal receipt copy uses
@@ -1107,6 +1306,100 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
     width: 80mm !important;
     padding: 0 !important;
     overflow: visible !important;
+  }
+
+  /* Multi-copy printing (US-047). PassPRNT prints one document per launch, but the browser path
+     has no such limit, so N copies are one print dialog containing N page-broken receipts rather
+     than N dialogs. iOS Safari fires afterprint unreliably, which rules out printing in sequence. */
+  body.printing-pos-invoice .pos-receipt-print-offscreen {
+    position: static !important;
+    left: auto !important;
+    width: 80mm !important;
+  }
+
+  body.printing-pos-invoice .pos-receipt-print-extra {
+    display: block !important;
+  }
+
+  .pos-receipt-print--page-break {
+    break-after: page;
+    page-break-after: always;
+  }
+
+  @page pos-staff-report {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  body.printing-pos-report-detail > #root {
+    display: none !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-backdrop {
+    position: static !important;
+    display: block !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-modal {
+    display: block !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    max-height: none !important;
+    margin: 0 auto !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    page: pos-staff-report;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-body,
+  body.printing-pos-report-detail .pos-report-detail-print {
+    display: block !important;
+    overflow: visible !important;
+    color: #000000 !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-body {
+    padding: 0 !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-print {
+    box-shadow: none !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-header,
+  body.printing-pos-report-detail .pos-report-detail-print * {
+    color: #000000 !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-print .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-print table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-print th,
+  body.printing-pos-report-detail .pos-report-detail-print td {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-toolbar,
+  body.printing-pos-report-detail .pos-report-detail-actions,
+  body.printing-pos-report-detail .pos-report-detail-close {
+    display: none !important;
   }
 
   /* Reset body and html for print */
@@ -1375,6 +1668,136 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 }
 @media (prefers-reduced-motion: reduce) {
   .plan-recommend-badge {
+    animation: none;
+  }
+}
+
+/* Public check-in — guest phone keypad (matches the door-QR landing mockup). */
+.public-checkin-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: #060b22;
+  background-image:
+    radial-gradient(ellipse 58% 90% at 108% 42%, rgba(108, 48, 255, 0.78) 0%, rgba(62, 22, 180, 0.38) 34%, transparent 68%),
+    radial-gradient(ellipse 50% 55% at -8% 108%, rgba(30, 110, 255, 0.32) 0%, transparent 62%),
+    radial-gradient(ellipse 70% 60% at 50% 48%, rgba(12, 22, 70, 0.45) 0%, transparent 72%),
+    linear-gradient(168deg, #070e28 0%, #0a1438 42%, #080a24 100%);
+}
+
+.public-checkin-card {
+  width: 100%;
+  max-width: 380px;
+  border-radius: 28px;
+  padding: 2.25rem 1.6rem 1.5rem;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(14, 22, 68, 0.62) 0%, rgba(8, 12, 40, 0.78) 100%);
+  border: 1px solid rgba(90, 200, 255, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(70, 170, 255, 0.28),
+    0 0 24px rgba(40, 160, 255, 0.5),
+    0 0 72px rgba(50, 90, 255, 0.28),
+    0 28px 80px rgba(2, 4, 24, 0.55),
+    inset 0 1px 0 rgba(170, 230, 255, 0.38),
+    inset 0 0 48px rgba(30, 70, 180, 0.18);
+  backdrop-filter: blur(24px);
+}
+
+.public-checkin-key {
+  display: flex;
+  height: 3.5rem;
+  align-items: center;
+  justify-content: center;
+  appearance: none;
+  border: 0;
+  border-radius: 18px;
+  background:
+    radial-gradient(130% 90% at 50% -10%, rgba(96, 128, 255, 0.42) 0%, rgba(28, 24, 90, 0) 55%),
+    linear-gradient(180deg, #2a2874 0%, #171454 50%, #100e3c 100%);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #fff;
+  box-shadow:
+    0 0 0 1px rgba(110, 165, 255, 0.32),
+    0 5px 14px rgba(4, 2, 28, 0.5),
+    0 0 16px rgba(70, 120, 255, 0.2),
+    inset 0 1px 0 rgba(200, 220, 255, 0.3),
+    inset 0 -12px 20px rgba(6, 4, 32, 0.5);
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: filter 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+.public-checkin-key:hover {
+  filter: brightness(1.12);
+  box-shadow:
+    0 0 0 1px rgba(140, 190, 255, 0.45),
+    0 5px 16px rgba(4, 2, 28, 0.5),
+    0 0 22px rgba(90, 140, 255, 0.3),
+    inset 0 1px 0 rgba(210, 225, 255, 0.38),
+    inset 0 -12px 20px rgba(6, 4, 32, 0.42);
+}
+
+.public-checkin-key:active {
+  transform: scale(0.97);
+  filter: brightness(0.94);
+}
+
+@media (min-width: 640px) {
+  .public-checkin-key {
+    height: 4rem;
+  }
+}
+
+/* Host for the extra copies the browser print path renders. Portalled to <body> as a sibling of
+   #root on purpose: the print stylesheet hides #root outright, so anything mounted inside the app
+   tree would be hidden with it. Positioned off-screen rather than display:none, because a hidden
+   element has no layout and prints blank. */
+.pos-receipt-print-offscreen {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+}
+
+.pos-receipt-print-extra {
+  display: none;
+}
+
+/* Beep bell — the tech's incoming-call icon (staff beep sheet + its minimised pill).
+   Swings twice then rests, rather than a constant wobble: it has to read as "someone is
+   ringing you" from across the salon floor without becoming visual noise while the tech
+   works. Rotation only, so it composes with whatever sizing/colour utility the icon has. */
+@keyframes beep-bell-swing {
+  0%,
+  55%,
+  100% {
+    transform: rotate(0deg);
+  }
+  6% {
+    transform: rotate(-14deg);
+  }
+  16% {
+    transform: rotate(12deg);
+  }
+  26% {
+    transform: rotate(-9deg);
+  }
+  36% {
+    transform: rotate(6deg);
+  }
+  46% {
+    transform: rotate(-3deg);
+  }
+}
+.animate-beep-bell {
+  /* Pivot at the bell's crown, not its centre — swinging around the middle looks like a
+     spinning object instead of a ringing bell. */
+  transform-origin: 50% 15%;
+  animation: beep-bell-swing 1.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-beep-bell {
     animation: none;
   }
 }

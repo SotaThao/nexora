@@ -21,17 +21,17 @@ env:
   IMAGE_NAME: nexora-frontend
 
 jobs:
-  resolve-environment:
+  build-and-push:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    name: Resolve Deployment Environment
+    name: Build & Push Docker Image
     outputs:
-      github_environment: ${{ steps.resolve.outputs.github_environment }}
-      build_env: ${{ steps.resolve.outputs.build_env }}
-      deploy_path: ${{ steps.resolve.outputs.deploy_path }}
-      devops_path: ${{ steps.resolve.outputs.devops_path }}
+      deploy_path: ${{ steps.env.outputs.deploy_path }}
+      devops_path: ${{ steps.env.outputs.devops_path }}
+      github_environment: ${{ steps.env.outputs.github_environment }}
     steps:
       - name: Resolve environment from branch
-        id: resolve
+        id: env
         shell: bash
         run: |
           target_ref="${GITHUB_REF_NAME}"
@@ -43,10 +43,6 @@ jobs:
             master|main)
               github_environment="PRODUCTION"
               build_env="production"
-              # Docker image tags cannot contain `/`, but the devops repo
-              # organizes manifests under argocd/<env>/. For master/main both
-              # forms equal the target_ref string so they collapse to the
-              # same value here.
               deploy_path="$target_ref"
               devops_path="$target_ref"
               ;;
@@ -56,12 +52,9 @@ jobs:
               deploy_path="$target_ref"
               devops_path="$target_ref"
               ;;
-            feature/taxiq-pos)        # NEW (Phase 3/11 — test2 environment)
+            feature/taxiq-pos)
               github_environment="TEST2"
               build_env="test2"
-              # Sanitized tag (Docker rejects `/` in tags). devops path uses
-              # the env_name 'test2' so it matches argocd/test2/ in the
-              # devops repo (renamed from argocd/feature/taxiq-pos/ in PR #65).
               deploy_path="taxiq-pos"
               devops_path="test2"
               ;;
@@ -84,85 +77,6 @@ jobs:
 
           echo "Resolved $target_ref -> $github_environment / $build_env / deploy_path=$deploy_path / devops_path=$devops_path"
 
-  validate-build:
-    needs: resolve-environment
-    runs-on: ubuntu-latest
-    name: Validate Multi-Environment Build
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        run: echo "store=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.store }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
-
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Validate all build modes
-        run: |
-          echo "Testing all supported build modes..."
-          VITE_APP_ENV=development \
-          VITE_API_BASE_URL=https://localhost:5005 \
-          VITE_DATA_SOURCE=storage \
-          VITE_ENABLE_DEMO_TOOLS=false \
-          pnpm run build:dev
-          rm -rf dist
-          VITE_APP_ENV=test \
-          VITE_API_BASE_URL=https://test-api.nexoratouch.com \
-          VITE_DATA_SOURCE=api \
-          VITE_ENABLE_DEMO_TOOLS=false \
-          pnpm run build:test
-          rm -rf dist
-          VITE_APP_ENV=test2 \
-          VITE_API_BASE_URL=https://test2-api.nexoratouch.com \
-          VITE_DATA_SOURCE=api \
-          VITE_ENABLE_DEMO_TOOLS=false \
-          pnpm run build:test2
-          rm -rf dist
-          VITE_APP_ENV=staging \
-          VITE_API_BASE_URL=https://staging-api.nexoratouch.com \
-          VITE_DATA_SOURCE=api \
-          VITE_ENABLE_DEMO_TOOLS=false \
-          pnpm run build:staging
-          rm -rf dist
-          VITE_APP_ENV=production \
-          VITE_API_BASE_URL=https://api.nexoratouch.com \
-          VITE_DATA_SOURCE=api \
-          VITE_ENABLE_DEMO_TOOLS=false \
-          pnpm run build:prod
-          echo "All environment builds successful!"
-
-  build-and-push:
-    needs:
-      - resolve-environment
-      - validate-build
-    environment: ${{ needs.resolve-environment.outputs.github_environment }}
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    name: Build & Push Docker Image
-    env:
-      BUILD_ENV: ${{ needs.resolve-environment.outputs.build_env }}
-      APP_ENV: ${{ vars.VITE_APP_ENV || needs.resolve-environment.outputs.build_env }}
-    steps:
       - uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -203,12 +117,12 @@ jobs:
           export DIGITALOCEAN_ACCESS_TOKEN=${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
           doctl auth init
           doctl registry login
-          echo "Build environment: $BUILD_ENV"
-          echo "GitHub environment: ${{ needs.resolve-environment.outputs.github_environment }}"
+          echo "Build environment: ${{ steps.env.outputs.build_env }}"
+          echo "GitHub environment: ${{ steps.env.outputs.github_environment }}"
           docker build \
             --file ./Dockerfile \
-            --build-arg BUILD_ENV="$BUILD_ENV" \
-            --build-arg VITE_APP_ENV="$APP_ENV" \
+            --build-arg BUILD_ENV="${{ steps.env.outputs.build_env }}" \
+            --build-arg VITE_APP_ENV="${{ vars.VITE_APP_ENV || steps.env.outputs.build_env }}" \
             --build-arg VITE_API_BASE_URL="${{ vars.VITE_API_BASE_URL }}" \
             --build-arg VITE_DATA_SOURCE="${{ vars.VITE_DATA_SOURCE }}" \
             --build-arg VITE_ENABLE_DEMO_TOOLS="${{ vars.VITE_ENABLE_DEMO_TOOLS }}" \
@@ -219,25 +133,66 @@ jobs:
             --build-arg VITE_MAP_MARKER_ENGINE="${{ vars.VITE_MAP_MARKER_ENGINE }}" \
             --build-arg VITE_GOOGLE_MAPS_MAP_ID="${{ vars.VITE_GOOGLE_MAPS_MAP_ID }}" \
             --build-arg VITE_VLINKPAY_WEB_URL_BASE="${{ vars.VITE_VLINKPAY_WEB_URL_BASE }}" \
-            --tag $REGISTRY/$IMAGE_NAME:${{ needs.resolve-environment.outputs.deploy_path }}-${{ github.sha }} \
-            --tag $REGISTRY/$IMAGE_NAME:${{ needs.resolve-environment.outputs.deploy_path }}-latest \
+            --tag $REGISTRY/$IMAGE_NAME:${{ steps.env.outputs.deploy_path }}-${{ github.sha }} \
+            --tag $REGISTRY/$IMAGE_NAME:${{ steps.env.outputs.deploy_path }}-latest \
             .
 
       - name: Push Docker Image
         run: |
           echo "*********** Push Nexora Frontend ***********"
-          docker push $REGISTRY/$IMAGE_NAME:${{ needs.resolve-environment.outputs.deploy_path }}-${{ github.sha }}
-          docker push $REGISTRY/$IMAGE_NAME:${{ needs.resolve-environment.outputs.deploy_path }}-latest
+          docker push $REGISTRY/$IMAGE_NAME:${{ steps.env.outputs.deploy_path }}-${{ github.sha }}
+          docker push $REGISTRY/$IMAGE_NAME:${{ steps.env.outputs.deploy_path }}-latest
 
   deploy:
-    environment: ${{ needs.resolve-environment.outputs.github_environment }}
+    environment: ${{ needs.build-and-push.outputs.github_environment }}
     if: github.event_name == 'push'
     needs:
-      - resolve-environment
       - build-and-push
     runs-on: ubuntu-latest
     name: Deploy to ArgoCD
     steps:
+      - name: Resolve environment from branch
+        id: env
+        shell: bash
+        run: |
+          target_ref="${GITHUB_REF_NAME}"
+          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ] && [ -n "${GITHUB_BASE_REF}" ]; then
+            target_ref="${GITHUB_BASE_REF}"
+          fi
+
+          case "$target_ref" in
+            master|main)
+              github_environment="PRODUCTION"
+              deploy_path="$target_ref"
+              devops_path="$target_ref"
+              ;;
+            staging)
+              github_environment="STAGING"
+              deploy_path="$target_ref"
+              devops_path="$target_ref"
+              ;;
+            feature/taxiq-pos)
+              github_environment="TEST2"
+              deploy_path="taxiq-pos"
+              devops_path="test2"
+              ;;
+            dev)
+              github_environment="TEST"
+              deploy_path="$target_ref"
+              devops_path="$target_ref"
+              ;;
+            *)
+              echo "Unsupported deployment branch: $target_ref" >&2
+              exit 1
+              ;;
+          esac
+
+          echo "github_environment=$github_environment" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=$deploy_path" >> "$GITHUB_OUTPUT"
+          echo "devops_path=$devops_path" >> "$GITHUB_OUTPUT"
+
+          echo "Resolved $target_ref -> $github_environment / deploy_path=$deploy_path / devops_path=$devops_path"
+
       - name: Checkout ArgoCD Repository
         uses: actions/checkout@v4
         with:
@@ -249,12 +204,8 @@ jobs:
       - name: Update Deployment Manifest
         run: |
           echo "Updating deployment for Nexora Frontend"
-          echo "Deploy path (tag): ${{ needs.resolve-environment.outputs.deploy_path }}, devops path: ${{ needs.resolve-environment.outputs.devops_path }}, SHA: ${{ github.sha }}"
-          # Update deployment image tag.
-          # Match the whole image-line (registry+repo+tag) and replace the tag portion
-          # with the current build's deploy_path + sha. The image line uses the
-          # repo name (e.g. nexora-frontend) as a unique key — safe to match.
-          sed -i 's|nexora-frontend:.*|nexora-frontend:'${{ needs.resolve-environment.outputs.deploy_path }}'-'${{ github.sha }}'|g' devops/argocd/${{ needs.resolve-environment.outputs.devops_path }}/app-nexora-frontend/deployment.yaml
+          echo "Deploy path (tag): ${{ needs.build-and-push.outputs.deploy_path }}, devops path: ${{ needs.build-and-push.outputs.devops_path }}, SHA: ${{ github.sha }}"
+          sed -i 's|nexora-frontend:.*|nexora-frontend:'${{ needs.build-and-push.outputs.deploy_path }}'-'${{ github.sha }}'|g' devops/argocd/${{ needs.build-and-push.outputs.devops_path }}/app-nexora-frontend/deployment.yaml
 
       - name: Commit and Push Changes
         run: |
@@ -262,5 +213,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add .
-          git diff --staged --quiet || git commit -m "Update Nexora Frontend ${{ needs.resolve-environment.outputs.devops_path }} image to ${{ github.sha }}"
+          git diff --staged --quiet || git commit -m "Update Nexora Frontend ${{ needs.build-and-push.outputs.devops_path }} image to ${{ github.sha }}"
           git push

@@ -74,6 +74,8 @@ interface StaffBusinessApiDto {
   tipUrl?: string | null
   url?: string | null
   qrImageUrl?: string | null
+  ownerUserProfileId?: string | null
+  timeZone?: string | null
   touchPoints?: StaffBusinessTouchPointApiDto[] | null
 }
 
@@ -126,6 +128,16 @@ function normalizeStaffBusinessLink(b: StaffBusinessApiDto): StaffBusinessLink {
   const wireRole = b.role ?? readField<number | string>(b as Record<string, unknown>, 'role', 'Role')
   const linkStatus =
     b.linkStatus ?? readField<number | string>(b as Record<string, unknown>, 'linkStatus', 'LinkStatus') ?? null
+  const ownerUserProfileIdRaw =
+    readField<string | null>(b as Record<string, unknown>, 'ownerUserProfileId', 'OwnerUserProfileId')
+    ?? b.ownerUserProfileId
+    ?? null
+  const ownerUserProfileId = ownerUserProfileIdRaw?.trim() || null
+  const timeZoneRaw =
+    readField<string | null>(b as Record<string, unknown>, 'timeZone', 'TimeZone')
+    ?? b.timeZone
+    ?? null
+  const timeZone = timeZoneRaw?.trim() || null
 
   return {
     businessId: readField<string>(b as Record<string, unknown>, 'businessId', 'BusinessId') ?? '',
@@ -147,6 +159,8 @@ function normalizeStaffBusinessLink(b: StaffBusinessApiDto): StaffBusinessLink {
     tipUrl,
     qrImageUrl,
     touchPointsMissing,
+    ownerUserProfileId,
+    timeZone,
   }
 }
 

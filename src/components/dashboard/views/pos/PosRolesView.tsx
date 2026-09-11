@@ -20,7 +20,7 @@ import type { PosRoleApiDto } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
 import CreatePosRoleModal from './modals/CreatePosRoleModal'
 
-export default function PosRolesView() {
+export default function PosRolesView({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const { data: roles, isLoading } = usePosRoles()
@@ -41,10 +41,10 @@ export default function PosRolesView() {
     <div className="space-y-6">
       <section className="flex items-start justify-between gap-3 px-0.5">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold leading-tight text-nexoraText">
+          {!embedded ? <h1 className="text-2xl font-bold leading-tight text-nexoraText">
             {t('dashboard.menu.pos_roles')}
-          </h1>
-          <p className="text-sm font-medium text-nexoraMuted">
+          </h1> : null}
+          <p className={`${embedded ? 'text-xs' : 'text-sm'} font-medium text-nexoraMuted`}>
             {t('components.dashboard.views.pos.PosRolesView.description')}
           </p>
         </div>
@@ -224,10 +224,15 @@ function PosRoleCard({ role }: { role: PosRoleApiDto }) {
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {visibleAreas.map((area) => (
-          <div key={area.area} className="space-y-1.5">
+        {visibleAreas.map((area) => {
+          const labelKey = `components.dashboard.views.pos.PosRolesView.areas.${area.area}`
+          const translatedLabel = t(labelKey)
+          const areaLabel = translatedLabel === labelKey
+            ? area.area.replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+            : translatedLabel
+          return <div key={area.area} className="space-y-1.5">
             <h5 className="text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
-              {t(`components.dashboard.views.pos.PosRolesView.areas.${area.area}`)}
+              {areaLabel}
             </h5>
             {area.permissions.map((permission) => {
               const isChecked = role.isOwnerRole
@@ -252,7 +257,7 @@ function PosRoleCard({ role }: { role: PosRoleApiDto }) {
               )
             })}
           </div>
-        ))}
+        })}
       </div>
     </div>
   )

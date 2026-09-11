@@ -7,9 +7,11 @@
 //
 // Holds no state and no rules: everything comes off the session, so this file and the wizard
 // cannot disagree about what check-in does.
-import { Loader2, X } from 'lucide-react'
+import { ArrowLeft, Loader2, UsersRound } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import CustomerIdentityCard from '../parts/CustomerIdentityCard'
+import CheckInSectionCard from '../parts/CheckInSectionCard'
+import FrontDeskNoteCard from '../parts/FrontDeskNoteCard'
 import SelectedServicesSummary from '../parts/SelectedServicesSummary'
 import ServiceCatalogSection from '../parts/ServiceCatalogSection'
 import TechnicianPickerGrid from '../parts/TechnicianPickerGrid'
@@ -21,23 +23,25 @@ export default function SinglePageCheckInLayout({
   session,
   businessName,
   onCancel,
+  compactTechnicianCards = false,
 }: {
   session: CheckInSession
   businessName: string
   onCancel: () => void
+  compactTechnicianCards?: boolean
 }) {
   const { t } = useTranslation()
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-4">
-      <div className="flex justify-end">
+    <div className="mx-auto w-full max-w-6xl space-y-4">
+      <div className="flex justify-start">
         <button
           type="button"
           onClick={onCancel}
           className="flex h-11 items-center gap-1.5 rounded-lg border border-nexoraBorder bg-nexoraSurface px-4 text-sm font-bold text-nexoraMuted hover:border-nexoraBrand"
         >
-          <X className="h-4 w-4" />
-          {t(`${K}.cancel`)}
+          <ArrowLeft className="h-4 w-4" />
+          {t(`${K}.back`)}
         </button>
       </div>
 
@@ -47,66 +51,73 @@ export default function SinglePageCheckInLayout({
         </p>
       ) : null}
 
-      <CustomerIdentityCard
-        phone={session.phone}
-        customerName={session.customerName}
-        onChangeName={session.setCustomerName}
-        onChangePhone={session.changePhone}
-        smsConsent={session.smsConsent}
-        onChangeSmsConsent={session.setSmsConsent}
-        businessName={businessName}
-      />
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]">
+        <div className="min-w-0 space-y-4">
+          <CustomerIdentityCard
+            phone={session.phone}
+            customerName={session.customerName}
+            onChangeName={session.setCustomerName}
+            onChangePhone={session.changePhone}
+            smsConsent={session.smsConsent}
+            onChangeSmsConsent={session.setSmsConsent}
+            businessName={businessName}
+          />
 
-      <section className="space-y-3 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4">
-        <div>
-          <h2 className="text-lg font-black text-nexoraText">{t(`${K}.technicianTitle`)}</h2>
-          <p className="text-sm text-nexoraMuted">{t(`${K}.technicianSubtitle`)}</p>
+          <CheckInSectionCard
+            title={t(`${K}.technicianTitle`)}
+            subtitle={t(`${K}.technicianSubtitle`)}
+            icon={UsersRound}
+          >
+            <TechnicianPickerGrid
+              technicians={session.technicians}
+              isLoading={session.isTechniciansLoading}
+              selectedStaffId={session.preferredStaffId}
+              onSelect={session.choosePreferredStaff}
+              anyoneLabel={t(`${K}.firstAvailable`)}
+              anyoneHint={t(`${K}.firstAvailableHint`)}
+              searchPlaceholder={t(`${K}.technicianSearchPlaceholder`)}
+              emptyLabel={t(`${K}.noTechnicians`)}
+              busyLabel={t(`${K}.technicianBusy`)}
+              availableLabel={t(`${K}.technicianAvailable`)}
+              compact={compactTechnicianCards}
+              autoWrap
+            />
+          </CheckInSectionCard>
+
+          <ServiceCatalogSection
+            services={session.catalog}
+            isLoading={session.isCatalogLoading}
+            selectedServiceIds={session.selectedServiceIds}
+            onToggle={session.toggleService}
+          />
         </div>
-        <TechnicianPickerGrid
-          technicians={session.technicians}
-          isLoading={session.isTechniciansLoading}
-          selectedStaffId={session.preferredStaffId}
-          onSelect={session.choosePreferredStaff}
-          anyoneLabel={t(`${K}.firstAvailable`)}
-          anyoneHint={t(`${K}.firstAvailableHint`)}
-          searchPlaceholder={t(`${K}.technicianSearchPlaceholder`)}
-          emptyLabel={t(`${K}.noTechnicians`)}
-          busyLabel={t(`${K}.technicianBusy`)}
-          availableLabel={t(`${K}.technicianAvailable`)}
-        />
-      </section>
 
-      <ServiceCatalogSection
-        services={session.catalog}
-        isLoading={session.isCatalogLoading}
-        selectedServiceIds={session.selectedServiceIds}
-        onToggle={session.toggleService}
-        note={session.note}
-        onChangeNote={session.setNote}
-      />
+        <aside className="min-w-0 space-y-4 lg:sticky lg:top-4 lg:self-start">
+          <SelectedServicesSummary
+            services={session.selectedServices}
+            totalPrice={session.totalPrice}
+            onRemove={session.toggleService}
+          />
 
-      <SelectedServicesSummary
-        services={session.selectedServices}
-        totalMinutes={session.totalMinutes}
-        totalPrice={session.totalPrice}
-        onRemove={session.toggleService}
-      />
+          <FrontDeskNoteCard note={session.note} onChangeNote={session.setNote} />
 
-      {session.submitError ? (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-nexoraDanger">
-          {session.submitError}
-        </p>
-      ) : null}
+          {session.submitError ? (
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-nexoraDanger">
+              {session.submitError}
+            </p>
+          ) : null}
 
-      <button
-        type="button"
-        onClick={session.submit}
-        disabled={!session.canSubmit || session.isSubmitting}
-        className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-nexoraBrand text-base font-black text-white hover:bg-nexoraBrandDark disabled:opacity-60"
-      >
-        {session.isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
-        {t(`${K}.submit`, { count: String(session.selectedServiceIds.length) })}
-      </button>
+          <button
+            type="button"
+            onClick={session.submit}
+            disabled={!session.canSubmit || session.isSubmitting}
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-nexoraBrand text-base font-black text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+          >
+            {session.isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
+            {t(`${K}.submit`)}
+          </button>
+        </aside>
+      </div>
     </div>
   )
 }

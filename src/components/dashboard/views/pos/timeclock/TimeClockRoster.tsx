@@ -11,11 +11,21 @@ import { storage } from '../../../../../utils/storage'
 import { getApiErrorCode } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import { useBeepStaff, useClockInStaff, useClockOutStaff } from '../../../../../data/hooks/usePosTimeClock'
-import type { TimeClockRosterRowApiDto } from '../../../../../types/repositories'
+import { cannotReceiveBeep } from '../../../../../constants/posStaffBeep'
+import type { PosBeepApiDto, TimeClockRosterRowApiDto } from '../../../../../types/repositories'
 import { formatPosDateTime, formatPosTime } from '../posDateTime'
 import { EMPTY_VALUE, getInitials } from '../posDisplay'
+import { beepCooldownUntil, useCooldownSeconds } from './beepCooldown'
+import BeepInteractions from './BeepInteractions'
+import BeepMessageModal from './BeepMessageModal'
 import { formatHours } from './timeClockDay'
 import { tk } from './timeClockI18n'
+import {
+  POS_TABLE_HEADER_CELL_CLASS,
+  POS_TABLE_HEADER_ROW_CLASS,
+  POS_TABLE_STICKY_ACTION_CELL_CLASS,
+  POS_TABLE_STICKY_ACTION_HEADER_CLASS,
+} from '../posTableStyles'
 
 // Table/Card is a separate preference from the Order List's List/Card toggle — the two tabs are
 // remembered independently, so they keep their own storage keys.
@@ -29,10 +39,12 @@ export default function TimeClockRoster({
   businessId,
   rows,
   onShiftCount,
+  beepByStaffId,
 }: {
   businessId: string
   rows: TimeClockRosterRowApiDto[]
   onShiftCount: number
+  beepByStaffId?: Map<string, PosBeepApiDto>
 }) {
   const { t, currentLanguage } = useTranslation()
   const { showToast, showConfirm } = useNotification()
@@ -50,12 +62,14 @@ export default function TimeClockRoster({
     storage.setItem(ROSTER_VIEW_MODE_STORAGE_KEY, mode)
   }
 
+  const [beepTarget, setBeepTarget] = useState<TimeClockRosterRowApiDto | null>(null)
+  const [beepMessage, setBeepMessage] = useState('')
+
   const isBusy = clockIn.isPending || clockOut.isPending || beep.isPending
 
   const handleClockIn = async (row: TimeClockRosterRowApiDto) => {
     try {
       await clockIn.mutateAsync(row.businessStaffLinkId)
-      showToast(t(tk('clockInSuccess'), { name: row.displayName }))
     } catch (err: unknown) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
     }
@@ -77,15 +91,30 @@ export default function TimeClockRoster({
 
     try {
       await clockOut.mutateAsync(row.businessStaffLinkId)
-      showToast(t(tk('clockOutSuccess'), { name: row.displayName }))
     } catch (err: unknown) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
     }
   }
 
-  const handleBeep = async (row: TimeClockRosterRowApiDto) => {
+  const openBeepModal = (row: TimeClockRosterRowApiDto) => {
+    setBeepTarget(row)
+    setBeepMessage('')
+  }
+
+  const closeBeepModal = () => {
+    setBeepTarget(null)
+    setBeepMessage('')
+  }
+
+  const handleBeep = async () => {
+    if (!beepTarget || beep.isPending) return
+    const row = beepTarget
     try {
-      const result = await beep.mutateAsync(row.posStaffProfileId)
+      const result = await beep.mutateAsync({
+        posStaffProfileId: row.posStaffProfileId,
+        message: beepMessage.trim() || undefined,
+      })
+      closeBeepModal()
       showToast(
         result.delivered
           ? t(tk('beepSent'), { name: row.displayName })
@@ -100,14 +129,14 @@ export default function TimeClockRoster({
   const renderShiftCell = (row: TimeClockRosterRowApiDto) => (
     <div className="space-y-0.5">
       {row.isClockedIn ? (
-        <p className="flex items-center gap-1.5 text-xs font-bold text-nexoraText">
+        <p className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-extrabold text-emerald-700">
           <span className="h-2 w-2 rounded-full bg-emerald-500" />
           {t(tk('inSince'), {
             time: formatPosTime(row.clockInAt, currentLanguage),
           })}
         </p>
       ) : (
-        <p className="text-xs font-bold text-nexoraMuted">
+        <p className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-extrabold text-slate-600">
           {t(tk('notIn'))}
         </p>
       )}
@@ -134,31 +163,6 @@ export default function TimeClockRoster({
     </span>
   )
 
-  const renderActions = (row: TimeClockRosterRowApiDto) => (
-    <div className="flex justify-end gap-1.5">
-      <button
-        type="button"
-        onClick={() => (row.isClockedIn ? handleClockOut(row) : handleClockIn(row))}
-        disabled={isBusy}
-        className="flex h-9 shrink-0 items-center gap-1 rounded-lg border border-nexoraBorder px-2.5 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand hover:text-nexoraBrandDark disabled:opacity-60"
-      >
-        {row.isClockedIn ? <LogOut className="h-3.5 w-3.5" /> : <LogIn className="h-3.5 w-3.5" />}
-        {row.isClockedIn
-          ? t(tk('clockOut'))
-          : t(tk('clockIn'))}
-      </button>
-      <button
-        type="button"
-        onClick={() => handleBeep(row)}
-        disabled={isBusy}
-        className="flex h-9 shrink-0 items-center gap-1 rounded-lg bg-nexoraBrand px-2.5 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
-      >
-        <Bell className="h-3.5 w-3.5" />
-        {t(tk('beep'))}
-      </button>
-    </div>
-  )
-
   const renderAvatar = (row: TimeClockRosterRowApiDto) => (
     <div className="flex items-center gap-3">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nexoraLavender/20 text-[11px] font-bold text-nexoraBrandDark">
@@ -176,7 +180,9 @@ export default function TimeClockRoster({
   )
 
   return (
-    <section className="space-y-3 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4">
+     <>
+    <section className="space-y-3">
+ 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-bold text-nexoraText">
           {t(tk('rosterTitle'))}
@@ -185,15 +191,15 @@ export default function TimeClockRoster({
           <span className="rounded-full bg-nexoraCanvas px-2.5 py-1 text-[11px] font-bold text-nexoraBrandDark">
             {t(tk('onShift'), { count: onShiftCount })}
           </span>
-          <div className="flex gap-1 rounded-lg border border-nexoraBorder p-0.5">
+          <div className="flex gap-1 rounded-xl border border-nexoraBorder bg-nexoraCanvas/70 p-1">
             <button
               type="button"
               onClick={() => handleChangeViewMode(RosterViewMode.Table)}
               aria-label={t(tk('viewModeTable'))}
-              className={`rounded-md p-1.5 ${
+              className={`rounded-lg p-1.5 ${
                 viewMode === RosterViewMode.Table
-                  ? 'bg-nexoraBrand text-white'
-                  : 'text-nexoraMuted hover:text-nexoraText'
+                  ? 'bg-white text-nexoraBrandDark shadow-sm ring-1 ring-inset ring-nexoraBorder/70'
+                  : 'text-nexoraMuted hover:bg-white/80 hover:text-nexoraText'
               }`}
             >
               <ListIcon className="h-4 w-4" />
@@ -202,10 +208,10 @@ export default function TimeClockRoster({
               type="button"
               onClick={() => handleChangeViewMode(RosterViewMode.Card)}
               aria-label={t(tk('viewModeCard'))}
-              className={`rounded-md p-1.5 ${
+              className={`rounded-lg p-1.5 ${
                 viewMode === RosterViewMode.Card
-                  ? 'bg-nexoraBrand text-white'
-                  : 'text-nexoraMuted hover:text-nexoraText'
+                  ? 'bg-white text-nexoraBrandDark shadow-sm ring-1 ring-inset ring-nexoraBorder/70'
+                  : 'text-nexoraMuted hover:bg-white/80 hover:text-nexoraText'
               }`}
             >
               <LayoutGrid className="h-4 w-4" />
@@ -221,50 +227,70 @@ export default function TimeClockRoster({
       ) : viewMode === 'card' ? (
         <div className="grid max-h-[560px] grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 xl:grid-cols-3">
           {rows.map((row) => (
-            <div key={row.posStaffProfileId} className="space-y-3 rounded-2xl border border-nexoraBorder p-4">
+            <div key={row.posStaffProfileId} className="space-y-3 rounded-xl border border-nexoraBorder bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-nexoraBrand/40 hover:shadow-md">
               {renderAvatar(row)}
               {renderShiftCell(row)}
-              <div className="flex items-center justify-between gap-2 text-xs text-nexoraMuted">
-                <span className="truncate">{row.currentCustomerName ?? EMPTY_VALUE}</span>
+              <div className="flex items-center justify-between gap-2 text-xs">
+                <span className="pos-customer-name truncate font-semibold text-nexoraText">{row.currentCustomerName ?? EMPTY_VALUE}</span>
                 {renderTurnsCell(row)}
               </div>
-              {renderActions(row)}
+              <BeepInteractions
+                businessId={businessId}
+                beep={beepByStaffId?.get(row.posStaffProfileId)}
+                staffName={row.displayName}
+              />
+              <RosterRowActions
+                row={row}
+                beep={beepByStaffId?.get(row.posStaffProfileId)}
+                isBusy={isBusy}
+                onClockToggle={(r) => (r.isClockedIn ? handleClockOut(r) : handleClockIn(r))}
+                onOpenBeepModal={openBeepModal}
+              />
             </div>
           ))}
         </div>
       ) : (
-        <div className="max-h-[560px] overflow-x-auto overflow-y-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="uppercase tracking-wider text-nexoraMuted">
-                <th className="pb-2 pr-3 text-xs font-black">
+        <div className="max-h-[560px] overflow-x-auto overflow-y-auto rounded-xl border border-nexoraBorder bg-white">
+          <table className="w-full min-w-[900px] table-auto text-left text-xs">
+            <thead className="sticky top-0 z-[1] bg-nexoraCanvas/90">
+              <tr className={POS_TABLE_HEADER_ROW_CLASS}>
+                <th className={POS_TABLE_HEADER_CELL_CLASS}>
                   {t(tk('columnTechnician'))}
                 </th>
-                <th className="pb-2 pr-3 text-xs font-black">
+                <th className={POS_TABLE_HEADER_CELL_CLASS}>
                   {t(tk('columnShift'))}
                 </th>
-                <th className="pb-2 pr-3 text-xs font-black">
+                <th className={POS_TABLE_HEADER_CELL_CLASS}>
                   {t(tk('columnCurrentTicket'))}
                 </th>
-                <th className="pb-2 pr-3 text-xs font-black">
+                <th className={POS_TABLE_HEADER_CELL_CLASS}>
                   {t(tk('columnTurns'))}
                 </th>
-                <th className="pb-2 pr-3 text-xs font-black">
+                <th className={POS_TABLE_HEADER_CELL_CLASS}>
                   {t(tk('columnBeeper'))}
                 </th>
-                <th className="pb-2 text-right text-xs font-black">
+                <th className={`${POS_TABLE_HEADER_CELL_CLASS} ${POS_TABLE_STICKY_ACTION_HEADER_CLASS} text-right`}>
                   {t(tk('columnActions'))}
                 </th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.posStaffProfileId} className="border-t border-nexoraBorder align-top">
-                  <td className="py-2 pr-3">{renderAvatar(row)}</td>
-                  <td className="py-2 pr-3">{renderShiftCell(row)}</td>
-                  <td className="py-2 pr-3 text-nexoraMuted">
+                <tr
+                  key={row.posStaffProfileId}
+                  className={`border-t border-nexoraBorder/70 align-top transition-colors ${
+                    row.hasForgottenEntry
+                      ? 'bg-amber-50/30 hover:bg-amber-50/60'
+                      : row.isClockedIn
+                        ? 'bg-emerald-50/20 hover:bg-emerald-50/45'
+                        : 'hover:bg-violet-50/35'
+                  }`}
+                >
+                  <td className="px-4 py-3">{renderAvatar(row)}</td>
+                  <td className="px-4 py-3">{renderShiftCell(row)}</td>
+                  <td className="px-4 py-3 font-semibold text-nexoraText">
                     {row.currentCustomerName ? (
-                      <span className="font-bold text-nexoraWarning">{row.currentCustomerName}</span>
+                      <span className="pos-customer-name rounded-full bg-amber-100 px-2.5 py-1 font-bold text-amber-700">{row.currentCustomerName}</span>
                     ) : (
                       EMPTY_VALUE
                     )}
@@ -272,15 +298,30 @@ export default function TimeClockRoster({
                       <span className="ml-1 font-mono text-[11px]">#{row.currentOrderNumber}</span>
                     ) : null}
                   </td>
-                  <td className="py-2 pr-3">{renderTurnsCell(row)}</td>
-                  <td className="py-2 pr-3 text-nexoraMuted">
-                    {row.lastBeepAt
-                      ? t(tk('beepedAt'), {
+                  <td className="px-4 py-3">{renderTurnsCell(row)}</td>
+                  <td className="px-4 py-3 font-semibold text-nexoraText">
+                    {row.lastBeepAt ? (
+                      <span className="rounded-full bg-sky-50 px-2.5 py-1 text-sky-700">
+                        {t(tk('beepedAt'), {
                           time: formatPosTime(row.lastBeepAt, currentLanguage),
-                        })
-                      : EMPTY_VALUE}
+                        })}
+                      </span>
+                    ) : EMPTY_VALUE}
+                    <BeepInteractions
+                      businessId={businessId}
+                      beep={beepByStaffId?.get(row.posStaffProfileId)}
+                      staffName={row.displayName}
+                    />
                   </td>
-                  <td className="py-2">{renderActions(row)}</td>
+                  <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} px-4 py-3`}>
+                    <RosterRowActions
+                      row={row}
+                      beep={beepByStaffId?.get(row.posStaffProfileId)}
+                      isBusy={isBusy}
+                      onClockToggle={(r) => (r.isClockedIn ? handleClockOut(r) : handleClockIn(r))}
+                      onOpenBeepModal={openBeepModal}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -288,5 +329,74 @@ export default function TimeClockRoster({
         </div>
       )}
     </section>
+    <BeepMessageModal
+      open={beepTarget !== null}
+      staffName={beepTarget?.displayName ?? ''}
+      message={beepMessage}
+      isPending={beep.isPending}
+      onChangeMessage={setBeepMessage}
+      onSend={handleBeep}
+      onClose={closeBeepModal}
+    />
+    </>
+  )
+}
+
+// Split out from the row/card render so `useCooldownSeconds` (a hook) is called once per actual
+// component instance instead of once per plain-function call inside `rows.map(...)` — calling a
+// hook from a function invoked a variable number of times per render breaks the Rules of Hooks.
+function RosterRowActions({
+  row,
+  beep,
+  isBusy,
+  onClockToggle,
+  onOpenBeepModal,
+}: {
+  row: TimeClockRosterRowApiDto
+  beep: PosBeepApiDto | undefined
+  isBusy: boolean
+  onClockToggle: (row: TimeClockRosterRowApiDto) => void
+  onOpenBeepModal: (row: TimeClockRosterRowApiDto) => void
+}) {
+  const { t } = useTranslation()
+  // A re-beep on a tech who already has an open call is a nudge on that same row server-side, so it
+  // shares the Nudge button's rate limit — same cooldown data, same countdown behaviour.
+  const cooldownUntil = beepCooldownUntil(beep)
+  const secondsLeft = useCooldownSeconds(cooldownUntil)
+  const onCooldown = secondsLeft > 0
+  // Local staff / no email on file — no app to ring, so sending would always be undelivered. The
+  // roster row carries its own isLocalStaff/email (same as the turn-board station).
+  const blockedLocal = cannotReceiveBeep(row)
+  const beepTitle = blockedLocal ? t(tk('beepLocalStaffTooltip')) : undefined
+
+  return (
+    <div className="inline-flex w-max justify-end gap-1.5">
+      <button
+        type="button"
+        onClick={() => onClockToggle(row)}
+        disabled={isBusy}
+        className={`flex h-9 shrink-0 items-center gap-1 rounded-lg border px-2.5 text-[11px] font-extrabold transition-colors disabled:opacity-60 ${
+          row.isClockedIn
+            ? 'border-rose-200 bg-rose-50 text-rose-600 hover:border-rose-300 hover:bg-rose-100'
+            : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-300 hover:bg-emerald-100'
+        }`}
+      >
+        {row.isClockedIn ? <LogOut className="h-3.5 w-3.5" /> : <LogIn className="h-3.5 w-3.5" />}
+        {row.isClockedIn
+          ? t(tk('clockOut'))
+          : t(tk('clockIn'))}
+      </button>
+      <span title={beepTitle} className="inline-flex">
+        <button
+          type="button"
+          onClick={() => onOpenBeepModal(row)}
+          disabled={isBusy || onCooldown || blockedLocal}
+          className="flex h-9 shrink-0 items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 text-[11px] font-extrabold text-amber-700 transition-colors hover:border-amber-300 hover:bg-amber-100 disabled:opacity-60"
+        >
+          <Bell className="h-3.5 w-3.5" />
+          {onCooldown ? t(tk('beepCooldown'), { seconds: secondsLeft }) : t(tk('beep'))}
+        </button>
+      </span>
+    </div>
   )
 }
