@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Loader2, RefreshCw, X } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
+import { useNotification } from '../../../../contexts/NotificationContext'
 import {
   POS_CHECKOUT_PAYMENT_METHOD_LABEL_KEYS,
   PosCheckoutPaymentMethod,
@@ -126,6 +127,7 @@ export default function PosQuickSplitPanel({
   disabled?: boolean
 }) {
   const { t } = useTranslation()
+  const { showToast } = useNotification()
 
   const [rows, setRows] = useState<SplitRow[]>(() => {
     const restored = rowsFromAllocations(savedAllocations)
@@ -302,10 +304,43 @@ export default function PosQuickSplitPanel({
   // succeeded, and never when there is nothing stored at all.
   const showSaved = savedAllocations.length > 0 && !isDirty && !isSaving
 
-  const canSave = !disabled && !isSaving && isDirty && !rows.some(carriesMoreTipThanAmount)
+  const findSaveBlockMessage = (): string | null => {
+    const tipRow = rows.find(carriesMoreTipThanAmount)
+    if (tipRow) return t(`${TK}.errorTipExceedsAmount`, { amount: formatUsdAmount(tipAmount) })
+
+    const cashShortRow = rows.find((row) => row.method === PosCheckoutPaymentMethod.Cash
+      && row.cashReceivedInput.trim() !== ''
+      && amountInputToCents(row.cashReceivedInput) < amountInputToCents(row.amountInput))
+    if (cashShortRow) return t(`${TK}.errorCashShort`)
+
+    const unattributedRow = rows.find((row) => row.method === null && amountInputToCents(row.amountInput) > 0)
+    if (unattributedRow) return t(`${TK}.errorChooseMethod`)
+
+    const amountlessRow = rows.find((row) => row.method !== null && amountInputToCents(row.amountInput) === 0)
+    if (amountlessRow) return t(`${TK}.errorAmountRequired`)
+
+    if (payload.allocations.length === 0) return t(`${TK}.errorChooseMethod`)
+
+    if (!isBalanced) {
+      return outstandingCents > 0
+        ? t(`${TK}.short`, { amount: formatUsdAmount(fromCents(outstandingCents)) })
+        : t(`${TK}.over`, { amount: formatUsdAmount(fromCents(-outstandingCents)) })
+    }
+
+    return null
+  }
 
   const handleSave = () => {
-    if (!canSave) return
+    if (disabled || isSaving) return
+
+    const blockMessage = findSaveBlockMessage()
+    if (blockMessage) {
+      showToast(blockMessage, 'error')
+      return
+    }
+
+    if (!isDirty) return
+
     onSave(payload)
   }
 
@@ -605,7 +640,7 @@ export default function PosQuickSplitPanel({
             <button
               type="button"
               onClick={handleSave}
-              disabled={!canSave}
+              disabled={disabled || isSaving}
               className="ml-auto flex h-11 items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-5 text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
             >
               {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
