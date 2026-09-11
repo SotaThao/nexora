@@ -417,7 +417,7 @@ export function filterWorkOrderCatalogCategories(
 
 function lineFromCatalog(
   service: WorkOrderCatalogService,
-  extras?: Pick<WorkOrderEditableLine, 'key' | 'id' | 'technicianName' | 'isAddOn' | 'lineStatus' | 'isMine'>,
+  extras?: Partial<Pick<WorkOrderEditableLine, 'key' | 'id' | 'technicianName' | 'isAddOn' | 'lineStatus' | 'isMine'>>,
 ): WorkOrderEditableLine {
   return {
     key: extras?.key ?? nextLocalLineKey(),

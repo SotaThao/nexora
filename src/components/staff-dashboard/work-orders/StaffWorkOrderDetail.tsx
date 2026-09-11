@@ -145,7 +145,7 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
   if (detailQuery.isPending) return <WorkOrderDetailSkeleton />
 
   const ticketStamp = ticket
-    ? `${ticket.status}:${ticket.items.map((item) => `${item.id}:${item.lineStatus}`).join(',')}`
+    ? `${ticket.status}:${ticket.myStatus}:${ticket.items.map((item) => `${item.id}:${item.lineStatus}:${item.isMine ? 1 : 0}`).join(',')}`
     : ''
   const hasPendingLineEdits = lines.some((line) => (
     Boolean(line.pendingRemoval) || line.approval === WORK_ORDER_SERVICE_APPROVAL.pending
@@ -157,7 +157,7 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
     setLines(toWorkOrderEditableLines(ticket.items))
     setApprovalError(null)
   } else if (ticket && seededStamp !== ticketStamp && !hasPendingLineEdits) {
-    // After ticket/line start-complete, refetch must redraw badges even when the order id is unchanged.
+    // Refetch after start/complete/reassign must redraw badges and isMine even when order id is unchanged.
     setSeededStamp(ticketStamp)
     setLines(toWorkOrderEditableLines(ticket.items))
   }
