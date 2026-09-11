@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom'
 import { Mail, Printer, X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { PosReportMode } from '../../../../../constants/posReportMode'
-import { getPosCheckoutPaymentMethodLabel } from '../../../../../constants/posCheckoutPaymentMethod'
 import { usePosReportDetail } from '../../../../../data/hooks/usePosReport'
 import type {
   PosReportDetailParams,
@@ -12,6 +11,9 @@ import type {
 import { SkeletonList } from '../../../../ui/skeleton'
 import { formatCurrency } from '../../../utils'
 import { formatDayLabel } from './posReportPeriod'
+
+import { buildTechnicianReportReceipt } from './buildTechnicianReportReceipt'
+import PosTechnicianReportPrintDocument from '../receipt/PosTechnicianReportPrintDocument'
 
 const TK = 'components.dashboard.views.pos.report.detail'
 // There is no POS-report email endpoint yet. Keep the prepared UI behind one switch so it can be
@@ -116,19 +118,7 @@ export default function PosReportDetailModal({
               {t(`${TK}.loadError`)}
             </div>
           ) : (
-            <article className="pos-report-detail-print mx-auto w-[80mm] max-w-full space-y-3 bg-white p-6 font-sans text-xs leading-relaxed text-black shadow-nexora-card" data-testid="pos-report-detail-print">
-              <div className="pos-report-detail-header border-b border-dashed border-slate-400 pb-3 text-center">
-                <h3 className="break-words text-base font-black uppercase tracking-wide">{displayName}</h3>
-                <p className="mt-1 text-xs font-semibold">
-                  {params.mode === PosReportMode.Daily ? t(`${TK}.dailyTitle`) : t(`${TK}.weeklyTitle`)}
-                </p>
-                {periodLabel ? <p className="mt-0.5 text-xs font-bold">{periodLabel}</p> : null}
-              </div>
-              {params.mode === PosReportMode.Daily
-                ? <DailyDetail detail={detail} />
-                : <WeeklyDetail detail={detail} />}
-              <DetailTotals detail={detail} />
-            </article>
+            <PosReportDetailDocument detail={detail} displayName={displayName} />
           )}
         </div>
 
@@ -198,89 +188,12 @@ export default function PosReportDetailModal({
   return typeof document !== 'undefined' ? createPortal(modal, document.body) : null
 }
 
-function DailyDetail({ detail }: { detail: PosStaffReportDetail }) {
+export function PosReportDetailDocument({ detail, displayName }: { detail: PosStaffReportDetail; displayName: string }) {
   const { t } = useTranslation()
-  const tickets = detail.days.flatMap((day) => day.tickets)
-  if (tickets.length === 0) {
-    return <div className="py-8 text-center text-sm text-black">{t(`${TK}.noTickets`)}</div>
-  }
-
-  return (
-    <div>
-      <div className="grid grid-cols-[1fr_auto_auto] gap-3 border-b border-dashed border-slate-400 pb-1 font-black uppercase text-black">
-        <span>{t(`${TK}.ticket`)}</span>
-        <span className="text-right">{t(`${TK}.amount`)}</span>
-        <span className="text-right">{t(`${TK}.tips`)}</span>
-      </div>
-      {tickets.map((ticket, ticketIndex) => (
-        <div key={ticket.orderId} className="border-b border-dashed border-slate-300 py-2 last:border-b-0">
-          <div className="grid grid-cols-[1fr_auto_auto] gap-3 text-black">
-            <span className="font-black">{ticketIndex + 1}. #{ticket.orderNumber}</span>
-            <span className="text-right font-bold tabular-nums">{formatCurrency(ticket.amount)}</span>
-            <span className="text-right font-bold tabular-nums">{formatCurrency(ticket.tips)}</span>
-          </div>
-          <p className="mt-1 font-bold text-black">{formatReportTime(ticket.completedAtUtc, detail.timeZone)}</p>
-          <div className="mt-1 space-y-0.5 text-black">
-            {ticket.services.map((service, index) => <div key={`${ticket.orderId}-${index}`}>{service}</div>)}
-          </div>
-          <div className="mt-1 flex items-center justify-between gap-3 text-black">
-            <span>-- {t(`${TK}.ownerDiscount`)}</span>
-            <span className="font-bold tabular-nums text-black">
-              {ticket.ownerDiscount > 0 ? formatCurrency(ticket.ownerDiscount) : '—'}
-            </span>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function WeeklyDetail({ detail }: { detail: PosStaffReportDetail }) {
-  const { t } = useTranslation()
-  return (
-    <div>
-      <div className="grid grid-cols-[1fr_auto_auto] gap-3 border-b border-dashed border-slate-400 pb-1 font-black uppercase text-black">
-        <span>{t(`${TK}.day`)}</span>
-        <span className="text-right">{t(`${TK}.amount`)}</span>
-        <span className="text-right">{t(`${TK}.tips`)}</span>
-      </div>
-      {detail.days.map((day) => (
-        <div key={day.date} className="grid grid-cols-[1fr_auto_auto] gap-3 border-b border-dashed border-slate-300 py-1.5 text-black last:border-b-0">
-          <span className="font-semibold">{formatReportDay(day.date)}</span>
-          <span className="text-right font-bold tabular-nums">{formatCurrency(day.amount)}</span>
-          <span className="text-right font-bold tabular-nums">{formatCurrency(day.tips)}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function DetailTotals({ detail }: { detail: PosStaffReportDetail }) {
-  const { t } = useTranslation()
-  const totals = [
-    [t(`${TK}.totalAmount`), detail.totalAmount],
-    [t(`${TK}.totalTips`), detail.totalTips],
-    [t(`${TK}.totalDiscount`), detail.totalDiscount],
-    [t(`${TK}.totalCommission`), detail.totalCommission],
-    ...detail.paymentTotals.map((payment) => [
-      t(`${TK}.collected`, { method: getPosCheckoutPaymentMethodLabel(payment.paymentMethod, t) }),
-      payment.amount,
-    ] as [string, number]),
-  ] as Array<[string, number]>
-
-  return (
-    <div className="border-t border-dashed border-slate-500 pt-2">
-      {totals.map(([label, amount], index) => (
-        <div
-          key={label}
-          className={`flex items-center justify-between gap-3 py-0.5 text-black ${index === 0 ? 'font-black' : ''}`}
-        >
-          <span>{label}</span>
-          <span className="font-bold tabular-nums text-black">{formatCurrency(amount)}</span>
-        </div>
-      ))}
-    </div>
-  )
+  const document = buildTechnicianReportReceipt(detail, displayName, t)
+  return <article className="pos-report-detail-print mx-auto w-[80mm] max-w-full bg-white p-6 text-black shadow-nexora-card" data-testid="pos-report-detail-print">
+    <PosTechnicianReportPrintDocument report={document.technicianReport!} />
+  </article>
 }
 
 function formatReportTime(isoUtc: string, timeZone: string): string {

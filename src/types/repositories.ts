@@ -2393,6 +2393,8 @@ export type {
 
 export interface PosPrinterProfile {
   transport: PosPrintTransportType
+  /** Whether the device has explicitly chosen a print method. */
+  transportConfigured?: boolean
   /** Printer dots — see RECEIPT_PAPER_WIDTH_DOTS. */
   paperWidthDots: number
   /** ISO timestamp of the last test print, or null when never tested. */
@@ -2438,4 +2440,5 @@ export interface PosPendingPrintJob {
   attemptId?: string
   /** Canonical owner/staff salon route that owns this print job. */
   backPath?: string
+  ticketPrint?: { businessId: string; orderId: string }
 }

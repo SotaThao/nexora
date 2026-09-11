@@ -131,6 +131,7 @@ export const PASSPRNT_JOB_STALE_MS = 90_000
 export const POS_PRINTER_PROFILE_STORAGE_KEY = 'pos_printer_profile_v1'
 export const POS_RECEIPT_SETTINGS_STORAGE_KEY = 'pos_receipt_settings_v1'
 export const POS_PRINT_JOB_STORAGE_KEY = 'pos_print_job_v1'
+export const POS_TICKET_PRINT_HISTORY_STORAGE_KEY = 'pos_ticket_print_history_v1'
 
 /** Matches the HTML mockup's defaults: one receipt after a card payment, none for cash. */
 export const DEFAULT_POS_RECEIPT_SETTINGS = {
