@@ -49,6 +49,15 @@ export function usePosReceiptSettings() {
   })
 }
 
+export function usePosTicketPrinted(businessId: string, orderId: string) {
+  return useQuery({
+    queryKey: qk.posTicketPrinted(businessId, orderId),
+    queryFn: () => posPrinterSettingsRepository.wasTicketPrinted({ businessId, orderId }),
+    initialData: () => posPrinterSettingsRepository.wasTicketPrinted({ businessId, orderId }),
+    ...DEVICE_QUERY_OPTIONS,
+  })
+}
+
 export function useSavePosReceiptSettings() {
   const queryClient = useQueryClient()
   return useMutation<PosReceiptSettings, Error, PosReceiptSettings>({

@@ -116,7 +116,7 @@ export interface PosReportParams {
 export interface PosReportDetailParams {
   businessId: string
   posStaffProfileId: string
-  mode: PosReportMode.Daily | PosReportMode.Weekly
+  mode: PosReportMode
   periodKey: string
   displayName: string
   periodStart: string
@@ -330,6 +330,42 @@ export function createPosReportRepository(client: HttpClient = httpClient) {
       return await client.getBlob(`${BASE_PATH}/export.csv`, { params: toQueryParams(params) })
     },
 
+    async getStaffReportsForPrint(
+      params: PosReportParams,
+      rows: PosReportRow[],
+      period: PosReportPeriod,
+    ): Promise<Array<{ displayName: string; detail: PosStaffReportDetail }>> {
+      // Share summary, completed-order pages and ticket details within this print batch.
+      // Every technician still uses exactly the same calculation as View → Print.
+      const reads = new Map<string, Promise<unknown>>()
+      const sharedClient: HttpClient = {
+        ...client,
+        get<T>(path: string, options?: Parameters<HttpClient['get']>[1]): Promise<T> {
+          const key = JSON.stringify([path, options])
+          let result = reads.get(key)
+          if (!result) {
+            result = client.get(path, options)
+            reads.set(key, result)
+          }
+          return result as Promise<T>
+        },
+      }
+      const repository = createPosReportRepository(sharedClient)
+      return mapInBatches(rows, 4, async row => ({
+        displayName: row.displayName,
+        detail: await repository.getStaffReportDetail({
+          businessId: params.businessId,
+          posStaffProfileId: row.posStaffProfileId,
+          displayName: row.displayName,
+          mode: params.mode,
+          periodKey: period.key,
+          periodStart: period.start,
+          periodEnd: period.end,
+          timeZone: params.timeZone || 'America/Chicago',
+        }),
+      }))
+    },
+
     async getStaffReportDetail(
       params: PosReportDetailParams,
       orderDetailLoader?: PosOrderDetailLoader,
@@ -339,6 +375,7 @@ export function createPosReportRepository(client: HttpClient = httpClient) {
         mode: params.mode,
         dates: params.mode === PosReportMode.Daily ? [params.periodKey] : undefined,
         weeks: params.mode === PosReportMode.Weekly ? [params.periodKey] : undefined,
+        month: params.mode === PosReportMode.Monthly ? params.periodKey : undefined,
       }
       // Start the existing summary and order-detail reads together so every figure in the modal
       // comes from the same refresh cycle instead of mixing fresh tickets with a stale table row.

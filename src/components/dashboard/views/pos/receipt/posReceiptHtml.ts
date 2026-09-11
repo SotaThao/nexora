@@ -9,6 +9,9 @@
  * identical text. Follows `packageHistoryDocuments.ts` — a pure builder taking pre-translated copy
  * and returning a string.
  */
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import PosTechnicianReportPrintDocument from './PosTechnicianReportPrintDocument'
 import { maskReceiptPhone } from './maskReceiptPhone'
 import type { PosReceiptDocument, PosReceiptTotalRow } from '../../../../../types/domain'
 
@@ -44,6 +47,14 @@ const CHROME_HEIGHT_PX = 320
 
 export function estimatePosReceiptHeightPx(doc: PosReceiptDocument): number {
   if (doc.pages?.length) return doc.pages.reduce((sum, page) => sum + estimatePosReceiptHeightPx(page), 0)
+  if (doc.technicianReport) {
+    const report = doc.technicianReport
+    return CHROME_HEIGHT_PX + report.totals.length * TOTAL_ROW_HEIGHT_PX
+      + report.entries.reduce((height, entry) => height + ROW_HEIGHT_PX * (
+        2 + (entry.time ? 1 : 0) + (entry.discount ? 1 : 0)
+        + (entry.services?.reduce((lines, text) => lines + Math.max(1, Math.ceil(text.length / 30)), 0) ?? 0)
+      ), 0)
+  }
   return (
     CHROME_HEIGHT_PX + doc.rows.length * ROW_HEIGHT_PX + doc.totals.length * TOTAL_ROW_HEIGHT_PX + (doc.footerNotes?.lines.reduce((sum, note) => sum + Math.ceil(note.length / 30) * ROW_HEIGHT_PX, ROW_HEIGHT_PX) ?? 0)
   )
@@ -94,6 +105,12 @@ export function buildPosReceiptHtml(
     const start = pages[0].indexOf('<body>') + '<body>'.length
     const content = pages.map((page, index) => `<section style="${index ? 'break-before:page;page-break-before:always;padding-top:24px;' : ''}">${page.slice(page.indexOf('<body>') + 6, page.lastIndexOf('</body>'))}</section>`).join('')
     return pages[0].slice(0, start) + content + '</body></html>'
+  }
+  if (doc.technicianReport) {
+    const content = renderToStaticMarkup(createElement(PosTechnicianReportPrintDocument, {
+      report: doc.technicianReport, fontSize: 22,
+    }))
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="format-detection" content="telephone=no"><style>*{box-sizing:border-box}body{margin:0;width:${options.widthDots}px;padding:16px 24px;background:#fff;color:#000}</style></head><body>${content}</body></html>`
   }
   const businessBlock = [
     doc.businessName ? `<h1>${escapeHtml(doc.businessName)}</h1>` : '',

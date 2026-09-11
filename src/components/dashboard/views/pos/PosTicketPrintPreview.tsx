@@ -25,6 +25,7 @@ interface PosTicketPrintPreviewProps {
   onClose: () => void
   onPrint: () => void
   isPrinting?: boolean
+  wasPrinted?: boolean
   orderNumber: string
   completedAt?: string | null
   groups: PosTicketPrintGroup[]
@@ -37,6 +38,7 @@ export default function PosTicketPrintPreview({
   onClose,
   onPrint,
   isPrinting = false,
+  wasPrinted = false,
   orderNumber,
   completedAt,
   groups,
@@ -170,7 +172,7 @@ export default function PosTicketPrintPreview({
           >
             <Printer className="h-4 w-4" aria-hidden="true" />
             {t(
-              'components.dashboard.views.pos.PosOrderWorkspace.printTicketAction',
+              `components.dashboard.views.pos.PosOrderWorkspace.${wasPrinted ? 'reprintTicketAction' : 'printTicketAction'}`,
             )}
           </button>
         </div>
