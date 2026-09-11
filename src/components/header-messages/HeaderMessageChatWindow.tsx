@@ -15,6 +15,8 @@ import {
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactElement } from 'react'
 import { createPortal } from 'react-dom'
+import { formatCallDuration } from '../../calls/callFormat'
+import useCall from '../../calls/useCall'
 import {
   CommunityChatType,
   COMMUNITY_CHAT_IMAGE_ACCEPT,
@@ -22,15 +24,18 @@ import {
   isAllowedCommunityChatImageFile,
   isPendingCommunityChatSessionId,
 } from '../../constants/communityChat'
+import { CommunityCallEndReason, CommunityCallType } from '../../constants/communityCall'
 import { useCommunityChatMessagesInfinite } from '../../data/hooks/useCommunityChatMessageThread'
 import {
   useMarkCommunityChatSessionRead,
   useSendCommunityChatImage,
   useSendCommunityChatMessage,
 } from '../../data/hooks/useCommunityChat'
+import useIceServers from '../../data/hooks/useIceServers'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { resolveTranslatedApiError } from '../../utils/resolveTranslatedApiError'
+import { logger } from '../../utils/logger'
 import {
   HEADER_MESSAGES_CHAT_I18N,
   HEADER_MESSAGES_I18N,
@@ -83,13 +88,46 @@ interface HeaderMessageChatWindowProps {
 }
 
 
+/**
+ * Localized label for a `MessageType.Call` bubble — never falls back to `message.content` (raw
+ * English text from the backend, US-06 AC). Busy/Failed/NetworkError reuse the call-state labels
+ * (`callBusy`/`callNetworkError`) since the ticket's i18n list only names one key per outcome for
+ * Missed/Declined/Cancelled/Answered.
+ */
+function getCallMessageBodyText(
+  callMeta: NonNullable<HeaderChatThreadMessage['callMeta']>,
+  t: (key: string, vars?: Record<string, string | number>) => string,
+  chatTk: string,
+): string {
+  switch (callMeta.endReason) {
+    case CommunityCallEndReason.Missed:
+      return t(`${chatTk}.chatSystemMessageMissedCall`)
+    case CommunityCallEndReason.Declined:
+      return t(`${chatTk}.chatSystemMessageCallDeclined`)
+    case CommunityCallEndReason.Cancelled:
+      return t(`${chatTk}.chatSystemMessageCallCancelled`)
+    case CommunityCallEndReason.Busy:
+      return t(`${chatTk}.callBusy`)
+    case CommunityCallEndReason.Answered:
+      return t(`${chatTk}.chatSystemMessageCallEnded`, {
+        duration: formatCallDuration(callMeta.durationSeconds),
+      })
+    // Failed / NetworkError
+    default:
+      return t(`${chatTk}.callNetworkError`)
+  }
+}
+
 function getMessageBodyText(
   message: HeaderChatThreadMessage,
-  t: (key: string) => string,
+  t: (key: string, vars?: Record<string, string | number>) => string,
   chatTk: string,
 ): string {
   if (message.isDeleted) {
     return t(`${chatTk}.messageDeleted`)
+  }
+  if (message.callMeta) {
+    return getCallMessageBodyText(message.callMeta, t, chatTk)
   }
   return message.bodyText || (message.bodyKey ? t(`${chatTk}.${message.bodyKey}`) : '')
 }
@@ -295,6 +333,41 @@ function HeaderMessageChatWindow({
   const chatTk = HEADER_MESSAGES_CHAT_I18N
   const isFloating = layout === HeaderMessageChatLayout.Floating
   const isMobileFullscreen = layout === HeaderMessageChatLayout.Fullscreen
+
+  // Voice call (US-06) — desktop floating layout only (Technical Notes #1: mobile/immersive
+  // start-call wiring is Backlog; incoming/answer still works everywhere via the global banner).
+  const canStartVoiceCall = isFloating && !isGroupChat && !isPendingSession
+  const { phase: callPhase, startOutgoingCall } = useCall()
+  // Prefetched as soon as this 1:1 chat window opens (Technical Notes #2), not at click time —
+  // `getUserMedia` below must be the very first call in the click handler with no prior `await`.
+  const { data: iceServers } = useIceServers({ enabled: canStartVoiceCall })
+
+  const handleStartVoiceCall = () => {
+    if (!canStartVoiceCall || callPhase !== 'idle') return
+    if (!iceServers?.length) {
+      showToast(t(`${chatTk}.callNetworkError`), 'error')
+      return
+    }
+    navigator.mediaDevices
+      .getUserMedia({ audio: true })
+      .then((stream) => {
+        void startOutgoingCall({
+          chatSessionId: sessionId,
+          peerUserProfileId: conversation.peerUserProfileId ?? '',
+          peerName: conversation.name,
+          peerAvatarUrl: conversation.peerAvatarUrl ?? null,
+          callType: CommunityCallType.Voice,
+          localStream: stream,
+          iceServers,
+        })
+      })
+      .catch((error: unknown) => {
+        logger.warn('Community call: getUserMedia failed for outgoing call', error)
+        const deviceMissing = error instanceof DOMException && error.name === 'NotFoundError'
+        showToast(t(`${chatTk}.${deviceMissing ? 'callNoDeviceFound' : 'callMicPermissionDenied'}`), 'error')
+      })
+  }
+
   const isThreadLoading = isConversationLoading || isLoading
 
   const localMessages = useMemo(
@@ -706,9 +779,10 @@ function HeaderMessageChatWindow({
             <button
               type="button"
               className="header-message-chat-icon-btn"
-              aria-label={t(`${chatTk}.callUnavailable`)}
-              title={t(`${chatTk}.callUnavailable`)}
-              disabled
+              aria-label={t(`${chatTk}.call`)}
+              title={t(`${chatTk}.call`)}
+              disabled={!canStartVoiceCall || callPhase !== 'idle'}
+              onClick={handleStartVoiceCall}
             >
               <Phone className="h-4 w-4" aria-hidden="true" />
             </button>

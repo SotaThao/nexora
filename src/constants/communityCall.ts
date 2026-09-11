@@ -35,3 +35,11 @@ export const COMMUNITY_CALL_NO_ANSWER_TIMEOUT_MS = 45_000
 
 /** How long `phase` stays `'ended'` before callState resets itself back to `'idle'`. */
 export const COMMUNITY_CALL_ENDED_RESET_DELAY_MS = 3_000
+
+/**
+ * Grace window after `RTCPeerConnection` enters `'disconnected'` before treating it as a real
+ * connection failure (US-06 AC — mirrors the backend's own grace window for `OnDisconnectedAsync`,
+ * US-03 Technical Notes #4). Not specified by an exact number in the business doc; chosen as a
+ * reasonable margin for a brief network hiccup / ICE restart to self-recover.
+ */
+export const COMMUNITY_CALL_DISCONNECT_GRACE_MS = 10_000

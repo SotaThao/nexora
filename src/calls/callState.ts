@@ -19,6 +19,7 @@
 import type { HubConnection } from '@microsoft/signalr'
 import { getCommunityChatHubConnection } from '../components/header-messages/communityChatRealtime'
 import {
+  COMMUNITY_CALL_DISCONNECT_GRACE_MS,
   COMMUNITY_CALL_ENDED_RESET_DELAY_MS,
   COMMUNITY_CALL_NO_ANSWER_TIMEOUT_MS,
   CommunityCallEndReason,
@@ -37,7 +38,7 @@ import type {
   SdpPayload,
 } from '../types/communityChat'
 import { logger } from '../utils/logger'
-import { createPeerConnection, type ManagedPeerConnection } from './webrtc'
+import { captureStatsSnapshotJson, createPeerConnection, type ManagedPeerConnection } from './webrtc'
 
 export type CallPhase =
   | 'idle'
@@ -64,6 +65,8 @@ export interface CallStateSnapshot {
   peerConnectionRef: ManagedPeerConnection | null
   /** Generated once per page load (not per call) — lets the backend pick a winner across tabs. */
   tabToken: string
+  /** Set only during the brief `'ended'` flash — drives which label `CallOverlay` shows (US-06). */
+  endedReason: CommunityCallEndReason | null
 }
 
 // Generated once per page load — used by AnswerCall so the backend can tell multiple tabs of the
@@ -86,6 +89,7 @@ const INITIAL_STATE: CallStateSnapshot = {
   error: null,
   peerConnectionRef: null,
   tabToken: TAB_TOKEN,
+  endedReason: null,
 }
 
 let state: CallStateSnapshot = INITIAL_STATE
@@ -169,6 +173,7 @@ export function initCallSignaling(): void {
 
 let noAnswerTimer: ReturnType<typeof setTimeout> | null = null
 let endedResetTimer: ReturnType<typeof setTimeout> | null = null
+let disconnectGraceTimer: ReturnType<typeof setTimeout> | null = null
 
 function clearNoAnswerTimer() {
   if (noAnswerTimer) {
@@ -184,9 +189,17 @@ function clearEndedResetTimer() {
   }
 }
 
+function clearDisconnectGraceTimer() {
+  if (disconnectGraceTimer) {
+    clearTimeout(disconnectGraceTimer)
+    disconnectGraceTimer = null
+  }
+}
+
 /** Stops local tracks + closes the peer connection. Does not touch React-visible state. */
 function cleanupResources() {
   clearNoAnswerTimer()
+  clearDisconnectGraceTimer()
   state.peerConnectionRef?.close()
   state.localStream?.getTracks().forEach((track) => track.stop())
 }
@@ -198,8 +211,8 @@ function resetToIdle(options: { error?: string | null } = {}) {
   setState({ ...INITIAL_STATE, tabToken: TAB_TOKEN, error: options.error ?? null })
 }
 
-/** Externally-driven end (peer rejected/cancelled/ended, or a detected network failure). */
-function finishCall() {
+/** A call concluded (peer action, self-hangup of a connecting/active call, timeout, or failure). */
+function finishCall(reason: CommunityCallEndReason | null = null) {
   cleanupResources()
   setState({
     phase: 'ended',
@@ -207,6 +220,7 @@ function finishCall() {
     localStream: null,
     remoteStream: null,
     isMuted: false,
+    endedReason: reason,
   })
   clearEndedResetTimer()
   endedResetTimer = setTimeout(() => {
@@ -223,13 +237,29 @@ function isForCurrentCall(callId: string): boolean {
 // Hub RPC helpers (best-effort — the local state transition never waits on these).
 // ---------------------------------------------------------------------------
 
-async function invokeEndCall(callId: string, reason: CommunityCallEndReason) {
+async function invokeEndCall(
+  callId: string,
+  reason: CommunityCallEndReason,
+  statsJson: string | null = null,
+) {
   if (!activeConnection) return
   try {
-    await activeConnection.invoke(CommunityChatHubMethod.EndCall, callId, reason, null)
+    await activeConnection.invoke(CommunityChatHubMethod.EndCall, callId, reason, statsJson)
   } catch (error) {
     logger.warn('Community call: EndCall invoke failed', error)
   }
+}
+
+/**
+ * Ends a connecting/active call: snapshots `getStats()` *before* closing the peer connection (US-06
+ * AC), flashes `phase: 'ended'` (auto-resets to idle shortly after — same for a self-hangup, a
+ * peer-driven end, or a detected network failure), then reports the result to the backend.
+ */
+async function endActiveCallWithStats(callId: string, reason: CommunityCallEndReason) {
+  const pc = state.peerConnectionRef?.pc ?? null
+  const statsJson = pc ? await captureStatsSnapshotJson(pc) : null
+  finishCall(reason)
+  await invokeEndCall(callId, reason, statsJson)
 }
 
 async function invokeCancelCall(callId: string, reason: CommunityCallEndReason) {
@@ -266,17 +296,48 @@ function handleRemoteTrack(event: RTCTrackEvent) {
   if (stream) setState({ remoteStream: stream })
 }
 
+/**
+ * Only the caller side renegotiates on ICE restart — having both peers create competing offers at
+ * once (glare) would need full perfect-negotiation handling that isn't otherwise needed here.
+ */
+async function attemptIceRestart() {
+  if (!state.isCaller || !state.peerConnectionRef || !state.callId) return
+  try {
+    state.peerConnectionRef.pc.restartIce()
+    const offer = await state.peerConnectionRef.pc.createOffer()
+    await state.peerConnectionRef.pc.setLocalDescription(offer)
+    await activeConnection?.invoke(CommunityChatHubMethod.SendSdpOffer, state.callId, offer.sdp)
+  } catch (error) {
+    logger.warn('Community call: ICE restart failed', error)
+  }
+}
+
 function handleConnectionStateChange(connectionState: RTCPeerConnectionState) {
-  if (connectionState === 'connected' && state.phase !== 'active') {
-    setState({ phase: 'active', startedAt: state.startedAt ?? new Date().toISOString() })
+  if (connectionState === 'connected') {
+    clearDisconnectGraceTimer()
+    if (state.phase !== 'active') {
+      setState({ phase: 'active', startedAt: state.startedAt ?? new Date().toISOString() })
+    }
     return
   }
-  // Only 'failed' is treated as terminal — 'disconnected' can self-recover (ICE restart/reconnect),
-  // same reasoning as the backend's OnDisconnectedAsync grace window (US-03 Technical Notes #4).
+  if (connectionState === 'disconnected' && (state.phase === 'connecting' || state.phase === 'active')) {
+    // May self-recover (brief network hiccup) — try an ICE restart right away, but only treat this
+    // as a real failure if it hasn't recovered to 'connected' by the time the grace window elapses.
+    void attemptIceRestart()
+    clearDisconnectGraceTimer()
+    disconnectGraceTimer = setTimeout(() => {
+      disconnectGraceTimer = null
+      if (state.phase !== 'connecting' && state.phase !== 'active') return
+      const callId = state.callId
+      if (callId) void endActiveCallWithStats(callId, CommunityCallEndReason.NetworkError)
+    }, COMMUNITY_CALL_DISCONNECT_GRACE_MS)
+    return
+  }
+  // 'failed' is always immediately terminal — 'disconnected' gets the grace window above instead.
   if (connectionState === 'failed' && (state.phase === 'connecting' || state.phase === 'active')) {
+    clearDisconnectGraceTimer()
     const callId = state.callId
-    finishCall()
-    if (callId) void invokeEndCall(callId, CommunityCallEndReason.NetworkError)
+    if (callId) void endActiveCallWithStats(callId, CommunityCallEndReason.NetworkError)
   }
 }
 
@@ -338,17 +399,17 @@ function handleCallAnsweredElsewhere(event: CallAnsweredElsewhereEvent) {
 
 function handleCallRejected(event: CallIdEvent) {
   if (!isForCurrentCall(event.callId)) return
-  finishCall()
+  finishCall(CommunityCallEndReason.Declined)
 }
 
 function handleCallCanceled(event: CallCanceledEvent) {
   if (!isForCurrentCall(event.callId)) return
-  finishCall()
+  finishCall(event.endReason as CommunityCallEndReason)
 }
 
 function handleCallEnded(event: CallEndedEvent) {
   if (!isForCurrentCall(event.callId)) return
-  finishCall()
+  finishCall(event.endReason as CommunityCallEndReason)
 }
 
 async function handleReceiveSdpOffer(payload: SdpPayload) {
@@ -410,7 +471,9 @@ function startNoAnswerTimer(callId: string) {
     noAnswerTimer = null
     if (state.callId !== callId || state.phase !== 'outgoing-ringing') return
     void invokeCancelCall(callId, CommunityCallEndReason.Missed)
-    resetToIdle()
+    // Flash "Missed" briefly so the caller sees the outcome instead of the overlay silently
+    // vanishing (business doc Luồng 1: "tự chuyển thành Nhỡ").
+    finishCall(CommunityCallEndReason.Missed)
   }, COMMUNITY_CALL_NO_ANSWER_TIMEOUT_MS)
 }
 
@@ -500,7 +563,10 @@ export async function rejectCall(): Promise<void> {
   resetToIdle()
 }
 
-/** Generic hangup — cancels an outgoing ring, or ends a connecting/active call. */
+/**
+ * Generic hangup — cancels an outgoing ring instantly (nothing to summarize, never connected), or
+ * ends a connecting/active call via the same stats-then-flash path as a peer-driven end/failure.
+ */
 export async function endCall(): Promise<void> {
   const callId = state.callId
   if (!callId) return
@@ -510,8 +576,7 @@ export async function endCall(): Promise<void> {
     return
   }
   if (state.phase === 'connecting' || state.phase === 'active') {
-    await invokeEndCall(callId, CommunityCallEndReason.Answered)
-    resetToIdle()
+    await endActiveCallWithStats(callId, CommunityCallEndReason.Answered)
   }
 }
 

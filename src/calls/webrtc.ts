@@ -31,6 +31,24 @@ export interface CreatePeerConnectionOptions {
   onConnectionStateChange?: (state: RTCPeerConnectionState) => void
 }
 
+/**
+ * Snapshot `pc.getStats()` as a JSON string — must be called *before* `pc.close()` (closing first
+ * yields an empty report). Used for the `EndCall(callId, reason, statsJson)` payload (US-06 AC).
+ * Best-effort: never throws, returns null on failure so ending a call never blocks on this.
+ */
+export async function captureStatsSnapshotJson(pc: RTCPeerConnection): Promise<string | null> {
+  try {
+    const report = await pc.getStats()
+    const entries: Record<string, RTCStats> = {}
+    report.forEach((stats, id) => {
+      entries[id] = stats
+    })
+    return JSON.stringify(entries)
+  } catch {
+    return null
+  }
+}
+
 export function createPeerConnection(options: CreatePeerConnectionOptions): ManagedPeerConnection {
   const { iceServers, onIceCandidate, onTrack, onConnectionStateChange } = options
   const pc = new RTCPeerConnection({ iceServers })
