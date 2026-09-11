@@ -749,15 +749,59 @@ const FIRST_CALL_SMS_TEMPLATES = {
   }
 } as const;
 
+const BUSINESS_FAQ_TEMPLATES = {
+  "visit-basics": {
+    labelKey: "businessFaqTemplateVisitLabel",
+    enText: [
+      "Q: Do you take walk-ins?\nA: Yes, but appointments get priority. We'll take walk-ins as soon as a technician is free.",
+      "Q: Is there parking?\nA: Yes. Free parking is available in the plaza lot in front of the salon.",
+      "Q: Do you have gift cards?\nA: Yes. Gift cards are available in any amount, in store only.",
+    ].join("\n\n"),
+    viText: [
+      "Q: Tiệm có nhận khách vãng lai không?\nA: Dạ có, nhưng khách hẹn trước được ưu tiên. Khách vãng lai sẽ được phục vụ khi có kỹ thuật viên trống.",
+      "Q: Có chỗ đậu xe không?\nA: Có. Bãi đậu xe miễn phí ngay trước tiệm.",
+      "Q: Tiệm có gift card không?\nA: Dạ có. Gift card mọi mệnh giá, chỉ bán tại tiệm.",
+    ].join("\n\n"),
+  },
+  "booking-policies": {
+    labelKey: "businessFaqTemplateBookingLabel",
+    enText: [
+      "Q: How do I book an appointment?\nA: You can book by phone, online, or right now on this call. We'll find the next time that works for you.",
+      "Q: What is your cancellation policy?\nA: Please cancel or reschedule at least 24 hours in advance so we can offer the time to another guest.",
+      "Q: What if I'm running late?\nA: Please call ahead. We hold appointments for 10 minutes; after that we may need to shorten or reschedule the service.",
+    ].join("\n\n"),
+    viText: [
+      "Q: Làm sao để đặt lịch?\nA: Bạn có thể đặt qua điện thoại, online, hoặc ngay trong cuộc gọi này. Chúng tôi sẽ tìm khung giờ phù hợp cho bạn.",
+      "Q: Chính sách hủy lịch như thế nào?\nA: Vui lòng hủy hoặc dời lịch ít nhất 24 giờ trước để tiệm có thể nhường giờ cho khách khác.",
+      "Q: Nếu tôi đến trễ thì sao?\nA: Vui lòng gọi báo trước. Tiệm giữ lịch 10 phút; sau đó có thể phải rút ngắn hoặc dời dịch vụ.",
+    ].join("\n\n"),
+  },
+  "services-care": {
+    labelKey: "businessFaqTemplateServicesLabel",
+    enText: [
+      "Q: How long do nail and spa services take?\nA: A classic manicure is about 30–45 minutes. Gel manicures are about 45–60 minutes. Pedicures and spa packages run 45–75 minutes depending on what you book.",
+      "Q: Do you take kids?\nA: Yes. We welcome kids 8 and older when a parent or guardian stays with them during the visit.",
+      "Q: How do you keep tools clean?\nA: All metal tools are hospital-grade sterilized after every client, and we use a fresh set of files and buffers for each visit.",
+    ].join("\n\n"),
+    viText: [
+      "Q: Làm nail và spa mất bao lâu?\nA: Manicure thường khoảng 30–45 phút. Gel khoảng 45–60 phút. Pedicure và gói spa khoảng 45–75 phút tùy dịch vụ.",
+      "Q: Tiệm có nhận trẻ em không?\nA: Có. Tiệm nhận trẻ từ 8 tuổi trở lên khi có phụ huynh ở cùng trong lúc làm dịch vụ.",
+      "Q: Dụng cụ được vệ sinh thế nào?\nA: Tất cả dụng cụ kim loại được tiệt trùng đạt chuẩn sau mỗi khách, và tiệm dùng bộ dũa/buffer mới cho mỗi lần làm.",
+    ].join("\n\n"),
+  },
+} as const;
+
 const AI_HUB_SUGGESTIONS = {
   greeting: GREETING_TEMPLATES,
   promo: PROMO_TEMPLATES,
   firstCallSms: FIRST_CALL_SMS_TEMPLATES,
+  businessFaq: BUSINESS_FAQ_TEMPLATES,
 } as const;
 
 type GreetingSuggestKey = keyof typeof AI_HUB_SUGGESTIONS.greeting;
 type PromoSuggestKey = keyof typeof AI_HUB_SUGGESTIONS.promo;
 type FirstCallSmsSuggestKey = keyof typeof AI_HUB_SUGGESTIONS.firstCallSms;
+type BusinessFaqSuggestKey = keyof typeof AI_HUB_SUGGESTIONS.businessFaq;
 
 function applySalonNameToTemplate(text: string, salonName: string) {
   const resolvedName = salonName.trim() || SALON_NAME_TEMPLATE_TOKEN;
@@ -1166,6 +1210,8 @@ export default function BookingSettingsPanel() {
     useState<PromoSuggestKey | null>(null);
   const [selectedFirstCallSmsSuggestKey, setSelectedFirstCallSmsSuggestKey] =
     useState<FirstCallSmsSuggestKey | null>(null);
+  const [selectedBusinessFaqSuggestKey, setSelectedBusinessFaqSuggestKey] =
+    useState<BusinessFaqSuggestKey | null>(null);
   const [promotion, setPromotion] = useState("");
   const [salonName, setSalonName] = useState("");
   const [salonPhone, setSalonPhone] = useState("");
@@ -2657,6 +2703,17 @@ export default function BookingSettingsPanel() {
       );
     }
 
+    // FAQ
+    if (selectedBusinessFaqSuggestKey) {
+      const template =
+        AI_HUB_SUGGESTIONS.businessFaq[selectedBusinessFaqSuggestKey];
+      const nextText =
+        resolved === MerchantVoiceUiLanguage.Vi
+          ? template.viText
+          : template.enText;
+      setBusinessFaq(nextText.slice(0, BUSINESS_FAQ_MAX_LENGTH));
+    }
+
     setStatus(
       t(`${TK}.languageSelected`, {
         language: t(`${TK}.languageLabels.${resolved}`),
@@ -2716,6 +2773,21 @@ export default function BookingSettingsPanel() {
     setSelectedFirstCallSmsSuggestKey(key);
     setStatus(
       t(`${TK}.firstCallSmsFilled`, { name: t(`${TK}.${template.labelKey}`) }),
+    );
+  };
+
+  const handleBusinessFaqSuggest = (key: BusinessFaqSuggestKey) => {
+    markConfigDirty();
+    const template = AI_HUB_SUGGESTIONS.businessFaq[key];
+    if (!template) return;
+    const nextText =
+      language === MerchantVoiceUiLanguage.Vi
+        ? template.viText
+        : template.enText;
+    setBusinessFaq(nextText.slice(0, BUSINESS_FAQ_MAX_LENGTH));
+    setSelectedBusinessFaqSuggestKey(key);
+    setStatus(
+      t(`${TK}.businessFaqFilled`, { name: t(`${TK}.${template.labelKey}`) }),
     );
   };
 
@@ -4244,11 +4316,12 @@ export default function BookingSettingsPanel() {
                 maxLength={BUSINESS_FAQ_MAX_LENGTH}
                 placeholder={t(`${TK}.businessFaqPlaceholder`)}
                 aria-describedby="settings-business-faq-count"
-                onChange={(event) =>
+                onChange={(event) => {
+                  setSelectedBusinessFaqSuggestKey(null);
                   setBusinessFaq(
                     event.target.value.slice(0, BUSINESS_FAQ_MAX_LENGTH),
-                  )
-                }
+                  );
+                }}
               />
               <div className="settings-promo-meta">
                 <div
@@ -4256,6 +4329,39 @@ export default function BookingSettingsPanel() {
                   className={`settings-promo-count ${businessFaq.length >= BUSINESS_FAQ_MAX_LENGTH ? "is-max" : ""}`}
                 >
                   <span>{businessFaq.length}</span>/{BUSINESS_FAQ_MAX_LENGTH}
+                </div>
+                <div className="settings-promo-suggest-row">
+                  <SettingsSuggestLabel />
+                  <button
+                    className={`settings-promo-suggest${selectedBusinessFaqSuggestKey === "visit-basics"
+                        ? " is-active"
+                        : ""
+                      }`}
+                    type="button"
+                    onClick={() => handleBusinessFaqSuggest("visit-basics")}
+                  >
+                    {t(`${TK}.businessFaqSuggestVisit`)}
+                  </button>
+                  <button
+                    className={`settings-promo-suggest${selectedBusinessFaqSuggestKey === "booking-policies"
+                        ? " is-active"
+                        : ""
+                      }`}
+                    type="button"
+                    onClick={() => handleBusinessFaqSuggest("booking-policies")}
+                  >
+                    {t(`${TK}.businessFaqSuggestBooking`)}
+                  </button>
+                  <button
+                    className={`settings-promo-suggest${selectedBusinessFaqSuggestKey === "services-care"
+                        ? " is-active"
+                        : ""
+                      }`}
+                    type="button"
+                    onClick={() => handleBusinessFaqSuggest("services-care")}
+                  >
+                    {t(`${TK}.businessFaqSuggestServices`)}
+                  </button>
                 </div>
               </div>
             </label>
