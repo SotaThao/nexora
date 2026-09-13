@@ -60,6 +60,8 @@ export interface CallStateSnapshot {
   localStream: MediaStream | null
   remoteStream: MediaStream | null
   isMuted: boolean
+  /** Video-call only (US-07) — local camera track disabled via `track.enabled`, no renegotiation. */
+  isCameraOff: boolean
   startedAt: string | null
   error: string | null
   peerConnectionRef: ManagedPeerConnection | null
@@ -85,6 +87,7 @@ const INITIAL_STATE: CallStateSnapshot = {
   localStream: null,
   remoteStream: null,
   isMuted: false,
+  isCameraOff: false,
   startedAt: null,
   error: null,
   peerConnectionRef: null,
@@ -220,6 +223,7 @@ function finishCall(reason: CommunityCallEndReason | null = null) {
     localStream: null,
     remoteStream: null,
     isMuted: false,
+    isCameraOff: false,
     endedReason: reason,
   })
   clearEndedResetTimer()
@@ -587,4 +591,19 @@ export function toggleMute(): void {
     track.enabled = !nextMuted
   })
   setState({ isMuted: nextMuted })
+}
+
+/**
+ * Camera on/off for video calls (US-07): flips `track.enabled` on the local video track — no track
+ * removal and no SDP renegotiation (Technical Notes #2). No-op for voice calls (no video track).
+ */
+export function toggleCamera(): void {
+  if (!state.localStream) return
+  const videoTracks = state.localStream.getVideoTracks()
+  if (videoTracks.length === 0) return
+  const nextCameraOff = !state.isCameraOff
+  videoTracks.forEach((track) => {
+    track.enabled = !nextCameraOff
+  })
+  setState({ isCameraOff: nextCameraOff })
 }

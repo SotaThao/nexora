@@ -17,6 +17,7 @@ import {
   rejectCall,
   startOutgoingCall,
   subscribeCallState,
+  toggleCamera,
   toggleMute,
 } from './callState'
 import type { AnswerCallParams, StartOutgoingCallParams } from './callState'
@@ -33,6 +34,7 @@ export function useCall() {
   const reject = useCallback(() => rejectCall(), [])
   const end = useCallback(() => endCall(), [])
   const mute = useCallback(() => toggleMute(), [])
+  const camera = useCallback(() => toggleCamera(), [])
 
   return {
     ...state,
@@ -41,6 +43,7 @@ export function useCall() {
     rejectCall: reject,
     endCall: end,
     toggleMute: mute,
+    toggleCamera: camera,
   }
 }
 

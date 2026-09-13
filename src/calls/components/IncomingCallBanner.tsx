@@ -11,14 +11,16 @@ import { useNotification } from '../../contexts/NotificationContext'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { HEADER_MESSAGES_CHAT_I18N } from '../../components/header-messages/headerMessagesConstants'
 import { getHeaderMessageContactInitials } from '../../components/header-messages/headerMessagesMappers'
+import { CommunityCallType } from '../../constants/communityCall'
 import useIceServers from '../../data/hooks/useIceServers'
 import { logger } from '../../utils/logger'
+import { buildCallMediaConstraints } from '../webrtc'
 import useCall from '../useCall'
 
 const I18N = HEADER_MESSAGES_CHAT_I18N
 
 export default function IncomingCallBanner() {
-  const { phase, peerName, peerAvatarUrl, answerCall, rejectCall } = useCall()
+  const { phase, callType, peerName, peerAvatarUrl, answerCall, rejectCall } = useCall()
   // Fetched as soon as this (always-mounted) component renders — by the time a real call rings,
   // credentials are long cached (US-06 Technical Notes #2: never await this inside a click handler).
   const { data: iceServers } = useIceServers()
@@ -41,9 +43,10 @@ export default function IncomingCallBanner() {
       return
     }
     // getUserMedia must be the very first call in this handler, no prior `await` — Safari drops
-    // gesture attribution otherwise and silently blocks the mic (US-06 AC).
+    // gesture attribution otherwise and silently blocks the mic (US-06 AC). Video calls (US-07)
+    // also request the camera so the caller receives the callee's video.
     navigator.mediaDevices
-      .getUserMedia({ audio: true })
+      .getUserMedia(buildCallMediaConstraints(callType === CommunityCallType.Video))
       .then((stream) => {
         void answerCall({ localStream: stream, iceServers })
       })

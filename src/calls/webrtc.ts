@@ -24,6 +24,15 @@ export interface ManagedPeerConnection {
   close(): void
 }
 
+/**
+ * Media constraints for a call: video calls (US-07) capture camera + mic, voice calls mic only.
+ * Centralised here so caller (chat window) and callee (incoming banner) build identical constraints;
+ * the actual `getUserMedia()` still runs inside each click handler (Safari gesture requirement).
+ */
+export function buildCallMediaConstraints(wantsVideo: boolean): MediaStreamConstraints {
+  return { audio: true, video: wantsVideo }
+}
+
 export interface CreatePeerConnectionOptions {
   iceServers: RTCIceServer[]
   onIceCandidate?: (candidate: RTCIceCandidate) => void

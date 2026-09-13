@@ -16,6 +16,7 @@ import {
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactElement } from 'react'
 import { createPortal } from 'react-dom'
 import { formatCallDuration } from '../../calls/callFormat'
+import { buildCallMediaConstraints } from '../../calls/webrtc'
 import useCall from '../../calls/useCall'
 import {
   CommunityChatType,
@@ -334,29 +335,30 @@ function HeaderMessageChatWindow({
   const isFloating = layout === HeaderMessageChatLayout.Floating
   const isMobileFullscreen = layout === HeaderMessageChatLayout.Fullscreen
 
-  // Voice call (US-06) — desktop floating layout only (Technical Notes #1: mobile/immersive
-  // start-call wiring is Backlog; incoming/answer still works everywhere via the global banner).
-  const canStartVoiceCall = isFloating && !isGroupChat && !isPendingSession
+  // Voice/video call (US-06/US-07) — desktop floating layout only (Technical Notes #1:
+  // mobile/immersive start-call wiring is Backlog; incoming/answer still works everywhere via the
+  // global banner).
+  const canStartCall = isFloating && !isGroupChat && !isPendingSession
   const { phase: callPhase, startOutgoingCall } = useCall()
   // Prefetched as soon as this 1:1 chat window opens (Technical Notes #2), not at click time —
   // `getUserMedia` below must be the very first call in the click handler with no prior `await`.
-  const { data: iceServers } = useIceServers({ enabled: canStartVoiceCall })
+  const { data: iceServers } = useIceServers({ enabled: canStartCall })
 
-  const handleStartVoiceCall = () => {
-    if (!canStartVoiceCall || callPhase !== 'idle') return
+  const startCall = (callType: CommunityCallType) => {
+    if (!canStartCall || callPhase !== 'idle') return
     if (!iceServers?.length) {
       showToast(t(`${chatTk}.callNetworkError`), 'error')
       return
     }
     navigator.mediaDevices
-      .getUserMedia({ audio: true })
+      .getUserMedia(buildCallMediaConstraints(callType === CommunityCallType.Video))
       .then((stream) => {
         void startOutgoingCall({
           chatSessionId: sessionId,
           peerUserProfileId: conversation.peerUserProfileId ?? '',
           peerName: conversation.name,
           peerAvatarUrl: conversation.peerAvatarUrl ?? null,
-          callType: CommunityCallType.Voice,
+          callType,
           localStream: stream,
           iceServers,
         })
@@ -781,17 +783,18 @@ function HeaderMessageChatWindow({
               className="header-message-chat-icon-btn"
               aria-label={t(`${chatTk}.call`)}
               title={t(`${chatTk}.call`)}
-              disabled={!canStartVoiceCall || callPhase !== 'idle'}
-              onClick={handleStartVoiceCall}
+              disabled={!canStartCall || callPhase !== 'idle'}
+              onClick={() => startCall(CommunityCallType.Voice)}
             >
               <Phone className="h-4 w-4" aria-hidden="true" />
             </button>
             <button
               type="button"
               className="header-message-chat-icon-btn"
-              aria-label={t(`${chatTk}.videoCallUnavailable`)}
-              title={t(`${chatTk}.videoCallUnavailable`)}
-              disabled
+              aria-label={t(`${chatTk}.videoCall`)}
+              title={t(`${chatTk}.videoCall`)}
+              disabled={!canStartCall || callPhase !== 'idle'}
+              onClick={() => startCall(CommunityCallType.Video)}
             >
               <Video className="h-4 w-4" aria-hidden="true" />
             </button>
