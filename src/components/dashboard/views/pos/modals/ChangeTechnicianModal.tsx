@@ -124,10 +124,7 @@ export default function ChangeTechnicianModal({
             busyLabel={t(`${K}.technicianBusy`)}
             availableLabel={t(`${K}.technicianAvailable`)}
             offShiftLabel={t(`${K}.technicianOffShift`)}
-            completedTurnsLabel={(count) => t(`${K}.technicianCompletedTurns`, {
-              count: count === undefined ? '—' : `${formatTurnCredit(count)}T`,
-            })}
-            assignedTurnsLabel={(count) => t(`${K}.technicianAssignedWeightedTurns`, {
+            assignedTurnsLabel={(count) => t(`${K}.technicianTodayWeightedTurns`, {
               turns: formatTurnCredit(count),
             })}
             nextTurnLabel={t(`${K}.technicianNextTurn`)}

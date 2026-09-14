@@ -4359,7 +4359,7 @@
             "technicianTurnsToday": "Lượt hôm nay: {{count}}",
             "technicianCompletedTurns": "Hoàn tất: {{count}}",
             "technicianAssignedTurns": "Đang được giao: {{count}}",
-            "technicianAssignedWeightedTurns": "Đã giao hôm nay: {{turns}}T",
+            "technicianTodayWeightedTurns": "Lượt hôm nay: {{turns}}T",
             "technicianTurnsUpdating": "Đang cập nhật lượt…",
             "technicianTurnsError": "Chưa cập nhật được lượt. Số lượt đang hiển thị có thể chưa mới nhất.",
             "technicianNextTurn": "Lượt kế tiếp",

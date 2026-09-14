@@ -4359,7 +4359,7 @@
             "technicianTurnsToday": "Turns today: {{count}}",
             "technicianCompletedTurns": "Completed: {{count}}",
             "technicianAssignedTurns": "Assigned: {{count}}",
-            "technicianAssignedWeightedTurns": "Assigned: {{turns}}T",
+            "technicianTodayWeightedTurns": "Today's Turns: {{turns}}T",
             "technicianTurnsUpdating": "Updating turns…",
             "technicianTurnsError": "Could not refresh turns. Shown counts may be out of date.",
             "technicianNextTurn": "Next turn",
