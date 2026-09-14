@@ -1,12 +1,13 @@
 import { useId, type Ref } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import CountryCodeSelect, { formatNationalNumber, getNationalPhonePlaceholder, parsePhone } from '../../CountryCodeSelect'
+import CountryCodeSelect, { formatNationalNumberPreservingDigits, getNationalPhonePlaceholder, parsePhone } from '../../CountryCodeSelect'
 
 export interface TechnicianContactDraft { name: string; phone: string; email: string }
-export default function TechnicianProfileFields({ draft, onChange, readOnly = false, errors = {}, onClearError, nameInputRef }: {
+export default function TechnicianProfileFields({ draft, onChange, readOnly = false, readOnlyFields = {}, errors = {}, onClearError, nameInputRef }: {
   draft: TechnicianContactDraft
   onChange: (patch: Partial<TechnicianContactDraft>) => void
   readOnly?: boolean
+  readOnlyFields?: Partial<Record<keyof TechnicianContactDraft, boolean>>
   errors?: Partial<Record<keyof TechnicianContactDraft, string>>
   onClearError?: (field: keyof TechnicianContactDraft) => void
   nameInputRef?: Ref<HTMLInputElement>
@@ -15,6 +16,9 @@ export default function TechnicianProfileFields({ draft, onChange, readOnly = fa
   const id = useId()
   const TK = 'components.dashboard.views.BookingHubView.team'
   const { name: draftName, phone: draftPhone, email: draftEmail } = draft
+  const nameReadOnly = readOnly || Boolean(readOnlyFields.name)
+  const phoneReadOnly = readOnly || Boolean(readOnlyFields.phone)
+  const emailReadOnly = readOnly || Boolean(readOnlyFields.email)
   const draftPhoneParsed = parsePhone(draftPhone)
   const formErrors = errors
   const setDraftName = (name: string) => onChange({ name })
@@ -33,7 +37,8 @@ export default function TechnicianProfileFields({ draft, onChange, readOnly = fa
           ref={nameInputRef}
           id={`${id}-name`}
           className="settings-input"
-          readOnly={readOnly}
+          disabled={nameReadOnly}
+          readOnly={nameReadOnly}
           type="text"
           value={draftName}
           aria-invalid={Boolean(formErrors.name)}
@@ -51,13 +56,13 @@ export default function TechnicianProfileFields({ draft, onChange, readOnly = fa
       </div>
       <div className="settings-field">
         <label className="settings-label" htmlFor={`${id}-phone`}>{t(`${TK}.phone`)}</label>
-        <span className="phone-input-shell">
+        <span className="phone-input-shell" data-disabled={phoneReadOnly ? 'true' : undefined}>
           <CountryCodeSelect
             value={draftPhoneParsed.countryCode}
             embedded
-            disabled={readOnly}
+            disabled={phoneReadOnly}
             onChange={(nextCode) => {
-              const formatted = formatNationalNumber(
+              const formatted = formatNationalNumberPreservingDigits(
                 draftPhoneParsed.nationalNumber,
                 nextCode,
               );
@@ -68,9 +73,10 @@ export default function TechnicianProfileFields({ draft, onChange, readOnly = fa
           <input
             id={`${id}-phone`}
             className="settings-input phone-mask-input"
-            readOnly={readOnly}
+            disabled={phoneReadOnly}
+            readOnly={phoneReadOnly}
             type="tel"
-            value={formatNationalNumber(
+            value={formatNationalNumberPreservingDigits(
               draftPhoneParsed.nationalNumber,
               draftPhoneParsed.countryCode,
             )}
@@ -81,7 +87,7 @@ export default function TechnicianProfileFields({ draft, onChange, readOnly = fa
             inputMode="numeric"
             autoComplete="tel-national"
             onChange={(event) => {
-              const formatted = formatNationalNumber(
+              const formatted = formatNationalNumberPreservingDigits(
                 event.target.value,
                 draftPhoneParsed.countryCode,
               );
@@ -104,7 +110,8 @@ export default function TechnicianProfileFields({ draft, onChange, readOnly = fa
         <label className="settings-label" htmlFor={`${id}-email`}>{t(`${TK}.email`)}</label>
         <input
           className="settings-input"
-          readOnly={readOnly}
+          disabled={emailReadOnly}
+          readOnly={emailReadOnly}
           id={`${id}-email`}
           type="email"
           value={draftEmail}

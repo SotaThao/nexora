@@ -163,10 +163,7 @@ export const normalizePhoneE164 = (value: string, fallbackDialCode: string) => {
     : matchCallingCodePrefixedDigits(digits) ??
       parsePhone(`${fallbackDialCode}${digits}`)
 
-  const nationalDigits = stripTrunkPrefixNational(parsed.nationalNumber, parsed.countryCode).slice(
-    0,
-    getE164MaxNationalDigits(parsed.countryCode),
-  )
+  const nationalDigits = stripTrunkPrefixNational(parsed.nationalNumber, parsed.countryCode)
 
   if (!nationalDigits) return ''
   return `${parsed.countryCode}${nationalDigits}`
@@ -272,6 +269,34 @@ export const formatNationalNumber = (nationalNumber, dialCode) => {
   if (!country) return digits
   const formatter = new AsYouType(country.code as import('libphonenumber-js').CountryCode)
   return formatter.input(digits)
+}
+
+/**
+ * Format a national number for display without hiding malformed trailing digits.
+ * The normal input formatter intentionally caps values at the country's E.164 limit;
+ * read-only API data must keep any overflow visible so it can be corrected at the source.
+ */
+export const formatNationalNumberPreservingDigits = (nationalNumber: string, dialCode: string) => {
+  const digits = String(nationalNumber ?? '').replace(/\D/g, '')
+  if (!digits) return ''
+
+  const maxDigits = getDisplayMaxNationalDigits(dialCode, digits)
+  const primaryDigits = digits.slice(0, maxDigits)
+  const overflowDigits = digits.slice(maxDigits)
+  const formattedPrimary = formatNationalNumber(primaryDigits, dialCode)
+  if (!overflowDigits) return formattedPrimary
+
+  const formattedOverflow = overflowDigits.match(/.{1,3}/g)?.join(PHONE_GROUP_SEP) ?? overflowDigits
+  return `${formattedPrimary}${PHONE_GROUP_SEP}${formattedOverflow}`
+}
+
+export const formatPhoneDisplayPreservingDigits = (phone: string | null | undefined): string => {
+  const raw = phone?.trim()
+  if (!raw) return ''
+
+  const parsed = parsePhone(raw)
+  const national = formatNationalNumberPreservingDigits(parsed.nationalNumber, parsed.countryCode)
+  return national ? `${parsed.countryCode} ${national}`.trim() : raw
 }
 
 /** Placeholder pattern matching `formatNationalNumber` grouping for the dial code. */

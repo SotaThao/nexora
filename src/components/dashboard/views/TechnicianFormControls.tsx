@@ -1,3 +1,4 @@
+import { CalendarDays, FileText, ListChecks, UserRound, Wallet, type LucideIcon } from 'lucide-react'
 import { TWELVE_HOUR_INPUT_LANG } from '../../../constants/timeFormat'
 import { ClockIcon } from './BookingHubIcons'
 import { openNativeDateTimePicker } from './bookingHubFormatters'
@@ -114,123 +115,32 @@ export function PeopleIcon() {
   );
 }
 
-export function PersonCardIcon() {
+function TechnicianSectionIcon({ icon: Icon }: { icon: LucideIcon }) {
   return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      width="13"
-      height="13"
-    >
-      <rect
-        x="2"
-        y="3"
-        width="12"
-        height="10"
-        rx="1.5"
-        stroke="currentColor"
-        strokeWidth="1.3"
-      />
-      <circle cx="6" cy="7" r="1.6" stroke="currentColor" strokeWidth="1.2" />
-      <path
-        d="M4 11c.4-1.2 1.3-2 2.5-2h1c1.2 0 2.1.8 2.5 2"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+    <span aria-hidden="true" className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-nexoraBrand/10 text-nexoraBrand">
+      <Icon className="h-4 w-4" strokeWidth={1.75} />
+    </span>
+  )
+}
+
+export function PersonCardIcon() {
+  return <TechnicianSectionIcon icon={UserRound} />
 }
 
 export function ServicesListIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      width="13"
-      height="13"
-    >
-      <rect
-        x="2"
-        y="3"
-        width="12"
-        height="10"
-        rx="1.5"
-        stroke="currentColor"
-        strokeWidth="1.3"
-      />
-      <path
-        d="M5 6h.01M7 6h4M5 8h.01M7 8h4M5 10h.01M7 10h4"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <TechnicianSectionIcon icon={ListChecks} />
 }
 
 export function RolePayIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      width="13"
-      height="13"
-    >
-      <rect
-        x="3"
-        y="2"
-        width="10"
-        height="12"
-        rx="2"
-        stroke="currentColor"
-        strokeWidth="1.3"
-      />
-      <path
-        d="M6 5.5h4M6 8h4M6 10.5h2"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <TechnicianSectionIcon icon={Wallet} />
+}
+
+export function TaxFilingIcon() {
+  return <TechnicianSectionIcon icon={FileText} />
 }
 
 export function CalendarWeekIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      width="13"
-      height="13"
-    >
-      <rect
-        x="2"
-        y="3"
-        width="12"
-        height="11"
-        rx="1.5"
-        stroke="currentColor"
-        strokeWidth="1.3"
-      />
-      <path
-        d="M2 6.5h12M5 1.5v2.5M11 1.5v2.5"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-      />
-      <path
-        d="M5 9h1.5M7.75 9H9.25M10.75 9h1.5M5 11.5h1.5"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <TechnicianSectionIcon icon={CalendarDays} />
 }
 
 export function TechScheduleTimeBox({

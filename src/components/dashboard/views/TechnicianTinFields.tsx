@@ -20,6 +20,7 @@ export default function TechnicianTinFields({
   const inputValue = drafts[field]
   const setInputValue = (value: string) => setDrafts((previous) => ({ ...previous, [field]: value }))
   const value = field === 'ssn' ? ssn : ein
+  const isTypeDisabled = disabled || Boolean(ssn || ein)
   const label = t(`components.dashboard.views.pos.PosStaffProfileView.${field}FullLabel`)
 
   useEffect(() => {
@@ -27,8 +28,8 @@ export default function TechnicianTinFields({
   }, [field, inputValue, value, onDraftChange])
 
   return (
-    <div className="flex flex-wrap items-end gap-3">
-      <fieldset className="min-w-0" disabled={disabled}>
+    <div className="grid min-w-0 grid-cols-1 items-end gap-3 sm:grid-cols-[auto_minmax(0,1fr)]">
+      <fieldset className="min-w-0" disabled={isTypeDisabled}>
         <legend className="settings-label mb-2">
           {t('components.dashboard.views.pos.PosStaffProfileView.tinTypeLabel')}
         </legend>
@@ -36,7 +37,7 @@ export default function TechnicianTinFields({
           {(['ssn', 'ein'] as const).map((type) => (
             <label
               key={type}
-              className={`inline-flex h-10 w-auto shrink-0 cursor-pointer items-center gap-2 rounded-lg border px-3 ${field === type ? 'border-nexoraBrand bg-nexoraBrand/5 ring-1 ring-nexoraBrand' : 'border-nexoraBorder'}`}
+              className={`inline-flex h-[42px] w-auto shrink-0 items-center gap-2 rounded-lg border px-3 ${isTypeDisabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${field === type ? 'border-nexoraBrand bg-nexoraBrand/5 ring-1 ring-nexoraBrand' : 'border-nexoraBorder'}`}
             >
               <input
                 type="radio"
@@ -55,10 +56,10 @@ export default function TechnicianTinFields({
           ))}
         </div>
       </fieldset>
-      <div className="w-full min-w-0 sm:w-64">
+      <div className="min-w-0">
       <label className="settings-label mb-2 block" htmlFor={`staff-tin-${staffKey}`}>{label}</label>
       {value ? (
-        <div className="font-mono text-sm text-nexoraText">{value}</div>
+        <div className="flex min-h-[42px] items-center font-mono text-sm text-nexoraText">{value}</div>
       ) : (
         <div className="flex min-h-10 items-center gap-2">
           <input

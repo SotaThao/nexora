@@ -4,7 +4,8 @@ import { TechnicianDialogHeader, TechnicianDialogActions } from '../../Technicia
 // (shared with TaxIQ per CLAUDE.md's "Module Independence & Shared Data" principle),
 // Role/Pay/Tips, Service Assignment, and Weekly Schedule.
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { PersonCardIcon, ServicesListIcon, RolePayIcon, CalendarWeekIcon } from '../../TechnicianFormControls'
+import { ChevronDown, Send } from 'lucide-react'
+import { PersonCardIcon, ServicesListIcon, RolePayIcon, CalendarWeekIcon, TaxFilingIcon } from '../../TechnicianFormControls'
 import TechnicianProfileFields from '../../TechnicianProfileFields'
 import TechnicianPayFields from '../../TechnicianPayFields'
 import TechnicianWeeklySchedule from '../../TechnicianWeeklySchedule'
@@ -28,16 +29,20 @@ import {
   useUpdateStaffWeeklySchedule,
 } from '../../../../../data/hooks/usePosStaffProfile'
 import { useSetStaffTin } from '../../../../../data/hooks/useTaxiqOwnerPayouts'
+import { useOwnerTaxYearByBusiness } from '../../../../../data/hooks/useTaxiqOwnerTaxYear'
 import '../../booking-hub.css'
 import TechnicianServiceSelector from '../../TechnicianServiceSelector'
 import { useUpdateLocalStaff } from '../../../../../data/hooks/useLocalStaff'
+import { useSetMerchantStaffNickname } from '../../../../../data/hooks/useMerchantStaff'
 import { splitFullName } from '../../../../../utils/staffName'
 import { isValidPhoneE164, normalizePhoneE164, parsePhone } from '../../../../CountryCodeSelect'
 import { SkeletonList } from '../../../../ui/skeleton'
 import type { WeeklyScheduleEditorDay } from '../WeeklyScheduleEditor'
+import StaffW4InviteModal from '../../taxiq/modals/StaffW4InviteModal'
 
 const PAY_STRUCTURE_TYPES = ['Commission', 'WeeklySalary', 'AgreedAmount'] as const
 type PayStructureType = (typeof PAY_STRUCTURE_TYPES)[number]
+const SHOW_LOCAL_TAX_INVITE = false
 
 // Booth Renter is a valid TaxIQ contract type but is deliberately not offered here (ticket AC).
 const POS_CONTRACT_TYPES = ['W2', 'C1099'] as const
@@ -59,6 +64,7 @@ const fromApiScheduleTime = (hhmmss?: string | null): string => (hhmmss ? hhmmss
 
 
 export default function PosStaffProfileDetailModal({
+  businessId,
   linkId,
   staffLabel,
   staffAvatar,
@@ -67,6 +73,7 @@ export default function PosStaffProfileDetailModal({
   staffInfo,
   onClose,
 }: {
+  businessId?: string
   linkId: string
   staffLabel: string
   staffAvatar?: string | null
@@ -74,6 +81,7 @@ export default function PosStaffProfileDetailModal({
   staffContact?: string | null
   staffInfo?: {
     staffProfileId?: string | null
+    staffCode?: string | null
     isLocalStaff?: boolean
     fullName: string
     displayName: string | null
@@ -89,11 +97,14 @@ export default function PosStaffProfileDetailModal({
   const { showToast } = useNotification()
 
   const updateLocalStaff = useUpdateLocalStaff()
+  const setStaffNickname = useSetMerchantStaffNickname()
   const [draftName, setDraftName] = useState(staffInfo?.displayName || staffInfo?.fullName || staffLabel)
   const [draftPhone, setDraftPhone] = useState(staffInfo?.phone || '')
   const [draftEmail, setDraftEmail] = useState(staffInfo?.email || '')
   const contactHydrated = useRef(Boolean(staffInfo))
-  const canEditContact = Boolean(staffInfo?.isLocalStaff && staffInfo.staffProfileId)
+  const canEditLocalContact = Boolean(staffInfo?.isLocalStaff && staffInfo.staffProfileId)
+  const canEditLinkedNickname = staffInfo?.isLocalStaff === false
+  const canEditName = canEditLocalContact || canEditLinkedNickname
   const parsedPhone = parsePhone(draftPhone)
   useEffect(() => {
     if (!staffInfo || contactHydrated.current) return
@@ -122,6 +133,14 @@ export default function PosStaffProfileDetailModal({
   const saveAssignments = useSaveStaffServiceAssignments()
 
   const profile = profileQuery.data
+  const isLocalStaff = profile != null && profile.staffUserId == null
+  const currentTaxYearQuery = useOwnerTaxYearByBusiness(
+    isLocalStaff && SHOW_LOCAL_TAX_INVITE ? businessId : undefined,
+    new Date().getFullYear(),
+  )
+  const currentOwnerTaxYear = currentTaxYearQuery.data?.items?.[0]
+  const hasSavedLocalEmail = Boolean(staffInfo?.email?.trim())
+  const [isTaxInviteOpen, setIsTaxInviteOpen] = useState(false)
   const categories = categoriesQuery.data ?? []
   const services = servicesQuery.data ?? []
   const assignments = assignmentsQuery.data
@@ -208,15 +227,15 @@ export default function PosStaffProfileDetailModal({
 
   const handleSaveAll = async () => {
     if (!posRoleId || savingRef.current) return
-    if (canEditContact && !draftName.trim()) {
+    if (canEditName && !draftName.trim()) {
       showToast(t('components.dashboard.views.BookingHubView.team.technicianNameRequired'), 'error')
       return
     }
-    if (canEditContact && draftEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draftEmail.trim())) {
+    if (canEditLocalContact && draftEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draftEmail.trim())) {
       showToast(t('components.dashboard.views.BookingHubView.team.invalidEmail'), 'error')
       return
     }
-    if (canEditContact && parsedPhone.nationalNumber.replace(/\D/g, '') && !isValidPhoneE164(draftPhone, parsedPhone.countryCode)) {
+    if (canEditLocalContact && parsedPhone.nationalNumber.replace(/\D/g, '') && !isValidPhoneE164(draftPhone, parsedPhone.countryCode)) {
       showToast(t('setup.errors.staff_phone_invalid'), 'error')
       return
     }
@@ -246,7 +265,8 @@ export default function PosStaffProfileDetailModal({
     savingRef.current = true
     setIsSavingProfile(true)
     try {
-      if (canEditContact && staffInfo && (draftName !== (staffInfo.displayName || staffInfo.fullName) || draftPhone !== (staffInfo.phone || '') || draftEmail !== (staffInfo.email || ''))) {
+      const currentDisplayName = staffInfo?.displayName || staffInfo?.fullName || ''
+      if (canEditLocalContact && staffInfo && (draftName !== currentDisplayName || draftPhone !== (staffInfo.phone || '') || draftEmail !== (staffInfo.email || ''))) {
         await updateLocalStaff.mutateAsync({
           staffProfileId: staffInfo.staffProfileId!,
           params: {
@@ -258,6 +278,13 @@ export default function PosStaffProfileDetailModal({
             bio: staffInfo.bio ?? null,
             photoUrl: staffInfo.avatar,
           },
+        })
+      }
+      if (canEditLinkedNickname && staffInfo && draftName !== currentDisplayName) {
+        await setStaffNickname.mutateAsync({
+          staffLinkId: linkId,
+          staffCode: staffInfo.staffCode || '',
+          nickname: draftName.trim(),
         })
       }
       await saveProfile.mutateAsync({
@@ -346,21 +373,68 @@ export default function PosStaffProfileDetailModal({
               <SkeletonList count={3} lines={2} />
             ) : profile ? (
               <>
-                <div className="tech-modal-section">
+                <div className="tech-modal-section tech-pos-profile-section">
                   <h3 className="tech-modal-section-title">
                     <PersonCardIcon />
                     {t('components.dashboard.views.BookingHubView.team.profileDetails')}
                   </h3>
                   <TechnicianProfileFields
                     draft={{ name: draftName, phone: draftPhone, email: draftEmail }}
-                    readOnly={!canEditContact}
+                    readOnlyFields={{
+                      name: !canEditName,
+                      phone: !canEditLocalContact,
+                      email: !canEditLocalContact,
+                    }}
                     onChange={(patch) => {
                       if (patch.name !== undefined) setDraftName(patch.name)
                       if (patch.phone !== undefined) setDraftPhone(patch.phone)
                       if (patch.email !== undefined) setDraftEmail(patch.email)
                     }}
                   />
-                  {!canEditContact && <p className="mt-2 text-xs text-nexoraMuted">{t('components.dashboard.views.pos.PosStaffProfileView.accountContactManagedByStaff')}</p>}
+                  {!canEditLocalContact && (
+                    <p className="mt-2 rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3 py-2 text-xs leading-relaxed text-nexoraMuted" role="note">
+                      {t('components.dashboard.views.pos.PosStaffProfileView.accountContactManagedByStaff')}
+                    </p>
+                  )}
+                  {hasSavedProfile && (
+                    <div className="mt-2 flex flex-wrap items-end gap-x-8 gap-y-3">
+                      <div>
+                        <span id="pos-staff-status-label" className="settings-label">
+                          {t('components.dashboard.views.pos.PosStaffProfileView.statusLabel')}
+                        </span>
+                        <div
+                          role="group"
+                          aria-labelledby="pos-staff-status-label"
+                          className="mt-1.5 grid w-fit max-w-full grid-cols-3 gap-1 rounded-xl border border-nexoraBorder bg-nexoraCanvas p-1"
+                        >
+                          {POS_STAFF_STATUSES.map((option) => (
+                            <button
+                              key={option}
+                              type="button"
+                              aria-pressed={status === option}
+                              onClick={() => setStatus(option)}
+                              disabled={setStaffStatus.isPending}
+                              className={`min-h-9 rounded-lg px-4 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+                                status === option
+                                  ? 'bg-nexoraBrand text-white shadow-sm'
+                                  : 'text-nexoraMuted hover:bg-white hover:text-nexoraText'
+                              }`}
+                            >
+                              {t(`components.dashboard.views.pos.PosStaffProfileView.staffStatus.${option}`)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="settings-label">
+                          {t('components.dashboard.views.pos.PosStaffProfileView.turnsTodayLabel')}
+                        </span>
+                        <div className="mt-1.5 min-h-9 content-center text-sm font-bold text-nexoraText">
+                          {`${formatTurnCredit(profile.weightedTurnsToday)}T`}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="tech-modal-section tech-pos-pay-section">
                   <h3 className="tech-modal-section-title">
@@ -382,51 +456,50 @@ export default function PosStaffProfileDetailModal({
                       if (patch.tipsEnabled !== undefined) setTipsEnabled(patch.tipsEnabled)
                     }}
                   />
-                  {hasSavedProfile && (
-                    <div className="flex flex-wrap items-start gap-x-8 gap-y-3">
-                      <div>
-                      <span className="settings-label">
-                        {t('components.dashboard.views.pos.PosStaffProfileView.statusLabel')}
-                      </span>
-                      <div className="mt-1 flex w-fit overflow-hidden rounded-lg border border-nexoraBorder">
-                        {POS_STAFF_STATUSES.map((option) => (
-                          <button
-                            key={option}
-                            type="button"
-                            onClick={() => setStatus(option)}
-                            disabled={setStaffStatus.isPending}
-                            className={`px-3 py-1.5 text-xs font-semibold transition disabled:opacity-60 ${
-                              status === option
-                                ? 'bg-nexoraBrand text-white'
-                                : 'bg-white text-nexoraText hover:bg-nexoraCanvas'
-                            }`}
-                          >
-                            {t(`components.dashboard.views.pos.PosStaffProfileView.staffStatus.${option}`)}
-                          </button>
-                        ))}
-                      </div>
-                      </div>
-                      <div>
-                        <span className="settings-label">
-                          {t('components.dashboard.views.pos.PosStaffProfileView.turnsTodayLabel')}
-                        </span>
-                        <div className="mt-1 text-sm font-bold text-nexoraText">
-                          {`${formatTurnCredit(profile.weightedTurnsToday)}T`}
-                        </div>
-                      </div>
-                    </div>
-                  )}
+
 
 
                 </div>
 
-                {profile.staffUserId != null && (
                 <div className="tech-modal-section">
                   <h3 className="tech-modal-section-title">
-                    <PersonCardIcon />
+                    <TaxFilingIcon />
                     {t('components.dashboard.views.pos.PosStaffProfileView.taxFilingTitle')}
                   </h3>
-
+                  {profile.staffUserId == null ? (
+                    <div className="space-y-3">
+                      <p className="text-xs leading-relaxed text-nexoraMuted">
+                        {t('components.dashboard.views.pos.PosStaffProfileView.taxFilingSecureInvitationRequired')}
+                      </p>
+                      {SHOW_LOCAL_TAX_INVITE ? (
+                        <>
+                          <p className="text-xs leading-relaxed text-nexoraMuted">
+                            {t('components.dashboard.views.pos.PosStaffProfileView.taxFilingAccountRequired')}
+                          </p>
+                          <button
+                            type="button"
+                            disabled={!currentOwnerTaxYear || !hasSavedLocalEmail || currentTaxYearQuery.isLoading}
+                            aria-describedby={!hasSavedLocalEmail ? 'pos-tax-invite-email-required' : !currentOwnerTaxYear && !currentTaxYearQuery.isLoading ? 'pos-tax-invite-year-required' : undefined}
+                            onClick={() => setIsTaxInviteOpen(true)}
+                            className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-nexoraBrandDark disabled:cursor-not-allowed disabled:bg-nexoraCanvas disabled:text-nexoraMuted"
+                          >
+                            <Send aria-hidden="true" className="h-4 w-4" />
+                            {t('taxiq.w4Invite.form.inviteButton')}
+                          </button>
+                          {!hasSavedLocalEmail ? (
+                            <p id="pos-tax-invite-email-required" className="text-xs text-nexoraMuted">
+                              {t('components.dashboard.views.pos.PosStaffProfileView.taxInviteEmailRequired')}
+                            </p>
+                          ) : !currentOwnerTaxYear && !currentTaxYearQuery.isLoading ? (
+                            <p id="pos-tax-invite-year-required" className="text-xs text-nexoraMuted">
+                              {t('components.dashboard.views.pos.PosStaffProfileView.taxInviteTaxYearRequired')}
+                            </p>
+                          ) : null}
+                        </>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
                       <TechnicianTinFields
                         key={profile.staffUserId}
                         ssn={profile.ssn}
@@ -436,12 +509,13 @@ export default function PosStaffProfileDetailModal({
                         onDraftChange={setTaxDraft}
                       />
 
-                      <div className="flex flex-wrap items-end gap-2">
-                        <div>
-                          <label className="settings-label">
+                      <div className="min-w-0">
+                          <label className="settings-label mb-2 block" htmlFor="pos-staff-contract-type">
                             {t('components.dashboard.views.pos.PosStaffProfileView.contractTypeLabel')}
                           </label>
+                          <div className="relative">
                           <select
+                            id="pos-staff-contract-type"
                             value={contractType}
                             disabled={!profile.taxYearAvailable || isSavingProfile}
                             aria-describedby={!profile.taxYearAvailable ? 'pos-contract-unavailable' : undefined}
@@ -449,7 +523,7 @@ export default function PosStaffProfileDetailModal({
                               setContractType(e.target.value as PosContractType)
                               setContractTypeDirty(true)
                             }}
-                            className="mt-1 block rounded-lg border border-nexoraBorder px-2 py-1.5 text-xs font-semibold disabled:opacity-60"
+                            className="block h-[42px] w-full appearance-none rounded-lg border border-nexoraBorder bg-white pl-3 pr-9 text-sm font-semibold text-nexoraText focus:border-nexoraBrand focus:outline-none focus:ring-2 focus:ring-nexoraBrand/20 disabled:cursor-not-allowed disabled:bg-nexoraCanvas disabled:opacity-60"
                           >
                             {POS_CONTRACT_TYPES.map((type) => (
                               <option key={type} value={type}>
@@ -457,15 +531,17 @@ export default function PosStaffProfileDetailModal({
                               </option>
                             ))}
                           </select>
-                        </div>
+                          <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nexoraMuted" />
+                          </div>
                         {!profile.taxYearAvailable && (
-                          <p id="pos-contract-unavailable" className="pb-1 text-xs text-nexoraMuted">
+                          <p id="pos-contract-unavailable" className="mt-2 text-xs text-nexoraMuted">
                             {t('components.dashboard.views.pos.PosStaffProfileView.contractTypeUnavailableNotice')}
                           </p>
                         )}
                       </div>
+                    </div>
+                  )}
                 </div>
-                )}
 
                 <div className="tech-modal-section tech-services-section">
                   <h3 className="tech-modal-section-title">
@@ -518,6 +594,15 @@ export default function PosStaffProfileDetailModal({
           />
         </div>
       </div>
+      {SHOW_LOCAL_TAX_INVITE && currentOwnerTaxYear ? (
+        <StaffW4InviteModal
+          open={isTaxInviteOpen}
+          onClose={() => setIsTaxInviteOpen(false)}
+          ownerTaxYearId={currentOwnerTaxYear.id}
+          businessStaffLinkId={linkId}
+          staffDisplayName={draftName.trim() || staffLabel}
+        />
+      ) : null}
     </div>
   )
 }
