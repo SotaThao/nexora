@@ -499,6 +499,62 @@ export function addWorkOrderCustomService(
   ]
 }
 
+/** Custom lines and flagged catalog services wait for last-4; unflagged catalog edits persist immediately. */
+export function workOrderLineRequiresCustomerApproval(
+  line: Pick<WorkOrderEditableLine, 'posServiceId' | 'isRequiredApproval'>,
+): boolean {
+  return !line.posServiceId || Boolean(line.isRequiredApproval)
+}
+
+/**
+ * A saved line is mid-swap or mid-remove pending last-4. Persisting the rest of the basket
+ * would delete that row before the customer has approved the change.
+ */
+export function workOrderHasBlockingApprovalEdits(lines: WorkOrderEditableLine[]): boolean {
+  return lines.some((line) => (
+    Boolean(line.id)
+    && (line.pendingRemoval || line.approval === WORK_ORDER_SERVICE_APPROVAL.pending)
+  ))
+}
+
+export function toDirectSaveWorkOrderServiceLinesPayload(
+  lines: WorkOrderEditableLine[],
+): SaveStaffWorkOrderServiceLinePayload[] | null {
+  if (workOrderHasBlockingApprovalEdits(lines)) return null
+  return toSaveWorkOrderServiceLinesPayload(
+    lines.filter((line) => line.approval !== WORK_ORDER_SERVICE_APPROVAL.pending),
+  )
+}
+
+export function workOrderServiceLinePayloadsEqual(
+  left: SaveStaffWorkOrderServiceLinePayload[],
+  right: SaveStaffWorkOrderServiceLinePayload[],
+): boolean {
+  if (left.length !== right.length) return false
+  return left.every((line, index) => {
+    const other = right[index]
+    if (!other) return false
+    return line.id === other.id
+      && line.posServiceId === other.posServiceId
+      && line.customServiceName === other.customServiceName
+      && line.price === other.price
+      && line.durationMinutes === other.durationMinutes
+  })
+}
+
+/** After an auto-save, keep unsaved required adds that were never part of that request. */
+export function retainPendingLocalWorkOrderLines(
+  savedItems: WorkOrderItem[],
+  current: WorkOrderEditableLine[],
+): WorkOrderEditableLine[] {
+  return [
+    ...toWorkOrderEditableLines(savedItems),
+    ...current.filter(
+      (line) => !line.id && line.approval === WORK_ORDER_SERVICE_APPROVAL.pending,
+    ),
+  ]
+}
+
 export function removeWorkOrderServiceLine(
   lines: WorkOrderEditableLine[],
   key: string,
@@ -508,7 +564,10 @@ export function removeWorkOrderServiceLine(
     // A line that was never saved is only a local add — dropping it undoes that add.
     if (!line.id) return []
     if (line.pendingRemoval) return [line]
-    return [{ ...line, pendingRemoval: true }]
+    if (workOrderLineRequiresCustomerApproval(line)) {
+      return [{ ...line, pendingRemoval: true }]
+    }
+    return []
   })
 }
 
