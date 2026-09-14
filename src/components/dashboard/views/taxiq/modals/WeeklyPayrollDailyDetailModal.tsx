@@ -24,7 +24,7 @@ export default function WeeklyPayrollDailyDetailModal({ businessStaffLinkId, dis
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
-      <div className="nexora-modal-card max-w-2xl">
+      <div className="nexora-modal-card max-w-3xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-extrabold text-nexoraText">{t('taxiq.weeklyPayroll.dailyDetailModal.title', { name: displayName })}</h2>
           <IconButton label={t('common.cancel')} onClick={onClose}>
@@ -37,7 +37,7 @@ export default function WeeklyPayrollDailyDetailModal({ businessStaffLinkId, dis
         ) : (
           <div className="flex-1 space-y-3 overflow-y-auto">
             <div className="overflow-x-auto rounded-xl border border-nexoraBorder">
-              <table className="w-full min-w-[560px] text-left text-xs">
+              <table className="w-full min-w-[680px] text-left text-xs">
                 <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase text-nexoraMuted">
                   <tr>
                     <th className="px-3 py-2">{t('taxiq.weeklyPayroll.dailyDetailModal.columns.date')}</th>
@@ -46,6 +46,7 @@ export default function WeeklyPayrollDailyDetailModal({ businessStaffLinkId, dis
                     <th className="px-3 py-2">{t('taxiq.weeklyPayroll.dailyDetailModal.columns.sales')}</th>
                     <th className="px-3 py-2">{t('taxiq.weeklyPayroll.dailyDetailModal.columns.tips')}</th>
                     <th className="px-3 py-2">{t('taxiq.weeklyPayroll.dailyDetailModal.columns.discountBorne')}</th>
+                    <th className="px-3 py-2" title={t('taxiq.weeklyPayroll.supplyFeeHint')}>{t('taxiq.weeklyPayroll.dailyDetailModal.columns.supplyFeeBorne')}</th>
                     <th className="px-3 py-2">{t('taxiq.weeklyPayroll.dailyDetailModal.columns.estimatedPay')}</th>
                   </tr>
                 </thead>
@@ -76,6 +77,9 @@ export default function WeeklyPayrollDailyDetailModal({ businessStaffLinkId, dis
                           '—'
                         )}
                       </td>
+                      <td className="px-3 py-2 tabular-nums text-nexoraText">
+                        {day.supplyFeeBorne > 0 ? <span className="text-nexoraDanger">−{formatCurrency(day.supplyFeeBorne)}</span> : formatCurrency(0)}
+                      </td>
                       <td className="px-3 py-2 text-nexoraText">~{formatCurrency(day.estimatedPay)}</td>
                     </tr>
                   ))}
@@ -87,6 +91,9 @@ export default function WeeklyPayrollDailyDetailModal({ businessStaffLinkId, dis
                       <td className="px-3 py-2 text-nexoraText">{formatCurrency(data.totalTips)}</td>
                       <td className="px-3 py-2 text-nexoraText">
                         {data.totalDiscountBorne > 0 ? `-${formatCurrency(data.totalDiscountBorne)}` : '—'}
+                      </td>
+                      <td className="px-3 py-2 tabular-nums text-nexoraText">
+                        {data.totalSupplyFeeBorne > 0 ? `−${formatCurrency(data.totalSupplyFeeBorne)}` : formatCurrency(0)}
                       </td>
                       <td className="px-3 py-2 text-nexoraText">{formatCurrency(data.totalEstimatedPay)}</td>
                     </tr>

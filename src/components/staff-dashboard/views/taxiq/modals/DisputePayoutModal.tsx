@@ -79,7 +79,7 @@ export default function DisputePayoutModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
       <div className="nexora-modal-card max-w-lg">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-nexoraText">{t('taxiq.staffPayoutConfirmation.dispute.modalTitle')}</h2>
+          <h2 className="text-nexoraText text-sm font-semibold leading-snug">{t('taxiq.staffPayoutConfirmation.dispute.modalTitle')}</h2>
           <IconButton label={t('common.cancel')} onClick={handleClose}>
             <X className="h-4 w-4" />
           </IconButton>
@@ -87,10 +87,10 @@ export default function DisputePayoutModal({
 
         <div className="flex-1 space-y-3 overflow-y-auto">
           <div className="nexora-card p-3">
-            <div className="text-[10px] font-extrabold uppercase tracking-wider text-nexoraMuted">
+            <div className="text-xs font-extrabold uppercase tracking-wider text-nexoraMuted">
               {t('taxiq.staffPayoutConfirmation.dispute.ownerEnteredLabel')}
             </div>
-            <div className="mt-1 grid grid-cols-1 gap-x-3 gap-y-1 text-[11px] text-nexoraMuted sm:grid-cols-2">
+            <div className="mt-1 grid grid-cols-1 gap-x-3 gap-y-1 text-xs text-nexoraMuted sm:grid-cols-2">
               <div>{t('taxiq.staffPayoutConfirmation.columns.servicePayout')}: {formatCurrency(payout.servicePayout)}</div>
               <div>{t('taxiq.staffPayoutConfirmation.columns.tip')}: {formatCurrency(payout.totalTip)}</div>
               <div>{t('taxiq.staffPayoutConfirmation.columns.bonus')}: {formatCurrency(payout.bonus)}</div>
@@ -131,14 +131,14 @@ export default function DisputePayoutModal({
         </div>
 
         <div className="mt-6 flex justify-end gap-2">
-          <button type="button" onClick={handleClose} className="rounded-lg px-4 py-2 text-xs font-bold text-nexoraMuted">
+          <button type="button" onClick={handleClose} className="rounded-lg px-4 py-2 text-xs font-semibold text-nexoraMuted">
             {t('common.cancel')}
           </button>
           <button
             type="button"
             onClick={handleSubmit}
             disabled={!canSubmit || disputePayout.isPending}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-semibold text-white disabled:opacity-60"
           >
             {disputePayout.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
             {t('taxiq.staffPayoutConfirmation.dispute.submitButton')}

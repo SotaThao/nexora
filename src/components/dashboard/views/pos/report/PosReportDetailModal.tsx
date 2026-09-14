@@ -2,21 +2,19 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Mail, Printer, X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
-import { PosReportMode } from '../../../../../constants/posReportMode'
-import { getPosCheckoutPaymentMethodLabel } from '../../../../../constants/posCheckoutPaymentMethod'
-import { usePosReportDetail } from '../../../../../data/hooks/usePosReport'
+import { usePosReportDetail, useSendPosStaffReportEmail } from '../../../../../data/hooks/usePosReport'
 import type {
   PosReportDetailParams,
   PosStaffReportDetail,
 } from '../../../../../data/repositories/posReport'
 import { SkeletonList } from '../../../../ui/skeleton'
-import { formatCurrency } from '../../../utils'
 import { formatDayLabel } from './posReportPeriod'
 
+import { buildTechnicianReportReceipt } from './buildTechnicianReportReceipt'
+import PosTechnicianReportPrintDocument from '../receipt/PosTechnicianReportPrintDocument'
+
 const TK = 'components.dashboard.views.pos.report.detail'
-// There is no POS-report email endpoint yet. Keep the prepared UI behind one switch so it can be
-// restored when the backend send API is available without exposing a non-functional action now.
-export const POS_REPORT_EMAIL_ENABLED: boolean = false
+const EMAIL_PATTERN = /^\S+@\S+\.\S+$/
 
 type Props = {
   params: PosReportDetailParams
@@ -33,6 +31,7 @@ export default function PosReportDetailModal({
 }: Props) {
   const { t } = useTranslation()
   const detailQuery = usePosReportDetail(params, { enabled: true })
+  const sendEmail = useSendPosStaffReportEmail()
   const [recipientEmail, setRecipientEmail] = useState('')
   const [showEmailForm, setShowEmailForm] = useState(false)
   const printCleanupRef = useRef<(() => void) | null>(null)
@@ -44,6 +43,8 @@ export default function PosReportDetailModal({
 
   useEffect(() => {
     setShowEmailForm(false)
+    sendEmail.reset()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.posStaffProfileId, params.periodStart, params.periodEnd])
 
   useEffect(() => () => printCleanupRef.current?.(), [])
@@ -55,13 +56,18 @@ export default function PosReportDetailModal({
     return start === end ? start : `${start} — ${end}`
   }, [detail])
 
-  const mailtoHref = useMemo(() => {
-    const email = recipientEmail.trim()
-    if (!detail || !/^\S+@\S+\.\S+$/.test(email)) return ''
-    const subject = `POS report - ${displayName} - ${periodLabel}`
-    const body = buildEmailBody(detail, displayName, periodLabel)
-    return `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-  }, [detail, displayName, periodLabel, recipientEmail])
+  const isEmailValid = EMAIL_PATTERN.test(recipientEmail.trim())
+
+  const handleSendEmail = () => {
+    if (!isEmailValid || !detail || sendEmail.isPending) return
+    sendEmail.mutate({
+      businessId: params.businessId,
+      posStaffProfileId: params.posStaffProfileId,
+      mode: params.mode,
+      periodKey: params.periodKey,
+      toEmails: [recipientEmail.trim()],
+    })
+  }
 
   const handlePrint = () => {
     if (!detail || typeof window === 'undefined' || typeof window.print !== 'function') return
@@ -116,19 +122,7 @@ export default function PosReportDetailModal({
               {t(`${TK}.loadError`)}
             </div>
           ) : (
-            <article className="pos-report-detail-print mx-auto w-[80mm] max-w-full space-y-3 bg-white p-6 font-sans text-xs leading-relaxed text-black shadow-nexora-card" data-testid="pos-report-detail-print">
-              <div className="pos-report-detail-header border-b border-dashed border-slate-400 pb-3 text-center">
-                <h3 className="break-words text-base font-black uppercase tracking-wide">{displayName}</h3>
-                <p className="mt-1 text-xs font-semibold">
-                  {params.mode === PosReportMode.Daily ? t(`${TK}.dailyTitle`) : t(`${TK}.weeklyTitle`)}
-                </p>
-                {periodLabel ? <p className="mt-0.5 text-xs font-bold">{periodLabel}</p> : null}
-              </div>
-              {params.mode === PosReportMode.Daily
-                ? <DailyDetail detail={detail} />
-                : <WeeklyDetail detail={detail} />}
-              <DetailTotals detail={detail} />
-            </article>
+            <PosReportDetailDocument detail={detail} displayName={displayName} />
           )}
         </div>
 
@@ -145,196 +139,96 @@ export default function PosReportDetailModal({
             </button>
             <button
               type="button"
-              onClick={() => setShowEmailForm((visible) => !visible)}
-              disabled={!POS_REPORT_EMAIL_ENABLED || !detail}
+              onClick={() => setShowEmailForm(true)}
+              disabled={!detail}
               className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-3 text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Mail className="h-4 w-4" aria-hidden="true" />
               {t(`${TK}.email`)}
             </button>
           </div>
-          {POS_REPORT_EMAIL_ENABLED && showEmailForm ? (
-            <div className="mt-3 flex flex-col gap-2">
-              <label className="min-w-0 flex-1">
-                <span className="mb-1 block text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
-                  {t(`${TK}.emailLabel`)}
-                </span>
-                <small className="mb-1.5 block text-[10px] font-semibold text-amber-600">
-                  {t(`${TK}.emailComingSoon`)}
-                </small>
+        </div>
+      </div>
+
+      {showEmailForm ? (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4"
+          onMouseDown={(event) => { if (event.target === event.currentTarget) setShowEmailForm(false) }}
+        >
+          <section
+            className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pos-report-email-dialog-title"
+          >
+            <header className="flex items-start justify-between gap-3 border-b border-nexoraBorder p-5">
+              <div>
+                <h3 id="pos-report-email-dialog-title" className="text-lg font-extrabold text-nexoraText">
+                  {t(`${TK}.emailDialogTitle`)}
+                </h3>
+                <p className="mt-1 text-xs font-semibold text-nexoraMuted">{displayName}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEmailForm(false)}
+                aria-label={t(`${TK}.emailDialogClose`)}
+                className="rounded-lg p-2 text-nexoraMuted hover:bg-nexoraCanvas"
+              >
+                <X className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </header>
+            <div className="space-y-3 p-5">
+              <label className="grid gap-1 text-xs font-bold text-nexoraMuted">
+                {t(`${TK}.emailLabel`)}
                 <input
                   type="email"
                   value={recipientEmail}
-                  onChange={(event) => setRecipientEmail(event.target.value)}
-                  aria-label={t(`${TK}.emailLabel`)}
+                  onChange={(event) => {
+                    setRecipientEmail(event.target.value)
+                    if (sendEmail.isSuccess || sendEmail.isError) sendEmail.reset()
+                  }}
                   placeholder={t(`${TK}.emailPlaceholder`)}
                   autoFocus
-                  className="h-10 w-full rounded-lg border border-nexoraBorder bg-white px-3 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
+                  className="min-h-11 rounded-lg border border-nexoraBorder bg-white px-3 text-sm font-semibold text-nexoraText outline-none transition focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20"
                 />
               </label>
-              {mailtoHref ? (
-                <a
-                  href={mailtoHref}
-                  className="inline-flex h-10 items-center justify-center rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white hover:bg-nexoraBrandDark"
-                >
-                  {t(`${TK}.send`)}
-                </a>
-              ) : (
-                <button
-                  type="button"
-                  disabled
-                  className="inline-flex h-10 items-center justify-center rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white opacity-50"
-                >
-                  {t(`${TK}.send`)}
-                </button>
-              )}
+              {sendEmail.isSuccess ? (
+                <p className="text-xs font-semibold text-nexoraSuccess" role="status">{t(`${TK}.sendSuccess`)}</p>
+              ) : null}
+              {sendEmail.isError ? (
+                <p className="text-xs font-semibold text-nexoraDanger" role="alert">{t(`${TK}.sendError`)}</p>
+              ) : null}
             </div>
-          ) : null}
+            <footer className="flex justify-end gap-2 border-t border-nexoraBorder bg-nexoraCanvas/50 p-4">
+              <button
+                type="button"
+                onClick={() => setShowEmailForm(false)}
+                className="inline-flex h-10 items-center justify-center rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText hover:bg-nexoraCanvas"
+              >
+                {t(`${TK}.cancel`)}
+              </button>
+              <button
+                type="button"
+                onClick={handleSendEmail}
+                disabled={!isEmailValid || sendEmail.isPending}
+                className="inline-flex h-10 items-center justify-center rounded-lg border border-nexoraBrand bg-nexoraBrand px-4 text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {sendEmail.isPending ? t(`${TK}.sending`) : t(`${TK}.send`)}
+              </button>
+            </footer>
+          </section>
         </div>
-      </div>
+      ) : null}
     </div>
   )
 
   return typeof document !== 'undefined' ? createPortal(modal, document.body) : null
 }
 
-function DailyDetail({ detail }: { detail: PosStaffReportDetail }) {
+export function PosReportDetailDocument({ detail, displayName }: { detail: PosStaffReportDetail; displayName: string }) {
   const { t } = useTranslation()
-  const tickets = detail.days.flatMap((day) => day.tickets)
-  if (tickets.length === 0) {
-    return <div className="py-8 text-center text-sm text-black">{t(`${TK}.noTickets`)}</div>
-  }
-
-  return (
-    <div>
-      <div className="grid grid-cols-[1fr_auto_auto] gap-3 border-b border-dashed border-slate-400 pb-1 font-black uppercase text-black">
-        <span>{t(`${TK}.ticket`)}</span>
-        <span className="text-right">{t(`${TK}.amount`)}</span>
-        <span className="text-right">{t(`${TK}.tips`)}</span>
-      </div>
-      {tickets.map((ticket, ticketIndex) => (
-        <div key={ticket.orderId} className="border-b border-dashed border-slate-300 py-2 last:border-b-0">
-          <div className="grid grid-cols-[1fr_auto_auto] gap-3 text-black">
-            <span className="font-black">{ticketIndex + 1}. #{ticket.orderNumber}</span>
-            <span className="text-right font-bold tabular-nums">{formatCurrency(ticket.amount)}</span>
-            <span className="text-right font-bold tabular-nums">{formatCurrency(ticket.tips)}</span>
-          </div>
-          <p className="mt-1 font-bold text-black">{formatReportTime(ticket.completedAtUtc, detail.timeZone)}</p>
-          <div className="mt-1 space-y-0.5 text-black">
-            {ticket.services.map((service, index) => <div key={`${ticket.orderId}-${index}`}>{service}</div>)}
-          </div>
-          <div className="mt-1 flex items-center justify-between gap-3 text-black">
-            <span>-- {t(`${TK}.ownerDiscount`)}</span>
-            <span className="font-bold tabular-nums text-black">
-              {ticket.ownerDiscount > 0 ? formatCurrency(ticket.ownerDiscount) : '—'}
-            </span>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function WeeklyDetail({ detail }: { detail: PosStaffReportDetail }) {
-  const { t } = useTranslation()
-  return (
-    <div>
-      <div className="grid grid-cols-[1fr_auto_auto] gap-3 border-b border-dashed border-slate-400 pb-1 font-black uppercase text-black">
-        <span>{t(`${TK}.day`)}</span>
-        <span className="text-right">{t(`${TK}.amount`)}</span>
-        <span className="text-right">{t(`${TK}.tips`)}</span>
-      </div>
-      {detail.days.map((day) => (
-        <div key={day.date} className="grid grid-cols-[1fr_auto_auto] gap-3 border-b border-dashed border-slate-300 py-1.5 text-black last:border-b-0">
-          <span className="font-semibold">{formatReportDay(day.date)}</span>
-          <span className="text-right font-bold tabular-nums">{formatCurrency(day.amount)}</span>
-          <span className="text-right font-bold tabular-nums">{formatCurrency(day.tips)}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function DetailTotals({ detail }: { detail: PosStaffReportDetail }) {
-  const { t } = useTranslation()
-  const totals = [
-    [t(`${TK}.totalAmount`), detail.totalAmount],
-    [t(`${TK}.totalTips`), detail.totalTips],
-    [t(`${TK}.totalDiscount`), detail.totalDiscount],
-    [t(`${TK}.totalCommission`), detail.totalCommission],
-    ...detail.paymentTotals.map((payment) => [
-      t(`${TK}.collected`, { method: getPosCheckoutPaymentMethodLabel(payment.paymentMethod, t) }),
-      payment.amount,
-    ] as [string, number]),
-  ] as Array<[string, number]>
-
-  return (
-    <div className="border-t border-dashed border-slate-500 pt-2">
-      {totals.map(([label, amount], index) => (
-        <div
-          key={label}
-          className={`flex items-center justify-between gap-3 py-0.5 text-black ${index === 0 ? 'font-black' : ''}`}
-        >
-          <span>{label}</span>
-          <span className="font-bold tabular-nums text-black">{formatCurrency(amount)}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function formatReportTime(isoUtc: string, timeZone: string): string {
-  const normalized = /(?:z|[+-]\d{2}:?\d{2})$/i.test(isoUtc) ? isoUtc : `${isoUtc}Z`
-  const date = new Date(normalized)
-  if (Number.isNaN(date.getTime())) return '—'
-  return new Intl.DateTimeFormat('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: true,
-    timeZone,
-  }).format(date)
-}
-
-function formatReportDay(isoDate: string): string {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate)
-  if (!match) return isoDate
-  return new Intl.DateTimeFormat('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))))
-}
-
-function buildEmailBody(
-  detail: PosStaffReportDetail,
-  displayName: string,
-  periodLabel: string,
-): string {
-  const lines = [`POS report - ${displayName}`, periodLabel, '']
-  if (detail.mode === PosReportMode.Daily) {
-    for (const ticket of detail.days.flatMap((day) => day.tickets)) {
-      lines.push(
-        `#${ticket.orderNumber} | ${formatCurrency(ticket.amount)} | Tips ${formatCurrency(ticket.tips)} | ${formatReportTime(ticket.completedAtUtc, detail.timeZone)}`,
-        ticket.services.join(', '),
-      )
-    }
-  } else {
-    for (const day of detail.days) {
-      lines.push(`${formatReportDay(day.date)} | ${formatCurrency(day.amount)} | Tips ${formatCurrency(day.tips)}`)
-    }
-  }
-  lines.push(
-    '',
-    `Total amount: ${formatCurrency(detail.totalAmount)}`,
-    `Total tips: ${formatCurrency(detail.totalTips)}`,
-    `Total discount: ${formatCurrency(detail.totalDiscount)}`,
-    `Total commission: ${formatCurrency(detail.totalCommission)}`,
-  )
-  for (const payment of detail.paymentTotals) {
-    lines.push(`${payment.paymentMethod} collected: ${formatCurrency(payment.amount)}`)
-  }
-  return lines.join('\n')
+  const document = buildTechnicianReportReceipt(detail, displayName, t)
+  return <article className="pos-report-detail-print mx-auto w-[80mm] max-w-full bg-white p-6 text-black shadow-nexora-card" data-testid="pos-report-detail-print">
+    <PosTechnicianReportPrintDocument report={document.technicianReport!} />
+  </article>
 }

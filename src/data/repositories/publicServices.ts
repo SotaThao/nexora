@@ -1,0 +1,99 @@
+import httpClient from '../../lib/httpClient'
+import type { PublicServiceCategory, PublicServiceItem, PublicServiceMenu } from '../../types/publicServices'
+
+type HttpClient = typeof httpClient
+type Raw = Record<string, unknown>
+
+function asRecord(value: unknown): Raw {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('Invalid public service menu')
+  }
+  return value as Raw
+}
+
+function nonNegativeNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null
+}
+
+function normalizeImageUrl(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const url = value.trim()
+  if (!url || /[\\\u0000-\u0020\u007f]/.test(url) || url.startsWith('//')) return null
+  if (url.startsWith('/')) return url
+  try {
+    const parsed = new URL(url)
+    return ['http:', 'https:'].includes(parsed.protocol) && !parsed.username && !parsed.password ? url : null
+  } catch {
+    return null
+  }
+}
+
+function normalizeTags(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  const tags = new Map<string, string>()
+  for (const item of value) {
+    if (typeof item !== 'string') continue
+    const tag = item.trim()
+    const key = tag.toLowerCase()
+    if (tag && !tags.has(key)) tags.set(key, tag)
+  }
+  return [...tags.values()]
+}
+
+function normalizeService(value: unknown): PublicServiceItem {
+  const service = asRecord(value)
+  if (typeof service.id !== 'string' || typeof service.name !== 'string') {
+    throw new Error('Invalid public service menu')
+  }
+
+  return {
+    id: service.id,
+    name: service.name,
+    imageUrl: normalizeImageUrl(service.imageUrl),
+    tags: normalizeTags(service.tags),
+    description: typeof service.description === 'string' ? service.description : null,
+    durationMinutes: nonNegativeNumber(service.durationMinutes) ?? 0,
+    price: nonNegativeNumber(service.price),
+  }
+}
+
+function normalizeCategory(value: unknown): PublicServiceCategory {
+  const category = asRecord(value)
+  if (!Array.isArray(category.services)) throw new Error('Invalid public service menu')
+  const categoryId = typeof category.categoryId === 'string' ? category.categoryId : null
+
+  return {
+    categoryId,
+    categoryName: typeof category.categoryName === 'string' ? category.categoryName : '',
+    services: category.services.map(normalizeService),
+  }
+}
+
+/** The API owns category and service ordering; preserve its response order exactly. */
+export function normalizePublicServiceMenu(value: unknown): PublicServiceMenu {
+  const menu = asRecord(value)
+  if (typeof menu.businessName !== 'string' || !Array.isArray(menu.categories)) {
+    throw new Error('Invalid public service menu')
+  }
+
+  return {
+    businessName: menu.businessName,
+    categories: menu.categories.map(normalizeCategory),
+  }
+}
+
+export function createPublicServicesRepository(client: HttpClient = httpClient) {
+  return {
+    async getMenu(businessSlug: string): Promise<PublicServiceMenu> {
+      // PublicServices_GetServiceMenu: the full active catalog, independent of booking setup.
+      const response = await client.get<unknown>(
+        `/api/v1/services/${encodeURIComponent(businessSlug)}`,
+        { anonymous: true },
+      )
+      return normalizePublicServiceMenu(response)
+    },
+  }
+}
+
+export const publicServicesRepository = createPublicServicesRepository()
+export default publicServicesRepository

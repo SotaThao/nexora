@@ -1,7 +1,7 @@
 // StaffHome — personal staff home (mobile-first "Pro" layout):
 // greeting, KPI cards, quick actions, pending tip confirmations, linked
 // businesses. All data is real (empty states when missing).
-import { useOutletContext } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 import {
   QrCode,
   Banknote,
@@ -24,6 +24,7 @@ import { SkeletonLayout } from '../../ui/skeleton'
 import Tooltip from '../../ui/Tooltip'
 import { STAFF_HOME_SKELETON } from '../skeletons/staffDashboardSkeletons'
 import ActiveBannersCarousel from '../../dashboard/overview/ActiveBannersCarousel'
+import IncomeByCategoryPanel from '../../dashboard/charts/IncomeByCategoryPanel'
 import {
   getStaffBusinessLinkStatusPresentation,
   resolveStaffBusinessLinkStatusLabel,
@@ -57,15 +58,15 @@ function KpiCard({ icon, iconBg, label, value, trend = null, trendColor = 'text-
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-1.5">
           <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-white ${iconBg}`}>{icon}</span>
-          <p className="truncate text-[9px] font-semibold uppercase text-nexoraSubtle">{label}</p>
+          <p className="text-xs font-semibold leading-4 text-nexoraSubtle">{label}</p>
         </div>
         <ChevronRight className="h-3.5 w-3.5 shrink-0 text-nexoraSubtle" />
       </div>
-      <div className="mt-1 flex items-baseline justify-between gap-2">
-        <p className="text-base font-semibold leading-none text-nexoraText">{value}</p>
+      <div className="mt-1.5 flex flex-col items-start gap-0.5">
+        <p className="break-all text-lg font-semibold leading-6 tabular-nums text-nexoraText">{value}</p>
         {trend ? (
           typeof trend === 'string'
-            ? <p className={`truncate text-[11px] font-semibold ${trendColor}`}>{trend}</p>
+            ? <p className={`text-[11px] font-medium leading-4 ${trendColor}`}>{trend}</p>
             : <div className="shrink-0">{trend}</div>
         ) : null}
       </div>
@@ -79,25 +80,28 @@ function QuickAction({ icon, label, onClick, bg, iconColor }) {
     <button
       type="button"
       onClick={onClick}
-      className={`grid h-14 content-center justify-items-center gap-1 rounded-lg border px-1 text-center transition active:scale-95 ${bg}`}
+      className={`grid min-h-14 min-w-0 content-center justify-items-center gap-1 rounded-lg border px-2 py-2 text-center transition active:scale-95 ${bg}`}
     >
       <span className={iconColor}>{icon}</span>
-      <span className="text-[10px] font-semibold leading-none text-nexoraText">{label}</span>
+      <span className="text-xs font-semibold leading-4 text-nexoraText">{label}</span>
     </button>
   )
 }
 
+const DASHBOARD_LINK_INTERACTION = 'group transition-colors duration-150 hover:bg-nexoraBrand/10 hover:text-nexoraBrand active:bg-nexoraBrand/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand/40 focus-visible:ring-offset-2 motion-reduce:transition-none'
+
 function SectionHeader({ title, action = null, onAction = null }: any) {
   return (
     <div className="mb-1.5 flex items-center justify-between">
-      <h2 className="text-sm font-semibold text-nexoraText">{title}</h2>
+      <h2 className="text-nexoraText text-sm font-semibold leading-5">{title}</h2>
       {action ? (
         <button
           type="button"
           onClick={onAction}
-          className="inline-flex h-7 min-w-[56px] items-center justify-center rounded-md px-2 text-[11px] font-semibold text-nexoraBrandDark"
+          className={`inline-flex h-7 min-w-[56px] items-center justify-center gap-1 rounded-md px-2 text-xs font-semibold text-nexoraBrandDark ${DASHBOARD_LINK_INTERACTION}`}
         >
           {action}
+          <ChevronRight className="h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-hover:translate-x-0.5 group-focus-visible:translate-x-0.5 motion-reduce:transform-none motion-reduce:transition-none" aria-hidden="true" />
         </button>
       ) : null}
     </div>
@@ -106,6 +110,7 @@ function SectionHeader({ title, action = null, onAction = null }: any) {
 
 export default function StaffHome() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { onNavigate } = useOutletContext<any>() || {}
   const { account } = useStaffAccount()
   const confirmTipsMutation = useConfirmStaffTipsReceipt()
@@ -133,14 +138,14 @@ export default function StaffHome() {
         <div className="flex items-start gap-3">
           <div className="min-w-0 space-y-1">
             <div className="flex items-center gap-1.5">
-              <span className="inline-flex rounded-full bg-[#EEE9FF] px-2 py-0.5 text-[9px] font-semibold uppercase leading-none text-nexoraBrandDark">
+              <span className="inline-flex rounded-full bg-[#EEE9FF] px-2 py-0.5 text-xs font-semibold uppercase leading-none text-nexoraBrandDark">
                 Staff
               </span>
-              <span className="truncate text-[10px] font-semibold text-nexoraSubtle">
+              <span className="truncate text-xs font-semibold uppercase leading-4 text-nexoraSubtle">
                 {firstName}
               </span>
             </div>
-            <h1 className="text-[15px] font-semibold leading-tight tracking-tight text-nexoraText">
+            <h1 className="tracking-tight text-nexoraText text-xl lg:text-2xl font-semibold leading-snug">
               Dashboard
             </h1>
           </div>
@@ -152,14 +157,14 @@ export default function StaffHome() {
         <section className="rounded-lg border border-[#DDD8FF] bg-[#F4F2FF] p-2.5 shadow-[0_10px_22px_rgba(70,72,212,0.10)]">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="inline-flex rounded-full bg-nexoraWarning/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-nexoraWarning">
+              <p className="inline-flex rounded-full bg-nexoraWarning/10 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-nexoraWarning">
                 {t('staff_dashboard.home.needs_confirmation')}
               </p>
-              <div className="mt-1 flex items-baseline gap-1.5">
+              <div className="mt-1 flex flex-wrap items-baseline gap-1.5">
                 <h2 className="text-sm font-semibold text-nexoraText">
                   {t('staff_dashboard.home.pending_amount', { amount: formatTipAmount(pendingAmount) })}
                 </h2>
-                <p className="text-[10px] font-semibold text-nexoraMuted">
+                <p className="text-[11px] font-medium leading-4 text-nexoraMuted">
                   {t('staff_dashboard.home.tips_count', { count: kpis.pendingCount })}
                 </p>
               </div>
@@ -167,7 +172,7 @@ export default function StaffHome() {
             <button
               type="button"
               onClick={() => go('tips')}
-              className="inline-flex h-7 min-w-[78px] items-center justify-center rounded-lg bg-nexoraBrand px-2.5 text-[10px] font-semibold text-white"
+              className="inline-flex min-h-10 shrink-0 min-w-[78px] items-center justify-center rounded-lg bg-nexoraBrand px-2.5 text-xs font-semibold text-white"
             >
               {t('staff_dashboard.home.view_all')}
             </button>
@@ -220,7 +225,7 @@ export default function StaffHome() {
       {/* ── Quick Actions ────────────────────────────────────────────────── */}
       <section className="space-y-1.5 px-0.5">
         <SectionHeader title={t('staff_dashboard.home.quick_actions')} action={t('staff_dashboard.home.manage')} onAction={() => go('qr')} />
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 gap-2 min-[400px]:grid-cols-4">
           <QuickAction icon={<Banknote className="h-4 w-4" />} label={t('staff_dashboard.home.quick_qr')} bg="border-[#DDD8FF] bg-[#F4F2FF]" iconColor="text-nexoraBrandDark" onClick={() => go('qr')} />
           <QuickAction icon={<Star className="h-4 w-4" />} label={t('staff_dashboard.home.quick_reviews')} bg="border-orange-200 bg-orange-50" iconColor="text-orange-500" onClick={() => go('reviews')} />
           <QuickAction icon={<CreditCard className="h-4 w-4" />} label={t('staff_dashboard.home.quick_payments')} bg="border-indigo-200 bg-indigo-50" iconColor="text-indigo-600" onClick={() => go('qr', { tab: 'payment' })} />
@@ -229,117 +234,133 @@ export default function StaffHome() {
       </section>
 
       {/* ── Pending Confirmations ────────────────────────────────────────── */}
-      <section className="rounded-lg border border-[#EEE9FF] bg-white px-3 pb-3 pt-2 shadow-[0_8px_18px_rgba(70,72,212,0.08)]">
-        <div className="mb-1.5 flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <h2 className="text-sm font-semibold text-nexoraText">{t('staff_dashboard.home.pending_confirmations')}</h2>
-            <Tooltip
-              content={t('staff_dashboard.home.confirm_all_tooltip')}
-              ariaLabel={t('staff_dashboard.home.confirm_all_tooltip')}
-            />
-          </div>
-          {isPendingTipsFetching && pendingTips.length > 0 ? (
-            <span className="text-[11px] font-bold uppercase tracking-wider text-nexoraSubtle">{t('common.loading')}</span>
-          ) : null}
-        </div>
-        {pendingTips.length === 0 ? (
-          <p className="py-3 text-center text-[12px] font-medium text-nexoraSubtle">{t('staff_dashboard.home.no_pending')}</p>
-        ) : (
-          <>
-            <div className="space-y-1">
-              {pendingTips.map((tip) => (
-                <div key={tip.id} className="grid min-h-[38px] grid-cols-[24px_minmax(0,1fr)_auto_auto] items-center gap-2 rounded-xl border border-nexoraBorder bg-white px-2 py-1 shadow-sm">
-                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-emerald-50 text-emerald-600 shadow-sm">
-                    <Wallet className="h-3.5 w-3.5" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-semibold">{tip.paymentMethod || t('staff_dashboard.home.anonymous_customer')}</p>
-                    <p className="truncate text-[10px] font-medium text-nexoraMuted">
-                      {t('staff_dashboard.home.via_method', { method: tip.paymentMethod })} · {tip.touchpoint}
-                    </p>
-                  </div>
-                  <span className="text-[12px] font-semibold text-nexoraSuccess">{formatTipAmount(tip.amount)}</span>
-                  <button
-                    type="button"
-                    disabled={isConfirming}
-                    onClick={() => confirmTipsMutation.mutate({ tipIds: [tip.id] })}
-                    className="inline-flex h-6 min-w-[58px] items-center justify-center rounded-full border border-[#EEE9FF] bg-white px-2 text-[10px] font-semibold text-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {t('staff_dashboard.home.confirm')}
-                  </button>
-                </div>
-              ))}
+      {pendingTips.length > 0 && (
+        <section className="rounded-lg border border-[#EEE9FF] bg-white px-3 pb-3 pt-2 shadow-[0_8px_18px_rgba(70,72,212,0.08)]">
+          <div className="mb-1.5 flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <h2 className="text-nexoraText text-sm font-semibold leading-5">{t('staff_dashboard.home.pending_confirmations')}</h2>
+              <Tooltip
+                content={t('staff_dashboard.home.confirm_all_tooltip')}
+                ariaLabel={t('staff_dashboard.home.confirm_all_tooltip')}
+              />
             </div>
-            <button
-              type="button"
-              disabled={isConfirming}
-              onClick={() => confirmTipsMutation.mutate({ tipIds: pendingTips.map((tip) => tip.id) })}
-              className="mt-2 flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand text-[10px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              {t('staff_dashboard.home.confirm_all')}
-            </button>
-          </>
-        )}
-      </section>
+            {isPendingTipsFetching ? (
+              <span className="text-[11px] font-medium leading-4 text-nexoraSubtle">{t('common.loading')}</span>
+            ) : null}
+          </div>
+          <div className="space-y-1">
+            {pendingTips.map((tip) => (
+              <div key={tip.id} className="grid min-h-[38px] grid-cols-[24px_minmax(0,1fr)_auto_auto] items-center gap-2 rounded-xl border border-nexoraBorder bg-white px-2 py-1 shadow-sm">
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-emerald-50 text-emerald-600 shadow-sm">
+                  <Wallet className="h-3.5 w-3.5" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold leading-4">{tip.paymentMethod || t('staff_dashboard.home.anonymous_customer')}</p>
+                  <p className="truncate text-[11px] font-medium leading-4 text-nexoraMuted">
+                    {t('staff_dashboard.home.via_method', { method: tip.paymentMethod })} · {tip.touchpoint}
+                  </p>
+                </div>
+                <span className="text-sm font-semibold text-nexoraSuccess">{formatTipAmount(tip.amount)}</span>
+                <button
+                  type="button"
+                  disabled={isConfirming}
+                  onClick={() => confirmTipsMutation.mutate({ tipIds: [tip.id] })}
+                  className="inline-flex min-h-9 min-w-[58px] items-center justify-center rounded-full border border-[#EEE9FF] bg-white px-2 text-xs font-semibold text-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {t('staff_dashboard.home.confirm')}
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            disabled={isConfirming}
+            onClick={() => confirmTipsMutation.mutate({ tipIds: pendingTips.map((tip) => tip.id) })}
+            className="mt-2 flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            {t('staff_dashboard.home.confirm_all')}
+          </button>
+        </section>
+      )}
+
+      {/* ── Income by category ───────────────────────────────────────────── */}
+      <IncomeByCategoryPanel scope="staff" onManageCategories={() => navigate('/staff/categories')} />
 
       {/* ── Linked Businesses ────────────────────────────────────────────── */}
-      <section className="grid grid-cols-2 gap-2">
-        <div className="rounded-lg border border-[#EEE9FF] bg-white p-2.5 shadow-[0_8px_18px_rgba(70,72,212,0.08)]">
-          <h2 className="mb-2 text-[12px] font-semibold">{t('staff_dashboard.home.recent_activity')}</h2>
-          <div className="space-y-1.5">
-            <div className="grid grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-1.5">
-              <span className="grid h-6 w-6 place-items-center rounded-lg bg-nexoraBrand/10 text-nexoraBrandDark"><Sparkles className="h-3.5 w-3.5" /></span>
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="min-w-0 rounded-xl border border-nexoraBorder bg-white px-3.5 pb-3.5 pt-2">
+          <div className="mb-1 flex min-h-9 items-center justify-between gap-2">
+            <h2 className="text-nexoraText text-sm font-semibold leading-5">{t('staff_dashboard.home.recent_activity')}</h2>
+            <button
+              type="button"
+              onClick={() => go('tips')}
+              aria-label={t('staff_dashboard.home.view_all_activity')}
+              className={`-mr-1 inline-flex min-h-9 shrink-0 items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-nexoraBrandDark ${DASHBOARD_LINK_INTERACTION}`}
+            >
+              {t('staff_dashboard.home.view_all')}
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-hover:translate-x-0.5 group-focus-visible:translate-x-0.5 motion-reduce:transform-none motion-reduce:transition-none" aria-hidden="true" />
+            </button>
+          </div>
+          <div className="space-y-2">
+            <div className="grid min-h-9 grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-2.5">
+              <span className="grid h-7 w-7 place-items-center rounded-lg bg-nexoraBrand/10 text-nexoraBrandDark"><Sparkles className="h-3.5 w-3.5" /></span>
               <div className="min-w-0">
-                <p className="truncate text-[9px] font-semibold">{t('staff_dashboard.home.tip_received')}</p>
-                <p className="truncate text-[8px] font-medium text-nexoraMuted">{t('staff_dashboard.home.today')}</p>
+                <p className="truncate text-xs font-semibold leading-4">{t('staff_dashboard.home.tip_received')}</p>
+                <p className="truncate text-[11px] font-medium leading-4 text-nexoraMuted">{t('staff_dashboard.home.today')}</p>
               </div>
-              <span className="text-[9px] font-semibold text-nexoraSuccess">{formatTipAmount(kpis.todayTips)}</span>
+              <span className="text-sm font-semibold tabular-nums text-nexoraSuccess">{formatTipAmount(kpis.todayTips)}</span>
             </div>
-            <div className="grid grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-1.5">
-              <span className="grid h-6 w-6 place-items-center rounded-lg bg-nexoraSuccess/10 text-nexoraSuccess"><CalendarCheck className="h-3.5 w-3.5" /></span>
+            <div className="grid min-h-9 grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-2.5">
+              <span className="grid h-7 w-7 place-items-center rounded-lg bg-nexoraSuccess/10 text-nexoraSuccess"><CalendarCheck className="h-3.5 w-3.5" /></span>
               <div className="min-w-0">
-                <p className="truncate text-[9px] font-semibold">{t('staff_dashboard.home.monthly_tips')}</p>
-                <p className="truncate text-[8px] font-medium text-nexoraMuted">{t('staff_dashboard.home.this_month')}</p>
+                <p className="truncate text-xs font-semibold leading-4">{t('staff_dashboard.home.monthly_tips')}</p>
+                <p className="truncate text-[11px] font-medium leading-4 text-nexoraMuted">{t('staff_dashboard.home.this_month')}</p>
               </div>
-              <span className="text-[9px] font-semibold text-nexoraSuccess">{formatTipAmount(kpis.monthTips)}</span>
+              <span className="text-sm font-semibold tabular-nums text-nexoraSuccess">{formatTipAmount(kpis.monthTips)}</span>
             </div>
-            <div className="grid grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-1.5">
-              <span className="grid h-6 w-6 place-items-center rounded-lg bg-nexoraWarning/10 text-nexoraWarning"><Star className="h-3.5 w-3.5" /></span>
+            <div className="grid min-h-9 grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-2.5">
+              <span className="grid h-7 w-7 place-items-center rounded-lg bg-nexoraWarning/10 text-nexoraWarning"><Star className="h-3.5 w-3.5" /></span>
               <div className="min-w-0">
-                <p className="truncate text-[9px] font-semibold">Rating</p>
-                <p className="truncate text-[8px] font-medium text-nexoraMuted">{t('staff_dashboard.home.latest_score')}</p>
+                <p className="truncate text-xs font-semibold leading-4">{t('staff_dashboard.home.rating')}</p>
+                <p className="truncate text-[11px] font-medium leading-4 text-nexoraMuted">{t('staff_dashboard.home.latest_score')}</p>
               </div>
-              <span className="text-[9px] font-semibold text-nexoraWarning">{kpis.rating > 0 ? Number(kpis.rating).toFixed(1) : '—'}</span>
+              <span className="text-sm font-semibold tabular-nums text-nexoraText">{kpis.rating > 0 ? Number(kpis.rating).toFixed(1) : '—'}</span>
             </div>
           </div>
-          <button type="button" onClick={() => go('tips')} className="mt-2 inline-flex h-6 w-full items-center justify-center rounded-lg text-[10px] font-semibold text-nexoraBrandDark">
-            {t('staff_dashboard.home.view_all_activity')}
-          </button>
         </div>
 
-        <div className="rounded-lg border border-[#EEE9FF] bg-white p-2.5 shadow-[0_8px_18px_rgba(70,72,212,0.08)]">
-          <h2 className="mb-2 text-[12px] font-semibold">{t('staff_dashboard.home.my_salons')}</h2>
+        <div className="min-w-0 rounded-xl border border-nexoraBorder bg-white px-3.5 pb-3.5 pt-2">
+          <div className="mb-1 flex min-h-9 items-center justify-between gap-2">
+            <h2 className="text-nexoraText text-sm font-semibold leading-5">{t('staff_dashboard.home.my_salons')}</h2>
+            <button
+              type="button"
+              onClick={() => go('salons')}
+              aria-label={t('staff_dashboard.home.view_all_salons')}
+              className={`-mr-1 inline-flex min-h-9 shrink-0 items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-nexoraBrandDark ${DASHBOARD_LINK_INTERACTION}`}
+            >
+              {t('staff_dashboard.home.view_all')}
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-hover:translate-x-0.5 group-focus-visible:translate-x-0.5 motion-reduce:transform-none motion-reduce:transition-none" aria-hidden="true" />
+            </button>
+          </div>
           {activeLinkedBusinesses.length === 0 ? (
-            <p className="py-3 text-center text-[10px] font-medium text-nexoraSubtle">{t('staff_dashboard.qr.no_linked_businesses')}</p>
+            <p className="py-3 text-center text-[11px] font-medium leading-4 text-nexoraSubtle">{t('staff_dashboard.qr.no_linked_businesses')}</p>
           ) : (
-          <div className="space-y-1.5">
-            {activeLinkedBusinesses.slice(0, 3).map((biz, index) => {
+          <div className="space-y-2">
+            {activeLinkedBusinesses.slice(0, 3).map((biz) => {
               const statusLabel = resolveStaffBusinessLinkStatusLabel(biz)
               const statusPresentation = getStaffBusinessLinkStatusPresentation(statusLabel)
               return (
-              <div key={biz.businessStaffLinkId} className="grid grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-1.5">
-                <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[8px] font-semibold ${
-                  index === 0 ? 'bg-nexoraBrand text-white' : 'bg-nexoraBrand/10 text-nexoraBrandDark'
-                }`}>
+              <div key={biz.businessStaffLinkId} className="grid min-h-9 grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-2.5">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-nexoraBrand/10 text-[11px] font-semibold text-nexoraBrandDark">
                   {(biz.businessName || '?').slice(0, 2).toUpperCase()}
                 </span>
                 <div className="min-w-0">
-                  <p className="truncate text-[9px] font-semibold uppercase text-nexoraText">{biz.businessName}</p>
-                  <p className="truncate text-[8px] font-medium text-nexoraMuted">{biz.displayName}</p>
+                  <p className="truncate text-xs font-semibold leading-4 text-nexoraText">{biz.businessName}</p>
+                  <p className="truncate text-[11px] font-medium leading-4 text-nexoraMuted">{biz.displayName}</p>
                 </div>
                 <span
-                  className={`shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-semibold ${statusPresentation.className}`}
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium leading-4 ${statusPresentation.className}`}
                 >
                   {statusPresentation.translationKey
                     ? t(statusPresentation.translationKey)
@@ -349,9 +370,6 @@ export default function StaffHome() {
             )})}
           </div>
           )}
-          <button type="button" onClick={() => go('salons')} className="mt-2 inline-flex h-6 w-full items-center justify-center rounded-lg text-[10px] font-semibold text-nexoraBrandDark">
-            {t('staff_dashboard.home.view_all_salons')}
-          </button>
         </div>
       </section>
 
@@ -366,13 +384,13 @@ export default function StaffHome() {
             <Gift className="h-[18px] w-[18px] text-white" />
           </span>
           <div className="min-w-0 flex-1">
-            <h2 className="text-[14px] font-black leading-tight text-white">{t('staff_dashboard.home.refer_title')}</h2>
-            <p className="mt-0.5 text-[12px] font-semibold leading-tight text-white/70">{t('staff_dashboard.home.refer_subtitle')}</p>
+            <h2 className="text-white text-sm font-semibold leading-5">{t('staff_dashboard.home.refer_title')}</h2>
+            <p className="mt-0.5 text-white/70 text-[11px] font-medium leading-4">{t('staff_dashboard.home.refer_subtitle')}</p>
           </div>
           <button
             type="button"
             onClick={() => go('qr', { tab: 'personal' })}
-            className="inline-flex h-9 min-w-[57px] shrink-0 items-center justify-center rounded-full bg-white px-4 text-[12px] font-black text-nexoraBrandDark shadow-sm transition active:scale-95"
+            className="inline-flex h-9 min-w-[57px] shrink-0 items-center justify-center rounded-full bg-white px-4 text-xs font-semibold text-nexoraBrandDark shadow-sm transition active:scale-95"
           >
             {t('staff_dashboard.home.invite_now')}
           </button>

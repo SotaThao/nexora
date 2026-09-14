@@ -76,9 +76,16 @@ export function buildPassPrntUrl(input: PassPrntUrlInput): PassPrntUrlResult {
 }
 
 /** Strips any query string — PassPRNT appends its own params to whatever it is given. */
-export function buildPassPrntBackUrl(origin: string, path: string): string {
+export function readPassPrntReturnPath(path: string): { backPath: string; attemptId: string | null } {
   const cleanPath = path.split('?')[0].split('#')[0]
-  return `${origin.replace(/\/$/, '')}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`
+  const match = cleanPath.match(/^(.*)\/print-return\/([a-zA-Z0-9-]+)\/?$/)
+  return match ? { backPath: match[1], attemptId: match[2] } : { backPath: cleanPath, attemptId: null }
+}
+
+export function buildPassPrntBackUrl(origin: string, path: string, attemptId?: string): string {
+  const cleanPath = readPassPrntReturnPath(path).backPath
+  const suffix = attemptId ? `/print-return/${encodeURIComponent(attemptId)}` : ''
+  return `${origin.replace(/\/$/, '')}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}${suffix}`
 }
 
 export function parsePassPrntCallback(params: URLSearchParams): PassPrntCallback | null {

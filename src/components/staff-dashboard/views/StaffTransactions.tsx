@@ -40,13 +40,13 @@ export default function StaffTransactions() {
   )
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 [&_table]:text-sm [&_thead]:text-xs [&_td_span]:text-xs [&_td_button]:text-xs [&_td_button]:font-semibold [&_td_button_span]:font-semibold">
       <div className="flex flex-col gap-4 border-b border-nexoraBorder pb-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-extrabold text-nexoraText">
+          <h2 className="text-nexoraText text-xl lg:text-2xl font-semibold leading-snug">
             {t('staff_dashboard.transactions.title')}
           </h2>
-          <p className="mt-1 max-w-[22rem] text-xs leading-relaxed text-nexoraMuted">
+          <p className="mt-1 max-w-[22rem] text-nexoraMuted text-[13px] font-normal leading-5">
             {activeTab === TAB_DIRECT_PAYMENTS
               ? t('staff_payments.description')
               : activeTab === TAB_PAYOUTS
@@ -65,9 +65,9 @@ export default function StaffTransactions() {
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`h-9 min-w-0 flex-1 rounded-lg px-2 text-[10px] font-bold transition-all sm:flex-none sm:px-4 sm:text-xs ${
+              className={`min-h-10 min-w-0 flex-1 rounded-lg px-2 py-2 text-xs font-semibold leading-snug transition-all sm:flex-none sm:px-4 ${
                 activeTab === tab.id
-                  ? 'bg-white font-black text-nexoraBrand shadow-sm'
+                  ? 'bg-white font-semibold text-nexoraBrand shadow-sm'
                   : 'text-nexoraMuted hover:text-nexoraText'
               }`}
             >

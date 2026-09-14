@@ -189,18 +189,18 @@ export default function StaffReviews() {
   return (
     <div className="space-y-5">
       <div className="space-y-1">
-        <h2 className="text-xl font-extrabold tracking-tight text-[#1E293B]">
+        <h2 className="tracking-tight text-[#1E293B] text-xl lg:text-2xl font-semibold leading-snug">
           {t('staff_dashboard.nav.my_reviews')}
         </h2>
       </div>
 
-      <section className="rounded-2xl border border-[#DCE3F7] bg-[#FCFCFF] p-4 shadow-sm">
-        <div className="flex items-center gap-5">
-          <div className="w-[132px] shrink-0">
+      <section className="rounded-2xl border border-[#DCE3F7] bg-[#FCFCFF] p-3 shadow-sm sm:p-4">
+        <div className="flex items-center gap-3 sm:gap-5">
+          <div className="w-[112px] shrink-0 sm:w-[132px]">
             <p className="text-sm font-semibold text-slate-500">
               {t('components.staff_dashboard.views.StaffReviews.overallRating')}
             </p>
-            <p className="mt-1 text-[44px] font-black leading-none tracking-tight text-[#1E293B]">
+            <p className="mt-1 text-xl font-semibold leading-7 sm:text-2xl sm:leading-8 tabular-nums text-[#1E293B]">
               {averageRating > 0 ? averageRating.toFixed(1) : '-.-'}
             </p>
             <div className="mt-2 flex gap-0.5 text-amber-400">
@@ -211,7 +211,7 @@ export default function StaffReviews() {
                 />
               ))}
             </div>
-            <p className="mt-1.5 text-sm font-medium text-slate-500">
+            <p className="mt-1 text-xs font-medium text-slate-500 sm:mt-1.5 sm:text-sm">
               {t('components.staff_dashboard.views.StaffReviews.reviewsCount', { count: totalReviews })}
             </p>
           </div>
@@ -233,14 +233,14 @@ export default function StaffReviews() {
         <div className="flex gap-8">
           <button
             type="button"
-            className="-mb-px border-b-2 border-nexoraBrand pb-3 text-sm font-bold text-nexoraBrand"
+            className="-mb-px border-b-2 border-nexoraBrand pb-3 text-xs font-semibold text-nexoraBrand"
           >
             {t('components.staff_dashboard.views.StaffReviews.allReviews')}
           </button>
           <button
             type="button"
             disabled
-            className="-mb-px border-b-2 border-transparent pb-3 text-sm font-bold text-slate-400"
+            className="-mb-px border-b-2 border-transparent pb-3 text-xs font-semibold text-slate-400"
           >
             {t('components.staff_dashboard.views.StaffReviews.needsReply')}
           </button>

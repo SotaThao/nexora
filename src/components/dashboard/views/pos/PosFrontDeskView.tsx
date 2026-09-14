@@ -9,7 +9,7 @@
 // decides whether the actionable UI renders at all; the caller (Owner vs Staff
 // route wrapper) is responsible for only linking here when access is expected.
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   ChevronLeft,
@@ -58,6 +58,10 @@ import {
   REPORT_WEEKS_PARAM,
   POS_FRONT_DESK_TABS,
   PosFrontDeskTab,
+  TURN_BOARD_STATUS_FILTERS,
+  TURN_BOARD_VIEW_MODE_STORAGE_KEY,
+  TurnBoardStatusFilter,
+  TurnBoardViewMode,
 } from '../../../../constants/posFrontDesk'
 import type {
   BookingListItemApiDto,
@@ -68,9 +72,11 @@ import type {
 } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
 import { getInitials, joinOrEmpty } from './posDisplay'
+import { formatCustomerPhone } from './customer/customerFormatters'
+import CustomerVisitTag from './CustomerVisitTag'
 import PosOrderWorkspace from './PosOrderWorkspace'
 import { usePassPrntReturn } from './receipt/usePassPrntReturn'
-import { DASHBOARD_MENU_ID } from '../../constants'
+import { readPassPrntReturnPath } from './receipt/passprntTransport'
 import {
   readPosWorkspaceFromParams,
   writePosWorkspaceToParams,
@@ -93,14 +99,15 @@ import NewBookingForm from './booking/NewBookingForm'
 import BookingTab from './booking/BookingTab'
 import { formatBookingWallClockTime, resolveBookingWallClockParts } from './booking/bookingFormatters'
 import CustomerTab from './customer/CustomerTab'
-import { formatCustomerPhone } from './customer/customerFormatters'
 import TimeClockTab from './timeclock/TimeClockTab'
 import { beepCooldownUntil, useCooldownSeconds } from './timeclock/beepCooldown'
 import BeepInteractions from './timeclock/BeepInteractions'
 import BeepMessageModal from './timeclock/BeepMessageModal'
+import WeightedTurnSettingsModal from './modals/WeightedTurnSettingsModal'
+import TurnGridView, { formatServiceTotal, formatTurnCredit } from './TurnGridView'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { formatCurrency } from '../../utils'
-import { compareNextTurnRows, nextTurnServiceAmount, selectNextTurnTechnician } from './posNextTurn'
+import { compareNextTurnRows, nextTurnServiceAmount, selectNextTurnTechnician, sortTurnBoardStations } from './posNextTurn'
 import {
   POS_TABLE_HEADER_CELL_CLASS,
   POS_TABLE_HEADER_ROW_CLASS,
@@ -419,6 +426,8 @@ export default function PosFrontDeskView({
   // kept in sync on every tab switch (see setActiveTab below) so a reload restores
   // whichever tab was active instead of always falling back to Order List.
   const [searchParams, setSearchParams] = useSearchParams()
+  const { pathname } = useLocation()
+  const receiptPrintBackPath = readPassPrntReturnPath(pathname).backPath
   const tabFromUrl = searchParams.get(POS_FRONT_DESK_TAB_PARAM) as PosFrontDeskTab | null
   const initialTab: PosFrontDeskTab =
     tabFromUrl && availableTabs.includes(tabFromUrl) ? tabFromUrl : DEFAULT_POS_FRONT_DESK_TAB
@@ -465,12 +474,12 @@ export default function PosFrontDeskView({
   const turnBoard = turnBoardQuery.data ?? []
   const isTurnBoardLoading = turnBoardQuery.isLoading
   // Refresh clock-in eligibility with the next-turn balance while the board is visible.
-  const todayTurnWindow = getLocalDayWindow()
+  const todayTurnWindow = getLocalDayWindow(new Date(), reportBusinessTimeZone || 'America/Chicago')
   const todayRosterQuery = useTimeClockRoster(businessId, todayTurnWindow, {
     enabled:
       activeTab === PosFrontDeskTab.TurnBoard
       || activeTab === PosFrontDeskTab.Booking,
-    refetchInterval: 15000,
+    refetchInterval: 5000,
   })
   // Beep replies use their own polled feed for the station pill.
   const { data: turnBoardBeeps = [] } = useMerchantBeepFeed(businessId, todayTurnWindow, {
@@ -519,9 +528,6 @@ export default function PosFrontDeskView({
     enabled: activeTab === PosFrontDeskTab.TurnBoard && Boolean(nextWaitingOrder),
   })
   const todayTurnRows = [...(todayRosterQuery.data?.rows ?? [])].sort(compareNextTurnRows)
-  const turnsTodayByStaffId = new Map(
-    todayTurnRows.map((row) => [row.posStaffProfileId, row.turnsToday]),
-  )
   const nextTurnRequiredServiceIds = Array.from(
     new Set(
       (nextWaitingOrderDetail?.serviceLines ?? [])
@@ -540,7 +546,8 @@ export default function PosFrontDeskView({
   )
   const serviceAmountsTodayByStaffId = todayNextTurnBalanceQuery.data?.completedAmounts ?? new Map<string, number>()
   const nextTurnTechnician = todayNextTurnBalanceQuery.data
-    && !todayNextTurnBalanceQuery.isFetching && !todayNextTurnBalanceQuery.isError
+    && !todayNextTurnBalanceQuery.isRecalculating
+    && !todayNextTurnBalanceQuery.isError && !todayRosterQuery.isError
     ? selectNextTurnTechnician(
         todayTurnRows,
         nextTurnSkilledTechnicianIds,
@@ -653,8 +660,10 @@ export default function PosFrontDeskView({
   // Set when PassPRNT reports a failed receipt print, so the workspace can open the preview and
   // let the operator print through the browser instead of leaving the customer waiting.
   const [printFallbackOrderId, setPrintFallbackOrderId] = useState<string | null>(null)
+  const [printReturnDraft, setPrintReturnDraft] = useState<{ orderId: string; note: string } | null>(null)
 
   const setUpdateWorkspace = useCallback((workspace: UpdateWorkspaceState | null, nextTab?: PosFrontDeskTab) => {
+    setPrintReturnDraft(null)
     setUpdateWorkspaceState(workspace)
     if (nextTab) setActiveTabState(nextTab)
     setSearchParams(
@@ -667,30 +676,19 @@ export default function PosFrontDeskView({
   // restore path is the workspace URL state this view already owns, so no new params are needed.
   usePassPrntReturn({
     surface: 'frontDesk',
-    backPath: `/dashboard/${DASHBOARD_MENU_ID.pos}`,
+    backPath: receiptPrintBackPath,
     onPrintFailed: useCallback((job) => setPrintFallbackOrderId(job.jobId), []),
     onRestore: useCallback(
       (restore) => {
         if (restore.surface !== 'frontDesk') return
-        const tab = restore.tab as PosFrontDeskTab
-        // A re-print from the Completed list carries no order: its detail modal is local state
-        // with no URL representation, so the honest restore is the tab it was opened from.
-        if (!restore.orderId) {
-          setUpdateWorkspace(null, tab)
-          return
-        }
-        setUpdateWorkspace(
-          {
-            orderId: restore.orderId,
-            // Preserve where the operator actually was: printing an unpaid invoice returns to
-            // checkout, printing a paid receipt returns to the success screen.
-            mode: restore.mode ?? 'success',
-            receiptMode: restore.receiptMode as PosReceiptMode,
-          },
-          tab,
-        )
+        // The print return hook restores the URL atomically. The URL effect below owns
+        // the workspace; a second navigation here would reintroduce callback parameters.
+        setActiveTabState(restore.tab as PosFrontDeskTab)
+        setPrintReturnDraft(restore.mode === 'edit' && restore.orderId && typeof restore.ticketNote === 'string'
+          ? { orderId: restore.orderId, note: restore.ticketNote }
+          : null)
       },
-      [setUpdateWorkspace],
+      [],
     ),
   })
 
@@ -711,6 +709,52 @@ export default function PosFrontDeskView({
   // what the tech should see before anything is sent, instead of firing a message-less beep on tap.
   const [beepStation, setBeepStation] = useState<TurnBoardStationApiDto | null>(null)
   const [beepMessage, setBeepMessage] = useState('')
+  // Weighted turn rules. The same modal is reachable from the Bookings tab, against the same
+  // endpoint, so the salon maintains one set of numbers rather than one per screen.
+  const [isTurnSettingsOpen, setIsTurnSettingsOpen] = useState(false)
+  const [turnBoardStatusFilter, setTurnBoardStatusFilter] = useState<TurnBoardStatusFilter>(
+    TurnBoardStatusFilter.All,
+  )
+  const [turnBoardSearch, setTurnBoardSearch] = useState('')
+  const [turnBoardViewMode, setTurnBoardViewMode] = useState<TurnBoardViewMode>(() =>
+    storage.getItem(TURN_BOARD_VIEW_MODE_STORAGE_KEY) === TurnBoardViewMode.Grid
+      ? TurnBoardViewMode.Grid
+      : TurnBoardViewMode.Stations,
+  )
+  const handleChangeTurnBoardViewMode = (mode: TurnBoardViewMode) => {
+    setTurnBoardViewMode(mode)
+    storage.setItem(TURN_BOARD_VIEW_MODE_STORAGE_KEY, mode)
+  }
+
+  // Board summary and narrowing. All of it derives from the rows already on screen — no extra
+  // request. `isClockedIn` is optional in the contract, so a response without it reads as "on
+  // shift", which is what the board showed before it listed off-shift technicians at all.
+  const isStationClockedIn = (station: TurnBoardStationApiDto) => station.isClockedIn !== false
+  const isStationBusy = (station: TurnBoardStationApiDto) =>
+    station.currentStatus === PosOrderStatus.InService
+  const turnBoardCounts = {
+    total: turnBoard.length,
+    available: turnBoard.filter((s) => isStationClockedIn(s) && !isStationBusy(s)).length,
+    busy: turnBoard.filter((s) => isStationClockedIn(s) && isStationBusy(s)).length,
+    guestsWaiting: orderList.filter((o) => o.status === PosOrderStatus.Waiting).length,
+  }
+  const turnBoardSearchTerm = turnBoardSearch.trim().toLocaleLowerCase()
+  const visibleTurnBoard = turnBoard.filter((station) => {
+    const matchesStatus =
+      turnBoardStatusFilter === TurnBoardStatusFilter.All
+        ? true
+        : turnBoardStatusFilter === TurnBoardStatusFilter.ClockedOut
+          ? !isStationClockedIn(station)
+          : turnBoardStatusFilter === TurnBoardStatusFilter.Busy
+            ? isStationClockedIn(station) && isStationBusy(station)
+            : isStationClockedIn(station) && !isStationBusy(station)
+    if (!matchesStatus) return false
+    if (!turnBoardSearchTerm) return true
+    // Name or skill, same as the front desk asks out loud: "who can do acrylics?"
+    return [station.displayName, ...(station.serviceSkillNames ?? [])].some((value) =>
+      value.toLocaleLowerCase().includes(turnBoardSearchTerm),
+    )
+  })
   // Entry point for creating a booking (Ticket 3) — kept as the one global "+ New Booking"
   // action; Ticket 9 added the "Bookings" tab/management screen below for viewing, checking
   // in, cancelling, and rescheduling existing bookings.
@@ -958,12 +1002,14 @@ export default function PosFrontDeskView({
   const renderStationCard = (station: TurnBoardStationApiDto) => {
     const isBeeping = beepStaff.isPending && beepStation?.posStaffProfileId === station.posStaffProfileId
     const isNextTurn = station.posStaffProfileId === nextTurnTechnician?.posStaffProfileId
-    const turnsToday = turnsTodayByStaffId.get(station.posStaffProfileId) ?? 0
     return (
       <div
         key={station.posStaffProfileId}
         data-testid={`turn-board-station-${station.posStaffProfileId}`}
-        className="space-y-3 rounded-xl border border-nexoraBorder bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-nexoraBrand/40 hover:shadow-md"
+        className={`space-y-3 rounded-xl border p-4 transition-colors ${isNextTurn
+          ? 'border-violet-500 bg-violet-50 shadow-md shadow-violet-200/60 ring-2 ring-inset ring-violet-500'
+          : 'border-nexoraBorder bg-white shadow-sm hover:border-nexoraBrand/40 hover:shadow-md'
+        }`}
       >
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nexoraLavender/20 text-[11px] font-bold text-nexoraBrandDark">
@@ -974,7 +1020,7 @@ export default function PosFrontDeskView({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold text-nexoraText">{station.displayName}</p>
+            <p className={`truncate font-bold ${isNextTurn ? 'text-base text-violet-950' : 'text-sm text-nexoraText'}`}>{station.displayName}</p>
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
               <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-extrabold ${
                 station.currentStatus === PosOrderStatus.InService
@@ -984,10 +1030,13 @@ export default function PosFrontDeskView({
                 {t(tk(`stationStatus.${station.currentStatus}`))}
               </span>
               <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-extrabold tabular-nums text-slate-600">
-                {t(tk('stationTurnsToday'), { count: turnsToday })}
+                {t(tk('stationWeightedTurns'), {
+                  turns: formatTurnCredit(station.weightedTurnsToday),
+                  amount: formatServiceTotal(station.serviceTotalToday),
+                })}
               </span>
               {isNextTurn ? (
-                <span className="inline-flex rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-extrabold text-violet-700">
+                <span className="inline-flex rounded-full bg-violet-700 px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide text-white">
                   {t(tk('nextTurnBadge'))}
                 </span>
               ) : null}
@@ -1127,7 +1176,10 @@ export default function PosFrontDeskView({
 
   const renderTodayTurnsPanel = () => {
     const rows = todayTurnRows
-    const totalTurnsToday = rows.reduce((total, row) => total + Math.max(0, row.turnsToday ?? 0), 0)
+    // Weighted, so the total matches the per-row figures below it and the badges on the board.
+    const totalTurnsToday = formatTurnCredit(
+      rows.reduce((total, row) => total + Math.max(0, row.weightedTurnsToday ?? 0), 0),
+    )
     // The completed-order list has ticket-level technician/service aggregates. They cannot
     // tell us which technician performed which service when a ticket has multiple techs, so
     // build the table from each order detail's serviceLines instead. Keep both identifiers as
@@ -1302,7 +1354,17 @@ export default function PosFrontDeskView({
                         </div>
                       </td>
                       <td className="px-3 py-2.5 text-right font-bold tabular-nums text-nexoraText">
-                        {row.turnsToday}
+                        <p>{t(tk('stationWeightedTurns'), {
+                          turns: formatTurnCredit(row.weightedTurnsToday),
+                          amount: formatServiceTotal(row.serviceTotalToday),
+                        })}</p>
+                        {todayNextTurnBalanceQuery.data ? (
+                          <div className="mt-1 space-y-0.5 text-[10px] font-semibold text-nexoraMuted">
+                            <p>{t('components.dashboard.views.pos.PosOrderWorkspace.technicianCompletedTurns', {
+                              count: todayNextTurnBalanceQuery.data.completedTurns?.get(row.posStaffProfileId) ?? 0,
+                            })}</p>
+                          </div>
+                        ) : null}
                       </td>
                       <td className="whitespace-nowrap px-3 py-2.5 text-right font-bold tabular-nums text-nexoraText">
                         {todayNextTurnBalanceQuery.data
@@ -1398,7 +1460,9 @@ export default function PosFrontDeskView({
           businessTimeZone={reportBusinessTimeZone}
           canViewReport={Boolean(access?.canViewReport)}
           receiptPrintTab={activeTab}
+          receiptPrintBackPath={receiptPrintBackPath}
           printFallbackOrderId={printFallbackOrderId}
+          initialTicketNote={printReturnDraft?.orderId === updateWorkspace.orderId ? printReturnDraft.note : undefined}
           onPrintFallbackHandled={() => setPrintFallbackOrderId(null)}
           onPaymentCompleted={(completedOrderId, receiptMode) => {
             setUpdateWorkspace({ orderId: completedOrderId, mode: 'success', receiptMode })
@@ -1654,7 +1718,10 @@ export default function PosFrontDeskView({
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-1.5">{renderRowFlags(order)}</div>
-                        <p className="pos-customer-name truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
+                        <div className="flex min-w-0 flex-col items-start gap-1">
+                          <p className="pos-customer-name truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
+                          <CustomerVisitTag isNewCustomer={order.isNewCustomer} />
+                        </div>
                         {renderServiceChips(order.serviceNames)}
                         <div>{renderTechnicianChip(order.technicianNames)}</div>
                         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-nexoraBorder pt-2">
@@ -1704,7 +1771,12 @@ export default function PosFrontDeskView({
                           }`}
                         >
                           <td className="px-4 py-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
-                          <td className="pos-customer-name px-4 py-3 font-bold text-nexoraText">{order.customerName}</td>
+                          <td className="px-4 py-3">
+                            <div className="flex min-w-0 flex-col items-start gap-1">
+                              <p className="pos-customer-name font-bold text-nexoraText">{order.customerName}</p>
+                              <CustomerVisitTag isNewCustomer={order.isNewCustomer} />
+                            </div>
+                          </td>
                           <td className="whitespace-nowrap px-4 py-3 font-semibold tabular-nums text-nexoraText">
                             {formatPosTime(order.checkedInAt, currentLanguage) || '—'}
                           </td>
@@ -1745,6 +1817,75 @@ export default function PosFrontDeskView({
 
       {activeTab === PosFrontDeskTab.TurnBoard && (
         <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {([
+              ['turnBoardKpiTotal', turnBoardCounts.total],
+              ['turnBoardKpiAvailable', turnBoardCounts.available],
+              ['turnBoardKpiBusy', turnBoardCounts.busy],
+              ['turnBoardKpiWaiting', turnBoardCounts.guestsWaiting],
+            ] as const).map(([labelKey, value]) => (
+              <div key={labelKey} className="rounded-xl border border-nexoraBorder bg-white p-3">
+                <p className="text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
+                  {t(tk(labelKey))}
+                </p>
+                <p className="mt-1 text-xl font-extrabold tabular-nums text-nexoraText">{value}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex gap-1 rounded-xl border border-nexoraBorder bg-nexoraCanvas/70 p-1">
+              {TURN_BOARD_STATUS_FILTERS.map((filter) => (
+                <button
+                  key={filter}
+                  type="button"
+                  onClick={() => setTurnBoardStatusFilter(filter)}
+                  className={`rounded-md px-2.5 py-1 text-[11px] font-bold transition-colors ${
+                    turnBoardStatusFilter === filter
+                      ? 'bg-white text-nexoraBrandDark shadow-sm ring-1 ring-inset ring-nexoraBorder/70'
+                      : 'text-nexoraMuted hover:bg-nexoraBrandSoft hover:text-nexoraBrandDark'
+                  }`}
+                >
+                  {t(tk(`turnBoardStatusFilter.${filter}`))}
+                </button>
+              ))}
+            </div>
+
+            <div className="inline-flex gap-1 rounded-xl border border-nexoraBorder bg-nexoraCanvas/70 p-1">
+              {([TurnBoardViewMode.Stations, TurnBoardViewMode.Grid] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => handleChangeTurnBoardViewMode(mode)}
+                  className={`rounded-md px-2.5 py-1 text-[11px] font-bold transition-colors ${
+                    turnBoardViewMode === mode
+                      ? 'bg-white text-nexoraBrandDark shadow-sm ring-1 ring-inset ring-nexoraBorder/70'
+                      : 'text-nexoraMuted hover:bg-nexoraBrandSoft hover:text-nexoraBrandDark'
+                  }`}
+                >
+                  {t(tk(mode === TurnBoardViewMode.Grid ? 'turnBoardViewGrid' : 'turnBoardViewStations'))}
+                </button>
+              ))}
+            </div>
+
+            <input
+              type="search"
+              value={turnBoardSearch}
+              onChange={(event) => setTurnBoardSearch(event.target.value)}
+              placeholder={t(tk('turnBoardSearchPlaceholder'))}
+              aria-label={t(tk('turnBoardSearchPlaceholder'))}
+              className="h-8 min-w-[10rem] flex-1 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand sm:max-w-xs"
+            />
+
+            <button
+              type="button"
+              onClick={() => setIsTurnSettingsOpen(true)}
+              className="h-8 shrink-0 rounded-lg border border-nexoraBorder bg-white px-3 text-[11px] font-bold text-nexoraText transition-colors hover:bg-nexoraCanvas"
+            >
+              {t('components.dashboard.views.pos.WeightedTurnSettingsModal.openButton')}
+            </button>
+          </div>
+
           {isTurnBoardLoading ? (
             <div className="py-6">
               <SkeletonList count={3} lines={2} />
@@ -1753,11 +1894,20 @@ export default function PosFrontDeskView({
             <div className="py-8 text-center text-xs text-nexoraMuted">
               {t(tk('turnBoardEmpty'))}
             </div>
+          ) : visibleTurnBoard.length === 0 ? (
+            <div className="py-8 text-center text-xs text-nexoraMuted">
+              {t(tk('turnBoardNoMatches'))}
+            </div>
+          ) : turnBoardViewMode === TurnBoardViewMode.Grid ? (
+            <TurnGridView
+              stations={sortTurnBoardStations(visibleTurnBoard, nextTurnTechnician?.posStaffProfileId)}
+              nextTurnStaffId={nextTurnTechnician?.posStaffProfileId}
+            />
           ) : (
             <div
               className={`grid ${SCROLL_PANEL_MAX_HEIGHT} grid-cols-1 gap-4 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
             >
-              {turnBoard.map(renderStationCard)}
+              {sortTurnBoardStations(visibleTurnBoard, nextTurnTechnician?.posStaffProfileId).map(renderStationCard)}
             </div>
           )}
           {renderTodayTurnsPanel()}
@@ -1808,6 +1958,13 @@ export default function PosFrontDeskView({
       )}
         </>
       )}
+
+      {isTurnSettingsOpen ? (
+        <WeightedTurnSettingsModal
+          businessId={businessId}
+          onClose={() => setIsTurnSettingsOpen(false)}
+        />
+      ) : null}
 
       <BeepMessageModal
         open={beepStation !== null}

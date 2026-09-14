@@ -68,6 +68,8 @@ import { formatBusinessAddress } from '../views/pos/posDisplay'
 import PosDevicesView from '../views/pos/devices/PosDevicesView'
 import PosPrinterSetupView from '../views/pos/printer/PosPrinterSetupView'
 import PosPublicCheckInView from '../views/pos/PosPublicCheckInView'
+import MyCertificationsView from '../../certificate/MyCertificationsView'
+import CategoryManagementView from '../views/CategoryManagementView'
 import ResponsiveStaffRoute from './ResponsiveStaffRoute'
 import {
   StaffDetailRouteContent,
@@ -1288,4 +1290,16 @@ export function FallbackRoute() {
   const navigate = useNavigate()
   const { '*': currentPath } = useParams()
   return <ComingSoon activeMenu={currentPath} onBack={() => navigate('/dashboard')} />
+}
+
+// Account menu > My Certifications. Personal, not business-scoped: no KYB/verification gate and
+// no business props, because a certificate belongs to whoever is signed in.
+export function MyCertificationsRoute() {
+  return <MyCertificationsView />
+}
+
+// Income/Payout Categories (issue #584) — Merchant's own category set. Catalog-like data, not
+// gated behind verificationStatus/KYB, same rationale as the other Payments & Payouts screens.
+export function CategoryManagementRoute() {
+  return <CategoryManagementView />
 }

@@ -28,6 +28,7 @@ import { validatePayoutAccount } from './validatePayoutAccount'
 import { supportsPayoutAccountName } from '../../data/paymentMethodTypes'
 
 interface PayoutSetupModalProps {
+  className?: string
   open: boolean
   walletKey: string
   staffName?: string
@@ -45,6 +46,7 @@ interface PayoutSetupModalProps {
 }
 
 function PayoutSetupModal({
+  className = '',
   open,
   walletKey,
   staffName,
@@ -480,7 +482,7 @@ function PayoutSetupModal({
 
   const modal = (
     <div className={overlayClass}>
-      <div data-testid="payout-setup-modal" className={panelClass}>
+      <div data-testid="payout-setup-modal" className={`${panelClass} ${className}`}>
         {header}
         {/* Body scrolls; header/footer (Save / Cancel) stay pinned on small screens. */}
         {!isCameraOpen && (

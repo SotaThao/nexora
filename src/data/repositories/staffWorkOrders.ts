@@ -13,6 +13,8 @@ import type {
   StaffBookingCalendarQuery,
   SaveStaffWorkOrderServiceLinesPayload,
   StaffWorkOrderCatalogItemApiDto,
+  StaffWorkOrderCatalogCategoryApiDto,
+  StaffWorkOrderServiceCatalogApiDto,
   StaffWorkOrderDetailApiDto,
   StaffWorkOrderItemApiDto,
   StaffWorkOrderListItemApiDto,
@@ -27,6 +29,17 @@ export type StaffWorkOrderCatalogItem = {
   price: number
   durationMinutes: number
   categories: { id: string; name: string }[]
+}
+
+export type StaffWorkOrderCatalogCategory = {
+  id: string
+  name: string
+  displayOrder: number
+}
+
+export type StaffWorkOrderCatalog = {
+  categories: StaffWorkOrderCatalogCategory[]
+  services: StaffWorkOrderCatalogItem[]
 }
 
 export type StaffWorkOrderItem = {
@@ -52,7 +65,10 @@ export type StaffWorkOrderListItem = {
   id: string
   orderNumber: string
   customerName: string
+  /** Shared ticket status (front desk). */
   status: PosOrderStatus
+  /** Caller-local badge/filter status from their own parent lines. */
+  myStatus: PosOrderStatus
   checkedInAt: string
   scheduledAt: string | null
   serviceNames: string[]
@@ -87,7 +103,10 @@ export type StaffWorkOrderDetail = {
   businessId: string
   orderNumber: string
   customerName: string
+  /** Shared ticket status (front desk). */
   status: PosOrderStatus
+  /** Caller-local progress from their own parent lines. */
+  myStatus: PosOrderStatus
   checkedInAt: string
   scheduledAt: string | null
   stationNumber: number | null
@@ -167,11 +186,14 @@ function toPosOrderStatus(raw: string): PosOrderStatus {
 function normalizeListItem(dto: StaffWorkOrderListItemApiDto): StaffWorkOrderListItem | null {
   const id = readText(dto, 'id', 'Id')
   if (!id) return null
+  const status = toPosOrderStatus(readText(dto, 'status', 'Status'))
+  const myStatusRaw = readText(dto, 'myStatus', 'MyStatus')
   return {
     id,
     orderNumber: readText(dto, 'orderNumber', 'OrderNumber'),
     customerName: readText(dto, 'customerName', 'CustomerName'),
-    status: toPosOrderStatus(readText(dto, 'status', 'Status')),
+    status,
+    myStatus: myStatusRaw ? toPosOrderStatus(myStatusRaw) : status,
     checkedInAt: readText(dto, 'checkedInAt', 'CheckedInAt'),
     scheduledAt: readOptionalText(dto, 'scheduledAt', 'ScheduledAt'),
     serviceNames: readTextList(dto, 'serviceNames', 'ServiceNames'),
@@ -204,12 +226,15 @@ function normalizeDetail(dto: StaffWorkOrderDetailApiDto | null): StaffWorkOrder
   const id = readText(dto, 'id', 'Id')
   if (!id) return null
   const items = readValue<StaffWorkOrderItemApiDto[]>(dto, 'items', 'Items') ?? []
+  const status = toPosOrderStatus(readText(dto, 'status', 'Status'))
+  const myStatusRaw = readText(dto, 'myStatus', 'MyStatus')
   return {
     id,
     businessId: readText(dto, 'businessId', 'BusinessId'),
     orderNumber: readText(dto, 'orderNumber', 'OrderNumber'),
     customerName: readText(dto, 'customerName', 'CustomerName'),
-    status: toPosOrderStatus(readText(dto, 'status', 'Status')),
+    status,
+    myStatus: myStatusRaw ? toPosOrderStatus(myStatusRaw) : status,
     checkedInAt: readText(dto, 'checkedInAt', 'CheckedInAt'),
     scheduledAt: readOptionalText(dto, 'scheduledAt', 'ScheduledAt'),
     stationNumber: readOptionalNumber(dto, 'stationNumber', 'StationNumber'),
@@ -240,6 +265,45 @@ function normalizeCatalogItem(dto: StaffWorkOrderCatalogItemApiDto): StaffWorkOr
         name: readText(category, 'name', 'Name'),
       }))
       .filter((category) => Boolean(category.id)),
+  }
+}
+
+function normalizeCatalogCategory(
+  dto: StaffWorkOrderCatalogCategoryApiDto,
+): StaffWorkOrderCatalogCategory | null {
+  const id = readText(dto, 'id', 'Id')
+  if (!id) return null
+  return {
+    id,
+    name: readText(dto, 'name', 'Name'),
+    displayOrder: readNumber(dto, 'displayOrder', 'DisplayOrder'),
+  }
+}
+
+function normalizeCatalogServices(items: StaffWorkOrderCatalogItemApiDto[]): StaffWorkOrderCatalogItem[] {
+  return items
+    .map(normalizeCatalogItem)
+    .filter((item): item is StaffWorkOrderCatalogItem => item != null)
+}
+
+function normalizeCatalog(
+  dto: StaffWorkOrderServiceCatalogApiDto | StaffWorkOrderCatalogItemApiDto[] | null | undefined,
+): StaffWorkOrderCatalog {
+  // Older payloads were a flat service array. Empty salon categories could not exist in that
+  // shape, so treat a leftover array as services-only rather than dropping the picker.
+  if (Array.isArray(dto)) {
+    return { categories: [], services: normalizeCatalogServices(dto) }
+  }
+  if (!dto || typeof dto !== 'object') {
+    return { categories: [], services: [] }
+  }
+  const categories = readValue<StaffWorkOrderCatalogCategoryApiDto[]>(dto, 'categories', 'Categories') ?? []
+  const services = readValue<StaffWorkOrderCatalogItemApiDto[]>(dto, 'services', 'Services') ?? []
+  return {
+    categories: (Array.isArray(categories) ? categories : [])
+      .map(normalizeCatalogCategory)
+      .filter((category): category is StaffWorkOrderCatalogCategory => category != null),
+    services: Array.isArray(services) ? normalizeCatalogServices(services) : [],
   }
 }
 
@@ -330,16 +394,12 @@ function createStaffWorkOrdersRepository(client: HttpClient = httpClient) {
       return normalizeDetail(res)
     },
 
-    // Already narrowed server-side to what this technician is qualified for, so anything listed
-    // here is something the save will accept.
-    async getMyServiceCatalog(orderId: string): Promise<StaffWorkOrderCatalogItem[]> {
-      const res = await client.get<StaffWorkOrderCatalogItemApiDto[]>(
+    // Salon menu: every category plus every Active service, matching POS Settings > Services.
+    async getMyServiceCatalog(orderId: string): Promise<StaffWorkOrderCatalog> {
+      const res = await client.get<StaffWorkOrderServiceCatalogApiDto | StaffWorkOrderCatalogItemApiDto[]>(
         `${workOrderDetailPath(orderId)}/${STAFF_WORK_ORDER_SERVICE_CATALOG}`,
       )
-      if (!Array.isArray(res)) return []
-      return res
-        .map(normalizeCatalogItem)
-        .filter((item): item is StaffWorkOrderCatalogItem => item != null)
+      return normalizeCatalog(res)
     },
 
     // One call for the whole basket: the customer approves once, so the change lands once.

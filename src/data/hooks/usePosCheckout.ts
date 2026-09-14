@@ -21,6 +21,7 @@ import type {
   ServiceLineAddOnOptionApiDto,
   SetOrderDiscountPayload,
   SetOrderServiceLineDiscountPayload,
+  SetOrderPaymentAllocationsPayload,
   SetOrderStaffTipSplitPayload,
 } from '../../types/repositories'
 
@@ -229,6 +230,10 @@ export function useAddOrderServiceLine(businessId?: string) {
             lineTotalAfterDiscount: lineTotal,
             canAssignDiscountToStaff: false,
             completedAt: null,
+            // Stamped client-side so the line lands in the right place in the ticket order right
+            // away; the refetch below replaces it with the server's own timestamp.
+            addedAt: new Date().toISOString(),
+            assignedAt: null,
             addOns: [],
           }))
         : null
@@ -303,6 +308,10 @@ export function useAddOrderCustomServiceLine(businessId?: string) {
             note,
             assignedPosStaffProfileId: posStaffProfileId,
             technicianName,
+            // See above — a custom line may arrive with its technician already picked, so both
+            // timestamps matter to where it sits until the refetch lands.
+            addedAt: new Date().toISOString(),
+            assignedAt: posStaffProfileId ? new Date().toISOString() : null,
             addOns: [],
           }))
         : null
@@ -480,6 +489,7 @@ export function useAddOrderServiceAddOnLine(businessId?: string) {
     onSuccess: (_result, { orderId }) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
     },
   })
 }
@@ -512,6 +522,7 @@ export function useRemoveOrderServiceAddOnLine(businessId?: string) {
     onSuccess: (_result, { orderId }) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
     },
   })
 }
@@ -749,6 +760,20 @@ export function useSetOrderStaffTipSplit(businessId?: string) {
   return useMutation<boolean, Error, { orderId: string; payload: SetOrderStaffTipSplitPayload }>({
     mutationFn: ({ orderId, payload }) =>
       posCheckoutRepository.setOrderStaffTipSplit(businessId as string, orderId, payload),
+    onSuccess: (_result, { orderId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
+    },
+  })
+}
+
+// Auto-save for the Quick Split screen: replaces the whole set of payment portions on every edit.
+// Only the order detail is invalidated — a draft split changes nothing any list, board or report
+// reads, and those caches only need to move once the order is actually completed.
+export function useSetOrderPaymentAllocations(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<boolean, Error, { orderId: string; payload: SetOrderPaymentAllocationsPayload }>({
+    mutationFn: ({ orderId, payload }) =>
+      posCheckoutRepository.setOrderPaymentAllocations(businessId as string, orderId, payload),
     onSuccess: (_result, { orderId }) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
     },

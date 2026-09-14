@@ -35,6 +35,7 @@ export interface PosReportRow {
   commission: number
   tips: number
   discount: number
+  supplyFee: number
   techTakes: number
   weeklyGuarantee?: number | null
 }
@@ -46,6 +47,7 @@ export interface PosReportTotals {
   commission: number
   tips: number
   discount: number
+  supplyFee: number
   techTakes: number
 }
 
@@ -100,6 +102,7 @@ export interface PosStaffReportDetail {
   totalTips: number
   totalDiscount: number
   totalCommission: number
+  totalSupplyFee: number
   paymentTotals: PosStaffReportPaymentTotal[]
 }
 
@@ -116,12 +119,40 @@ export interface PosReportParams {
 export interface PosReportDetailParams {
   businessId: string
   posStaffProfileId: string
-  mode: PosReportMode.Daily | PosReportMode.Weekly
+  mode: PosReportMode
   periodKey: string
   displayName: string
   periodStart: string
   periodEnd: string
   timeZone: string
+}
+
+export interface PosStaffReportEmailParams {
+  businessId: string
+  posStaffProfileId: string
+  mode: PosReportMode
+  periodKey: string
+  toEmails: string[]
+}
+
+export interface PosStaffReportEmailBulkRecipient {
+  posStaffProfileId: string
+  email: string
+}
+
+export interface PosStaffReportEmailBulkParams {
+  businessId: string
+  mode: PosReportMode
+  periodKey: string
+  skipEmptyReports: boolean
+  recipients: PosStaffReportEmailBulkRecipient[]
+}
+
+export interface PosStaffReportEmailBulkResultItem {
+  posStaffProfileId: string
+  displayName: string
+  sent: boolean
+  skippedReason?: string | null
 }
 
 type QueryParams = Record<string, string | number | boolean | string[] | number[]>
@@ -318,9 +349,9 @@ export function createPosReportRepository(client: HttpClient = httpClient) {
       return {
         mode: data?.mode ?? params.mode,
         periods: data?.periods ?? [],
-        rows: data?.rows ?? [],
-        totals: data?.totals ?? {
-          turns: 0, hours: 0, serviceAmount: 0, commission: 0, tips: 0, discount: 0, techTakes: 0,
+        rows: (data?.rows ?? []).map((row) => ({ ...row, supplyFee: row.supplyFee ?? 0 })),
+        totals: data?.totals ? { ...data.totals, supplyFee: data.totals.supplyFee ?? 0 } : {
+          turns: 0, hours: 0, serviceAmount: 0, commission: 0, tips: 0, discount: 0, supplyFee: 0, techTakes: 0,
         },
         generatedAtUtc: data?.generatedAtUtc ?? '',
       }
@@ -328,6 +359,71 @@ export function createPosReportRepository(client: HttpClient = httpClient) {
 
     async exportStaffReportCsv(params: PosReportParams): Promise<Blob> {
       return await client.getBlob(`${BASE_PATH}/export.csv`, { params: toQueryParams(params) })
+    },
+
+    async sendStaffReportEmail(params: PosStaffReportEmailParams): Promise<void> {
+      // Only businessId is a query param — the controller reads the rest of the command
+      // (posStaffProfileId/mode/periodKey/toEmails) from the request body.
+      await client.post(`${BASE_PATH}/email`, {
+        posStaffProfileId: params.posStaffProfileId,
+        mode: params.mode,
+        periodKey: params.periodKey,
+        toEmails: params.toEmails,
+      }, {
+        params: { businessId: params.businessId },
+      })
+    },
+
+    async sendStaffReportEmailBulk(
+      params: PosStaffReportEmailBulkParams,
+    ): Promise<PosStaffReportEmailBulkResultItem[]> {
+      const result = await client.post<{ results: PosStaffReportEmailBulkResultItem[] }>(
+        `${BASE_PATH}/email/bulk`,
+        {
+          mode: params.mode,
+          periodKey: params.periodKey,
+          skipEmptyReports: params.skipEmptyReports,
+          recipients: params.recipients,
+        },
+        { params: { businessId: params.businessId } },
+      )
+      return result?.results ?? []
+    },
+
+    async getStaffReportsForPrint(
+      params: PosReportParams,
+      rows: PosReportRow[],
+      period: PosReportPeriod,
+    ): Promise<Array<{ displayName: string; detail: PosStaffReportDetail }>> {
+      // Share summary, completed-order pages and ticket details within this print batch.
+      // Every technician still uses exactly the same calculation as View → Print.
+      const reads = new Map<string, Promise<unknown>>()
+      const sharedClient: HttpClient = {
+        ...client,
+        get<T>(path: string, options?: Parameters<HttpClient['get']>[1]): Promise<T> {
+          const key = JSON.stringify([path, options])
+          let result = reads.get(key)
+          if (!result) {
+            result = client.get(path, options)
+            reads.set(key, result)
+          }
+          return result as Promise<T>
+        },
+      }
+      const repository = createPosReportRepository(sharedClient)
+      return mapInBatches(rows, 4, async row => ({
+        displayName: row.displayName,
+        detail: await repository.getStaffReportDetail({
+          businessId: params.businessId,
+          posStaffProfileId: row.posStaffProfileId,
+          displayName: row.displayName,
+          mode: params.mode,
+          periodKey: period.key,
+          periodStart: period.start,
+          periodEnd: period.end,
+          timeZone: params.timeZone || 'America/Chicago',
+        }),
+      }))
     },
 
     async getStaffReportDetail(
@@ -339,6 +435,7 @@ export function createPosReportRepository(client: HttpClient = httpClient) {
         mode: params.mode,
         dates: params.mode === PosReportMode.Daily ? [params.periodKey] : undefined,
         weeks: params.mode === PosReportMode.Weekly ? [params.periodKey] : undefined,
+        month: params.mode === PosReportMode.Monthly ? params.periodKey : undefined,
       }
       // Start the existing summary and order-detail reads together so every figure in the modal
       // comes from the same refresh cycle instead of mixing fresh tickets with a stale table row.
@@ -428,9 +525,9 @@ export function createPosReportRepository(client: HttpClient = httpClient) {
         .sort(([left], [right]) => left.localeCompare(right))
         .map(([paymentMethod, amount]) => ({ paymentMethod, amount: roundCurrency(amount) }))
       const summary = await summaryPromise
-      const totalCommission = summary?.rows?.find(
+      const staffSummary = summary?.rows?.find(
         (row) => row.posStaffProfileId === params.posStaffProfileId,
-      )?.commission ?? 0
+      )
 
       return {
         mode: params.mode,
@@ -441,8 +538,9 @@ export function createPosReportRepository(client: HttpClient = httpClient) {
         days,
         totalAmount: roundCurrency(tickets.reduce((total, ticket) => total + ticket.amount, 0)),
         totalTips: roundCurrency(tickets.reduce((total, ticket) => total + ticket.tips, 0)),
-        totalDiscount: roundCurrency(tickets.reduce((total, ticket) => total + ticket.totalDiscount, 0)),
-        totalCommission: roundCurrency(totalCommission),
+        totalDiscount: roundCurrency(staffSummary?.discount ?? 0),
+        totalCommission: roundCurrency(staffSummary?.commission ?? 0),
+        totalSupplyFee: roundCurrency(staffSummary?.supplyFee ?? 0),
         paymentTotals,
       }
     },

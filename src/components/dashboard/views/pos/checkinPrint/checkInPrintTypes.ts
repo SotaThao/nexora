@@ -11,7 +11,7 @@ export interface CheckInPrintBusiness {
   hoursByLanguage: { en: string; vi: string }; checkInUrl: string
 }
 export interface TextRun {
-  text: string; x: number; baselineY: number; fontId: 'body' | 'bodyBold' | 'heading'; fontSize: number; color: string
+  text: string; x: number; baselineY: number; fontId: 'body' | 'bodyBold' | 'heading' | 'inter'; fontSize: number; color: string
 }
 export type PrintNode =
   | { kind: 'rect'; x: number; y: number; width: number; height: number; fill: string }

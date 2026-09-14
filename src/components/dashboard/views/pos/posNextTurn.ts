@@ -1,10 +1,29 @@
-import type { TimeClockRosterRowApiDto } from '../../../../types/repositories'
+import type { TimeClockRosterRowApiDto, TurnBoardStationApiDto } from '../../../../types/repositories'
+import { PosOrderStatus } from '../../../../constants/posOrderStatus'
 import type { NextTurnBalance } from '../../../../data/repositories/posNextTurn'
+import { parseApiUtcDateTime } from '../../../../utils/localDate'
 
 type NextTurnRosterRow = Pick<
   TimeClockRosterRowApiDto,
   'posStaffProfileId' | 'displayName' | 'isClockedIn' | 'turnRank' | 'turnsToday' | 'clockInAt'
 >
+
+export function sortTurnBoardStations<
+  TStation extends Pick<TurnBoardStationApiDto, 'posStaffProfileId' | 'currentStatus' | 'isClockedIn'>,
+>(stations: readonly TStation[], nextTurnStaffId?: string): TStation[] {
+  return [...stations].sort((a, b) => {
+    // Off-shift technicians sit below everyone on the floor: the board now lists them so the front
+    // desk can chase a clock-in, not so they compete for space with people ready to take a guest.
+    // `isClockedIn` is optional in the contract — an absent value reads as on shift.
+    const offShiftDifference = Number(a.isClockedIn === false) - Number(b.isClockedIn === false)
+    if (offShiftDifference !== 0) return offShiftDifference
+    // Display busy stations last without changing the money-based recommendation.
+    const busyDifference = Number(a.currentStatus === PosOrderStatus.InService)
+      - Number(b.currentStatus === PosOrderStatus.InService)
+    return busyDifference
+      || Number(b.posStaffProfileId === nextTurnStaffId) - Number(a.posStaffProfileId === nextTurnStaffId)
+  })
+}
 
 export function compareNextTurnRows(a: NextTurnRosterRow, b: NextTurnRosterRow) {
   const turnsDifference = (a.turnsToday ?? 0) - (b.turnsToday ?? 0)
@@ -45,7 +64,7 @@ export function selectNextTurnTechnician<TRow extends NextTurnRosterRow>(
   const total = (id: string) => Math.round(nextTurnServiceAmount(id, serviceAmountsByStaffId, balance?.committedAmounts) * 100)
   const availableSince = (row: TRow) => Math.max(
     balance?.availableSince.get(row.posStaffProfileId) ?? 0,
-    Date.parse(row.clockInAt ?? '') || 0,
+    parseApiUtcDateTime(row.clockInAt)?.getTime() ?? 0,
   )
   const eligibleRows = rosterRows
     .filter((row) => row.isClockedIn && eligibleStaffIds.has(row.posStaffProfileId))

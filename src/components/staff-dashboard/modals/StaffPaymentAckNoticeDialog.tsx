@@ -40,7 +40,7 @@ export default function StaffPaymentAckNoticeDialog({
             <Bell className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <h2 id="staff-payment-ack-notice-title" className="text-base font-extrabold text-nexoraText">
+            <h2 id="staff-payment-ack-notice-title" className="text-nexoraText text-base font-semibold leading-snug">
               {t('staff_payments.ack_notice_title')}
             </h2>
             <p className="mt-1 text-xs leading-relaxed text-nexoraMuted">
@@ -54,17 +54,17 @@ export default function StaffPaymentAckNoticeDialog({
         <div className="mt-4 rounded-xl border border-violet-100 bg-violet-50/60 p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-2xl font-black text-nexoraText">{formatCurrency(payment.amount)}</p>
-              <p className="mt-1 text-[11px] font-semibold text-nexoraMuted">
+              <p className="text-xl font-semibold tabular-nums text-nexoraText sm:text-2xl sm:font-black">{formatCurrency(payment.amount)}</p>
+              <p className="mt-1 text-xs font-semibold text-nexoraMuted">
                 {formatTransactionDateTime(payment.createdAt, currentLanguage)}
               </p>
               {payment.paymentMethodType ? (
-                <p className="mt-1 text-[11px] font-bold text-nexoraText">{payment.paymentMethodType}</p>
+                <p className="mt-1 text-xs font-bold text-nexoraText">{payment.paymentMethodType}</p>
               ) : null}
             </div>
             <DirectPaymentStatusBadge status={paymentStatus} t={t} variant="staff" className="shrink-0" />
           </div>
-          <p className="mt-3 text-[11px] leading-relaxed text-violet-900/90">
+          <p className="mt-3 text-xs leading-relaxed text-violet-900/90">
             {t('staff_payments.confirm_receipt_help')}
           </p>
         </div>
@@ -73,14 +73,14 @@ export default function StaffPaymentAckNoticeDialog({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 items-center justify-center rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraMuted transition hover:bg-slate-50"
+            className="inline-flex h-10 items-center justify-center rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-semibold text-nexoraMuted transition hover:bg-slate-50"
           >
             {t('common.close')}
           </button>
           <button
             type="button"
             onClick={onViewDetail}
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white transition hover:bg-nexoraBrand/90"
+            className="inline-flex h-10 items-center justify-center rounded-lg bg-nexoraBrand px-4 text-xs font-semibold text-white transition hover:bg-nexoraBrand/90"
           >
             {t('staff_payments.view_detail')}
           </button>

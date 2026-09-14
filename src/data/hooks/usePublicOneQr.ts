@@ -9,13 +9,15 @@
  */
 
 import { useContext } from 'react'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AuthContext } from '../../auth/AuthContext'
 import { tokenStore } from '../../auth/tokenStore'
 import { qk } from '../queryKeys'
-import publicOneQrRepository from '../repositories/publicOneQr'
-import type { OneQrAudience } from '../../constants/oneQr'
+import publicOneQrRepository, { resolveOneQrBookAiUrl } from '../repositories/publicOneQr'
+import { ONEQR_ROUTE, OneQrAudience } from '../../constants/oneQr'
 import type { OneQrLanding } from '../../types/oneQr'
+
+const BOOKING_LINK_STALE_TIME = 60_000
 
 function hasStoredAccessToken(): boolean {
   return Boolean(tokenStore.get()?.accessToken)
@@ -57,6 +59,36 @@ interface TrackOneQrModuleClickVars {
   moduleKey: string
   sessionId: string
   audience: OneQrAudience
+}
+
+/** Resolve the customer's configured Book AI destination without inventing a tenant slug. */
+export function usePublicOneQrBookingLink(businessSlug?: string) {
+  const slug = businessSlug?.trim() ?? ''
+  const queryClient = useQueryClient()
+  const cached = queryClient.getQueryCache().findAll({ queryKey: qk.publicOneQrLanding(slug).slice(0, 2) })
+    .filter(query => (query.state.data as OneQrLanding | null)?.audience === OneQrAudience.Customer
+      && Date.now() - query.state.dataUpdatedAt < BOOKING_LINK_STALE_TIME)
+    .sort((left, right) => right.state.dataUpdatedAt - left.state.dataUpdatedAt)[0]
+
+  const query = useQuery({
+    queryKey: qk.publicOneQrLanding(slug, '', 'anonymous', ONEQR_ROUTE.asCustomerValue),
+    queryFn: () => publicOneQrRepository.getLanding({
+      businessSlug: slug, sessionId: '', viewAs: ONEQR_ROUTE.asCustomerValue, anonymous: true,
+    }),
+    select: resolveOneQrBookAiUrl,
+    initialData: cached?.state.data as OneQrLanding | undefined,
+    initialDataUpdatedAt: cached?.state.dataUpdatedAt,
+    enabled: Boolean(slug),
+    staleTime: BOOKING_LINK_STALE_TIME,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  })
+
+  // A newer OneQR visit may update Book AI after this menu query was cached.
+  return cached && cached.state.dataUpdatedAt > query.dataUpdatedAt
+    ? { ...query, data: resolveOneQrBookAiUrl(cached.state.data as OneQrLanding) }
+    : query
 }
 
 /**

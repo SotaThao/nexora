@@ -58,6 +58,8 @@ function normalizeStaffPayment(raw: Record<string, unknown> | null | undefined):
     accountInfo: readField<string | null>(raw, 'accountInfo', 'AccountInfo') ?? null,
     imageUrl: readField<string | null>(raw, 'imageUrl', 'ImageUrl') ?? null,
     cryptoWallet: parsePaymentCryptoWallet(readField(raw, 'cryptoWallet', 'CryptoWallet')),
+    categoryId: readField<string | null>(raw, 'categoryId', 'CategoryId') ?? null,
+    categoryName: readField<string | null>(raw, 'categoryName', 'CategoryName') ?? null,
   }
 }
 
@@ -138,6 +140,14 @@ export function createStaffPaymentsRepository(client: HttpClient = httpClient) {
         `/api/v1/staff/payments/${encodeURIComponent(paymentId)}/acknowledge`,
         body,
       )
+    },
+
+    /**
+     * Income/Payout Categories (issue #584) — Staff assigns a category to a StaffDirectPayment
+     * they received. Endpoint per the technical design doc; not yet on Swagger.
+     */
+    async setCategory(paymentId: string, categoryId: string | null): Promise<void> {
+      await client.put<void>(`/api/v1/staff/payments/${encodeURIComponent(paymentId)}/category`, { categoryId })
     },
 
     async getStats(query: StaffPaymentStatsQuery = {}): Promise<MerchantPaymentStats> {

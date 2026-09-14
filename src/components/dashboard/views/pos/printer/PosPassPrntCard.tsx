@@ -47,11 +47,12 @@ export default function PosPassPrntCard({
   const saveProfile = useSavePosPrinterProfile()
 
   const profile = profileQuery.data
-  const transport = profile?.transport ?? PosPrintTransport.Browser
+  const transport = profile?.transportConfigured ? profile.transport : undefined
   const isPassPrnt = transport === PosPrintTransport.PassPrnt
+  const isBusy = isPrinting || saveProfile.isPending || profileQuery.isPending
 
   const selectTransport = (next: PosPrintTransportType) => {
-    if (next === transport) return
+    if (next === transport || isBusy) return
     saveProfile.mutate({ transport: next })
   }
 
@@ -67,18 +68,30 @@ export default function PosPassPrntCard({
         type="button"
         role="radio"
         aria-checked={active}
+        disabled={isBusy}
         onClick={() => selectTransport(value)}
-        className={`rounded-xl border p-3 text-left transition-colors ${
+        className={`min-h-20 rounded-xl border p-4 text-left transition-colors disabled:opacity-60 ${
           active
             ? 'border-nexoraBrand bg-nexoraBrandSoft'
             : 'border-nexoraBorder hover:border-nexoraBrand'
         }`}
       >
-        <span className="block text-xs font-bold text-nexoraText">{title}</span>
-        <span className="mt-1 block text-[11px] text-nexoraMuted">{hint}</span>
+        <span className="block text-sm font-bold text-nexoraText">{title}</span>
+        <span className="mt-1 block text-xs leading-relaxed text-nexoraMuted">{hint}</span>
       </button>
     )
   }
+
+  const testPrintButton = (
+    <button
+      type="button"
+      onClick={onTestPrint}
+      disabled={isBusy}
+      className="min-h-11 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+    >
+      {isPrinting ? t(`${K}.testPrinting`) : t(`${K}.step3Action`)}
+    </button>
+  )
 
   const step = (index: number, title: string, hint: string, action?: React.ReactNode) => (
     <div className="grid grid-cols-1 gap-2 border-t border-slate-50 py-3 first:border-t-0 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
@@ -131,41 +144,48 @@ export default function PosPassPrntCard({
         </h4>
       </div>
 
-      <p className="mb-3 text-[11px] text-nexoraMuted">{t(`${K}.connectionSubtitle`)}</p>
+      <p className="mb-3 text-sm font-bold text-nexoraText">{t(`${K}.connectionSubtitle`)}</p>
 
       <div role="radiogroup" aria-label={t(`${K}.methodLabel`)} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {methodOption(
-          PosPrintTransport.PassPrnt,
-          t(`${K}.methodPassPrnt`),
-          t(`${K}.methodPassPrntHint`),
-        )}
         {methodOption(
           PosPrintTransport.Browser,
           t(`${K}.methodBrowser`),
           t(`${K}.methodBrowserHint`),
         )}
+        {methodOption(
+          PosPrintTransport.PassPrnt,
+          t(`${K}.methodPassPrnt`),
+          t(`${K}.methodPassPrntHint`),
+        )}
       </div>
+
+      <p className="mt-3 text-xs leading-relaxed text-nexoraMuted">{t(`${K}.compatibilityNote`)}</p>
+
+      {profileQuery.isPending ? (
+        <p className="mt-4 text-xs text-nexoraMuted" role="status">{t(`${K}.loadingMethod`)}</p>
+      ) : !transport ? (
+        <p className="mt-4 text-sm text-nexoraMuted">{t(`${K}.chooseMethodHint`)}</p>
+      ) : null}
+      {saveProfile.isError || profileQuery.isError ? (
+        <p className="mt-3 text-xs text-nexoraText" role="alert">{t(`${K}.methodError`)}</p>
+      ) : null}
+
+      {transport === PosPrintTransport.Browser ? (
+        <div className="mt-5">
+          <h5 className="text-sm font-bold text-nexoraText">{t(`${K}.browserStepsTitle`)}</h5>
+          <div className="mt-1">
+            {step(1, t(`${K}.browserStep1Title`), t(`${K}.browserStep1Hint`))}
+            {step(2, t(`${K}.browserStep2Title`), t(`${K}.browserStep2Hint`))}
+            {step(3, t(`${K}.step3Title`), t(`${K}.browserStep3Hint`), testPrintButton)}
+          </div>
+          <p className="mt-3 rounded-xl bg-nexoraCanvas p-3 text-xs leading-relaxed text-nexoraMuted">
+            {t(`${K}.browserTestNote`)}
+          </p>
+        </div>
+      ) : null}
 
       {isPassPrnt ? (
         <>
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <label className="block">
-              <span className="mb-1 block text-[11px] font-bold text-nexoraText">
-                {t(`${K}.paperWidthLabel`)}
-              </span>
-              <select
-                className="h-11 w-full rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraText"
-                value={profile?.paperWidthDots ?? RECEIPT_PAPER_WIDTH_DOTS.Roll80mm}
-                onChange={(event) =>
-                  saveProfile.mutate({ paperWidthDots: Number(event.target.value) })
-                }
-              >
-                <option value={RECEIPT_PAPER_WIDTH_DOTS.Roll80mm}>{t(`${K}.paperWidth80`)}</option>
-                <option value={RECEIPT_PAPER_WIDTH_DOTS.Roll58mm}>{t(`${K}.paperWidth58`)}</option>
-              </select>
-            </label>
-          </div>
-
           <h5 className="mt-5 text-[11px] font-black uppercase tracking-wider text-nexoraMuted">
             {t(`${K}.stepsTitle`)}
           </h5>
@@ -185,18 +205,29 @@ export default function PosPassPrntCard({
               </a>,
             )}
             {step(2, t(`${K}.step2Title`), t(`${K}.step2Hint`))}
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <label className="block">
+                <span className="mb-1 block text-[11px] font-bold text-nexoraText">
+                  {t(`${K}.paperWidthLabel`)}
+                </span>
+                <select
+                  className="h-11 w-full rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraText"
+                  value={profile?.paperWidthDots ?? RECEIPT_PAPER_WIDTH_DOTS.Roll80mm}
+                  disabled={isBusy}
+                  onChange={(event) =>
+                    saveProfile.mutate({ paperWidthDots: Number(event.target.value) })
+                  }
+                >
+                  <option value={RECEIPT_PAPER_WIDTH_DOTS.Roll80mm}>{t(`${K}.paperWidth80`)}</option>
+                  <option value={RECEIPT_PAPER_WIDTH_DOTS.Roll58mm}>{t(`${K}.paperWidth58`)}</option>
+                </select>
+              </label>
+            </div>
             {step(
               3,
               t(`${K}.step3Title`),
               t(`${K}.step3Hint`),
-              <button
-                type="button"
-                onClick={onTestPrint}
-                disabled={isPrinting}
-                className="h-11 rounded-lg bg-nexoraBrand px-4 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
-              >
-                {isPrinting ? t(`${K}.testPrinting`) : t(`${K}.step3Action`)}
-              </button>,
+              testPrintButton,
             )}
           </div>
 
@@ -206,8 +237,39 @@ export default function PosPassPrntCard({
             </p>
             {lastTest()}
           </div>
+
+          <details className="mt-4 rounded-xl border border-nexoraBorder bg-nexoraBrandSoft p-4">
+            <summary className="min-h-11 cursor-pointer content-center text-sm font-bold text-nexoraText">
+              {t(`${K}.appRequiredTitle`)}
+            </summary>
+            <p className="mt-2 text-xs leading-relaxed text-nexoraMuted">{t(`${K}.appRequiredHint`)}</p>
+            <p className="mt-2 text-xs leading-relaxed text-nexoraMuted">{t(`${K}.appOptionalHint`)}</p>
+          </details>
         </>
       ) : null}
+
+      <details className="mt-4 rounded-xl border border-nexoraBorder bg-nexoraCanvas p-4">
+        <summary className="min-h-11 cursor-pointer content-center text-sm font-bold text-nexoraText">
+          {t(`${K}.otherPrinterTitle`)}
+        </summary>
+        <div className="mt-2 space-y-3 text-xs leading-relaxed text-nexoraMuted">
+          <p>{t(`${K}.otherPrinterIntro`)}</p>
+          <ul className="list-disc space-y-2 pl-5">
+            <li>{t(`${K}.otherPrinterIpad`)}</li>
+            <li>{t(`${K}.otherPrinterComputer`)}</li>
+            <li>{t(`${K}.otherPrinterUnsupported`)}</li>
+          </ul>
+          <div className="border-t border-nexoraBorder pt-3">
+            <p className="font-bold text-nexoraText">{t(`${K}.compatibilityCheckTitle`)}</p>
+            <p className="mt-1">{t(`${K}.compatibilityCheckHint`)}</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              <li>{t(`${K}.compatibilityCheckModel`)}</li>
+              <li>{t(`${K}.compatibilityCheckConnection`)}</li>
+              <li>{t(`${K}.compatibilityCheckDevice`)}</li>
+            </ul>
+          </div>
+        </div>
+      </details>
     </div>
   )
 }

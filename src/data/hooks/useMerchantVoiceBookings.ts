@@ -241,9 +241,10 @@ export function useUpdateMerchantVoiceConfig() {
   const queryClient = useQueryClient()
   return useMutation<void, Error, UpdateMerchantVoiceConfigRequest>({
     mutationFn: (body) => merchantVoiceRepository.updateConfig(body),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceConfig() })
-    },
+    onSuccess: () => Promise.all([
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceConfig() }),
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceOptionsRoot() }),
+    ]),
   })
 }
 
@@ -505,9 +506,20 @@ export function useUpdateMerchantVoiceCustomer() {
 
 const EMPTY_USAGE_ACTIVITY_FILTERS: MerchantVoiceUsageActivityFilter = {}
 
+type VoiceCreditQueryOptions = {
+  enabled?: boolean
+  staleTime?: number
+  gcTime?: number
+  refetchOnMount?: boolean | 'always'
+}
+
 /** GET `/api/v1/merchant/nexora-voice/credits` */
-export function useMerchantVoiceCreditWallet({ enabled = true } = {}) {
+export function useMerchantVoiceCreditWallet({
+  enabled = true,
+  ...queryOptions
+}: VoiceCreditQueryOptions = {}) {
   return useQuery<VoiceCreditWalletDto>({
+    ...queryOptions,
     queryKey: qk.merchantVoiceCreditWallet(),
     queryFn: () => merchantVoiceRepository.getCreditWallet(),
     enabled,
@@ -517,9 +529,10 @@ export function useMerchantVoiceCreditWallet({ enabled = true } = {}) {
 /** GET `/api/v1/merchant/nexora-voice/usage/activity` */
 export function useMerchantVoiceUsageActivity(
   filters: MerchantVoiceUsageActivityFilter = EMPTY_USAGE_ACTIVITY_FILTERS,
-  { enabled = true } = {},
+  { enabled = true, ...queryOptions }: VoiceCreditQueryOptions = {},
 ) {
   return useQuery<MerchantVoiceUsageActivityResponse>({
+    ...queryOptions,
     queryKey: qk.merchantVoiceUsageActivity(filters),
     queryFn: () => merchantVoiceRepository.getUsageActivity(filters),
     enabled,

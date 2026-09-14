@@ -11,8 +11,9 @@
 // page (PosCheckInTab / CheckInSurface), the same one the customer kiosk runs.
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowLeft, Loader2, Package, X, Printer, ClipboardCheck } from 'lucide-react'
+import { ArrowLeft, Loader2, Package, UserRound, X, Printer, ClipboardCheck } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
+import type { TechnicianOption } from '../../../checkin/parts/TechnicianPickerGrid'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getErrorMessage } from '../../../../data/errorCodes'
 import {
@@ -26,6 +27,7 @@ import {
   useAddOrderServiceAddOnLine,
   useRemoveOrderServiceAddOnLine,
   useServiceLineAddOnOptions,
+  useSetOrderPaymentAllocations,
   useSetOrderServiceLineDiscount,
   useUpdateOrderServiceLine,
   useEligiblePromotions,
@@ -71,6 +73,7 @@ import type {
   SetOrderServiceLineDiscountPayload,
   ServiceLineAddOnOptionApiDto,
   SetOrderDiscountPayload,
+  SetOrderPaymentAllocationsPayload,
   CompleteOrderResultApiDto,
 } from '../../../../types/repositories'
 import { Skeleton, SkeletonList, SkeletonListItem } from '../../../ui/skeleton'
@@ -82,6 +85,7 @@ import CustomServiceModal from './modals/CustomServiceModal'
 import type { CustomServiceSubmit, CustomServiceTarget } from './modals/CustomServiceModal'
 import ServiceAddOnPickerModal from './modals/ServiceAddOnPickerModal'
 import OrderDiscountSection from './OrderDiscountSection'
+import { sortTicketServiceLines } from './posTicketLineOrder'
 import ServiceDiscountModal, {
   type ServiceDiscountSubmit,
   type ServiceDiscountTarget,
@@ -90,8 +94,12 @@ import ChangeTechnicianModal from './modals/ChangeTechnicianModal'
 import { formatPosDateTime } from './posDateTime'
 import { useTicketActionLock } from './useTicketActionLock'
 import PosPaymentMethodSelector from './PosPaymentMethodSelector'
+import PosQuickSplitPanel from './PosQuickSplitPanel'
+import { reallocateTip } from './posPaymentAllocations'
 import {
   getPosCheckoutPaymentMethodLabel,
+  isPosCheckoutPaymentMethod,
+  POS_CHECKOUT_PAYMENT_METHOD_LABEL_KEYS,
   PosCheckoutPaymentMethod,
 } from '../../../../constants/posCheckoutPaymentMethod'
 import PosCashPaymentPanel, { isCashPaymentCovered } from './PosCashPaymentPanel'
@@ -108,12 +116,13 @@ import {
   resolvePosReceiptTotalsLabels,
   resolveUnassignedTechnicianLabel,
 } from './receipt/posReceiptLabels'
+import { formatPaymentMethodDisplay } from './posDisplay'
 import { usePosReceiptPrint } from './receipt/usePosReceiptPrint'
 import type { PosReceiptDocument } from '../../../../types/domain'
 import { PosFrontDeskTab } from '../../../../constants/posFrontDesk'
 import { DASHBOARD_MENU_ID } from '../../constants'
 import { DEFAULT_POS_RECEIPT_SETTINGS, PosPrintTransport } from '../../../../constants/posPrinter'
-import { usePosReceiptSettings } from '../../../../data/hooks/usePosPrinterSettings'
+import { usePosReceiptSettings, usePosTicketPrinted } from '../../../../data/hooks/usePosPrinterSettings'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { selectNextTurnTechnician } from './posNextTurn'
 import type { PosReceiptMode } from './posWorkspaceUrl'
@@ -140,6 +149,12 @@ const CORE_CHECKOUT_PAYMENT_METHODS = new Set<PosCheckoutPaymentMethodType>([
 
 // Keep the existing change-service flow available from Ticket Detail.
 const SHOW_CHANGE_SERVICE_ACTION = true
+
+// Split amounts are compared in whole cents: a split that is one cent out has to read as one cent
+// out, and float dollars cannot be trusted to say so.
+function toPaymentCents(amount: number) {
+  return Math.round(amount * 100)
+}
 
 function round2(value: number) {
   return Math.round(value * 100) / 100
@@ -287,8 +302,10 @@ export default function PosOrderWorkspace({
   businessTimeZone,
   canViewReport = false,
   receiptPrintTab = PosFrontDeskTab.CheckoutCustomer,
+  receiptPrintBackPath = POS_FRONT_DESK_ROUTE_PATH,
   printFallbackOrderId = null,
   onPrintFallbackHandled,
+  initialTicketNote,
 }: {
   businessId: string
   orderId: string
@@ -309,15 +326,18 @@ export default function PosOrderWorkspace({
   // Which Front Desk tab to return to after a PassPRNT round trip. Printing leaves the app, so
   // the callback lands on a fresh mount and has to be told where the operator was.
   receiptPrintTab?: string
+  receiptPrintBackPath?: string
   // Order whose PassPRNT print just failed. The preview opens on it so the operator can fall
   // back to the browser dialog without going anywhere.
   printFallbackOrderId?: string | null
   onPrintFallbackHandled?: () => void
+  initialTicketNote?: string
 }) {
   const { t, currentLanguage } = useTranslation()
   // Device-local receipt options (what to print, how many copies). Read here rather than at
   // print time so the document is already shaped correctly for the preview the operator sees.
   const { data: receiptSettings } = usePosReceiptSettings()
+  const { data: ticketWasPrinted } = usePosTicketPrinted(businessId, orderId)
   const { print: printReceipt, printSurface, isPrinting: isReceiptPrinting, transport: printTransport } = usePosReceiptPrint()
   // Set in the completion callback, acted on one commit later — see the effect below.
   const [autoPrintIntent, setAutoPrintIntent] = useState<{
@@ -330,6 +350,9 @@ export default function PosOrderWorkspace({
 
   const { data: order, isLoading: isOrderLoading } = useOrderDetail(businessId, orderId)
   const isPaid = order?.status === PosOrderStatus.Completed || Boolean(order?.completedAt)
+  // AssignStaffToServiceLine only accepts a Waiting or InService order.
+  const canEditLines =
+    order?.status === PosOrderStatus.Waiting || order?.status === PosOrderStatus.InService
   const { data: serviceCatalog = [] } = useCheckoutServiceCatalog(businessId)
   const {
     data: receivePaymentMethods = [],
@@ -363,6 +386,7 @@ export default function PosOrderWorkspace({
   const setTip = useSetOrderTip(businessId)
   const setNote = useSetOrderNote(businessId)
   const setStaffTipSplit = useSetOrderStaffTipSplit(businessId)
+  const setPaymentAllocations = useSetOrderPaymentAllocations(businessId)
   const completeOrder = useCompleteOrder(businessId)
 
   // Sync lock so a second tap in the same tick cannot queue another call. Mutation
@@ -412,18 +436,20 @@ export default function PosOrderWorkspace({
     serviceName: string
     posServiceId: string | null
     posStaffProfileId?: string
+    technicianName?: string
     note?: string
   } | null>(null)
-  const technicianTurnWindow = getLocalDayWindow()
+  const technicianTurnWindow = getLocalDayWindow(new Date(), businessTimeZone?.trim() || 'America/Chicago')
+  // Warm the shared next-turn data while the operator reviews the ticket, before opening a picker.
   const technicianTurnRosterQuery = useTimeClockRoster(businessId, technicianTurnWindow, {
-    enabled: technicianTarget !== null,
-    refetchInterval: 15000,
+    enabled: canEditLines,
+    refetchInterval: 5000,
   })
   const technicianNextTurnBalanceQuery = usePosNextTurnBalance(
     businessId,
     reportTodayIso(businessTimeZone || 'America/Chicago'),
     businessTimeZone,
-    technicianTarget !== null && canViewReport,
+    canEditLines && canViewReport,
   )
   const [noteDraft, setNoteDraft] = useState('')
   // Chosen technician shown immediately so the row never flashes the previous name while
@@ -455,6 +481,10 @@ export default function PosOrderWorkspace({
   const [customTipInput, setCustomTipInput] = useState('')
   const [noteInput, setNoteInput] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<PosCheckoutPaymentMethodType>('Cash')
+  // Quick Split is a sub-screen of checkout, not a mode of it: the split is built there and the
+  // payment is still confirmed once by the Pay button here. Unmounting it on close is deliberate —
+  // the next open re-reads the saved draft from the order instead of showing stale local edits.
+  const [isQuickSplitOpen, setIsQuickSplitOpen] = useState(false)
   const [cashReceived, setCashReceived] = useState('')
   const cashReceivedWasEditedRef = useRef(false)
   const [completedPayment, setCompletedPayment] = useState<CompleteOrderResultApiDto | null>(null)
@@ -476,6 +506,8 @@ export default function PosOrderWorkspace({
   useEffect(() => setTicketBrowserFallback(false), [orderId])
   const [tipSplitInputs, setTipSplitInputs] = useState<Record<string, string>>({})
   const initializedWorkspaceRef = useRef<string | null>(null)
+  const restoredTicketNoteKeyRef = useRef<string | null>(null)
+  const ticketNoteEditedRef = useRef(false)
   const initializedOrderIdRef = useRef<string | null>(null)
   const printCleanupRef = useRef<(() => void) | null>(null)
   const serviceLineIdsBeforeAddRef = useRef<Set<string> | null>(null)
@@ -488,14 +520,16 @@ export default function PosOrderWorkspace({
 
   // No local draft for the lines — the table is always a live reflection of the latest
   // GetOrderDetailQuery result, since every edit already calls its endpoint immediately
-  // (see handlers below).
+  // (see handlers below). The reading order is decided here rather than by the backend: the
+  // customer receipt groups the same lines by its own rule, and the query feeds that too.
   const visibleLines: DisplayLine[] = useMemo(() => {
     if (!order) return []
     const idsBeforeAdd = serviceLineIdsBeforeAddRef.current
     const hideInFlightAdd = showAddLinePlaceholder && idsBeforeAdd !== null
     return [
-      ...order.serviceLines
-        .filter((l) => isPersistedLineId(l.id) && (!hideInFlightAdd || idsBeforeAdd.has(l.id)))
+      ...sortTicketServiceLines(
+        order.serviceLines.filter((l) => isPersistedLineId(l.id) && (!hideInFlightAdd || idsBeforeAdd.has(l.id))),
+      )
         .map((l): DisplayServiceLine => ({
           key: l.id,
           existingId: l.id,
@@ -529,6 +563,28 @@ export default function PosOrderWorkspace({
       })),
     ]
   }, [order, showAddLinePlaceholder])
+
+  // Which service lines open a technician's block. The list is already grouped by technician
+  // (sortTicketServiceLines), so a heading belongs wherever the name changes from the line above —
+  // and the name each row shows, pending assignment included, is the one that decides it.
+  const technicianHeadingByLineKey = useMemo(() => {
+    const headings = new Map<string, string>()
+    let previousLabel: string | null = null
+
+    for (const line of visibleLines) {
+      if (line.itemType !== 'Service') {
+        previousLabel = null
+        continue
+      }
+      const { technicianName } = lineTechnicianDisplay(line, pendingTechnician)
+      const label = technicianName
+        ?? t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel')
+      if (label !== previousLabel) headings.set(line.key, label)
+      previousLabel = label
+    }
+
+    return headings
+  }, [visibleLines, pendingTechnician, t])
 
   // Preserve service-line order while deduplicating staff. Exactly one entry means the ticket has
   // one technician on it, which is the only case a new line can be assigned from (see
@@ -579,13 +635,24 @@ export default function PosOrderWorkspace({
   useEffect(() => {
     if (!order) return
     const workspaceKey = `${order.id}:${mode}`
-    if (initializedWorkspaceRef.current === workspaceKey) return
+    if (initializedWorkspaceRef.current === workspaceKey) {
+      // The parent may recover the print draft after this cached order has hydrated.
+      // Apply it once, without overwriting any edits made since returning.
+      if (mode === 'edit' && initialTicketNote !== undefined
+        && restoredTicketNoteKeyRef.current !== workspaceKey) {
+        restoredTicketNoteKeyRef.current = workspaceKey
+        if (!ticketNoteEditedRef.current) setNoteInput(initialTicketNote)
+      }
+      return
+    }
     initializedWorkspaceRef.current = workspaceKey
+    ticketNoteEditedRef.current = false
+    restoredTicketNoteKeyRef.current = mode === 'edit' && initialTicketNote !== undefined ? workspaceKey : null
 
     // Status never reveals checkout information by itself. An InService order reached through
     // Edit still opens as an operational ticket; only an explicit Checkout entry reveals payment.
     setShowPaymentSection(mode === 'checkout' && !isPaid)
-    setNoteInput(order.note ?? '')
+    setNoteInput(mode === 'edit' ? initialTicketNote ?? order.note ?? '' : order.note ?? '')
     if (mode !== 'success') {
       setReceiptChoice('none')
       setPaymentMethod('Cash')
@@ -607,7 +674,7 @@ export default function PosOrderWorkspace({
       else setTipMode('custom')
       setCustomTipInput(formatUsdInputAmount(order.tipAmount))
     }
-  }, [order, mode, isPaid])
+  }, [order, mode, isPaid, initialTicketNote])
 
   // Keep the default equal to the live total while tip/discount edits are still changing it.
   // Once the cashier types a received amount, that physical cash value belongs to them and must
@@ -647,15 +714,117 @@ export default function PosOrderWorkspace({
   const isPaymentMethodEligible = isCorePaymentMethod || Boolean(selectedReceivePaymentMethod)
   const cashPaymentCovered = paymentMethod !== PosCheckoutPaymentMethod.Cash
     || (order ? isCashPaymentCovered(cashReceived, order.total) : false)
+
+  // Validity is read off the saved draft on the order, not off local state — the Pay button has to
+  // judge exactly what the server will be asked to complete. Mirrors the checks in
+  // PosOrderCheckout.ApplyPaymentAllocationsAsync so the cashier is stopped here rather than by a
+  // rejected request after the tap.
+  const splitAllocations = order?.paymentAllocations ?? []
+  const orderTotalCents = order ? toPaymentCents(order.total) : 0
+  const splitAllocatedCents = splitAllocations.reduce(
+    (sum, allocation) => sum + toPaymentCents(allocation.amount),
+    0,
+  )
+  const splitTipCents = order ? toPaymentCents(order.tipAmount) : 0
+  const splitTipAttributedCents = splitAllocations.reduce(
+    (sum, allocation) => sum + toPaymentCents(allocation.tipAmount),
+    0,
+  )
+  const splitTipBearerCount = splitAllocations.filter((allocation) => allocation.tipAmount > 0).length
+  const splitCashCovered = splitAllocations.every((allocation) =>
+    allocation.paymentMethodType !== PosCheckoutPaymentMethod.Cash
+    || (allocation.cashReceived != null
+      && toPaymentCents(allocation.cashReceived) >= toPaymentCents(allocation.amount)))
+  const isSplitPaymentReady = paymentMethod !== PosCheckoutPaymentMethod.SplitPay
+    || (splitAllocations.length >= 2
+      && splitAllocatedCents === orderTotalCents
+      && splitTipAttributedCents === splitTipCents
+      && (splitTipCents === 0 || splitTipBearerCount === 1)
+      && splitCashCovered)
+
+  // Every blocker above used to share one sentence about the total, which sent the cashier to
+  // re-check amounts that were already correct. Each condition now names itself.
+  const splitBlockMessage = (() => {
+    if (isSplitPaymentReady) return null
+    if (splitAllocations.length < 2) return t('components.dashboard.views.pos.PosQuickSplitPanel.needTwoMethods')
+    if (splitAllocatedCents !== orderTotalCents) {
+      const unallocatedCents = orderTotalCents - splitAllocatedCents
+      return unallocatedCents > 0
+        ? t('components.dashboard.views.pos.PosQuickSplitPanel.short', { amount: formatUsdAmount(unallocatedCents / 100) })
+        : t('components.dashboard.views.pos.PosQuickSplitPanel.over', { amount: formatUsdAmount(-unallocatedCents / 100) })
+    }
+    if (!splitCashCovered) return t('components.dashboard.views.pos.PosQuickSplitPanel.cashNotCovered')
+    return t('components.dashboard.views.pos.PosQuickSplitPanel.tipNotAttributed')
+  })()
+
+  // The same filter PosPaymentMethodSelector applies to the chip row, minus Split Pay itself —
+  // that value labels the order, it is never one of the portions.
+  const availableSplitMethods = useMemo(() => {
+    const core: PosCheckoutPaymentMethodType[] = [
+      PosCheckoutPaymentMethod.Cash,
+      PosCheckoutPaymentMethod.Card,
+      PosCheckoutPaymentMethod.GiftCard,
+    ]
+    const configured = receivePaymentMethods
+      .filter((method) => method.isActive && method.isConfigured && isPosCheckoutPaymentMethod(method.type))
+      .map((method) => method.type as PosCheckoutPaymentMethodType)
+      .filter((method) => !core.includes(method) && method !== PosCheckoutPaymentMethod.SplitPay)
+    return [...core, ...Array.from(new Set(configured))]
+  }, [receivePaymentMethods])
+
+  // The chosen method is recorded only on the portion carrying the tip, so clearing the tip to
+  // zero erases it. Remembered per order while this screen stays open, so No Tip followed by a
+  // new tip still lands where the cashier said rather than sending them back into Quick Split.
+  const savedTipBearerMethod = order?.paymentAllocations
+    .find((allocation) => allocation.tipAmount > 0)?.paymentMethodType
+  const lastTipBearerRef = useRef<{ orderId: string; method: string } | null>(null)
+  useEffect(() => {
+    if (savedTipBearerMethod) lastTipBearerRef.current = { orderId, method: savedTipBearerMethod }
+  }, [orderId, savedTipBearerMethod])
+
+  // Once the cashier has said which method the tip arrives through, a tip edited on this screen
+  // re-places itself — reopening Quick Split only to press Save again is work the screen can do.
+  // Covers every path that moves the tip, including the percentage effect below re-applying a %
+  // after a service is added, which changes the tip without anyone touching the tip controls.
+  const reconciledSplitRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!order || paymentMethod !== PosCheckoutPaymentMethod.SplitPay) return
+    // Quick Split does this itself while open, and writing underneath it would leave the amounts
+    // on screen disagreeing with what the dialog thinks is saved.
+    if (isQuickSplitOpen || isBusy || setPaymentAllocations.isPending) return
+
+    const rememberedBearer = lastTipBearerRef.current?.orderId === orderId
+      ? lastTipBearerRef.current.method
+      : null
+    const payload = reallocateTip(order.paymentAllocations, order.tipAmount, rememberedBearer)
+    if (!payload) {
+      reconciledSplitRef.current = null
+      return
+    }
+
+    // One attempt per distinct split: a rejected write must not turn into a retry loop driven by
+    // the refetch it triggers.
+    const signature = JSON.stringify(payload)
+    if (reconciledSplitRef.current === signature) return
+    reconciledSplitRef.current = signature
+    setPaymentAllocations.mutate({ orderId, payload }, { onError: reportError })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order?.tipAmount, order?.paymentAllocations, paymentMethod, isQuickSplitOpen, isBusy,
+    setPaymentAllocations.isPending, orderId])
+
+  // Closes only once the server has taken the split. On a rejected save the dialog stays open
+  // with the cashier's amounts still on screen and the reason in a toast, rather than vanishing
+  // and taking the work with it.
+  const handleSaveSplit = (payload: SetOrderPaymentAllocationsPayload) => {
+    setPaymentAllocations.mutate({ orderId, payload }, {
+      onSuccess: () => setIsQuickSplitOpen(false),
+      onError: reportError,
+    })
+  }
   const draftSubtotal = visibleLines.reduce(
     (sum, l) => sum + lineTotalAfterDiscount(l) + addOnsTotalAfterDiscount(l),
     0,
   )
-
-  // AssignStaffToServiceLine only accepts a Waiting or InService order, so a closed ticket shows
-  // its technicians as text instead of offering a picker every tap of which would fail.
-  const canEditLines =
-    order?.status === PosOrderStatus.Waiting || order?.status === PosOrderStatus.InService
 
   useEffect(() => {
     if (areReceivePaymentMethodsLoading || isCorePaymentMethod || selectedReceivePaymentMethod) return
@@ -673,12 +842,14 @@ export default function PosOrderWorkspace({
       eligibleTechnicians.map((technician) => technician.posStaffProfileId),
     )
     const rosterRows = technicianTurnRosterQuery.data?.rows ?? []
-    const turnsByTechnicianId = new Map(
-      rosterRows.map((row) => [row.posStaffProfileId, row.turnsToday]),
+    // Weighted, so the picker's figure matches the Turn Board badge for the same technician.
+    const assignedTurnsToday = new Map(
+      rosterRows.map((row) => [row.posStaffProfileId, row.weightedTurnsToday ?? 0]),
     )
     const serviceAmountsByTechnicianId = technicianNextTurnBalanceQuery.data?.completedAmounts ?? new Map<string, number>()
     const nextTurnTechnician = technicianNextTurnBalanceQuery.data
-      && !technicianNextTurnBalanceQuery.isFetching && !technicianNextTurnBalanceQuery.isError
+      && !technicianNextTurnBalanceQuery.isRecalculating
+      && !technicianNextTurnBalanceQuery.isError && !technicianTurnRosterQuery.isError
       ? selectNextTurnTechnician(
           rosterRows,
           eligibleTechnicianIds,
@@ -689,7 +860,12 @@ export default function PosOrderWorkspace({
 
     return eligibleTechnicians.map((technician) => ({
       ...technician,
-      turnsToday: turnsByTechnicianId.get(technician.posStaffProfileId),
+      // The polled roster reflects current work more recently than the catalog roster.
+      isBusy: rosterRows.find(row => row.posStaffProfileId === technician.posStaffProfileId)?.currentOrderId
+        ? true : rosterRows.some(row => row.posStaffProfileId === technician.posStaffProfileId)
+          ? false : technician.isBusy,
+      completedTurns: technicianNextTurnBalanceQuery.data?.completedTurns?.get(technician.posStaffProfileId) ?? (technicianNextTurnBalanceQuery.data ? 0 : undefined),
+      assignedTurns: assignedTurnsToday.get(technician.posStaffProfileId),
       isNextTurn: technician.posStaffProfileId === nextTurnTechnician?.posStaffProfileId,
     }))
   }
@@ -700,6 +876,35 @@ export default function PosOrderWorkspace({
 
   const reportError = (err: unknown) => {
     showToast(getErrorMessage(err, t, 'ERROR'), 'error')
+  }
+
+  // What the ticket's own technician pickers offer: the qualified roster, plus anyone already on
+  // this ticket who has since clocked out. The backend keeps those assignable on the order they are
+  // already working (PosStaffAssignmentResolver), so hiding them would leave the front desk unable
+  // to move a line back to the technician actually doing it. Every other off-shift technician stays
+  // out, and a technician who is on shift but not trained for the service stays out too — that is a
+  // skill rule, not a shift one.
+  const technicianOptionsForTicket = (posServiceId: string | null): TechnicianOption[] => {
+    const qualified = techniciansForService(posServiceId)
+    const rosterIds = new Set(allTechnicians.map((tech) => tech.posStaffProfileId))
+    const offShiftOnTicket = assignedTechnicianIds
+      .filter((staffId) => !rosterIds.has(staffId))
+      .map((staffId) => ({
+        posStaffProfileId: staffId,
+        displayName: technicianDisplayName(staffId) ?? '',
+        isOffShift: true,
+      }))
+      .filter((option) => option.displayName !== '')
+    return [...qualified, ...offShiftOnTicket]
+  }
+
+  // Whether the ticket's technician may take one more service. Absence from the roster is not a
+  // "no": it only lists technicians who are clocked in, and a shift ends (or PosStaffClockAutoCloseJob
+  // ends it) while the customer is still in the chair — the ticket already names who is doing the
+  // work. Only a technician the roster does list is held to their assigned services.
+  const canTechnicianTakeService = (staffId: string, posServiceId: string) => {
+    const rosterEntry = allTechnicians.find((tech) => tech.posStaffProfileId === staffId)
+    return !rosterEntry || rosterEntry.serviceIds.includes(posServiceId)
   }
 
   // Keep an existing ticket with an already assigned technician when services are added.
@@ -721,7 +926,7 @@ export default function PosOrderWorkspace({
 
           const inheritedStaffId = resolveNewLineTechnicianAssignment(
             assignedTechnicianIds,
-            (staffId) => techniciansForService(service.id).some((tech) => tech.posStaffProfileId === staffId),
+            (staffId) => canTechnicianTakeService(staffId, service.id),
           )
           // Nothing to inherit means the line is already how it should be — an assign call here
           // would only write an empty note over an empty note.
@@ -808,6 +1013,7 @@ export default function PosOrderWorkspace({
       serviceName: line.serviceName,
       posServiceId: line.posServiceId,
       posStaffProfileId: line.posStaffProfileId,
+      technicianName: line.technicianName,
       note: line.note,
     })
     setNoteDraft(line.note ?? '')
@@ -868,10 +1074,18 @@ export default function PosOrderWorkspace({
     runDiscountMutation({ discountType: null, discountValue: null, discountBearer: null, discountNote: null })
   }
 
-  const technicianDisplayName = (staffId: string | null | undefined) =>
-    staffId
-      ? allTechnicians.find((tech) => tech.posStaffProfileId === staffId)?.displayName ?? null
-      : null
+  // Roster first, then the ticket's own lines: an off-shift technician is no longer in the roster,
+  // and this name feeds the optimistic patch — "First available" flashing over work that already has
+  // a technician reads as a lost assignment.
+  const technicianDisplayName = (staffId: string | null | undefined) => {
+    if (!staffId) return null
+    const rosterName = allTechnicians.find((tech) => tech.posStaffProfileId === staffId)?.displayName
+    if (rosterName) return rosterName
+    const assignedLine = visibleLines.find(
+      (line): line is DisplayServiceLine => line.itemType === 'Service' && line.posStaffProfileId === staffId,
+    )
+    return assignedLine?.technicianName ?? null
+  }
 
   // AssignStaffToServiceLine overwrites Note unconditionally, so both values travel together on
   // every call — sending only the technician would silently wipe the note.
@@ -1181,7 +1395,7 @@ export default function PosOrderWorkspace({
   }
 
   const handleComplete = () => {
-    if (!order || isPaid || !cashPaymentCovered || !isPaymentMethodEligible) return
+    if (!order || isPaid || !cashPaymentCovered || !isPaymentMethodEligible || !isSplitPaymentReady) return
     if (hasNoLines) {
       showToast(t('components.dashboard.views.pos.PosOrderWorkspace.addLineFirst'), 'error')
       return
@@ -1236,7 +1450,7 @@ export default function PosOrderWorkspace({
                 },
                 unassignedTechnicianLabel: resolveUnassignedTechnicianLabel(t),
                 productsLabel: resolveProductsGroupLabel(t),
-                paymentMethodLabel: getPosCheckoutPaymentMethodLabel(paymentMethod, t),
+                paymentMethodLabel: formatPaymentMethodDisplay(order?.paymentAllocations, paymentMethod, t),
                 totalsLabels: resolvePosReceiptTotalsLabels(t),
                 labels: resolvePosReceiptLabels(t),
                 locale: currentLanguage,
@@ -1356,19 +1570,31 @@ export default function PosOrderWorkspace({
                 <div className="max-h-[320px] space-y-2 overflow-y-auto pr-1">
                   {visibleLines.map((line, index) => (
                     <Fragment key={line.key}>
-                      {index > 0 ? (
+                      {index > 0 && !technicianHeadingByLineKey.has(line.key) ? (
                         <div
                           data-testid={`ticket-detail-separator-${index}`}
                           aria-hidden="true"
                           className="border-t border-dashed border-nexoraBorder/70"
                         />
                       ) : null}
+                      {technicianHeadingByLineKey.has(line.key) ? (
+                        <div
+                          data-testid={`ticket-detail-technician-heading-${line.key}`}
+                          className={`flex items-center gap-1.5 rounded-lg bg-nexoraBrandSoft/70 px-2.5 py-1.5 ${
+                            index > 0 ? 'mt-2' : ''
+                          }`}
+                        >
+                          <UserRound className="h-3.5 w-3.5 shrink-0 text-nexoraBrandDark" />
+                          <span className="min-w-0 truncate text-[11px] font-black uppercase tracking-wider text-nexoraBrandDark">
+                            {technicianHeadingByLineKey.get(line.key)}
+                          </span>
+                        </div>
+                      ) : null}
                       {line.itemType === 'Service' ? (
                         (() => {
-                          const { isFirstAvailable, technicianName } = lineTechnicianDisplay(line, pendingTechnician)
-                          const technicianLabel = isFirstAvailable
-                            ? t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel')
-                            : technicianName
+                          // Only the button label still needs this — the name itself now lives in the
+                          // technician heading above the block.
+                          const { isFirstAvailable } = lineTechnicianDisplay(line, pendingTechnician)
                           const isCustomLine = line.posServiceId === null
                           const canEditServiceLine =
                             canEditLines && !line.completedAt && isPersistedLineId(line.existingId)
@@ -1402,12 +1628,6 @@ export default function PosOrderWorkspace({
                                     {t(posOrderItemStatusLabelKey(line.lineStatus))}
                                   </span>
                                 </div>
-                                <p className="mt-1 min-w-0 truncate text-xs font-semibold leading-tight text-nexoraText">
-                                  <span className="text-[10px] font-normal text-nexoraMuted">
-                                    {t('components.dashboard.views.pos.PosOrderWorkspace.technicianPrefix')}
-                                  </span>{' '}
-                                  {technicianLabel}
-                                </p>
                               </div>
                               <div className="text-right">
                                 {line.discountAmount > 0 ? (
@@ -1454,7 +1674,7 @@ export default function PosOrderWorkspace({
                                       {t('components.dashboard.views.pos.serviceLineStatus.startAction')}
                                     </button>
                                   ) : null}
-                                  {canMutateLine && line.lineStatus === PosOrderItemStatus.Started ? (
+                                  {mode === 'checkout' && canMutateLine && line.lineStatus === PosOrderItemStatus.Started ? (
                                     <button
                                       type="button"
                                       data-testid={`complete-line-${line.key}`}
@@ -1692,7 +1912,7 @@ export default function PosOrderWorkspace({
               <textarea
                 id="pos-ticket-note"
                 value={noteInput}
-                onChange={(e) => setNoteInput(e.target.value)}
+                onChange={(e) => { ticketNoteEditedRef.current = true; setNoteInput(e.target.value) }}
                 onBlur={handleNoteCommit}
                 disabled={isBusy}
                 maxLength={500}
@@ -1713,7 +1933,7 @@ export default function PosOrderWorkspace({
                     className="inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-nexoraSurface px-3 text-xs font-semibold text-nexoraMuted transition-colors hover:border-nexoraBrand/30 hover:bg-nexoraBrandSoft/40 hover:text-nexoraBrandDark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand/30 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Printer className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    {t('components.dashboard.views.pos.PosOrderWorkspace.printTicketAction')}
+                    {t(`components.dashboard.views.pos.PosOrderWorkspace.${ticketWasPrinted ? 'reprintTicketAction' : 'printTicketAction'}`)}
                   </button>
                 ) : null}
                 {order?.status === PosOrderStatus.Waiting && hasServiceLines ? (
@@ -1924,15 +2144,71 @@ export default function PosOrderWorkspace({
                 ) : null}
 
                 <div className="space-y-3 rounded-xl border border-nexoraBorder/70 bg-nexoraSurface p-3 shadow-sm">
+                  {isQuickSplitOpen && order ? (
+                    <PosQuickSplitPanel
+                      amountDueCents={orderTotalCents}
+                      tipAmount={order.tipAmount}
+                      availableMethods={availableSplitMethods}
+                      savedAllocations={order.paymentAllocations}
+                      isSaving={setPaymentAllocations.isPending}
+                      onSave={handleSaveSplit}
+                      onBack={() => setIsQuickSplitOpen(false)}
+                      disabled={isBusy}
+                    />
+                  ) : null}
                   <h3 className="text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
                     {t('components.dashboard.views.pos.PosOrderWorkspace.paymentMethodTitle')}
                   </h3>
+                  {/* Nothing here hides while Quick Split is open any more: it is a dialog over the
+                      page now, so the checkout it belongs to stays visible behind it. */}
                   <PosPaymentMethodSelector
                     value={paymentMethod}
-                    onChange={setPaymentMethod}
+                    onChange={(value) => {
+                      setPaymentMethod(value)
+                      // Split Pay is a doorway, not a method: picking it opens the dialog where the
+                      // real portions get built. The payment is still confirmed by Pay below.
+                      if (value === PosCheckoutPaymentMethod.SplitPay) setIsQuickSplitOpen(true)
+                    }}
                     receiveMethods={receivePaymentMethods}
                     disabled={isBusy}
                   />
+                  {paymentMethod === PosCheckoutPaymentMethod.SplitPay && order ? (
+                    <div className="space-y-2 rounded-xl border border-nexoraBorder/70 bg-nexoraCanvas/40 p-3">
+                      {splitAllocations.length > 0 ? (
+                        <dl className="space-y-1 text-xs">
+                          {splitAllocations.map((allocation) => (
+                            <div key={allocation.paymentMethodType} className="flex justify-between">
+                              <dt className="text-nexoraMuted">
+                                {t(POS_CHECKOUT_PAYMENT_METHOD_LABEL_KEYS[
+                                  allocation.paymentMethodType as PosCheckoutPaymentMethodType
+                                ] ?? allocation.paymentMethodType)}
+                              </dt>
+                              <dd className="font-bold tabular-nums text-nexoraText">
+                                {formatUsdAmount(allocation.amount)}
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+                      ) : (
+                        <p className="text-xs font-medium text-nexoraMuted">
+                          {t('components.dashboard.views.pos.PosQuickSplitPanel.noSplitYet')}
+                        </p>
+                      )}
+                      {splitBlockMessage ? (
+                        <p className="text-xs font-bold text-nexoraDanger" aria-live="polite">
+                          {splitBlockMessage}
+                        </p>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => setIsQuickSplitOpen(true)}
+                        disabled={isBusy}
+                        className="h-11 w-full rounded-lg border border-nexoraBrand text-xs font-bold text-nexoraBrand hover:bg-nexoraLavender/15 disabled:opacity-60"
+                      >
+                        {t('components.dashboard.views.pos.PosQuickSplitPanel.editSplit')}
+                      </button>
+                    </div>
+                  ) : null}
                   {paymentMethod === PosCheckoutPaymentMethod.Cash && order ? (
                     <PosCashPaymentPanel
                       total={order.total}
@@ -2132,7 +2408,7 @@ export default function PosOrderWorkspace({
                 <button
                   type="button"
                   onClick={handleComplete}
-                  disabled={isBusy || hasNoLines || !cashPaymentCovered || !isPaymentMethodEligible}
+                  disabled={isBusy || hasNoLines || !cashPaymentCovered || !isPaymentMethodEligible || !isSplitPaymentReady}
                   title={
                     hasNoLines
                       ? t('components.dashboard.views.pos.PosOrderWorkspace.addLineFirst')
@@ -2227,13 +2503,14 @@ export default function PosOrderWorkspace({
   const printableTicket = order ? (
     <PosTicketPrintPreview
       open={ticketPreviewOpen}
+      wasPrinted={ticketWasPrinted}
       isPrinting={isReceiptPrinting}
       onPrint={() => {
         const doc = buildPosTicketDocument({ orderNumber: order.orderNumber, completedAtLabel: formatPosDateTime(order.completedAt ?? new Date().toISOString(), currentLanguage), customerName: order.customerName, orderNote: noteInput, groups: printableReceiptGroups,
           noteLabel: t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteTitle'), customerLabel: t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewCustomer') })
         setTicketPreviewOpen(false)
-        printReceipt(doc, { jobId: orderId, copies: 1, backPath: POS_FRONT_DESK_ROUTE_PATH, browserOnly: ticketBrowserFallback,
-          restore: { surface: 'frontDesk', tab: receiptPrintTab, orderId, mode: 'edit' } })
+        printReceipt(doc, { jobId: orderId, copies: 1, backPath: receiptPrintBackPath, browserOnly: ticketBrowserFallback, ticketPrint: { businessId, orderId },
+          restore: { surface: 'frontDesk', tab: receiptPrintTab, orderId, mode: 'edit', ticketNote: noteInput } })
       }}
       customerName={order.customerName}
       orderNote={noteInput}
@@ -2262,8 +2539,8 @@ export default function PosOrderWorkspace({
               },
               unassignedTechnicianLabel: resolveUnassignedTechnicianLabel(t),
               productsLabel: resolveProductsGroupLabel(t),
-              paymentMethodLabel: order.paymentMethodType
-                ? getPosCheckoutPaymentMethodLabel(order.paymentMethodType, t)
+              paymentMethodLabel: order.paymentMethodType || order.paymentAllocations.length > 0
+                ? formatPaymentMethodDisplay(order.paymentAllocations, order.paymentMethodType, t)
                 : undefined,
               totalsLabels: resolvePosReceiptTotalsLabels(t),
               labels: resolvePosReceiptLabels(t),
@@ -2286,7 +2563,7 @@ export default function PosOrderWorkspace({
     printReceipt(autoPrintIntent.doc, {
       jobId: autoPrintIntent.orderId,
       copies: autoPrintIntent.copies,
-      backPath: POS_FRONT_DESK_ROUTE_PATH,
+      backPath: receiptPrintBackPath,
       restore: {
         surface: 'frontDesk',
         tab: receiptPrintTab,
@@ -2296,7 +2573,7 @@ export default function PosOrderWorkspace({
       },
     })
     setAutoPrintIntent(null)
-  }, [autoPrintIntent, printReceipt, receiptPrintTab])
+  }, [autoPrintIntent, printReceipt, receiptPrintTab, receiptPrintBackPath])
 
   // The manual Print button has to respect the device transport too. Without this, a salon that
   // paired a Star printer would still get the browser dialog every time someone pressed Print —
@@ -2310,7 +2587,7 @@ export default function PosOrderWorkspace({
   const isPrintFallback = Boolean(printFallbackOrderId) && printFallbackOrderId === orderId
   useEffect(() => {
     if (!isPrintFallback) return
-    if (mode === 'edit') { setTicketBrowserFallback(true); setTicketPreviewOpen(true) }
+    if (mode === 'edit') setTicketBrowserFallback(true)
     else setPrintPreviewOpen(true)
     onPrintFallbackHandled?.()
   }, [isPrintFallback, onPrintFallbackHandled, mode])
@@ -2323,7 +2600,7 @@ export default function PosOrderWorkspace({
             {
               jobId: orderId,
               copies: 1,
-              backPath: POS_FRONT_DESK_ROUTE_PATH,
+              backPath: receiptPrintBackPath,
               restore: {
                 surface: 'frontDesk',
                 tab: receiptPrintTab,
@@ -2366,7 +2643,8 @@ export default function PosOrderWorkspace({
           businessPhone={businessPhone}
           customerName={order.customerName}
           orderNumber={order.orderNumber}
-          paymentMethodLabel={getPosCheckoutPaymentMethodLabel(
+          paymentMethodLabel={formatPaymentMethodDisplay(
+            order.paymentAllocations,
             completedPayment ? paymentMethod : order.paymentMethodType,
             t,
           )}
@@ -2428,9 +2706,11 @@ export default function PosOrderWorkspace({
       <ChangeTechnicianModal
         open={technicianTarget !== null}
         serviceName={technicianTarget?.serviceName ?? ''}
-        technicians={technicianTarget ? techniciansForService(technicianTarget.posServiceId) : []}
+        technicians={technicianTarget ? technicianOptionsForTicket(technicianTarget.posServiceId) : []}
         isLoading={areTechniciansPending && allTechnicians.length === 0}
         selectedStaffId={technicianTarget?.posStaffProfileId ?? null}
+        currentTechnicianName={technicianTarget?.technicianName}
+        turnsError={technicianNextTurnBalanceQuery.isError || technicianTurnRosterQuery.isError}
         note={noteDraft}
         onChangeNote={setNoteDraft}
         onSelect={handleSelectTechnician}
@@ -2449,7 +2729,7 @@ export default function PosOrderWorkspace({
       <CustomServiceModal
         target={customServiceTarget}
         isSaving={isBusy}
-        technicians={techniciansForService(null)}
+        technicians={technicianOptionsForTicket(null)}
         isTechnicianRosterLoading={areTechniciansPending && allTechnicians.length === 0}
         onSubmit={handleSaveCustomService}
         onPickFromMenu={

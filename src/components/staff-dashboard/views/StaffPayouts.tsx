@@ -4,17 +4,21 @@ import { CheckCircle2, Eye, List, Loader2, X } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { PayoutStatus } from '../../../data/payoutConstants'
-import { getErrorI18nKey } from '../../../data/errorCodes'
+import { getErrorI18nKey, getErrorMessage } from '../../../data/errorCodes'
 import {
   useConfirmStaffPayout,
+  useSetStaffPayoutCategory,
   useStaffPayoutDetail,
   useStaffPayoutStats,
   useStaffPayoutsList,
   useStaffUnpaidDebt,
 } from '../../../data/hooks/useStaffPayouts'
+import { useCreateStaffCategory, useStaffCategories } from '../../../data/hooks/useTransactionCategories'
 import type { StaffPayoutsListQuery } from '../../../data/repositories/payouts'
 import type { TFunction } from '../../../types/contexts'
 import { getApiErrorCode, type PayoutRecord, type StaffPayoutDetailRecord } from '../../../types/domain'
+import CategorySelect from '../../dashboard/categories/CategorySelect'
+import AddEditCategoryModal from '../../dashboard/categories/AddEditCategoryModal'
 import { DEFAULT_PAGE_SIZE } from '../../../constants/pagination'
 import { usePagination } from '../../../hooks/usePagination'
 import { formatCurrency, formatTransactionDateTime, DateTimeCell } from '../../dashboard/utils'
@@ -56,10 +60,10 @@ function StatCard({
   loading?: boolean
 }) {
   return (
-    <div className="h-full rounded-xl border border-nexoraBorder bg-white p-3 shadow-sm sm:p-4">
-      <p className="text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">{label}</p>
-      <p className="mt-2 text-xl font-black text-nexoraText sm:text-2xl">{loading ? '—' : value}</p>
-      {sub ? <p className="mt-1 text-[11px] font-semibold text-nexoraMuted">{sub}</p> : null}
+    <div className="h-full rounded-xl border border-nexoraBorder bg-white p-2.5 shadow-sm sm:p-4">
+      <p className="text-xs font-semibold leading-4 text-nexoraMuted sm:font-extrabold sm:uppercase sm:tracking-wide">{label}</p>
+      <p className="mt-1 break-words text-lg font-semibold leading-6 tabular-nums text-nexoraText sm:mt-2 sm:text-2xl sm:font-black">{loading ? '—' : value}</p>
+      {sub ? <p className="mt-1 text-[11px] font-normal leading-4 text-nexoraMuted sm:text-xs">{sub}</p> : null}
     </div>
   )
 }
@@ -110,7 +114,7 @@ function StaffPayoutList({
 
       <div className="hidden overflow-x-auto md:block">
         <table className="min-w-[940px] w-full text-left text-sm">
-          <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+          <thead className="bg-slate-50 text-xs font-black uppercase tracking-wider text-nexoraMuted">
             <tr>
               <th className="px-4 py-3">{t(STAFF_PAYOUT_COL_KEYS.code)}</th>
               <th className="px-4 py-3">{t(STAFF_PAYOUT_COL_KEYS.date)}</th>
@@ -140,7 +144,7 @@ function StaffPayoutList({
                       {getPayoutTypeI18nKeys(row.payoutTypes).map((key) => (
                         <span
                           key={key}
-                          className="rounded-md border border-nexoraBorder bg-slate-50 px-1.5 py-0.5 text-[10px] font-bold"
+                          className="rounded-md border border-nexoraBorder bg-slate-50 px-1.5 py-0.5 text-xs font-bold"
                         >
                           {t(key)}
                         </span>
@@ -159,7 +163,7 @@ function StaffPayoutList({
                       onClick={() => onViewDetail(row)}
                       title={canConfirm ? t('staff_payouts.confirm_receipt') : t('staff_payments.view_detail')}
                       aria-label={canConfirm ? t('staff_payouts.confirm_receipt') : t('staff_payments.view_detail')}
-                      className={`inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-xs font-bold ${
+                      className={`inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-xs font-semibold ${
                         canConfirm
                           ? 'bg-nexoraBrand text-white'
                           : 'border border-nexoraBorder bg-white text-nexoraText'
@@ -200,14 +204,47 @@ function StaffPayoutDetailModal({
   onClose: () => void
   onConfirm: (payoutId: string) => void
 }) {
+  const { showToast } = useNotification()
+  const { data: categories = [] } = useStaffCategories()
+  const setCategoryMutation = useSetStaffPayoutCategory()
+  const createCategoryMutation = useCreateStaffCategory()
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false)
+  const [addCategoryError, setAddCategoryError] = useState<string | null>(null)
+
   if (!payout && !isLoading) return null
   const canConfirm = payout?.status === PayoutStatus.Pending
+
+  const handleCategoryChange = (categoryId: string | null) => {
+    if (!payout?.id) return
+    setCategoryMutation.mutate(
+      { payoutId: payout.id, categoryId },
+      { onError: (err) => showToast(getErrorMessage(err, t), 'error') },
+    )
+  }
+
+  const handleCreateCategory = (name: string) => {
+    createCategoryMutation.mutate(name, {
+      onSuccess: (category) => {
+        setIsAddCategoryOpen(false)
+        setAddCategoryError(null)
+        if (payout?.id) {
+          setCategoryMutation.mutate(
+            { payoutId: payout.id, categoryId: category.id },
+            { onError: (err) => showToast(getErrorMessage(err, t), 'error') },
+          )
+        }
+      },
+      onError: (err) => setAddCategoryError(getErrorMessage(err, t)),
+    })
+  }
+
   return createPortal(
+    <>
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
       <div className="max-h-[85dvh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-2xl border border-nexoraBorder bg-white pb-[max(1rem,env(safe-area-inset-bottom,0px))] shadow-2xl sm:max-h-[92dvh] sm:rounded-2xl sm:pb-0">
         <div className="flex items-start justify-between border-b border-nexoraBorder px-5 py-4">
           <div>
-            <h3 className="text-base font-black text-nexoraText">{t('staff_payouts.detail_title')}</h3>
+            <h3 className="text-nexoraText text-base font-semibold leading-snug">{t('staff_payouts.detail_title')}</h3>
             <p className="mt-1 text-xs text-nexoraMuted">{t('staff_payouts.detail_sub')}</p>
           </div>
           <button type="button" onClick={onClose} className="rounded-lg border border-nexoraBorder p-2 text-nexoraMuted hover:bg-slate-50">
@@ -236,7 +273,7 @@ function StaffPayoutDetailModal({
                 </div>
               )}
               <div className="min-w-0">
-                <p className="text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
+                <p className="text-xs font-extrabold uppercase tracking-wide text-nexoraMuted">
                   {t('staff_payouts.field_business')}
                 </p>
                 <p className="truncate text-sm font-bold text-nexoraText">{payout.businessName}</p>
@@ -244,13 +281,13 @@ function StaffPayoutDetailModal({
             </div>
 
             <div className="rounded-xl bg-nexoraCanvas p-4 text-center">
-              <p className="text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
+              <p className="text-xs font-extrabold uppercase tracking-wide text-nexoraMuted">
                 {t('staff_payouts.field_amount')}
               </p>
-              <p className="mt-1 text-3xl font-black text-nexoraText">{formatCurrency(payout.amount)}</p>
+              <p className="mt-1 break-words text-xl font-semibold tabular-nums text-nexoraText sm:text-3xl sm:font-black">{formatCurrency(payout.amount)}</p>
               <div className="mt-2 flex flex-col items-center gap-1.5">
                 <PayoutStatusBadge status={payout.status} audience="staff" />
-                <p className="max-w-xs text-center text-[11px] text-nexoraMuted">
+                <p className="max-w-xs text-center text-xs text-nexoraMuted">
                   {t(getPayoutStatusDescI18nKey(payout.status, 'staff'))}
                 </p>
               </div>
@@ -282,7 +319,7 @@ function StaffPayoutDetailModal({
               <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.types)}</dt>
               <dd className="flex flex-wrap gap-1">
                 {getPayoutTypeI18nKeys(payout.payoutTypes).map((key) => (
-                  <span key={key} className="rounded-md border border-nexoraBorder bg-slate-50 px-2 py-0.5 text-[10px] font-bold">
+                  <span key={key} className="rounded-md border border-nexoraBorder bg-slate-50 px-2 py-0.5 text-xs font-bold">
                     {t(key)}
                   </span>
                 ))}
@@ -297,11 +334,22 @@ function StaffPayoutDetailModal({
                   <dd className="text-nexoraText">{payout.notes}</dd>
                 </>
               ) : null}
+              <dt className="font-semibold text-nexoraMuted">{t('transaction_categories.category_label')}</dt>
+              <dd>
+                <CategorySelect
+                  categories={categories}
+                  value={payout.categoryId ?? null}
+                  onChange={handleCategoryChange}
+                  onRequestCreateNew={() => setIsAddCategoryOpen(true)}
+                  disabled={setCategoryMutation.isPending}
+                  className="h-9"
+                />
+              </dd>
             </dl>
 
             {payout.evidenceUrls.length > 0 ? (
               <div>
-                <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-nexoraMuted">
+                <p className="mb-2 text-xs font-black uppercase tracking-wide text-nexoraMuted">
                   {t('staff_payouts.evidence_title')} ({payout.evidenceUrls.length})
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -328,7 +376,7 @@ function StaffPayoutDetailModal({
               type="button"
               onClick={() => onConfirm(payout.id)}
               disabled={confirmingId === payout.id}
-              className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-70"
+              className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
             >
               {confirmingId === payout.id ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -340,7 +388,19 @@ function StaffPayoutDetailModal({
           </div>
         ) : null}
       </div>
-    </div>,
+    </div>
+    <AddEditCategoryModal
+      open={isAddCategoryOpen}
+      mode="create"
+      onSave={handleCreateCategory}
+      onClose={() => {
+        setIsAddCategoryOpen(false)
+        setAddCategoryError(null)
+      }}
+      isSaving={createCategoryMutation.isPending}
+      errorMessage={addCategoryError}
+    />
+    </>,
     document.body,
   )
 }
@@ -434,7 +494,7 @@ export default function StaffPayouts() {
       </div>
 
       <div className="rounded-xl border border-nexoraBorder bg-white p-4 shadow-sm">
-        <h3 className="text-sm font-black text-nexoraText">{t('staff_payouts.unpaid_debt_title')}</h3>
+        <h3 className="text-nexoraText text-sm font-semibold leading-snug">{t('staff_payouts.unpaid_debt_title')}</h3>
         {isUnpaidDebtPending ? (
           <div className="flex items-center gap-2 pt-3 text-xs text-nexoraMuted">
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -451,7 +511,7 @@ export default function StaffPayouts() {
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold text-nexoraText">{row.businessName}</p>
-                  <p className="text-[11px] text-nexoraMuted">
+                  <p className="text-xs text-nexoraMuted">
                     <DateTimeCell value={row.lastUpdatedAt} locale={currentLanguage} />
                   </p>
                 </div>
@@ -468,7 +528,7 @@ export default function StaffPayouts() {
 
       <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm">
         <div className="flex w-full min-w-0 items-center gap-3 border-b border-nexoraBorder p-4">
-          <h3 className="min-w-0 flex-1 text-sm font-black text-nexoraText">
+          <h3 className="min-w-0 flex-1 text-nexoraText text-sm font-semibold leading-snug">
             {t('staff_payouts.list_title')}
           </h3>
           <div className="w-[9.5rem] shrink-0 sm:w-[11rem]">

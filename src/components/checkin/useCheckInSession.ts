@@ -10,6 +10,7 @@
 // Where the data comes from is injected: the kiosk passes a hook backed by its device token, the
 // front desk one backed by the merchant session. Swapping them changes nothing below.
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useNotification } from '../../contexts/NotificationContext'
 import type {
   CheckInBookingPrefill,
   CheckInService,
@@ -79,15 +80,20 @@ export interface CheckInSession {
 export default function useCheckInSession({
   useSource,
   submitErrorMessage,
+  nameRequiredMessage,
+  consentRequiredMessage,
   onCheckedIn,
 }: {
   useSource: CheckInSourceHook
   submitErrorMessage: string
+  nameRequiredMessage: string
+  consentRequiredMessage: string
   // Fired the moment the order exists, before the guest has dismissed the thank-you screen — the
   // front desk's lists should already be right behind it. The full result comes along for callers
   // that need more than the number (the public page reads its receipt token off it).
   onCheckedIn?: (orderNumber: string, result: CheckInSubmitResult) => void
 }): CheckInSession {
+  const { showToast } = useNotification()
   const [phase, setPhase] = useState<CheckInPhase>('phone')
   const [phone, setPhone] = useState('')
   const [customerName, setCustomerName] = useState('')
@@ -228,7 +234,15 @@ export default function useCheckInSession({
   const canSubmit = customerName.trim().length > 0 && smsConsent
 
   const submit = useCallback(() => {
-    if (!canSubmit || source.isSubmitting) return
+    if (source.isSubmitting) return
+    if (customerName.trim().length === 0) {
+      showToast(nameRequiredMessage, 'error')
+      return
+    }
+    if (!smsConsent) {
+      showToast(consentRequiredMessage, 'error')
+      return
+    }
     setSubmitError(null)
 
     const trimmedNote = note.trim() || null
@@ -242,11 +256,12 @@ export default function useCheckInSession({
     // Two endpoints, one button. A booked guest converts the appointment they already have;
     // anyone else opens a new order.
     const request = booking
-      ? source.submitBooking({ bookingId: booking.bookingId, customerName: trimmedName, items })
+      ? source.submitBooking({ bookingId: booking.bookingId, customerName: trimmedName, items, note: trimmedNote })
       : source.submitOrder({
           customerName: trimmedName,
           customerPhone: phone,
           items,
+          note: trimmedNote,
           ...(isAdditionalGuest ? { allowDuplicatePhone: true } : {}),
         })
 
@@ -258,8 +273,9 @@ export default function useCheckInSession({
       })
       .catch(() => setSubmitError(submitErrorMessage))
   }, [
-    booking, canSubmit, customerName, isAdditionalGuest, note, onCheckedIn, phone,
-    selectedServiceIds, source, submitErrorMessage, technicianChoices,
+    booking, consentRequiredMessage, customerName, isAdditionalGuest, nameRequiredMessage, note,
+    onCheckedIn, phone, selectedServiceIds, showToast, smsConsent, source, submitErrorMessage,
+    technicianChoices,
   ])
 
   return {

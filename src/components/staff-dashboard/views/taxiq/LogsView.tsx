@@ -28,8 +28,8 @@ export default function LogsView({
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-xl font-extrabold text-nexoraText">{t('taxiq.staffLogs.title')}</h2>
-        <p className="mt-1 text-xs text-nexoraMuted">{t('taxiq.staffLogs.subtitle')}</p>
+        <h2 className="text-nexoraText text-xl lg:text-2xl font-semibold leading-snug">{t('taxiq.staffLogs.title')}</h2>
+        <p className="mt-1 text-nexoraMuted text-[13px] font-normal leading-5">{t('taxiq.staffLogs.subtitle')}</p>
       </div>
 
       {isLocked && (
@@ -38,7 +38,7 @@ export default function LogsView({
           <button
             type="button"
             onClick={() => navigate('/staff/taxiq/export')}
-            className="self-start rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white"
+            className="self-start rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white"
           >
             {t('taxiq.deductionCenter.errors.lockedAction')}
           </button>
@@ -51,7 +51,7 @@ export default function LogsView({
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={`rounded-t-lg px-4 py-2 text-xs font-bold transition-colors ${
+            className={`rounded-t-lg px-4 py-2 text-xs font-semibold transition-colors ${
               activeTab === tab.id
                 ? 'border-b-2 border-nexoraBrand text-nexoraBrand'
                 : 'text-nexoraMuted hover:text-nexoraText'

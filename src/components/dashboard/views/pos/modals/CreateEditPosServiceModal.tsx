@@ -163,6 +163,11 @@ export default function CreateEditPosServiceModal({
       return
     }
 
+    const pendingTag = tagDraft.trim()
+    const submittedTags = pendingTag && !tags.some(
+      (tag) => tag.toLowerCase() === pendingTag.toLowerCase(),
+    ) ? [...tags, pendingTag] : tags
+
     onSubmit({
       name: trimmedName,
       price: priceValue,
@@ -170,7 +175,7 @@ export default function CreateEditPosServiceModal({
       durationMinutes: durationValue,
       description: description.trim() || undefined,
       categoryIds: selectedCategoryIds,
-      tags,
+      tags: submittedTags,
       status,
       photo: photoFile,
     })

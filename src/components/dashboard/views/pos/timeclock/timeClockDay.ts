@@ -13,7 +13,35 @@ export interface LocalDayWindow {
   dayKey: string
 }
 
-export function getLocalDayWindow(reference: Date = new Date()): LocalDayWindow {
+export function getLocalDayWindow(reference: Date = new Date(), timeZone?: string): LocalDayWindow {
+  if (timeZone) {
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+    })
+    const partsOf = (date: Date) => {
+      const parts = formatter.formatToParts(date)
+      const value = (type: string) => Number(parts.find(part => part.type === type)?.value)
+      return [value('year'), value('month'), value('day'), value('hour'), value('minute'), value('second')]
+    }
+    const [year, month, day] = partsOf(reference)
+    const midnight = (localDay: number) => {
+      const target = Date.UTC(year, month - 1, localDay)
+      let utc = target
+      // Resolve each midnight separately because a salon day may contain 23 or 25 hours.
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const [y, m, d, h, min, sec] = partsOf(new Date(utc))
+        const adjustment = target - Date.UTC(y, m - 1, d, h, min, sec)
+        utc += adjustment
+        if (adjustment === 0) break
+      }
+      return new Date(utc).toISOString()
+    }
+    return {
+      fromUtc: midnight(day), toUtc: midnight(day + 1),
+      dayKey: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+    }
+  }
   const start = new Date(reference.getFullYear(), reference.getMonth(), reference.getDate())
   const end = new Date(reference.getFullYear(), reference.getMonth(), reference.getDate() + 1)
 

@@ -40,7 +40,7 @@ import StaffNotifications from "./StaffNotifications";
 const panel =
   "rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm";
 const labelCls =
-  "mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-nexoraSubtle";
+  "mb-1.5 block text-xs font-bold uppercase tracking-wider text-nexoraSubtle";
 const inputCls =
   "w-full rounded-xl border border-nexoraBorder bg-nexoraSurface px-3 py-2.5 text-sm text-nexoraText outline-none focus:border-nexoraBrand transition-all";
 const readOnlyCls =
@@ -67,8 +67,8 @@ function ProfileMenuItem({ icon: Icon, label, sub = null, onClick = null }: any)
         <Icon className="h-4 w-4" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[13px] font-semibold text-nexoraText">{label}</span>
-        {sub ? <span className="block truncate text-[10px] font-medium text-nexoraMuted">{sub}</span> : null}
+        <span className="block truncate text-xs font-semibold text-nexoraText">{label}</span>
+        {sub ? <span className="block truncate text-xs font-semibold text-nexoraMuted">{sub}</span> : null}
       </span>
       <ChevronRight className="h-4 w-4 shrink-0 text-nexoraSubtle" />
     </button>
@@ -85,11 +85,11 @@ function VerificationMenuItem({ label, status, verified, onClick }: any) {
       <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-slate-300 bg-white text-slate-500">
         <ShieldCheck className="h-4 w-4" />
       </span>
-      <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-nexoraText">
+      <span className="min-w-0 flex-1 truncate text-xs font-semibold text-nexoraText">
         {label}
       </span>
       <span
-        className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-extrabold ${
+        className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
           verified ? "bg-emerald-50 text-emerald-500" : "bg-amber-50 text-amber-600"
         }`}
       >
@@ -110,10 +110,10 @@ function LanguageMenuItem({ label, value, onClick }: any) {
       <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-slate-500">
         <Languages className="h-4 w-4" />
       </span>
-      <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-nexoraText">
+      <span className="min-w-0 flex-1 truncate text-xs font-semibold text-nexoraText">
         {label}
       </span>
-      <span className="shrink-0 text-[11px] font-semibold text-slate-500">
+      <span className="shrink-0 text-xs font-semibold text-slate-500">
         {value}
       </span>
       <ChevronRight className="h-4 w-4 shrink-0 text-nexoraSubtle" />
@@ -132,7 +132,7 @@ function ProfileSectionHeader({ title, onBack }: { title: string; onBack: () => 
       >
         <ArrowLeft className="h-4 w-4" />
       </button>
-      <h1 className="min-w-0 truncate text-base font-semibold text-nexoraText">
+      <h1 className="min-w-0 truncate text-nexoraText text-xl lg:text-2xl font-semibold leading-snug">
         {title}
       </h1>
     </div>
@@ -335,7 +335,7 @@ export default function StaffProfile() {
               {!activeSection ? (
                 <>
               <section className="space-y-2 px-0.5">
-                <h1 className="text-base font-semibold leading-tight text-nexoraText">
+                <h1 className="text-nexoraText text-xl lg:text-2xl font-semibold leading-snug">
                   {t("staff_dashboard.profile.screen_title")}
                 </h1>
                 <div className={`${compactPanel} flex items-center gap-4 rounded-2xl p-3`}>
@@ -347,11 +347,11 @@ export default function StaffProfile() {
                     )}
                   </div>
                   <div className="min-w-0 flex-1 text-left">
-                    <h2 className="truncate text-base font-semibold leading-tight text-nexoraText">{profileName}</h2>
-                    <p className="mt-1 truncate text-[11px] font-medium text-nexoraMuted">
+                    <h2 className="truncate text-nexoraText text-base font-semibold leading-snug">{profileName}</h2>
+                    <p className="mt-1 truncate text-xs font-medium text-nexoraMuted">
                       {t("staff_dashboard.profile.nexora_id", { id: nexoraId })}
                     </p>
-                    <p className="mt-0.5 text-[11px] font-medium text-nexoraMuted">
+                    <p className="mt-0.5 text-xs font-medium text-nexoraMuted">
                       {memberSinceDate
                         ? t("staff_dashboard.profile.member_since", {
                             date: memberSinceDate,
@@ -361,7 +361,7 @@ export default function StaffProfile() {
                     <button
                       type="button"
                       onClick={() => openProfileSection("personal")}
-                      className="mt-2 inline-flex h-7 min-w-[88px] items-center justify-center rounded-lg bg-[#EEE9FF] px-4 text-[12px] font-semibold text-nexoraBrandDark transition active:scale-95"
+                      className="mt-2 inline-flex h-7 min-w-[88px] items-center justify-center rounded-lg bg-[#EEE9FF] px-4 text-xs font-semibold text-nexoraBrandDark transition active:scale-95"
                     >
                       {t("staff_dashboard.profile.edit_profile")}
                     </button>
@@ -396,7 +396,7 @@ export default function StaffProfile() {
               <button
                 type="button"
                 onClick={onLogout}
-                className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-2 text-xs font-extrabold text-amber-700 transition hover:bg-amber-100 cursor-pointer"
+                className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-2 text-xs font-semibold text-amber-700 transition hover:bg-amber-100 cursor-pointer"
               >
                 <LogOut className="h-4.5 w-4.5 shrink-0" />
                 <span className="truncate">{t("staff_dashboard.sign_out")}</span>
@@ -412,7 +412,7 @@ export default function StaffProfile() {
               />
 
               <section className={panel}>
-                <h3 className="mb-4 flex items-center gap-1.5 text-base font-extrabold text-nexoraText">
+                <h3 className="mb-4 flex items-center gap-1.5 text-nexoraText text-base font-semibold leading-snug">
                   {t("staff_dashboard.profile.title")}
                   <Tooltip
                     content={t("staff_dashboard.profile.title_tooltip")}
@@ -436,7 +436,7 @@ export default function StaffProfile() {
                       </div>
                     )}
                     <label
-                      className={`absolute inset-0 rounded-full bg-black/45 text-white text-[10px] font-black uppercase flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity ${uploadImageMutation.isPending ? "pointer-events-none opacity-100" : ""}`}
+                      className={`absolute inset-0 rounded-full bg-black/45 text-white text-xs font-black uppercase flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity ${uploadImageMutation.isPending ? "pointer-events-none opacity-100" : ""}`}
                     >
                       <Camera className="h-5 w-5 mb-1" />
                       {uploadImageMutation.isPending
@@ -456,7 +456,7 @@ export default function StaffProfile() {
                   <span className="mt-2 text-xs font-bold text-nexoraText">
                     {fullName || displayName}
                   </span>
-                  <span className="text-[10px] text-nexoraSubtle">
+                  <span className="text-xs text-nexoraSubtle">
                     {t("staff_dashboard.staff_id")}:{" "}
                     {profileView.staffCode || staffMember.id}
                   </span>
@@ -490,7 +490,7 @@ export default function StaffProfile() {
                       }}
                     />
                     {errors.fullName && (
-                      <p className="mt-1 text-[10px] font-bold text-rose-500">
+                      <p className="mt-1 text-xs font-bold text-rose-500">
                         {errors.fullName}
                       </p>
                     )}
@@ -516,7 +516,7 @@ export default function StaffProfile() {
                       }}
                     />
                     {errors.displayName && (
-                      <p className="mt-1 text-[10px] font-bold text-rose-500">
+                      <p className="mt-1 text-xs font-bold text-rose-500">
                         {errors.displayName}
                       </p>
                     )}
@@ -570,7 +570,7 @@ export default function StaffProfile() {
                         />
                       </div>
                       {errors.phone && (
-                        <p className="mt-1 text-[10px] font-bold text-rose-500">
+                        <p className="mt-1 text-xs font-bold text-rose-500">
                           {errors.phone}
                         </p>
                       )}
@@ -609,14 +609,14 @@ export default function StaffProfile() {
                     />
                     <div className="flex justify-between items-center mt-1">
                       {errors.bio ? (
-                        <p className="text-[10px] font-bold text-rose-500">
+                        <p className="text-xs font-bold text-rose-500">
                           {errors.bio}
                         </p>
                       ) : (
                         <span />
                       )}
                       <span
-                        className={`text-[10px] ${bio.length > 300 ? "text-rose-500 font-bold" : "text-nexoraSubtle"}`}
+                        className={`text-xs ${bio.length > 300 ? "text-rose-500 font-bold" : "text-nexoraSubtle"}`}
                       >
                         {bio.length}/300
                       </span>
@@ -624,7 +624,7 @@ export default function StaffProfile() {
                   </div>
                 </div>
 
-                <p className="mt-3 text-[11px] text-nexoraSubtle">
+                <p className="mt-3 text-xs text-nexoraSubtle">
                   {t("staff_dashboard.profile.identity_note")}
                 </p>
 
@@ -632,7 +632,7 @@ export default function StaffProfile() {
                   type="button"
                   onClick={handleSave}
                   disabled={isSavingProfile}
-                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet py-3 text-sm font-extrabold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet py-3 text-xs font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isSavingProfile ? (
                     <>
@@ -651,7 +651,7 @@ export default function StaffProfile() {
 
               {linkedBusinesses.length > 0 ? (
                 <section className={panel}>
-                  <h3 className="mb-1 text-base font-extrabold text-nexoraText">
+                  <h3 className="mb-1 text-nexoraText text-base font-semibold leading-snug">
                     {t("staff_dashboard.profile.business_settings")}
                   </h3>
                   <p className="mb-4 text-xs leading-relaxed text-nexoraMuted">
@@ -753,10 +753,10 @@ export default function StaffProfile() {
                           <ShieldCheck className="h-5 w-5" />
                         </span>
                         <div>
-                          <h3 className="text-sm font-extrabold text-nexoraText">
+                          <h3 className="text-nexoraText text-sm font-semibold leading-snug">
                             {kycStatusLabel}
                           </h3>
-                          <p className="mt-1 text-xs leading-5 text-nexoraMuted">
+                          <p className="mt-1 text-nexoraMuted text-[13px] font-normal leading-5">
                             {t("staff_dashboard.profile.verification_body")}
                           </p>
                         </div>
@@ -780,8 +780,8 @@ export default function StaffProfile() {
                       onClick={() => setLanguage("en")}
                       className="flex min-h-[44px] w-full items-center justify-between rounded-lg px-2 text-left transition hover:bg-[#F8F7FF]"
                     >
-                      <span className="text-[13px] font-semibold text-nexoraText">English</span>
-                      <span className="text-[11px] font-bold text-nexoraMuted">
+                      <span className="text-xs font-semibold text-nexoraText">English</span>
+                      <span className="text-xs font-semibold text-nexoraMuted">
                         {currentLanguage === "en" ? t("staff_dashboard.profile.current_language") : ""}
                       </span>
                     </button>
@@ -790,8 +790,8 @@ export default function StaffProfile() {
                       onClick={() => setLanguage("vi")}
                       className="flex min-h-[44px] w-full items-center justify-between rounded-lg px-2 text-left transition hover:bg-[#F8F7FF]"
                     >
-                      <span className="text-[13px] font-semibold text-nexoraText">Tiếng Việt</span>
-                      <span className="text-[11px] font-bold text-nexoraMuted">
+                      <span className="text-xs font-semibold text-nexoraText">Tiếng Việt</span>
+                      <span className="text-xs font-semibold text-nexoraMuted">
                         {currentLanguage === "vi" ? t("staff_dashboard.profile.current_language") : ""}
                       </span>
                     </button>

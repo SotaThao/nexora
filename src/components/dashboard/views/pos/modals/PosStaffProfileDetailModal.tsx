@@ -7,7 +7,9 @@ import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import { getApiErrorCode } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
+import { formatTurnCredit } from '../TurnGridView'
 import { usePosRoles } from '../../../../../data/hooks/usePosRoles'
+import { usePosStaffLevels } from '../../../../../data/hooks/usePosStaffLevels'
 import { usePosCategories } from '../../../../../data/hooks/usePosCategories'
 import { usePosServices } from '../../../../../data/hooks/usePosServices'
 import {
@@ -132,6 +134,7 @@ export default function PosStaffProfileDetailModal({
   const { showToast } = useNotification()
 
   const rolesQuery = usePosRoles()
+  const levelsQuery = usePosStaffLevels()
   const profileQuery = useStaffPosProfile(linkId)
   const saveProfile = useSaveStaffPosProfile()
   const updateContractType = useUpdateStaffPosContractType()
@@ -160,6 +163,7 @@ export default function PosStaffProfileDetailModal({
   const categoryNameById = useMemo(() => new Map(categories.map((c) => [c.id, c.name])), [categories])
 
   const [posRoleId, setPosRoleId] = useState('')
+  const [staffLevelId, setStaffLevelId] = useState('')
   const [payStructureType, setPayStructureType] = useState<PayStructureType>('Commission')
   const [commissionPercent, setCommissionPercent] = useState('')
   const [weeklySalaryAmount, setWeeklySalaryAmount] = useState('')
@@ -198,6 +202,7 @@ export default function PosStaffProfileDetailModal({
   useEffect(() => {
     if (!profile) return
     setPosRoleId(profile.posRoleId ?? '')
+    setStaffLevelId(profile.staffLevelId ?? '')
     setPayStructureType(
       PAY_STRUCTURE_TYPES.includes(profile.payStructureType as PayStructureType)
         ? (profile.payStructureType as PayStructureType)
@@ -221,6 +226,7 @@ export default function PosStaffProfileDetailModal({
       await saveProfile.mutateAsync({
         businessStaffLinkId: linkId,
         posRoleId,
+        staffLevelId: staffLevelId || null,
         payStructureType,
         commissionPercent: payStructureType === 'Commission' ? Number(commissionPercent) : null,
         weeklySalaryAmount: payStructureType === 'WeeklySalary' ? Number(weeklySalaryAmount) : null,
@@ -449,48 +455,82 @@ export default function PosStaffProfileDetailModal({
                 </h3>
 
                 {hasSavedProfile && (
-                  <div>
-                    <span className="text-[10px] font-bold uppercase text-nexoraMuted">
-                      {t('components.dashboard.views.pos.PosStaffProfileView.statusLabel')}
-                    </span>
-                    <div className="mt-1 flex w-fit overflow-hidden rounded-lg border border-nexoraBorder">
-                      {POS_STAFF_STATUSES.map((option) => (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => handleChangeStatus(option)}
-                          disabled={setStaffStatus.isPending}
-                          className={`px-3 py-1.5 text-xs font-semibold transition disabled:opacity-60 ${
-                            status === option
-                              ? 'bg-nexoraBrand text-white'
-                              : 'bg-white text-nexoraText hover:bg-nexoraCanvas'
-                          }`}
-                        >
-                          {t(`components.dashboard.views.pos.PosStaffProfileView.staffStatus.${option}`)}
-                        </button>
-                      ))}
+                  <div className="flex flex-wrap items-start gap-x-8 gap-y-3">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase text-nexoraMuted">
+                        {t('components.dashboard.views.pos.PosStaffProfileView.statusLabel')}
+                      </span>
+                      <div className="mt-1 flex w-fit overflow-hidden rounded-lg border border-nexoraBorder">
+                        {POS_STAFF_STATUSES.map((option) => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => handleChangeStatus(option)}
+                            disabled={setStaffStatus.isPending}
+                            className={`px-3 py-1.5 text-xs font-semibold transition disabled:opacity-60 ${
+                              status === option
+                                ? 'bg-nexoraBrand text-white'
+                                : 'bg-white text-nexoraText hover:bg-nexoraCanvas'
+                            }`}
+                          >
+                            {t(`components.dashboard.views.pos.PosStaffProfileView.staffStatus.${option}`)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] font-bold uppercase text-nexoraMuted">
+                        {t('components.dashboard.views.pos.PosStaffProfileView.turnsTodayLabel')}
+                      </span>
+                      {/* Weighted, so this reads the same as the Turn Board badge for this tech. */}
+                      <div className="mt-1 text-sm font-bold text-nexoraText">
+                        {`${formatTurnCredit(profile?.weightedTurnsToday)}T`}
+                      </div>
                     </div>
                   </div>
                 )}
 
-                <div>
-                  <label className="text-[10px] font-bold uppercase text-nexoraMuted">
-                    {t('components.dashboard.views.pos.PosStaffProfileView.roleLabel')}
-                  </label>
-                  <select
-                    value={posRoleId}
-                    onChange={(e) => setPosRoleId(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-nexoraBorder px-2 py-1.5 text-xs font-semibold sm:w-64"
-                  >
-                    <option value="" disabled>
-                      —
-                    </option>
-                    {(rolesQuery.data ?? []).map((role) => (
-                      <option key={role.id} value={role.id}>
-                        {role.name}
+                <div className="flex flex-wrap items-end gap-3">
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-nexoraMuted">
+                      {t('components.dashboard.views.pos.PosStaffProfileView.roleLabel')}
+                    </label>
+                    <select
+                      value={posRoleId}
+                      onChange={(e) => setPosRoleId(e.target.value)}
+                      className="mt-1 block w-full rounded-lg border border-nexoraBorder px-2 py-1.5 text-xs font-semibold sm:w-64"
+                    >
+                      <option value="" disabled>
+                        —
                       </option>
-                    ))}
-                  </select>
+                      {(rolesQuery.data ?? []).map((role) => (
+                        <option key={role.id} value={role.id}>
+                          {role.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-nexoraMuted">
+                      {t('components.dashboard.views.pos.PosStaffProfileView.staffLevelLabel')}
+                    </label>
+                    <select
+                      value={staffLevelId}
+                      onChange={(e) => setStaffLevelId(e.target.value)}
+                      className="mt-1 block w-full rounded-lg border border-nexoraBorder px-2 py-1.5 text-xs font-semibold sm:w-64"
+                    >
+                      <option value="">
+                        {t('components.dashboard.views.pos.PosStaffProfileView.staffLevelNoneOption')}
+                      </option>
+                      {(levelsQuery.data ?? []).map((level) => (
+                        <option key={level.id} value={level.id}>
+                          {level.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap items-end gap-3">

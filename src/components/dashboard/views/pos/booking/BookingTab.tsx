@@ -27,6 +27,7 @@ import BookingCalendar from './BookingCalendar'
 import type { BookingCalendarSlotSelect } from '../../BookingTeamCalendar'
 import RescheduleServicesEditor, { type RescheduleLineDraft } from './RescheduleServicesEditor'
 import BookingLinkShare from './BookingLinkShare'
+import WeightedTurnSettingsModal from '../modals/WeightedTurnSettingsModal'
 import { toBookingWallClockIso } from '../../../../../utils/bookingWallClock'
 import {
   bookingDateKey,
@@ -71,6 +72,9 @@ export default function BookingTab({
   const { showToast } = useNotification()
 
   const [viewMode, setViewMode] = useState<ViewMode>('table')
+  // Second entry point for the weighted turn rules (the Turn Board has the other one) — the
+  // booking turn credit is set here, against the same endpoint, so neither screen owns a copy.
+  const [isTurnSettingsOpen, setIsTurnSettingsOpen] = useState(false)
   const [status, setStatus] = useState('')
   const [posStaffProfileId, setPosStaffProfileId] = useState('')
   const [dateFrom, setDateFrom] = useState('')
@@ -264,6 +268,16 @@ export default function BookingTab({
           className="h-8 shrink-0 rounded-lg bg-nexoraBrand px-3 text-[11px] font-bold text-white transition-colors hover:bg-nexoraBrandDark"
         >
           {t('components.dashboard.views.pos.NewBookingForm.newBookingButton')}
+        </button>
+
+        {/* Same modal and same endpoint as the Turn Board's button — the booking turn credit
+            lives with the service-value bands, so there is one set of numbers, not two. */}
+        <button
+          type="button"
+          onClick={() => setIsTurnSettingsOpen(true)}
+          className="h-8 shrink-0 rounded-lg border border-nexoraBorder bg-white px-3 text-[11px] font-bold text-nexoraText transition-colors hover:bg-nexoraCanvas"
+        >
+          {t('components.dashboard.views.pos.WeightedTurnSettingsModal.openButton')}
         </button>
 
         {viewMode !== 'calendar' ? (
@@ -485,6 +499,13 @@ export default function BookingTab({
             </div>
           </div>
         </div>
+      ) : null}
+
+      {isTurnSettingsOpen ? (
+        <WeightedTurnSettingsModal
+          businessId={businessId}
+          onClose={() => setIsTurnSettingsOpen(false)}
+        />
       ) : null}
 
       {viewDetailTargetId ? (

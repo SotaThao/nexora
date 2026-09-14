@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { AlertTriangle, Check, Copy, Download, Printer, QrCode } from 'lucide-react'
+import { AlertTriangle, Check, Copy, FileDown, Image as ImageIcon, Printer, QrCode } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { useBusinessHours } from '../../../../data/hooks/useMerchantSetup'
@@ -25,6 +25,8 @@ import { useCheckInTemplatePrint } from './checkinPrint/useCheckInTemplatePrint'
 import type { CheckInPrintBusiness } from './checkinPrint/checkInPrintTypes'
 import './publicCheckInQrPrint.css'
 
+const actionControl = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+
 const TK = 'components.dashboard.views.pos.PublicCheckInQrPanel.'
 interface Props { businessId?: string; businessSlug?: string; businessName?: string; businessLogo?: string | null }
 export default function PublicCheckInQrPanel(props: Props) {
@@ -45,7 +47,7 @@ function PublicCheckInQrEditor({ businessId, businessSlug, businessName, busines
   const [config, setConfig] = useState(() => createDefaultCheckInPrintConfig())
   const [withoutLogo, setWithoutLogo] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
-  const [busy, setBusy] = useState<'pdf' | 'qr' | null>(null)
+  const [busy, setBusy] = useState<'pdf' | 'png' | 'qr' | null>(null)
   const busyRef = useRef(false)
   const mounted = useRef(true)
   const copyTimer = useRef<number | undefined>(undefined)
@@ -77,9 +79,9 @@ function PublicCheckInQrEditor({ businessId, businessSlug, businessName, busines
   const copy = async () => {
     try { await copyTextToClipboard(url); if (!mounted.current) return; setIsCopied(true); showToast(t(TK + 'copied')); window.clearTimeout(copyTimer.current); copyTimer.current = window.setTimeout(() => setIsCopied(false), 2000) } catch { showToast(t('common.error'), 'error') }
   }
-  const download = async (kind: 'pdf' | 'qr') => {
-    if (busyRef.current) return
-    if (kind === 'pdf' && (!ready || !design || !activeAssets)) return
+  const download = async (kind: 'pdf' | 'png' | 'qr') => {
+    if (busyRef.current || printing.job) return
+    if (kind !== 'qr' && (!ready || !design || !activeAssets)) return
     busyRef.current = true; setBusy(kind)
     const safeSlug = (businessSlug ?? 'business').replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 80)
     try {
@@ -87,11 +89,18 @@ function PublicCheckInQrEditor({ businessId, businessSlug, businessName, busines
       else if (design && activeAssets) {
         const documentSnapshot = design
         const assetsSnapshot = activeAssets
-        const fileName = mode === 'artwork' ? `${safeSlug}-${backgroundId}-${backgroundSize}.pdf` : `${safeSlug}-${config.templateId}-${config.sizeId}-${config.language}.pdf`
-        const { createCheckInPrintPdf } = await import('./checkinPrint/exportCheckInPrintPdf')
-        const bytes = await createCheckInPrintPdf(documentSnapshot, assetsSnapshot)
+        const fileName = mode === 'artwork' ? `${safeSlug}-${backgroundId}-${backgroundSize}.${kind}` : `${safeSlug}-${config.templateId}-${config.sizeId}-${config.language}.${kind}`
+        let blob: Blob
+        if (kind === 'png') {
+          const { createCheckInPrintPng } = await import('./checkinPrint/exportCheckInPrintPng')
+          blob = await createCheckInPrintPng(documentSnapshot, assetsSnapshot)
+        } else {
+          const { createCheckInPrintPdf } = await import('./checkinPrint/exportCheckInPrintPdf')
+          const bytes = await createCheckInPrintPdf(documentSnapshot, assetsSnapshot)
+          blob = new Blob([new Uint8Array(bytes)], { type: 'application/pdf' })
+        }
         if (!mounted.current) return
-        const objectUrl = URL.createObjectURL(new Blob([new Uint8Array(bytes)], { type: 'application/pdf' }))
+        const objectUrl = URL.createObjectURL(blob)
         const link = document.createElement('a'); link.href = objectUrl; link.download = fileName; document.body.appendChild(link); link.click(); link.remove()
         window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000)
       }
@@ -104,7 +113,7 @@ function PublicCheckInQrEditor({ businessId, businessSlug, businessName, busines
     <div className="nexora-card min-w-0 p-4 lg:p-6">
       <div className="mb-4 flex items-start gap-3"><QrCode className="h-6 w-6 shrink-0 text-nexoraBrand" /><div><h3 className="font-extrabold text-nexoraText">{t(TK + 'title')}</h3><p className="text-xs text-nexoraMuted">{t(TK + 'description')}</p></div></div>
       {checkInSettings && checkInSettings.publicCheckInEnabled !== true && <div className="mb-4 flex gap-2 rounded-lg border border-nexoraWarning p-3 text-xs"><AlertTriangle className="h-4 w-4 shrink-0" />{t(TK + 'enableNotice')}</div>}
-      <div className="grid min-w-0 gap-6 xl:grid-cols-2">
+      <div className="grid min-w-0 gap-6 md:grid-cols-2">
         <div className="min-w-0 space-y-5">
           <label className="block space-y-1 text-xs font-bold">{text('layoutSource')}<select className={control + ' w-full'} value={mode} onChange={event => setMode(event.target.value as 'artwork' | 'custom')}><option value="artwork">{text('artworkMode')}</option><option value="custom">{text('customMode')}</option></select></label>
           {mode === 'artwork' ? <>
@@ -121,7 +130,10 @@ function PublicCheckInQrEditor({ businessId, businessSlug, businessName, busines
           <CheckInTemplateEditor config={config} onChange={setConfig} />
           {(!businessLogo || withoutLogo) && <p className="text-xs text-nexoraMuted">{text('noLogo')}</p>}
           </>}
-          <div className="flex min-w-0 items-center gap-2 rounded-lg border border-nexoraBorder p-2"><a className="min-w-0 flex-1 truncate text-xs text-nexoraMuted" href={url} target="_blank" rel="noreferrer">{url.replace(/^https?:\/\//, '')}</a><button type="button" className="flex min-h-10 items-center gap-1 text-xs text-nexoraBrand" onClick={() => void copy()}>{isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{t('common.copy')}</button></div>
+          <div className="min-w-0 space-y-1">
+            <p className="text-xs font-bold text-nexoraText">{t(TK + 'linkLabel')}</p>
+            <div className="flex min-w-0 items-center gap-2 rounded-lg border border-nexoraBorder p-2"><a className="min-w-0 flex-1 truncate text-xs text-nexoraMuted" href={url} target="_blank" rel="noreferrer">{url.replace(/^https?:\/\//, '')}</a><button type="button" className="flex min-h-10 items-center gap-1 text-xs text-nexoraBrand" onClick={() => void copy()}>{isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{t('common.copy')}</button></div>
+          </div>
         </div>
         <div className="min-w-0 space-y-4">
           <h4 className="text-sm font-bold">{text('preview')}</h4>
@@ -135,7 +147,12 @@ function PublicCheckInQrEditor({ businessId, businessSlug, businessName, busines
           {mode === 'custom' && config.showHours && hoursQuery.isPending && !hoursQuery.isFetching && <div role="alert" className="space-y-2 text-sm text-nexoraText"><p>{text('hoursUnavailable')}</p><button type="button" className={control} onClick={() => setConfig(current => ({ ...current, showHours: false }))}>{text('withoutHours')}</button></div>}
           {mode === 'custom' && config.showHours && hoursQuery.isError && <div role="alert" className="space-y-2 text-sm text-nexoraText"><p>{text('hoursError')}</p><button type="button" className={control} onClick={() => void hoursQuery.refetch()}>{text('retry')}</button><button type="button" className={control + ' ml-2'} onClick={() => setConfig(current => ({ ...current, showHours: false }))}>{text('withoutHours')}</button></div>}
           {result?.ok === false && <div role="alert" className="text-sm text-nexoraText">{result.issues.map((issue, index) => <p key={index}>{text('issues.' + issue.code)}</p>)}</div>}
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3"><button type="button" disabled={disabled} className={control + ' flex items-center justify-center gap-2'} onClick={() => { if (ready && design && activeAssets) printing.print(design, activeAssets) }}><Printer className="h-4 w-4" />{text('print')}</button><button type="button" disabled={disabled} className={control + ' flex items-center justify-center gap-2'} onClick={() => void download('pdf')}><Download className="h-4 w-4" />{text(busy === 'pdf' ? 'working' : 'pdf')}</button><button type="button" disabled={busy !== null || printing.job !== null} className={control} onClick={() => void download('qr')}>{text(busy === 'qr' ? 'working' : 'qr')}</button></div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <button type="button" disabled={disabled} className={actionControl + ' border-nexoraBrand/20 bg-nexoraBrand/5 text-nexoraBrand enabled:hover:bg-nexoraBrand/10'} onClick={() => { if (ready && design && activeAssets) printing.print(design, activeAssets) }}><Printer className="h-4 w-4" aria-hidden />{text('print')}</button>
+            <button type="button" disabled={disabled} className={actionControl + ' border-amber-200 bg-amber-50/70 text-amber-800 enabled:hover:bg-amber-100'} onClick={() => void download('pdf')}><FileDown className="h-4 w-4" aria-hidden />{text(busy === 'pdf' ? 'working' : 'pdf')}</button>
+            <button type="button" disabled={disabled} className={actionControl + ' border-sky-200 bg-sky-50/70 text-sky-700 enabled:hover:bg-sky-100'} onClick={() => void download('png')}><ImageIcon className="h-4 w-4" aria-hidden />{text(busy === 'png' ? 'working' : 'png')}</button>
+            <button type="button" disabled={busy !== null || printing.job !== null} className={actionControl + ' border-emerald-200 bg-emerald-50/70 text-emerald-700 enabled:hover:bg-emerald-100'} onClick={() => void download('qr')}><QrCode className="h-4 w-4" aria-hidden />{text(busy === 'qr' ? 'working' : 'qr')}</button>
+          </div>
           {printing.job && <button type="button" className={control} onClick={printing.cancel}>{text('cancelPrint')}</button>}
           <p className="text-xs text-nexoraMuted">{text('printHint')}</p>
         </div>

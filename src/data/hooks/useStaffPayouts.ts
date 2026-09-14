@@ -86,3 +86,16 @@ export function useConfirmStaffPayout() {
     onSuccess: (_data, payoutId) => invalidateStaffPayoutCaches(queryClient, payoutId),
   })
 }
+
+/** Income/Payout Categories (issue #584) — Staff assigns a category to a Payout ("Payroll"). */
+export function useSetStaffPayoutCategory() {
+  const queryClient = useQueryClient()
+
+  return useMutation<void, Error, { payoutId: string; categoryId: string | null }>({
+    mutationFn: ({ payoutId, categoryId }) => staffPayoutsRepository.setCategory(payoutId, categoryId),
+    onSuccess: (_data, { payoutId }) => {
+      invalidateStaffPayoutCaches(queryClient, payoutId)
+      queryClient.invalidateQueries({ queryKey: ['staffTransactionCategories', 'stats'] })
+    },
+  })
+}

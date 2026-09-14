@@ -53,7 +53,7 @@ export function useTimeClockRoster(
 ) {
   const { isAuthenticated } = useSessionRole()
   return useQuery<TimeClockRosterApiDto>({
-    queryKey: qk.merchantPosTimeClockRoster(businessId, window?.dayKey),
+    queryKey: [...qk.merchantPosTimeClockRoster(businessId, window?.dayKey), window?.fromUtc, window?.toUtc],
     queryFn: () => posTimeClockRepository.getRoster(businessId as string, window!.fromUtc, window!.toUtc),
     enabled: (options.enabled ?? true) && isAuthenticated && Boolean(businessId) && Boolean(window),
     retry: false,
@@ -83,6 +83,7 @@ function useTimeClockInvalidation(businessId?: string) {
     queryClient.invalidateQueries({ queryKey: qk.merchantPosTimeClockRoster(businessId) })
     queryClient.invalidateQueries({ queryKey: qk.merchantPosTimeClockLog(businessId) })
     queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
+    queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
   }
 }
 

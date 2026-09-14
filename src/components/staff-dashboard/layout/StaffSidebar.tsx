@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { LogOut, ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react'
+import { MY_CERTIFICATIONS_PATH_SEGMENT } from '../../dashboard/constants'
 import { useStaffPendingAcceptanceCount } from '../../../data/hooks/useStaffPendingAcceptanceCount'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { STAFF_CALENDAR_LAYOUT_CLASS } from '../calendar/constants'
@@ -219,7 +220,7 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
                     aria-label={t('components.dashboard.views.pos.serviceLineStatus.pendingBadge', {
                       count: pendingAcceptanceCount,
                     })}
-                    className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-400 px-1.5 text-[10px] font-black text-slate-900"
+                    className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-400 px-1.5 text-xs font-semibold text-slate-900"
                   >
                     {pendingAcceptanceCount}
                   </span>
@@ -260,7 +261,7 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
             )}
             <div className="min-w-0">
               <div className="truncate text-sm font-bold text-white">{account.fullName || staffMember.fullName || displayName}</div>
-              <div className="mt-0.5 truncate text-[11px] text-white/65">{t('staff_dashboard.staff_id')}: {account.staffCode || staffMember.id}</div>
+              <div className="mt-0.5 truncate text-xs text-white/65">{t('staff_dashboard.staff_id')}: {account.staffCode || staffMember.id}</div>
             </div>
           </div>
           <div className="text-white/85 hover:text-white transition ml-2">
@@ -295,11 +296,11 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
                     }
                     if (isMobile && onClose) onClose()
                   }}
-                  className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
+                  className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-semibold transition ${
                     disabled
                       ? 'cursor-not-allowed text-white/40 opacity-60'
                       : isSubActive
-                        ? 'text-brandCyan font-extrabold'
+                        ? 'text-brandCyan font-semibold'
                         : 'text-white/75 hover:bg-white/5 hover:text-white'
                   }`}
                 >
@@ -308,12 +309,36 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
                 </button>
               )
             })}
+            {/* Its own button rather than another entry in the list above: those two are tabs of
+                the profile screen, this is a screen of its own. Personal, not salon-scoped, so it
+                belongs in the account block and not in the workspace nav below. */}
+            <button
+              type="button"
+              onClick={() => {
+                onNavigate(MY_CERTIFICATIONS_PATH_SEGMENT)
+                if (isMobile && onClose) onClose()
+              }}
+              className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-semibold transition ${
+                activeScreen === MY_CERTIFICATIONS_PATH_SEGMENT
+                  ? 'text-brandCyan font-semibold'
+                  : 'text-white/75 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <div
+                className={`h-1.5 w-1.5 rounded-full ${
+                  activeScreen === MY_CERTIFICATIONS_PATH_SEGMENT
+                    ? 'bg-brandCyan shadow-sm'
+                    : 'bg-white/30'
+                }`}
+              />
+              <span>{t('certifications.menu')}</span>
+            </button>
             <LanguageSwitcher variant="sidebar" className="w-full" />
           </div>
         )}
       </div>
 
-      <nav className={SIDEBAR_NAV_CLASS}>
+      <nav className={`${SIDEBAR_NAV_CLASS} [&_button]:text-xs [&_button]:font-semibold [&_a]:text-xs [&_a]:font-semibold`}>
         <HomepageLink
           variant="menu"
           active={isHomeActive}
@@ -331,7 +356,7 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
         <button
           type="button"
           onClick={onLogout}
-          className="flex w-full items-center gap-2 px-3 py-2 text-sm font-bold text-white/65 transition hover:text-white"
+          className="flex w-full items-center gap-2 px-3 py-2 text-xs font-semibold text-white/65 transition hover:text-white"
         >
           <LogOut className="h-4 w-4" />
           {t('staff_dashboard.sign_out')}
