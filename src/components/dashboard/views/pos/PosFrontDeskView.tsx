@@ -38,7 +38,6 @@ import { formatPosTime } from './posDateTime'
 import { useCancelOrder, useCompletedOrders, useOrderList } from '../../../../data/hooks/usePosOrders'
 import { useInServiceOrders, useOrderDetails } from '../../../../data/hooks/usePosCheckout'
 import { useBookingList, useCheckInBookingFromList } from '../../../../data/hooks/usePosBooking'
-import { useCheckInTechnicians } from '../../../../data/hooks/usePosCheckIn'
 import { useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
 import { useBeepStaff, useTimeClockRoster } from '../../../../data/hooks/usePosTimeClock'
 import { useMerchantBeepFeed } from '../../../../data/hooks/usePosBeep'
@@ -108,7 +107,7 @@ import WeightedTurnSettingsModal from './modals/WeightedTurnSettingsModal'
 import TurnGridView, { formatServiceTotal, formatTurnCredit } from './TurnGridView'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { formatCurrency } from '../../utils'
-import { compareNextTurnRows, nextTurnServiceAmount, selectNextTurnTechnician, sortTurnBoardStations } from './posNextTurn'
+import { compareNextTurnRows, nextTurnServiceAmount, selectNextTurnStation, sortTurnBoardStations } from './posNextTurn'
 import {
   POS_TABLE_HEADER_CELL_CLASS,
   POS_TABLE_HEADER_ROW_CLASS,
@@ -517,47 +516,13 @@ export default function PosFrontDeskView({
     },
   )
   const todayCompletedOrderItems = todayCompletedOrdersQuery.data?.items ?? []
-  // "Next turn" is a suggestion for the oldest Waiting ticket, not a fixed rotation leader.
-  // Load only that ticket's service ids so the recommendation can respect the skill matrix.
-  const nextWaitingOrder = useMemo(
-    () => orderList.find((order) => order.status === PosOrderStatus.Waiting),
-    [orderList],
-  )
-  const nextWaitingOrderDetails = useOrderDetails(
-    businessId,
-    nextWaitingOrder ? [nextWaitingOrder.id] : [],
-    { enabled: activeTab === PosFrontDeskTab.TurnBoard },
-  )
-  const nextWaitingOrderDetail = nextWaitingOrderDetails[0]?.data
-  const nextTurnTechniciansQuery = useCheckInTechnicians(businessId, {
-    enabled: activeTab === PosFrontDeskTab.TurnBoard && Boolean(nextWaitingOrder),
-  })
   const todayTurnRows = [...(todayRosterQuery.data?.rows ?? [])].sort(compareNextTurnRows)
-  const nextTurnRequiredServiceIds = Array.from(
-    new Set(
-      (nextWaitingOrderDetail?.serviceLines ?? [])
-        .map((line) => line.posServiceId)
-        .filter(Boolean),
-    ),
-  )
-  const nextTurnSkilledTechnicianIds = new Set(
-    (nextTurnTechniciansQuery.data ?? [])
-      .filter(
-        (technician) =>
-          nextTurnRequiredServiceIds.length > 0 &&
-          nextTurnRequiredServiceIds.every((serviceId) => technician.serviceIds.includes(serviceId)),
-      )
-      .map((technician) => technician.posStaffProfileId),
-  )
   const serviceAmountsTodayByStaffId = todayNextTurnBalanceQuery.data?.completedAmounts ?? new Map<string, number>()
-  const nextTurnTechnician = todayNextTurnBalanceQuery.data
-    && !todayNextTurnBalanceQuery.isRecalculating
-    && !todayNextTurnBalanceQuery.isError && !todayRosterQuery.isError
-    ? selectNextTurnTechnician(
-        todayTurnRows,
-        nextTurnSkilledTechnicianIds,
-        serviceAmountsTodayByStaffId,
-        todayNextTurnBalanceQuery.data,
+  const nextTurnTechnician = !turnBoardQuery.isError && !todayRosterQuery.isError
+    ? selectNextTurnStation(
+        turnBoard,
+        todayRosterQuery.data?.rows ?? [],
+        todayNextTurnBalanceQuery.data?.availableSince,
       )
     : undefined
   // A ticket with one technician is already unambiguous from the list response. Only fetch
