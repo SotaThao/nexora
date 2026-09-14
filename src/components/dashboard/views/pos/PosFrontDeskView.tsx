@@ -1537,7 +1537,7 @@ export default function PosFrontDeskView({
           <CheckInOverviewPanel businessId={businessId} onBack={() => setShowCheckInOverview(false)} />
         ) : (
           <div className="relative flex min-h-0 flex-1 flex-col gap-3">
-            <div className="absolute right-0 top-0 flex flex-col items-end gap-2">
+            <div className="flex flex-col items-end gap-2 sm:absolute sm:right-0 sm:top-0">
               <CheckInsTodayCard businessId={businessId} onViewOverview={() => setShowCheckInOverview(true)} />
               <div className="flex gap-1 rounded-xl border border-nexoraBorder bg-nexoraCanvas/70 p-1">
                 <button

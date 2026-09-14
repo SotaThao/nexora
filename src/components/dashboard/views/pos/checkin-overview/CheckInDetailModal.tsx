@@ -47,7 +47,7 @@ export default function CheckInDetailModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="checkin-detail-dialog-title"
-        className="flex max-h-[calc(100dvh-1rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-nexoraBorder bg-white shadow-2xl sm:max-h-[calc(100dvh-2rem)]"
+        className="nexora-modal-card w-full max-w-lg overflow-hidden rounded-2xl border border-nexoraBorder bg-white p-0 shadow-2xl"
       >
         <header className="flex shrink-0 items-center justify-between gap-3 border-b border-nexoraBorder p-4 sm:p-5">
           <h2 id="checkin-detail-dialog-title" className="text-lg font-bold text-nexoraText">

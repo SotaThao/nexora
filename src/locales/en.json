@@ -4674,12 +4674,16 @@
             "CheckInsTodayCard": {
               "title": "{{count}} Check-ins Today",
               "breakdown": "{{newCount}} New · {{returningCount}} Returning",
-              "viewOverview": "View overview"
+              "viewOverview": "View overview",
+              "loading": "Loading check-ins…",
+              "loadError": "Couldn't load check-ins"
             },
             "CheckInOverviewPanel": {
               "title": "Today's Check-in Overview",
               "subtitle": "Guest flow and new-customer acquisition for today.",
               "backToTickets": "Back",
+              "loadError": "Couldn't load today's check-ins. Please try again.",
+              "statusFilterLabel": "Filter by status",
               "cardTotalCheckIns": "Total Check-ins",
               "cardNewGuests": "New Guests",
               "cardReturningGuests": "Returning Guests",

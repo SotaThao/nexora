@@ -49,6 +49,7 @@ export function useCheckInOrder(businessId?: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosCheckInOverview(businessId) })
     },
   })
 }
@@ -138,6 +139,7 @@ export function useCancelOrder(businessId?: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosCheckInOverview(businessId) })
     },
   })
 }
@@ -206,6 +208,7 @@ export function useAssignStaffToServiceLine(businessId?: string) {
         queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) }),
         queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) }),
         queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) }),
+        queryClient.invalidateQueries({ queryKey: qk.merchantPosCheckInOverview(businessId) }),
       ])
     },
   })
@@ -223,6 +226,7 @@ export function useStartOrderService(businessId?: string) {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosInServiceOrders(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosCheckInOverview(businessId) })
     },
   })
 }
@@ -266,6 +270,7 @@ function useServiceLineAction(
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosCheckInOverview(businessId) })
     },
   })
 }
@@ -298,6 +303,7 @@ export function useMarkServiceLineDone(businessId?: string) {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosCheckInOverview(businessId) })
     },
   })
 }

@@ -31,7 +31,7 @@ export default function CheckInOverviewPanel({
   businessId: string
   onBack: () => void
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const p = 'components.dashboard.views.pos.checkinOverview.CheckInOverviewPanel.'
 
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>('All')
@@ -52,7 +52,7 @@ export default function CheckInOverviewPanel({
     return () => window.clearTimeout(timer)
   }, [searchInput, resetPage])
 
-  const { data, isLoading, isFetching } = useCheckInOverview(businessId, {
+  const { data, isLoading, isFetching, isError } = useCheckInOverview(businessId, {
     pageNumber,
     pageSize,
     status: statusFilter === 'All' ? undefined : statusFilter,
@@ -90,6 +90,10 @@ export default function CheckInOverviewPanel({
       {isLoading ? (
         <div className="py-6">
           <SkeletonList count={4} lines={1} />
+        </div>
+      ) : isError ? (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-center text-xs font-bold text-rose-700">
+          {t(p + 'loadError')}
         </div>
       ) : (
         <>
@@ -147,6 +151,7 @@ export default function CheckInOverviewPanel({
               <select
                 value={statusFilter}
                 onChange={(e) => handleStatusChange(e.target.value as (typeof STATUS_FILTERS)[number])}
+                aria-label={t(p + 'statusFilterLabel')}
                 className="h-9 shrink-0 rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
               >
                 {STATUS_FILTERS.map((filter) => (
@@ -161,6 +166,7 @@ export default function CheckInOverviewPanel({
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   placeholder={t(p + 'searchPlaceholder')}
+                  aria-label={t(p + 'searchPlaceholder')}
                   className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
                 />
               </div>
@@ -190,7 +196,7 @@ export default function CheckInOverviewPanel({
                   {items.map((item) => (
                     <tr key={item.id} className="border-b border-nexoraBorder/60 last:border-0">
                       <td className="px-3 py-2 font-bold text-nexoraText">#{item.orderNumber}</td>
-                      <td className="whitespace-nowrap px-3 py-2 text-nexoraMuted">{formatPosTime(item.checkedInAt).toUpperCase()}</td>
+                      <td className="whitespace-nowrap px-3 py-2 text-nexoraMuted">{formatPosTime(item.checkedInAt, currentLanguage).toUpperCase()}</td>
                       <td className="px-3 py-2">
                         <span className="font-bold text-nexoraText">{item.customerName}</span>
                         <span className="ml-1 text-nexoraMuted">

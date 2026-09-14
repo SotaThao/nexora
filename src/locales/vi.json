@@ -4675,12 +4675,16 @@
             "CheckInsTodayCard": {
               "title": "{{count}} lượt check-in hôm nay",
               "breakdown": "{{newCount}} khách mới · {{returningCount}} khách cũ",
-              "viewOverview": "Xem tổng quan"
+              "viewOverview": "Xem tổng quan",
+              "loading": "Đang tải check-in…",
+              "loadError": "Không tải được check-in"
             },
             "CheckInOverviewPanel": {
               "title": "Tổng Quan Check-in Hôm Nay",
               "subtitle": "Lượng khách và nguồn khách mới trong ngày.",
               "backToTickets": "Quay lại",
+              "loadError": "Không tải được dữ liệu check-in hôm nay. Vui lòng thử lại.",
+              "statusFilterLabel": "Lọc theo trạng thái",
               "cardTotalCheckIns": "Tổng Check-in",
               "cardNewGuests": "Khách Mới",
               "cardReturningGuests": "Khách Cũ",
