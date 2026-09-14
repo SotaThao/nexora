@@ -65,6 +65,7 @@ export default function CategoryGroupedCatalogPicker({
   searchPlaceholder,
   variant = 'list',
   selectedItemIds,
+  allowRepeatedItems = false,
   disabledItemIds,
   viewDetailsLabel,
   closeDetailsLabel,
@@ -90,6 +91,9 @@ export default function CategoryGroupedCatalogPicker({
   // Omitted by every other caller (Update-mode catalog, Products, Booking pickers), which
   // keep the original plain "+ Add" card and "All"-first category behavior untouched.
   selectedItemIds?: string[]
+  // Repeat mode keeps selected service cards additive and shows their current quantity.
+  // Omitted callers retain the existing selected/unselected toggle behavior.
+  allowRepeatedItems?: boolean
   // Cards for these ids render disabled (e.g. a service the chosen technician can't
   // perform) — grid variant only, omitted elsewhere.
   disabledItemIds?: string[]
@@ -107,7 +111,11 @@ export default function CategoryGroupedCatalogPicker({
   const [detailItem, setDetailItem] = useState<CatalogPickerItem | null>(null)
 
   const isCheckinServiceMode = selectedItemIds !== undefined
-  const selectedIdSet = useMemo(() => new Set(selectedItemIds ?? []), [selectedItemIds])
+  const selectedItemCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const itemId of selectedItemIds ?? []) counts.set(itemId, (counts.get(itemId) ?? 0) + 1)
+    return counts
+  }, [selectedItemIds])
   const disabledIdSet = useMemo(() => new Set(disabledItemIds ?? []), [disabledItemIds])
 
   const categories = useMemo(() => {
@@ -169,12 +177,12 @@ export default function CategoryGroupedCatalogPicker({
   // several rows per screen (the whole point of this redesign was cutting scroll distance),
   // but big enough to tap comfortably.
   const renderItemCard = (item: CatalogPickerItem) => {
-    const isSelected = selectedIdSet.has(item.id)
-    // Never disable an already-selected card — the current default technician (top
-    // picker) can change after this service was added with a *different* technician (see
-    // CheckinServiceTechnicianSelect), and the staff must still be able to tap it to
-    // remove it even if the current default couldn't perform it.
-    const isDisabled = Boolean(isPending) || (disabledIdSet.has(item.id) && !isSelected)
+    const selectedCount = selectedItemCounts.get(item.id) ?? 0
+    const isSelected = selectedCount > 0
+    // Toggle mode keeps an already-selected card enabled so it can be removed after the
+    // default technician changes. Repeat mode is always additive, so an explicitly
+    // unavailable service stays disabled even when that service is already in the order.
+    const isDisabled = Boolean(isPending) || (disabledIdSet.has(item.id) && (allowRepeatedItems || !isSelected))
     const hasDetails = Boolean(viewDetailsLabel && (item.description || item.photoUrl))
 
     if (isCheckinServiceMode) {
@@ -190,17 +198,31 @@ export default function CategoryGroupedCatalogPicker({
             type="button"
             onClick={() => onAdd(item.id)}
             disabled={isDisabled}
+            aria-label={allowRepeatedItems ? `${addLabel} ${item.name}` : undefined}
             className="flex w-full flex-col gap-1 text-left disabled:cursor-not-allowed"
           >
             <div className="flex items-start justify-between gap-2">
               <span className="line-clamp-2 text-[13px] font-bold leading-tight text-nexoraText">{item.name}</span>
-              <span
-                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                  isSelected ? 'border-nexoraBrand bg-nexoraBrand text-white' : 'border-nexoraBorder'
-                }`}
-              >
-                {isSelected ? <Check className="h-3 w-3" /> : null}
-              </span>
+              {allowRepeatedItems ? (
+                <span className="flex shrink-0 items-center gap-1">
+                  {selectedCount > 0 ? (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-nexoraBrandSoft px-1 text-[10px] font-black text-nexoraBrandDark">
+                      {selectedCount}
+                    </span>
+                  ) : null}
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-nexoraBrand text-sm font-bold leading-none text-white">
+                    +
+                  </span>
+                </span>
+              ) : (
+                <span
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                    isSelected ? 'border-nexoraBrand bg-nexoraBrand text-white' : 'border-nexoraBorder'
+                  }`}
+                >
+                  {isSelected ? <Check className="h-3 w-3" /> : null}
+                </span>
+              )}
             </div>
             <div className="flex items-baseline gap-1.5">
               <span className="text-[13px] font-bold text-nexoraText">{item.price == null ? missingPriceLabel : `$${item.price.toFixed(2)}`}</span>
@@ -490,7 +512,7 @@ export default function CategoryGroupedCatalogPicker({
                   <span className="text-xs text-nexoraMuted">· {detailItem.durationMinutes} min</span>
                 ) : null}
               </div>
-              {detailItem.description ? <p className="text-sm text-nexoraText">{detailItem.description}</p> : null}
+              {detailItem.description ? <p className="whitespace-pre-wrap break-words text-sm text-nexoraText">{detailItem.description}</p> : null}
             </div>
           </div>
         </div>
