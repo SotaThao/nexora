@@ -1,6 +1,10 @@
+import { TechnicianDialogHeader, TechnicianDialogActions } from "./TechnicianDialogChrome";
+import TechnicianProfileFields from "./TechnicianProfileFields";
+import { PlusIcon, SearchIcon, ChevronDownIcon, PeopleIcon, PersonCardIcon, ServicesListIcon, RolePayIcon, CalendarWeekIcon } from "./TechnicianFormControls";
+import TechnicianWeeklySchedule from "./TechnicianWeeklySchedule";
+import TechnicianServiceSelector from "./TechnicianServiceSelector";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { BOOKING_HUB_PAGE_SIZE } from "../../../constants/pagination";
-import { TWELVE_HOUR_INPUT_LANG } from "../../../constants/timeFormat";
 import { BOOKING_HUB_PAGINATION_CLASSNAME } from "./bookingHubFormatters";
 import { applyAiHubProgressiveValidation } from "./bookingHubDialogValidation";
 import { useTranslation } from "../../../contexts/LanguageContext";
@@ -47,17 +51,14 @@ import {
 import { usePagination } from "../../../hooks/usePagination";
 import { getApiErrorCode } from "../../../types/domain";
 import { splitFullName } from "../../../utils/staffName";
-import CountryCodeSelect, {
+import {
   formatNationalNumber,
-  getNationalPhonePlaceholder,
   normalizePhoneE164,
   parsePhone,
 } from "../../CountryCodeSelect";
 import Pagination from "../../ui/Pagination";
 import {
-  ClockIcon,
   PencilIcon,
-  SpinnerIcon,
   XLgIcon,
 } from "./BookingHubIcons";
 import {
@@ -68,7 +69,6 @@ import {
   BookingTechStaffListSkeleton,
 } from "./BookingHubSkeletons";
 import { useBookingHubVoiceEnabled } from "./BookingHubVoiceContext";
-import { openNativeDateTimePicker } from "./bookingHubFormatters";
 
 const TK = "components.dashboard.views.BookingHubView.team";
 const TK_HUB = "components.dashboard.views.BookingHubView";
@@ -314,331 +314,6 @@ function isScheduleRowInvalid(row: DaySchedule): boolean {
   return row.end <= row.start;
 }
 
-function PlusIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      width="12"
-      height="12"
-    >
-      <path
-        d="M8 3v10M3 8h10"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function SearchIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      width="13"
-      height="13"
-    >
-      <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M10.5 10.5 14 14"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function ChevronDownIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      width="12"
-      height="12"
-    >
-      <path
-        d="m4 6 4 4 4-4"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function PersonPlusIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      width="16"
-      height="16"
-    >
-      <circle cx="6.5" cy="5" r="2.5" stroke="currentColor" strokeWidth="1.4" />
-      <path
-        d="M2.5 13c0-2.2 1.8-4 4-4s4 1.8 4 4"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
-      <path
-        d="M12 4v4M10 6h4"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function PeopleIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      width="13"
-      height="13"
-    >
-      <circle cx="5.5" cy="5" r="2.2" stroke="currentColor" strokeWidth="1.3" />
-      <path
-        d="M1.5 13c0-2 1.8-3.6 4-3.6"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-      />
-      <circle cx="11" cy="6" r="1.8" stroke="currentColor" strokeWidth="1.3" />
-      <path
-        d="M8.5 13c.2-1.8 1.6-3.2 3.5-3.2 1 0 1.9.4 2.5 1"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function PersonCardIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      width="13"
-      height="13"
-    >
-      <rect
-        x="2"
-        y="3"
-        width="12"
-        height="10"
-        rx="1.5"
-        stroke="currentColor"
-        strokeWidth="1.3"
-      />
-      <circle cx="6" cy="7" r="1.6" stroke="currentColor" strokeWidth="1.2" />
-      <path
-        d="M4 11c.4-1.2 1.3-2 2.5-2h1c1.2 0 2.1.8 2.5 2"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function ServicesListIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      width="13"
-      height="13"
-    >
-      <rect
-        x="2"
-        y="3"
-        width="12"
-        height="10"
-        rx="1.5"
-        stroke="currentColor"
-        strokeWidth="1.3"
-      />
-      <path
-        d="M5 6h.01M7 6h4M5 8h.01M7 8h4M5 10h.01M7 10h4"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function RolePayIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      width="13"
-      height="13"
-    >
-      <rect
-        x="3"
-        y="2"
-        width="10"
-        height="12"
-        rx="2"
-        stroke="currentColor"
-        strokeWidth="1.3"
-      />
-      <path
-        d="M6 5.5h4M6 8h4M6 10.5h2"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function CalendarWeekIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      width="13"
-      height="13"
-    >
-      <rect
-        x="2"
-        y="3"
-        width="12"
-        height="11"
-        rx="1.5"
-        stroke="currentColor"
-        strokeWidth="1.3"
-      />
-      <path
-        d="M2 6.5h12M5 1.5v2.5M11 1.5v2.5"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-      />
-      <path
-        d="M5 9h1.5M7.75 9H9.25M10.75 9h1.5M5 11.5h1.5"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function TechScheduleTimeBox({
-  value,
-  disabled,
-  invalid,
-  ariaLabel,
-  onChange,
-}: {
-  value: string;
-  disabled: boolean;
-  invalid: boolean;
-  ariaLabel: string;
-  onChange: (next: string) => void;
-}) {
-  return (
-    <div
-      className="settings-time-box"
-      role="button"
-      tabIndex={disabled ? -1 : 0}
-      aria-label={ariaLabel}
-      onClick={(event) => {
-        event.stopPropagation();
-        if (disabled) return;
-        const input = event.currentTarget.querySelector("input");
-        if (input instanceof HTMLInputElement) {
-          openNativeDateTimePicker(input);
-        }
-      }}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          event.stopPropagation();
-          if (disabled) return;
-          openNativeDateTimePicker(
-            event.currentTarget.querySelector("input"),
-          );
-        }
-      }}
-    >
-      <input
-        className="settings-hour-input"
-        type="time"
-        value={value}
-        lang={TWELVE_HOUR_INPUT_LANG}
-        step={60}
-        disabled={disabled}
-        aria-invalid={invalid}
-        aria-label={ariaLabel}
-        onClick={(event) => event.stopPropagation()}
-        onChange={(event) => onChange(event.target.value)}
-      />
-      <ClockIcon />
-    </div>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      width="14"
-      height="14"
-    >
-      <path
-        d="m4 4 8 8M12 4 4 12"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      width="13"
-      height="13"
-    >
-      <path
-        d="m3.5 8.5 3 3 6-6"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 interface Props {
   /** When true, render without Booking Book sub-panel / overview-card chrome (Settings embed). */
   embedded?: boolean
@@ -670,10 +345,6 @@ export default function BookingTeamPanel({
   const [draftPhone, setDraftPhone] = useState("");
   const [draftEmail, setDraftEmail] = useState("");
   const [draftServices, setDraftServices] = useState<string[]>([]);
-  const [servicesExpanded, setServicesExpanded] = useState(true);
-  const [openServiceCategoryIds, setOpenServiceCategoryIds] = useState(
-    () => new Set<string>(),
-  );
   const [draftStaffProfileId, setDraftStaffProfileId] = useState<string | null>(
     null,
   );
@@ -701,7 +372,6 @@ export default function BookingTeamPanel({
   }>({});
   const [showScheduleValidation, setShowScheduleValidation] = useState(false);
   const comboboxRef = useRef<HTMLDivElement>(null);
-  const checkAllServicesRef = useRef<HTMLInputElement>(null);
   const technicianNameInputRef = useRef<HTMLInputElement>(null);
   const techDialogRef = useRef<HTMLDivElement>(null);
   const techModalBodyRef = useRef<
@@ -817,13 +487,6 @@ export default function BookingTeamPanel({
     [categoriesResponse, servicesResponse],
   );
 
-  const serviceOptions = useMemo(() => {
-    const names = flattenMerchantVoiceServiceSections(serviceSections)
-      .map((service) => service.name.trim())
-      .filter(Boolean);
-    return Array.from(new Set(names));
-  }, [serviceSections]);
-
   const selectedPosServiceIds = useMemo(() => {
     const selectedNames = new Set(draftServices);
     return Array.from(
@@ -904,9 +567,6 @@ export default function BookingTeamPanel({
       setDraftPhone("");
       setDraftEmail("");
       setDraftServices([]);
-      setOpenServiceCategoryIds(
-        new Set(serviceSections[0]?.id ? [serviceSections[0].id] : []),
-      );
       setDraftStaffProfileId(null);
       setDraftBusinessStaffLinkId(null);
       setDraftCreatedLocalStaffProfileId(null);
@@ -920,9 +580,6 @@ export default function BookingTeamPanel({
     setDraftPhone(member.phone);
     setDraftEmail(member.email);
     setDraftServices([...member.services]);
-    setOpenServiceCategoryIds(
-      new Set(serviceSections[0]?.id ? [serviceSections[0].id] : []),
-    );
     setDraftStaffProfileId(member.staffProfileId);
     setDraftBusinessStaffLinkId(null);
     setDraftCreatedLocalStaffProfileId(null);
@@ -984,9 +641,6 @@ export default function BookingTeamPanel({
     setDraftPhone(staff.phone);
     setDraftEmail(staff.email);
     setDraftServices([]);
-    setOpenServiceCategoryIds(
-      new Set(serviceSections[0]?.id ? [serviceSections[0].id] : []),
-    );
     setDraftStaffProfileId(staff.id);
     setDraftBusinessStaffLinkId(staff.linkId ?? null);
     setDraftCreatedLocalStaffProfileId(null);
@@ -1005,65 +659,6 @@ export default function BookingTeamPanel({
     setSearchQuery("");
     technicianNameInputRef.current?.focus();
   };
-
-  const toggleService = (service: string) => {
-    const name = service.trim();
-    if (!name) return;
-    setDraftServices((prev) =>
-      prev.includes(name)
-        ? prev.filter((item) => item !== name)
-        : [...prev, name],
-    );
-    setFormErrors((prev) => ({ ...prev, services: "" }));
-  };
-
-  const toggleServiceGroup = (services: string[]) => {
-    const names = Array.from(
-      new Set(services.map((service) => service.trim()).filter(Boolean)),
-    );
-    if (names.length === 0) return;
-
-    setDraftServices((prev) => {
-      const allSelected = names.every((name) => prev.includes(name));
-      if (allSelected) {
-        const groupNames = new Set(names);
-        return prev.filter((name) => !groupNames.has(name));
-      }
-      return Array.from(new Set([...prev, ...names]));
-    });
-    setFormErrors((prev) => ({ ...prev, services: "" }));
-  };
-
-  const toggleServiceCategory = (categoryId: string) => {
-    setOpenServiceCategoryIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(categoryId)) next.delete(categoryId);
-      else next.add(categoryId);
-      return next;
-    });
-  };
-
-  const selectedServiceCount = useMemo(
-    () =>
-      serviceOptions.filter((service) => draftServices.includes(service))
-        .length,
-    [draftServices, serviceOptions],
-  );
-  const allServicesSelected =
-    serviceOptions.length > 0 && selectedServiceCount === serviceOptions.length;
-  const someServicesSelected =
-    selectedServiceCount > 0 && !allServicesSelected;
-
-  const toggleAllServices = () => {
-    setDraftServices(allServicesSelected ? [] : [...serviceOptions]);
-    setFormErrors((prev) => ({ ...prev, services: "" }));
-  };
-
-  useEffect(() => {
-    if (checkAllServicesRef.current) {
-      checkAllServicesRef.current.indeterminate = someServicesSelected;
-    }
-  }, [someServicesSelected, allServicesSelected]);
 
   const toggleDayOff = (day: DayKey, dayOff: boolean) => {
     setDraftSchedule((prev) => ({
@@ -1407,15 +1002,7 @@ export default function BookingTeamPanel({
       ? t(`${TK}.modalSubCreate`)
       : t(`${TK}.modalSubEdit`, { name: draftName || t(`${TK}.selectedTech`) });
 
-  const hasScheduleError = useMemo(
-    () =>
-      hasScheduleValidationError(
-        draftSchedule,
-        scheduleRequiredMessage,
-        scheduleInvalidMessage,
-      ),
-    [draftSchedule, scheduleInvalidMessage, scheduleRequiredMessage],
-  );
+
 
   useEffect(() => {
     const unnamedLabel = t(`${TK}.unnamedStaff`);
@@ -1451,20 +1038,6 @@ export default function BookingTeamPanel({
       techModalBodyRef.current.inert = isSaving;
     }
   }, [isSaving]);
-
-  // Keep open ids in sync with the catalog and reveal the first group initially.
-  useEffect(() => {
-    if (!modalOpen || serviceSections.length === 0) return;
-    setOpenServiceCategoryIds((prev) => {
-      const valid = new Set(
-        [...prev].filter((id) =>
-          serviceSections.some((section) => section.id === id),
-        ),
-      );
-      if (valid.size === 0) valid.add(serviceSections[0].id);
-      return valid;
-    });
-  }, [modalOpen, serviceSections]);
 
   useEffect(() => {
     if (!comboboxOpen) return undefined;
@@ -1626,143 +1199,124 @@ export default function BookingTeamPanel({
             aria-busy={isSaving}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="tech-modal-head">
-              <div className="tech-modal-heading">
-                <span className="tech-title-mark">
-                  <PersonPlusIcon />
-                </span>
-                <div>
-                  <div className="tech-modal-title" id="tech-modal-title">
-                    {modalTitle}
-                  </div>
-                  <div className="tech-modal-sub">{modalSub}</div>
-                </div>
-              </div>
-              <button
-                className="tech-modal-close"
-                type="button"
-                aria-label={t(`${TK}.close`)}
-                onClick={closeModal}
-                disabled={isSaving}
-              >
-                <CloseIcon />
-              </button>
-            </div>
+            <TechnicianDialogHeader title={modalTitle} subtitle={modalSub} titleId="tech-modal-title" isSaving={isSaving} onClose={closeModal} />
 
             <div
               ref={techModalBodyRef}
               className="tech-modal-body"
             >
-              <div className="tech-modal-section" data-tech-picker-section>
-                <div className="tech-modal-section-title">
-                  <PeopleIcon />
-                  <span>{t(`${TK}.selectFromList`)}</span>
-                </div>
-                <div className="tech-select-row">
-                  <div
-                    className={`tech-combobox ${comboboxOpen ? "is-open" : ""}`}
-                    ref={comboboxRef}
-                  >
-                    <label className="tech-search">
-                      <span className="tech-search-icon">
-                        <SearchIcon />
-                      </span>
-                      <input
-                        type="search"
-                        role="combobox"
-                        aria-expanded={comboboxOpen}
-                        aria-controls="tech-select-menu"
-                        placeholder={t(`${TK}.searchPlaceholder`)}
-                        autoComplete="off"
-                        value={searchQuery}
-                        onChange={(event) => {
-                          setSearchQuery(event.target.value);
-                          setComboboxOpen(true);
-                        }}
-                        onFocus={() => setComboboxOpen(true)}
-                      />
-                      {searchQuery ? (
-                        <button
-                          className="tech-search-clear"
-                          type="button"
-                          aria-label={t(`${TK}.clearSearch`)}
-                          title={t(`${TK}.clearSearch`)}
-                          onClick={() => {
-                            setSearchQuery("");
+              {!(posPayEnabled && modalMode === "create") && (
+                <div className="tech-modal-section" data-tech-picker-section>
+                  <div className="tech-modal-section-title">
+                    <PeopleIcon />
+                    <span>{t(`${TK}.selectFromList`)}</span>
+                  </div>
+                  <div className="tech-select-row">
+                    <div
+                      className={`tech-combobox ${comboboxOpen ? "is-open" : ""}`}
+                      ref={comboboxRef}
+                    >
+                      <label className="tech-search">
+                        <span className="tech-search-icon">
+                          <SearchIcon />
+                        </span>
+                        <input
+                          type="search"
+                          role="combobox"
+                          aria-expanded={comboboxOpen}
+                          aria-controls="tech-select-menu"
+                          placeholder={t(`${TK}.searchPlaceholder`)}
+                          autoComplete="off"
+                          value={searchQuery}
+                          onChange={(event) => {
+                            setSearchQuery(event.target.value);
                             setComboboxOpen(true);
                           }}
-                        >
-                          <XLgIcon />
-                        </button>
-                      ) : null}
-                      <span className="tech-select-chevron">
-                        <ChevronDownIcon />
-                      </span>
-                    </label>
-                    {comboboxOpen ? (
-                      <div className="tech-select-menu" id="tech-select-menu">
-                        {isStaffPickerLoading ? (
-                          <BookingTechStaffListSkeleton count={3} />
-                        ) : (
-                          <div
-                            className="tech-choice-grid"
-                            role="listbox"
-                            aria-label={t(`${TK}.techList`)}
+                          onFocus={() => setComboboxOpen(true)}
+                        />
+                        {searchQuery ? (
+                          <button
+                            className="tech-search-clear"
+                            type="button"
+                            aria-label={t(`${TK}.clearSearch`)}
+                            title={t(`${TK}.clearSearch`)}
+                            onClick={() => {
+                              setSearchQuery("");
+                              setComboboxOpen(true);
+                            }}
                           >
-                            {filteredBusinessStaff.map((member) => (
-                              <button
-                                key={member.id}
-                                className={`tech-choice-card ${draftStaffProfileId === member.id ? "is-active" : ""} ${member.isAlreadyAdded ? "is-disabled" : ""}`}
-                                type="button"
-                                role="option"
-                                aria-selected={draftStaffProfileId === member.id}
-                                aria-disabled={member.isAlreadyAdded}
-                                disabled={member.isAlreadyAdded}
-                                onClick={() => selectBusinessStaff(member)}
-                              >
-                                <span
-                                  className="tech-avatar"
-                                  style={member.avatarStyle}
-                                >
-                                  {member.avatar}
-                                </span>
-                                <span>
-                                  <span className="tech-choice-name">
-                                    {member.name}
-                                    {member.isAlreadyAdded ? (
-                                      <span className="tech-choice-badge">
-                                        {t(`${TK}.alreadyAdded`)}
-                                      </span>
-                                    ) : null}
-                                  </span>
-                                  <span className="tech-choice-meta">
-                                    {member.position || member.email || "—"} ·{" "}
-                                    {formatPhoneDisplay(member.phone)}
-                                  </span>
-                                </span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                        {!isStaffPickerLoading &&
-                        filteredBusinessStaff.length === 0 ? (
-                          <div className="tech-empty is-visible">
-                            {t(`${TK}.noMatch`)}
-                          </div>
+                            <XLgIcon />
+                          </button>
                         ) : null}
-                      </div>
-                    ) : null}
+                        <span className="tech-select-chevron">
+                          <ChevronDownIcon />
+                        </span>
+                      </label>
+                      {comboboxOpen ? (
+                        <div className="tech-select-menu" id="tech-select-menu">
+                          {isStaffPickerLoading ? (
+                            <BookingTechStaffListSkeleton count={3} />
+                          ) : (
+                            <div
+                              className="tech-choice-grid"
+                              role="listbox"
+                              aria-label={t(`${TK}.techList`)}
+                            >
+                              {filteredBusinessStaff.map((member) => (
+                                <button
+                                  key={member.id}
+                                  className={`tech-choice-card ${draftStaffProfileId === member.id ? "is-active" : ""} ${member.isAlreadyAdded ? "is-disabled" : ""}`}
+                                  type="button"
+                                  role="option"
+                                  aria-selected={draftStaffProfileId === member.id}
+                                  aria-disabled={member.isAlreadyAdded}
+                                  disabled={member.isAlreadyAdded}
+                                  onClick={() => selectBusinessStaff(member)}
+                                >
+                                  <span
+                                    className="tech-avatar"
+                                    style={member.avatarStyle}
+                                  >
+                                    {member.avatar}
+                                  </span>
+                                  <span>
+                                    <span className="tech-choice-name">
+                                      {member.name}
+                                      {member.isAlreadyAdded ? (
+                                        <span className="tech-choice-badge">
+                                          {t(`${TK}.alreadyAdded`)}
+                                        </span>
+                                      ) : null}
+                                    </span>
+                                    <span className="tech-choice-meta">
+                                      {member.position || member.email || "—"} ·{" "}
+                                      {formatPhoneDisplay(member.phone)}
+                                    </span>
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {!isStaffPickerLoading &&
+                          filteredBusinessStaff.length === 0 ? (
+                            <div className="tech-empty is-visible">
+                              {t(`${TK}.noMatch`)}
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </div>
+                    <button
+                      className={`booking-secondary-button tech-create-button ${modalMode === "create" && !draftStaffProfileId ? "is-active" : ""}`}
+                      type="button"
+                      onClick={startCreate}
+                    >
+                      <PlusIcon />
+                      <span>{t(`${TK}.createNew`)}</span>
+                    </button>
                   </div>
-                  <button
-                    className={`booking-secondary-button tech-create-button ${modalMode === "create" && !draftStaffProfileId ? "is-active" : ""}`}
-                    type="button"
-                    onClick={startCreate}
-                  >
-                    <PlusIcon />
-                    <span>{t(`${TK}.createNew`)}</span>
-                  </button>
                 </div>
-              </div>
+              )}
 
               <div className="tech-modal-section">
                 <div className="tech-modal-section-title">
@@ -1772,102 +1326,17 @@ export default function BookingTeamPanel({
                 {modalMode !== "create" && isStaffDetailLoading ? (
                   <BookingTechModalProfileSkeleton />
                 ) : (
-                  <div className="tech-modal-grid">
-                    <div className="settings-field" data-ai-hub-field="name">
-                      <span className="settings-label">
-                        {t(`${TK}.techName`)}
-                        <small className="tech-required-hint">
-                          {t(`${TK}.requiredHint`)}
-                        </small>
-                      </span>
-                      <input
-                        ref={technicianNameInputRef}
-                        className="settings-input"
-                        type="text"
-                        value={draftName}
-                        aria-invalid={Boolean(formErrors.name)}
-                        placeholder={t(`${TK}.placeholderTechName`)}
-                        onChange={(event) => {
-                          setDraftName(event.target.value);
-                          setFormErrors((prev) => ({ ...prev, name: "" }));
-                        }}
-                      />
-                      <span className="field-error-slot" aria-live="polite">
-                        {formErrors.name ? (
-                          <span className="field-error">{formErrors.name}</span>
-                        ) : null}
-                      </span>
-                    </div>
-                    <div className="settings-field">
-                      <span className="settings-label">{t(`${TK}.phone`)}</span>
-                      <span className="phone-input-shell">
-                        <CountryCodeSelect
-                          value={draftPhoneParsed.countryCode}
-                          embedded
-                          onChange={(nextCode) => {
-                            const formatted = formatNationalNumber(
-                              draftPhoneParsed.nationalNumber,
-                              nextCode,
-                            );
-                            setDraftPhone(`${nextCode} ${formatted}`.trim());
-                            setFormErrors((prev) => ({ ...prev, phone: "" }));
-                          }}
-                        />
-                        <input
-                          className="settings-input phone-mask-input"
-                          type="tel"
-                          value={formatNationalNumber(
-                            draftPhoneParsed.nationalNumber,
-                            draftPhoneParsed.countryCode,
-                          )}
-                          aria-invalid={Boolean(formErrors.phone)}
-                          placeholder={getNationalPhonePlaceholder(
-                            draftPhoneParsed.countryCode,
-                          )}
-                          inputMode="numeric"
-                          autoComplete="tel-national"
-                          onChange={(event) => {
-                            const formatted = formatNationalNumber(
-                              event.target.value,
-                              draftPhoneParsed.countryCode,
-                            );
-                            setDraftPhone(
-                              `${draftPhoneParsed.countryCode} ${formatted}`.trim(),
-                            );
-                            setFormErrors((prev) => ({ ...prev, phone: "" }));
-                          }}
-                        />
-                      </span>
-                      <span className="field-error-slot" aria-live="polite">
-                        {formErrors.phone ? (
-                          <span className="field-error">
-                            {formErrors.phone}
-                          </span>
-                        ) : null}
-                      </span>
-                    </div>
-                    <div className="settings-field" data-ai-hub-field="email">
-                      <span className="settings-label">{t(`${TK}.email`)}</span>
-                      <input
-                        className="settings-input"
-                        type="email"
-                        value={draftEmail}
-                        aria-invalid={Boolean(formErrors.email)}
-                        placeholder={t(`${TK}.placeholderEmail`)}
-                        onChange={(event) => {
-                          setDraftEmail(event.target.value);
-                          setFormErrors((prev) => ({ ...prev, email: "" }));
-                        }}
-                      />
-                      <span className="field-error-slot" aria-live="polite">
-                        {formErrors.email ? (
-                          <span className="field-error">
-                            {formErrors.email}
-                          </span>
-                        ) : null}
-                      </span>
-                    </div>
-                  </div>
+                  <TechnicianProfileFields
+                    draft={{ name: draftName, phone: draftPhone, email: draftEmail }}
+                    nameInputRef={technicianNameInputRef}
+                    errors={formErrors}
+                    onClearError={(field) => setFormErrors((prev) => ({ ...prev, [field]: "" }))}
+                    onChange={(patch) => {
+                      if (patch.name !== undefined) setDraftName(patch.name);
+                      if (patch.phone !== undefined) setDraftPhone(patch.phone);
+                      if (patch.email !== undefined) setDraftEmail(patch.email);
+                    }}
+                  />
                 )}
               </div>
 
@@ -2128,148 +1597,18 @@ export default function BookingTeamPanel({
                 isServiceCatalogLoading ? (
                   <BookingTechServicesSkeleton count={4} />
                 ) : serviceSections.length > 0 ? (
-                  <div
-                    className="tech-services-control"
-                    aria-invalid={Boolean(formErrors.services)}
-                  >
-                    <div
-                      className={`tech-services-all-row${servicesExpanded ? " is-open" : ""}${selectedServiceCount > 0 ? " has-selection" : ""}`}
-                    >
-                      <label className="tech-services-check-label">
-                        <input
-                          ref={checkAllServicesRef}
-                          type="checkbox"
-                          checked={allServicesSelected}
-                          onChange={toggleAllServices}
-                        />
-                        <span>{t(`${TK}.checkAllServices`)}</span>
-                      </label>
-                      <button
-                        className="tech-services-expand-button"
-                        type="button"
-                        aria-label={t(`${TK}.services`)}
-                        aria-expanded={servicesExpanded}
-                        aria-controls="tech-services-catalog-panel"
-                        onClick={() => setServicesExpanded((open) => !open)}
-                      >
-                        <span className="tech-services-count">
-                          {serviceOptions.length}
-                        </span>
-                        <ChevronDownIcon />
-                      </button>
-                    </div>
-
-                    <div
-                      className={`tech-services-catalog-panel${servicesExpanded ? " is-open" : ""}`}
-                      id="tech-services-catalog-panel"
-                      aria-hidden={!servicesExpanded}
-                    >
-                      <div className="tech-services-catalog-panel-inner">
-                        <div className="tech-service-categories">
-                          {serviceSections.map((section) => {
-                            const isOpen = openServiceCategoryIds.has(
-                              section.id,
-                            );
-                            const serviceNames = section.services
-                              .map((service) => service.name.trim())
-                              .filter(Boolean);
-                            const selectedCount = serviceNames.filter((name) =>
-                              draftServices.includes(name),
-                            ).length;
-                            const allCategorySelected =
-                              serviceNames.length > 0 &&
-                              selectedCount === serviceNames.length;
-                            const someCategorySelected =
-                              selectedCount > 0 && !allCategorySelected;
-                            const panelId = `tech-service-panel-${section.id}`;
-
-                            return (
-                              <div
-                                className={`tech-service-category${isOpen ? " is-open" : ""}${selectedCount > 0 ? " has-selection" : ""}`}
-                                key={section.id}
-                              >
-                                <div className="tech-service-category-head">
-                                  <label className="tech-services-check-label">
-                                    <input
-                                      ref={(input) => {
-                                        if (input) {
-                                          input.indeterminate =
-                                            someCategorySelected;
-                                        }
-                                      }}
-                                      type="checkbox"
-                                      checked={allCategorySelected}
-                                      tabIndex={servicesExpanded ? 0 : -1}
-                                      aria-label={t(`${TK}.checkAllCategory`, {
-                                        category: section.name,
-                                      })}
-                                      onChange={() =>
-                                        toggleServiceGroup(serviceNames)
-                                      }
-                                    />
-                                    <span>{t(`${TK}.checkAll`)}</span>
-                                    <strong>{section.name}</strong>
-                                  </label>
-                                  <button
-                                    className="tech-services-expand-button"
-                                    type="button"
-                                    aria-label={section.name}
-                                    aria-expanded={isOpen}
-                                    aria-controls={panelId}
-                                    tabIndex={servicesExpanded ? 0 : -1}
-                                    onClick={() =>
-                                      toggleServiceCategory(section.id)
-                                    }
-                                  >
-                                    <span className="tech-services-count">
-                                      {section.services.length}
-                                    </span>
-                                    <ChevronDownIcon />
-                                  </button>
-                                </div>
-                                <div
-                                  className={`tech-service-category-panel${isOpen ? " is-open" : ""}`}
-                                  id={panelId}
-                                  aria-hidden={!isOpen}
-                                >
-                                  <div className="tech-service-category-panel-inner">
-                                    <div className="tech-service-option-grid">
-                                      {section.services.map((service) => {
-                                        const name = service.name.trim();
-                                        return (
-                                          <label
-                                            className="tech-service-option"
-                                            key={`${section.id}-${service.id}`}
-                                          >
-                                            <input
-                                              type="checkbox"
-                                              checked={
-                                                Boolean(name) &&
-                                                draftServices.includes(name)
-                                              }
-                                              tabIndex={
-                                                servicesExpanded && isOpen
-                                                  ? 0
-                                                  : -1
-                                              }
-                                              onChange={() =>
-                                                toggleService(name)
-                                              }
-                                            />
-                                            <span>{name}</span>
-                                          </label>
-                                        );
-                                      })}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <TechnicianServiceSelector
+                    serviceSections={serviceSections.map((section) => ({
+                      ...section,
+                      services: section.services.map((service) => ({ id: service.name.trim(), name: service.name.trim() })),
+                    }))}
+                    selectedIds={new Set(draftServices)}
+                    invalid={Boolean(formErrors.services)}
+                    onChange={(ids) => {
+                      setDraftServices([...ids]);
+                      setFormErrors((prev) => ({ ...prev, services: "" }));
+                    }}
+                  />
                 ) : (
                   <div className="tech-service-empty">
                     {t(`${TK}.servicesEmpty`)}
@@ -2289,119 +1628,23 @@ export default function BookingTeamPanel({
                 {modalMode !== "create" && isStaffDetailLoading ? (
                   <BookingTechScheduleSkeleton />
                 ) : (
-                  <>
-                    <div className="tech-schedule">
-                      {DAY_KEYS.map((day) => {
-                        const row = draftSchedule[day];
-                        const rowError = getScheduleRowError(
-                          row,
-                          scheduleRequiredMessage,
-                          scheduleInvalidMessage,
-                        );
-                        const showRowError =
-                          showScheduleValidation && !!rowError;
-                        const rowMissingTime = isScheduleRowMissingTime(row);
-                        return (
-                          <div
-                            key={day}
-                            className={`tech-schedule-row ${row.dayOff ? "is-day-off" : ""} ${showRowError ? "has-error" : ""}`}
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => toggleDayOff(day, !row.dayOff)}
-                            onKeyDown={(event) => {
-                              if (event.key === "Enter" || event.key === " ") {
-                                event.preventDefault();
-                                toggleDayOff(day, !row.dayOff);
-                              }
-                            }}
-                          >
-                            <span className="tech-schedule-day">
-                              {t(`${TK}.days.${day}`)}
-                            </span>
-                            <label className="tech-schedule-off">
-                              <input
-                                className="tech-schedule-toggle"
-                                type="checkbox"
-                                checked={row.dayOff}
-                                onClick={(event) => event.stopPropagation()}
-                                onChange={(event) =>
-                                  toggleDayOff(day, event.target.checked)
-                                }
-                              />
-                              {t(`${TK}.dayOff`)}
-                            </label>
-                            <span
-                              className="tech-schedule-time"
-                              lang={TWELVE_HOUR_INPUT_LANG}
-                            >
-                              <TechScheduleTimeBox
-                                value={row.start}
-                                disabled={row.dayOff}
-                                invalid={
-                                  showRowError &&
-                                  (rowMissingTime || isScheduleRowInvalid(row))
-                                }
-                                ariaLabel={`${t(`${TK}.days.${day}`)} ${t(`${TK}.scheduleTo`)}`}
-                                onChange={(next) =>
-                                  updateScheduleTime(day, "start", next)
-                                }
-                              />
-                              <span>{t(`${TK}.scheduleTo`)}</span>
-                              <TechScheduleTimeBox
-                                value={row.end}
-                                disabled={row.dayOff}
-                                invalid={
-                                  showRowError &&
-                                  (rowMissingTime || isScheduleRowInvalid(row))
-                                }
-                                ariaLabel={`${t(`${TK}.days.${day}`)} ${t(`${TK}.scheduleTo`)}`}
-                                onChange={(next) =>
-                                  updateScheduleTime(day, "end", next)
-                                }
-                              />
-                            </span>
-                            {showRowError ? (
-                              <span className="tech-schedule-row-error">
-                                {rowError}
-                              </span>
-                            ) : null}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {showScheduleValidation && hasScheduleError ? (
-                      <div className="tech-schedule-error">
-                        {t(`${TK}.scheduleValidationSummary`)}
-                      </div>
-                    ) : null}
-                  </>
+                  <TechnicianWeeklySchedule
+                    days={DAY_KEYS.map((day) => ({
+                      id: day,
+                      label: t(`${TK}.days.${day}`),
+                      dayOff: draftSchedule[day].dayOff,
+                      start: draftSchedule[day].start,
+                      end: draftSchedule[day].end,
+                      error: showScheduleValidation ? getScheduleRowError(draftSchedule[day], scheduleRequiredMessage, scheduleInvalidMessage) : undefined,
+                    }))}
+                    onDayOffChange={(day, off) => toggleDayOff(day as DayKey, off)}
+                    onTimeChange={(day, field, value) => updateScheduleTime(day as DayKey, field, value)}
+                  />
                 )}
               </div>
             </div>
 
-            <div className="tech-modal-actions">
-              <button
-                className="booking-secondary-button"
-                type="button"
-                onClick={closeModal}
-                disabled={isSaving}
-              >
-                {t(`${TK}.close`)}
-              </button>
-              <button
-                className="booking-primary-button"
-                type="button"
-                disabled={isSaving}
-                onClick={() => void saveModal()}
-              >
-                {isSaving ? (
-                  <SpinnerIcon className="booking-inline-spinner" />
-                ) : (
-                  <CheckIcon />
-                )}
-                <span>{t(`${TK}.saveTech`)}</span>
-              </button>
-            </div>
+            <TechnicianDialogActions isSaving={isSaving} onClose={closeModal} onSave={() => void saveModal()} />
           </div>
         </div>
       ) : null}
