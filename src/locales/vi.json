@@ -31,6 +31,7 @@
   "deleteConfirm": "Xóa tài liệu và tệp gốc? Không thể hoàn tác.",
   "flags": "Mẫu bị đánh dấu",
   "original": "Tải tệp gốc",
+  "downloading": "Đang tải xuống…",
   "selectTenant": "Chọn doanh nghiệp",
   "sizeError": "Chọn tệp TXT, DOCX hoặc PDF không quá 5 MB.",
   "countError": "Đã đạt giới hạn 5 tài liệu. Hãy xóa một tài liệu trước.",

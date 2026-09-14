@@ -26,6 +26,8 @@ export const voiceKnowledgeRepository = {
     form.append("file", file);
     return httpClient.upload<VoiceKnowledgeDocument>(base, form);
   },
+  download: (id: string) =>
+    httpClient.getBlob(`${base}/${encodeURIComponent(id)}/original`),
   content: (id: string, condensedContent: string) =>
     httpClient.put(`${base}/${encodeURIComponent(id)}/content`, {
       condensedContent,

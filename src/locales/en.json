@@ -31,6 +31,7 @@
   "deleteConfirm": "Delete this document and its original file? This cannot be undone.",
   "flags": "Flagged patterns",
   "original": "Download original",
+  "downloading": "Downloading…",
   "selectTenant": "Select a business",
   "sizeError": "Choose a TXT, DOCX, or PDF file no larger than 5 MB.",
   "countError": "The 5-document limit has been reached. Delete a document first.",

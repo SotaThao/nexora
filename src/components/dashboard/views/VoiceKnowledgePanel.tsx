@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "@/contexts/LanguageContext";
 import {
   useVoiceKnowledge,
@@ -27,6 +27,10 @@ export function VoiceKnowledgePanel() {
   const text = (key: string) => t(`voiceKnowledge.${key}`);
   const { query, mutation, actions } = useVoiceKnowledge();
   const [message, setMessage] = useState("");
+  const downloadsInProgress = useRef(new Set<string>());
+  const [downloadingIds, setDownloadingIds] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
   const [editing, setEditing] = useState<string | null>(null);
   const [facts, setFacts] = useState<
     Array<{ question: string; answer: string }>
@@ -53,6 +57,31 @@ export function VoiceKnowledgePanel() {
     d.lastRegeneratedAt.slice(0, 10) !==
       new Date().toISOString().slice(0, 10) ||
     d.regenerateCount < MAX_REGENERATIONS;
+  const download = async (document: VoiceKnowledgeDocument) => {
+    if (downloadsInProgress.current.has(document.id)) return;
+    downloadsInProgress.current.add(document.id);
+    setMessage("");
+    setDownloadingIds(new Set(downloadsInProgress.current));
+    try {
+      const blob = await actions.download(document.id);
+      const objectUrl = URL.createObjectURL(blob);
+      try {
+        const link = window.document.createElement("a");
+        link.href = objectUrl;
+        link.download = document.fileName;
+        window.document.body.appendChild(link);
+        link.click();
+        link.remove();
+      } finally {
+        URL.revokeObjectURL(objectUrl);
+      }
+    } catch {
+      setMessage(text("error"));
+    } finally {
+      downloadsInProgress.current.delete(document.id);
+      setDownloadingIds(new Set(downloadsInProgress.current));
+    }
+  };
   const save = async () => {
     const content = JSON.stringify({ facts });
     if (
@@ -168,6 +197,14 @@ export function VoiceKnowledgePanel() {
               {text(VOICE_KNOWLEDGE_ERROR_KEYS[d.failureReasonCode] ?? "error")}
             </p>
           )}
+          <button
+            type="button"
+            className={buttonClass}
+            disabled={downloadingIds.has(d.id)}
+            onClick={() => void download(d)}
+          >
+            {downloadingIds.has(d.id) ? text("downloading") : text("original")}
+          </button>
           {editing === d.id ? (
             <div className="space-y-3">
               {facts.map((fact, index) => (
