@@ -9,6 +9,9 @@ import { unlessOptimisticId } from '../../utils/uuid'
 import type {
   AssignableStaffApiDto,
   CheckInOrderPayload,
+  CheckInOverviewApiDto,
+  CheckInOverviewDetailApiDto,
+  CheckInOverviewQuery,
   CompletedOrdersListQuery,
   CompletedOrdersPage,
   CustomerLookupResultApiDto,
@@ -43,6 +46,15 @@ function buildCompletedOrdersParams(query: CompletedOrdersListQuery = {}) {
   return params
 }
 
+function buildCheckInOverviewParams(query: CheckInOverviewQuery = {}) {
+  const params: Record<string, string | number> = {}
+  if (query.pageNumber != null) params.Page = query.pageNumber
+  if (query.pageSize != null) params.PageSize = query.pageSize
+  if (query.status) params.Status = query.status
+  if (query.searchTerm) params.SearchTerm = query.searchTerm
+  return params
+}
+
 export function createPosOrdersRepository(client: HttpClient = httpClient) {
   return {
     async getWaitlist(businessId: string): Promise<PosWaitlistOrderApiDto[]> {
@@ -58,6 +70,19 @@ export function createPosOrdersRepository(client: HttpClient = httpClient) {
         `/api/v1/merchant/pos/${businessId}/orders`,
       )
       return mapOrderList(res)
+    },
+
+    async getCheckInOverview(businessId: string, query: CheckInOverviewQuery = {}): Promise<CheckInOverviewApiDto> {
+      return await client.get<CheckInOverviewApiDto>(
+        `/api/v1/merchant/pos/${businessId}/orders/checkin-overview`,
+        { params: buildCheckInOverviewParams(query) },
+      )
+    },
+
+    async getCheckInOverviewDetail(businessId: string, orderId: string): Promise<CheckInOverviewDetailApiDto> {
+      return await client.get<CheckInOverviewDetailApiDto>(
+        `/api/v1/merchant/pos/${businessId}/orders/checkin-overview/${orderId}`,
+      )
     },
 
     // Completed Orders panel (US-17 follow-up) — paginated, filterable by CompletedAt

@@ -11,6 +11,9 @@ import { isPersistedLineId, unlessOptimisticId } from '../../utils/uuid'
 import type {
   AssignableStaffApiDto,
   CheckInOrderPayload,
+  CheckInOverviewApiDto,
+  CheckInOverviewDetailApiDto,
+  CheckInOverviewQuery,
   CompletedOrdersListQuery,
   CompletedOrdersPage,
   CustomerLookupResultApiDto,
@@ -81,6 +84,31 @@ export function useOrderList(
     enabled: isAuthenticated && Boolean(businessId) && (options?.enabled ?? true),
     retry: false,
     refetchInterval: options?.refetchInterval ?? 15000,
+  })
+}
+
+export function useCheckInOverview(
+  businessId: string | undefined,
+  filters: CheckInOverviewQuery,
+  options?: { enabled?: boolean },
+) {
+  const { isAuthenticated } = useSessionRole()
+  return useQuery<CheckInOverviewApiDto>({
+    queryKey: qk.merchantPosCheckInOverview(businessId, filters),
+    queryFn: () => posOrdersRepository.getCheckInOverview(businessId as string, filters),
+    enabled: isAuthenticated && Boolean(businessId) && (options?.enabled ?? true),
+    placeholderData: keepPreviousData,
+    retry: false,
+  })
+}
+
+export function useCheckInOverviewDetail(businessId: string | undefined, orderId: string | undefined) {
+  const { isAuthenticated } = useSessionRole()
+  return useQuery<CheckInOverviewDetailApiDto>({
+    queryKey: qk.merchantPosCheckInOverviewDetail(businessId, orderId),
+    queryFn: () => posOrdersRepository.getCheckInOverviewDetail(businessId as string, orderId as string),
+    enabled: isAuthenticated && Boolean(businessId) && Boolean(orderId),
+    retry: false,
   })
 }
 
