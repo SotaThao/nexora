@@ -50,6 +50,7 @@ import ServiceLineMismatchWarningModal, {
 import { useCheckInTechnicians } from '../../../../data/hooks/usePosCheckIn'
 import { usePosNextTurnBalance } from '../../../../data/hooks/usePosNextTurnBalance'
 import { useTimeClockRoster } from '../../../../data/hooks/usePosTimeClock'
+import { useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
 import { usePublicBusinessPaymentMethods } from '../../../../data/hooks/usePublicTouch'
 import { SHOW_SERVICE_ADD_ONS } from '../../../../constants/posFeatureVisibility'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
@@ -124,7 +125,7 @@ import { DASHBOARD_MENU_ID } from '../../constants'
 import { DEFAULT_POS_RECEIPT_SETTINGS, PosPrintTransport } from '../../../../constants/posPrinter'
 import { usePosReceiptSettings, usePosTicketPrinted } from '../../../../data/hooks/usePosPrinterSettings'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
-import { selectNextTurnTechnician } from './posNextTurn'
+import { selectNextTurnStation } from './posNextTurn'
 import type { PosReceiptMode } from './posWorkspaceUrl'
 import { todayIso as reportTodayIso } from './report/posReportPeriod'
 
@@ -449,6 +450,10 @@ export default function PosOrderWorkspace({
   const technicianTurnWindow = getLocalDayWindow(new Date(), businessTimeZone?.trim() || 'America/Chicago')
   // Warm the shared next-turn data while the operator reviews the ticket, before opening a picker.
   const technicianTurnRosterQuery = useTimeClockRoster(businessId, technicianTurnWindow, {
+    enabled: canEditLines,
+    refetchInterval: 5000,
+  })
+  const technicianTurnBoardQuery = useTurnBoard(businessId, {
     enabled: canEditLines,
     refetchInterval: 5000,
   })
@@ -849,32 +854,28 @@ export default function PosOrderWorkspace({
       eligibleTechnicians.map((technician) => technician.posStaffProfileId),
     )
     const rosterRows = technicianTurnRosterQuery.data?.rows ?? []
-    // Weighted, so the picker's figure matches the Turn Board badge for the same technician.
-    const assignedTurnsToday = new Map(
-      rosterRows.map((row) => [row.posStaffProfileId, row.weightedTurnsToday ?? 0]),
-    )
-    const serviceAmountsByTechnicianId = technicianNextTurnBalanceQuery.data?.completedAmounts ?? new Map<string, number>()
-    const nextTurnTechnician = technicianNextTurnBalanceQuery.data
-      && !technicianNextTurnBalanceQuery.isRecalculating
-      && !technicianNextTurnBalanceQuery.isError && !technicianTurnRosterQuery.isError
-      ? selectNextTurnTechnician(
+    const stations = technicianTurnBoardQuery.data ?? []
+    const nextTurnTechnician = !technicianTurnBoardQuery.isError && !technicianTurnRosterQuery.isError
+      ? selectNextTurnStation(
+          stations.filter(station => eligibleTechnicianIds.has(station.posStaffProfileId)),
           rosterRows,
-          eligibleTechnicianIds,
-          serviceAmountsByTechnicianId,
-          technicianNextTurnBalanceQuery.data,
+          technicianNextTurnBalanceQuery.data?.availableSince,
         )
       : undefined
 
-    return eligibleTechnicians.map((technician) => ({
-      ...technician,
-      // The polled roster reflects current work more recently than the catalog roster.
-      isBusy: rosterRows.find(row => row.posStaffProfileId === technician.posStaffProfileId)?.currentOrderId
-        ? true : rosterRows.some(row => row.posStaffProfileId === technician.posStaffProfileId)
-          ? false : technician.isBusy,
-      completedTurns: technicianNextTurnBalanceQuery.data?.completedTurns?.get(technician.posStaffProfileId) ?? (technicianNextTurnBalanceQuery.data ? 0 : undefined),
-      assignedTurns: assignedTurnsToday.get(technician.posStaffProfileId),
-      isNextTurn: technician.posStaffProfileId === nextTurnTechnician?.posStaffProfileId,
-    }))
+    return eligibleTechnicians.map((technician) => {
+      const station = stations.find(row => row.posStaffProfileId === technician.posStaffProfileId)
+      const rosterRow = rosterRows.find(row => row.posStaffProfileId === technician.posStaffProfileId)
+      return {
+        ...technician,
+        isBusy: station ? station.currentStatus === PosOrderStatus.InService
+          : rosterRow ? Boolean(rosterRow.currentOrderId) : technician.isBusy,
+        // All weighted turns assigned today, including completed and provisional services.
+        assignedTurns: station?.weightedTurnsToday ?? rosterRow?.weightedTurnsToday,
+        // Completed ticket counts cannot represent weighted turns completed today.
+        isNextTurn: technician.posStaffProfileId === nextTurnTechnician?.posStaffProfileId,
+      }
+    })
   }
 
   const noteLines = visibleLines.filter(
@@ -2720,7 +2721,7 @@ export default function PosOrderWorkspace({
         isLoading={areTechniciansPending && allTechnicians.length === 0}
         selectedStaffId={technicianTarget?.posStaffProfileId ?? null}
         currentTechnicianName={technicianTarget?.technicianName}
-        turnsError={technicianNextTurnBalanceQuery.isError || technicianTurnRosterQuery.isError}
+        turnsError={technicianTurnBoardQuery.isError || technicianTurnRosterQuery.isError}
         note={noteDraft}
         onChangeNote={setNoteDraft}
         onSelect={handleSelectTechnician}

@@ -4115,7 +4115,7 @@
             "beepSent": "Beeped {{name}}",
             "beepNotDelivered": "{{name}} has no app account — nothing was sent.",
             "todayTurnsTitle": "Today's Turns",
-            "todayTurnsHint": "Suggested technician based on the lowest total of paid and assigned service amounts today. Equal totals prioritize the technician who has waited longest.",
+            "todayTurnsHint": "Next turn goes to a clocked-in technician with the fewest weighted turns today, including assigned services. Ties favor the lowest assigned service amount, then the longest wait.",
             "todayTurnsTotal": "Total turns today",
             "todayTurnsNext": "Next technician",
             "nextTurnBadge": "Next turn",

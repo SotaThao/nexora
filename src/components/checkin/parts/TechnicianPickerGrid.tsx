@@ -70,7 +70,7 @@ export default function TechnicianPickerGrid({
   availableLabel?: string
   // Only passed where an off-shift technician can appear at all; without it they read as available.
   offShiftLabel?: string
-  completedTurnsLabel?: (count: number) => string
+  completedTurnsLabel?: (count?: number) => string
   assignedTurnsLabel?: (count: number) => string
   nextTurnLabel?: string
   queueLabel?: (count: number) => string
@@ -183,7 +183,7 @@ export default function TechnicianPickerGrid({
                     {assignedTurnsLabel(staff.assignedTurns)}
                   </span>
                 ) : null}
-                {staff.completedTurns !== undefined && completedTurnsLabel ? (
+                {completedTurnsLabel ? (
                   <span className="text-[10px] font-semibold tabular-nums text-nexoraMuted">
                     {completedTurnsLabel(staff.completedTurns)}
                   </span>
