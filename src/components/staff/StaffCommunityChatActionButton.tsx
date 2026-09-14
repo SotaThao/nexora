@@ -21,6 +21,7 @@ interface StaffCommunityChatActionButtonProps {
   manageLabelKey?: string
   manageUnreadLabelKey?: string
   hintPlacement?: StaffChatStartHintPlacement
+  className?: string
 }
 
 export default function StaffCommunityChatActionButton({
@@ -31,6 +32,7 @@ export default function StaffCommunityChatActionButton({
   manageLabelKey = STAFF_CHAT_I18N.manage,
   manageUnreadLabelKey = STAFF_CHAT_I18N.manageUnread,
   hintPlacement,
+  className = 'nexora-icon-button relative w-auto gap-1 px-2 text-xs font-medium',
 }: StaffCommunityChatActionButtonProps) {
   const { t } = useTranslation()
   const hasUnread = unreadCount > 0
@@ -53,7 +55,7 @@ export default function StaffCommunityChatActionButton({
       aria-label={label}
       title={label}
       onClick={openChat}
-      className="nexora-icon-button relative w-auto gap-1 px-2 text-xs font-medium"
+      className={className}
     >
       <MessagesSquare className="h-4 w-4" aria-hidden="true" />
       <span>{t(STAFF_CHAT_I18N.open)}</span>

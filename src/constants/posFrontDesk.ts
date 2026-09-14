@@ -71,6 +71,36 @@ export const ORDER_LIST_FILTERS: OrderListFilter[] = [
   OrderListFilter.InService,
 ]
 
+/**
+ * Turn Board status filter. Derived from the board rows, not sent to the API — but referenced from
+ * the chip list and every `statusFilter ===` branch, so it lives here for the same reason the tab
+ * ids do.
+ *
+ * There is no "Paused" option: the salon has no such technician state. A technician is either
+ * clocked in (and then free or with a customer) or clocked out.
+ */
+export enum TurnBoardStatusFilter {
+  All = 'all',
+  Available = 'available',
+  Busy = 'busy',
+  ClockedOut = 'clockedout',
+}
+
+export const TURN_BOARD_STATUS_FILTERS: TurnBoardStatusFilter[] = [
+  TurnBoardStatusFilter.All,
+  TurnBoardStatusFilter.Available,
+  TurnBoardStatusFilter.Busy,
+  TurnBoardStatusFilter.ClockedOut,
+]
+
+/** Station cards vs the turn-by-turn grid. Remembered across visits (pure UI preference). */
+export enum TurnBoardViewMode {
+  Stations = 'stations',
+  Grid = 'grid',
+}
+
+export const TURN_BOARD_VIEW_MODE_STORAGE_KEY = 'pos_turn_board_view_mode'
+
 /** User-chosen List/Card view, remembered across visits (pure UI preference, not domain data). */
 export enum OrderListViewMode {
   List = 'list',

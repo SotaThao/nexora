@@ -105,7 +105,7 @@ export default function AddTipAsStaffModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
       <div className="nexora-modal-card max-w-lg">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-nexoraText">{t('taxiq.tipLedger.addButton')}</h2>
+          <h2 className="text-nexoraText text-sm font-semibold leading-snug">{t('taxiq.tipLedger.addButton')}</h2>
           <IconButton label={t('common.cancel')} onClick={handleClose}>
             <X className="h-4 w-4" />
           </IconButton>
@@ -133,7 +133,7 @@ export default function AddTipAsStaffModal({
                   key={m}
                   type="button"
                   onClick={() => setMethod(m)}
-                  className={`rounded-lg border px-2 py-1.5 text-[11px] font-bold ${
+                  className={`rounded-lg border px-2 py-1.5 text-xs font-semibold ${
                     method === m ? 'border-nexoraBrand bg-nexoraBrand text-white' : 'border-nexoraBorder text-nexoraText'
                   }`}
                 >
@@ -223,18 +223,18 @@ export default function AddTipAsStaffModal({
             />
           </div>
 
-          <p className="text-[11px] font-medium text-nexoraMuted">{t('taxiq.tipLedger.disclaimer')}</p>
+          <p className="text-xs font-medium text-nexoraMuted">{t('taxiq.tipLedger.disclaimer')}</p>
         </div>
 
         <div className="mt-6 flex justify-end gap-2">
-          <button type="button" onClick={handleClose} className="rounded-lg px-4 py-2 text-xs font-bold text-nexoraMuted">
+          <button type="button" onClick={handleClose} className="rounded-lg px-4 py-2 text-xs font-semibold text-nexoraMuted">
             {t('common.cancel')}
           </button>
           <button
             type="button"
             onClick={handleSubmit}
             disabled={addTip.isPending}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-semibold text-white disabled:opacity-60"
           >
             {addTip.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
             {t('taxiq.tipLedger.form.submit')}

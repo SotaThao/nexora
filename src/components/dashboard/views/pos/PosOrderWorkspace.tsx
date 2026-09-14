@@ -842,8 +842,9 @@ export default function PosOrderWorkspace({
       eligibleTechnicians.map((technician) => technician.posStaffProfileId),
     )
     const rosterRows = technicianTurnRosterQuery.data?.rows ?? []
+    // Weighted, so the picker's figure matches the Turn Board badge for the same technician.
     const assignedTurnsToday = new Map(
-      rosterRows.map((row) => [row.posStaffProfileId, row.turnsToday]),
+      rosterRows.map((row) => [row.posStaffProfileId, row.weightedTurnsToday ?? 0]),
     )
     const serviceAmountsByTechnicianId = technicianNextTurnBalanceQuery.data?.completedAmounts ?? new Map<string, number>()
     const nextTurnTechnician = technicianNextTurnBalanceQuery.data

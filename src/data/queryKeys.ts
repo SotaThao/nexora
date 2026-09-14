@@ -214,6 +214,7 @@ export const qk = {
   // POS Booking — per-business settings (Ticket 2)
   merchantPosBookingSettings: (businessId?: string) => ['merchantSettings', 'posBookingSettings', businessId ?? ''],
   merchantPosOrderSettings: (businessId?: string) => ['merchantSettings', 'posOrderSettings', businessId ?? ''],
+  merchantPosTurnSettings: (businessId?: string) => ['merchantSettings', 'posTurnSettings', businessId ?? ''],
   staffPosPendingAcceptanceCount: () => ['staff', 'posPendingAcceptanceCount'],
   // POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filtered.
   // `filters` is only appended when explicitly passed — omitting it (e.g. from an
@@ -444,6 +445,12 @@ export const qk = {
   staffPayoutDetail: (payoutId: string) => ['staffPayouts', 'detail', payoutId],
   staffPayoutStats: () => ['staffPayouts', 'stats'],
   staffUnpaidDebt: () => ['staffPayouts', 'unpaidDebt'],
+
+  // Income/Payout Categories (issue #584)
+  merchantTransactionCategories: () => ['merchantTransactionCategories'],
+  merchantIncomeByCategoryStats: (filters = EMPTY) => ['merchantTransactionCategories', 'stats', filters],
+  staffTransactionCategories: () => ['staffTransactionCategories'],
+  staffIncomeByCategoryStats: (filters = EMPTY) => ['staffTransactionCategories', 'stats', filters],
 
   // Staff Payment Methods
   staffPaymentMethods: ()      => ['staffPaymentMethods'],

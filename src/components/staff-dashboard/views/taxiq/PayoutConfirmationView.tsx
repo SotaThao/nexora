@@ -46,8 +46,8 @@ export default function PayoutConfirmationView({ staffTaxYearStatus }: { staffTa
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-xl font-extrabold text-nexoraText">{t('taxiq.staffPayoutConfirmation.title')}</h2>
-        <p className="mt-1 text-xs text-nexoraMuted">{t('taxiq.staffPayoutConfirmation.subtitle')}</p>
+        <h2 className="text-nexoraText text-xl lg:text-2xl font-semibold leading-snug">{t('taxiq.staffPayoutConfirmation.title')}</h2>
+        <p className="mt-1 text-nexoraMuted text-[13px] font-normal leading-5">{t('taxiq.staffPayoutConfirmation.subtitle')}</p>
       </div>
 
       {isLocked && (
@@ -63,7 +63,7 @@ export default function PayoutConfirmationView({ staffTaxYearStatus }: { staffTa
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
-            className={`-mb-px border-b-2 px-3 py-2 text-xs font-bold transition ${
+            className={`-mb-px border-b-2 px-3 py-2 text-xs font-semibold transition ${
               activeTab === tab
                 ? 'border-nexoraBrand text-nexoraBrand'
                 : 'border-transparent text-nexoraMuted hover:text-nexoraText'
@@ -79,7 +79,7 @@ export default function PayoutConfirmationView({ staffTaxYearStatus }: { staffTa
       ) : (
         <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
           <table className="w-full min-w-[860px] text-left text-xs">
-            <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase text-nexoraMuted">
+            <thead className="bg-nexoraCanvas text-xs font-extrabold uppercase text-nexoraMuted">
               <tr>
                 <th className="px-4 py-3">
                   <span className="inline-flex items-center gap-1">
@@ -132,7 +132,7 @@ export default function PayoutConfirmationView({ staffTaxYearStatus }: { staffTa
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
                         {isLocked ? (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-nexoraBorder px-2 py-0.5 text-[10px] font-bold text-nexoraMuted">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-nexoraBorder px-2 py-0.5 text-xs font-bold text-nexoraMuted">
                             <Lock className="h-3 w-3" />
                             {t('taxiq.staffPayoutConfirmation.lockedBadge')}
                           </span>
@@ -141,14 +141,14 @@ export default function PayoutConfirmationView({ staffTaxYearStatus }: { staffTa
                             <button
                               type="button"
                               onClick={() => setConfirmingPayout(payout)}
-                              className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-nexoraBrand hover:underline"
                             >
                               {t('taxiq.staffPayoutConfirmation.confirmAction')}
                             </button>
                             <button
                               type="button"
                               onClick={() => setDisputingPayout(payout)}
-                              className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 hover:underline"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:underline"
                             >
                               {t('taxiq.staffPayoutConfirmation.disputeAction')}
                             </button>

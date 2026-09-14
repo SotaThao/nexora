@@ -145,7 +145,7 @@ function ShareLinkPill({
       className={`flex items-center justify-between gap-2 overflow-hidden rounded-xl border border-nexoraBorder bg-slate-50 p-1.5 shadow-inner ${className}`}
       title={url}
     >
-      <div className="flex min-w-0 flex-1 items-center overflow-hidden pl-2 text-left font-mono text-[10px] text-slate-500">
+      <div className="flex min-w-0 flex-1 items-center overflow-hidden pl-2 text-left font-mono text-xs text-slate-500">
         {displayParts?.suffix ? (
           <>
             <span className="min-w-0 truncate">{displayParts.leading}</span>
@@ -158,7 +158,7 @@ function ShareLinkPill({
       <button
         type="button"
         onClick={() => void onCopy()}
-        className="flex h-7 shrink-0 items-center rounded-lg bg-slate-800 px-3 text-[10px] font-bold text-white transition hover:bg-slate-700"
+        className="flex h-7 shrink-0 items-center rounded-lg bg-slate-800 px-3 text-xs font-semibold text-white transition hover:bg-slate-700"
         aria-label={copyText}
         title={copyText}
       >
@@ -181,7 +181,7 @@ function QrLinkPanel({
 }) {
   return (
     <div className="mt-3 text-left">
-      <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">{label}</p>
+      <p className="mb-2 text-xs font-black uppercase tracking-wider text-nexoraMuted">{label}</p>
       <ShareLinkPill url={url} onCopy={onCopy} displayParts={displayParts} />
     </div>
   )
@@ -205,13 +205,13 @@ function QrEmptyState({
       <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-nexoraBrand shadow-sm">
         <Icon className="h-7 w-7" />
       </div>
-      <h4 className="text-sm font-extrabold text-nexoraText">{title}</h4>
-      <p className="mt-2 max-w-[280px] text-xs leading-relaxed text-nexoraMuted">{description}</p>
+      <h4 className="text-nexoraText text-sm font-semibold leading-snug">{title}</h4>
+      <p className="mt-2 max-w-[280px] text-nexoraMuted text-[13px] font-normal leading-5">{description}</p>
       {actionLabel && onAction ? (
         <button
           type="button"
           onClick={onAction}
-          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-nexoraBrand px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-nexoraBrandDark"
+          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-nexoraBrand px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-nexoraBrandDark"
         >
           <QrCode className="h-4 w-4" />
           {actionLabel}
@@ -766,7 +766,7 @@ export default function StaffMyQR() {
             : t('components.staff_dashboard.views.StaffMyQR.notConnected')
 
     return (
-      <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black ${className}`}>
+      <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-black ${className}`}>
         {label}
       </span>
     )
@@ -794,8 +794,8 @@ export default function StaffMyQR() {
 
       <section className="space-y-2">
         <div className="flex items-center justify-between px-0.5">
-          <h1 className="text-base font-semibold leading-tight text-nexoraText">{t('staff_dashboard.qr.my_qr_title')}</h1>
-          <span className="rounded-full bg-nexoraSuccess/10 px-2.5 py-1 text-[10px] font-semibold text-nexoraSuccess">
+          <h1 className="text-nexoraText text-xl lg:text-2xl font-semibold leading-snug">{t('staff_dashboard.qr.my_qr_title')}</h1>
+          <span className="rounded-full bg-nexoraSuccess/10 px-2.5 py-1 text-xs font-semibold text-nexoraSuccess">
             {t('staff_dashboard.home.ready')}
           </span>
         </div>
@@ -808,14 +808,14 @@ export default function StaffMyQR() {
                 key={tab}
                 type="button"
                 onClick={() => handleSelectTab(tab)}
-                className={`inline-flex h-8 min-w-0 items-center justify-center gap-1.5 rounded-full px-2 text-[10px] font-semibold transition ${
+                className={`inline-flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-full px-2 py-2 text-xs font-semibold transition ${
                   isActive
                     ? 'bg-nexoraBrand text-white shadow-[0_6px_14px_rgba(70,72,212,0.25)]'
                     : 'bg-transparent text-nexoraBrandDark hover:bg-[#F4F2FF]'
                 }`}
               >
                 <TabIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={2.2} />
-                <span className="truncate">{tabDisplayLabel[tab]}</span>
+                <span className="min-w-0 break-words leading-tight">{tabDisplayLabel[tab]}</span>
               </button>
             )
           })}
@@ -827,7 +827,7 @@ export default function StaffMyQR() {
           <section className={`${compactPanel} text-center`}>
             <div className="mb-2 flex items-center justify-between gap-2 text-left">
               <div>
-                <h3 className="text-sm font-semibold text-nexoraText">{t('staff_dashboard.qr.staff_invite_link')}</h3>
+                <h3 className="text-nexoraText text-sm font-semibold leading-snug">{t('staff_dashboard.qr.staff_invite_link')}</h3>
               </div>
               <span className="grid h-8 w-8 place-items-center rounded-lg bg-rose-50 text-rose-500">
                 <Gift className="h-4 w-4" />
@@ -835,7 +835,7 @@ export default function StaffMyQR() {
             </div>
             {staffCode && (
               <div className="rounded-xl border border-[#EEE9FF] bg-slate-50 p-3 text-left">
-                <span className="mb-2 block text-[10px] font-extrabold uppercase tracking-wider text-nexoraMuted">
+                <span className="mb-2 block text-xs font-extrabold uppercase tracking-wider text-nexoraMuted">
                   {t('staff_dashboard.qr.select_placement_leg')}
                 </span>
                 <div className="mt-2 flex justify-center gap-6">
@@ -874,7 +874,7 @@ export default function StaffMyQR() {
                 <div className="mx-auto my-3 flex h-40 w-40 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#EEE9FF] bg-white p-3 shadow-sm select-none">
                   <QrImage src={personalQrImageSrc} alt={t('staff_dashboard.qr.scan_qr_alt')} className="h-full w-full" />
                 </div>
-                <div className="flex items-center justify-center gap-2 text-[12px] font-semibold text-nexoraText">
+                <div className="flex items-center justify-center gap-2 text-sm font-semibold text-nexoraText">
                   <span>
                     {t('staff_dashboard.staff_id')}: {staffCode}
                   </span>
@@ -948,11 +948,11 @@ export default function StaffMyQR() {
               <section className="rounded-2xl border border-[#DDD8FF] bg-white p-3 shadow-[0_10px_22px_rgba(70,72,212,0.10)]">
                 <div className="mb-3 flex items-center justify-between gap-2">
                   <div>
-                    <h4 className="text-sm font-semibold text-nexoraText">
+                    <h4 className="text-nexoraText text-sm font-semibold leading-snug">
                       {t('staff_dashboard.qr.business_title')}
                     </h4>
                   </div>
-                  <span className="rounded-full bg-[#F4F2FF] px-3 py-1.5 text-[10px] font-semibold text-nexoraBrandDark">
+                  <span className="rounded-full bg-[#F4F2FF] px-3 py-1.5 text-xs font-semibold text-nexoraBrandDark">
                     {t(
                       activeTipQrs.length === 1
                         ? 'staff_dashboard.qr.salons_count_one'
@@ -995,14 +995,14 @@ export default function StaffMyQR() {
                         onClick={() => setSelectedBusinessId(biz.businessId)}
                         className="min-w-0 text-left"
                       >
-                        <div className="truncate text-[12px] font-semibold leading-4 text-nexoraText">
+                        <div className="truncate text-sm font-semibold leading-4 text-nexoraText">
                           {biz.businessName}
                         </div>
-                        <div className="truncate text-[10px] font-medium leading-3 text-nexoraMuted">
+                        <div className="truncate text-xs font-medium leading-3 text-nexoraMuted">
                           {t('staff_dashboard.qr.business_sub')}
                         </div>
                         {biz.tipUrl && (
-                          <div className="mt-1 truncate font-mono text-[9px] font-semibold text-nexoraBrandDark">
+                          <div className="mt-1 truncate font-mono text-xs font-semibold text-nexoraBrandDark">
                             {splitUrlQueryParamDisplay(biz.tipUrl, 'staffProfileId').fullDisplay}
                           </div>
                         )}
@@ -1086,7 +1086,7 @@ export default function StaffMyQR() {
             <section className={`${compactPanel} text-center`}>
               <div className="mb-2 flex items-center justify-between gap-2 text-left">
                 <div>
-                  <h3 className="text-sm font-semibold text-nexoraText">{t('staff_dashboard.qr.payment_title')}</h3>
+                  <h3 className="text-nexoraText text-sm font-semibold leading-snug">{t('staff_dashboard.qr.payment_title')}</h3>
                 </div>
                 <span className="grid h-8 w-8 place-items-center rounded-lg bg-indigo-50 text-indigo-600">
                   <CreditCard className="h-4 w-4" />
@@ -1112,7 +1112,7 @@ export default function StaffMyQR() {
                   className="h-full w-full"
                 />
                 <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-nexoraBrand/75 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                  <span className="rounded-lg bg-white/20 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-white backdrop-blur-sm">
+                  <span className="rounded-lg bg-white/20 px-3 py-1 text-xs font-black uppercase tracking-widest text-white backdrop-blur-sm">
                     PREVIEW
                   </span>
                 </div>
@@ -1121,13 +1121,13 @@ export default function StaffMyQR() {
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <div className="min-w-0 rounded-full border border-[#EEE9FF] bg-white px-2 text-left">
                   <div className="flex h-8 items-center gap-1.5">
-                    <span className="min-w-0 flex-1 truncate font-mono text-[9px] text-nexoraMuted">
+                    <span className="min-w-0 flex-1 truncate font-mono text-xs text-nexoraMuted">
                       {splitUrlPathTailDisplay(staffPaymentPageUrl, 2).fullDisplay}
                     </span>
                     <button
                       type="button"
                       onClick={handleCopyPaymentUrl}
-                      className="inline-flex h-6 shrink-0 items-center justify-center rounded-md bg-slate-900 px-2.5 text-[10px] font-semibold text-white"
+                      className="inline-flex h-6 shrink-0 items-center justify-center rounded-md bg-slate-900 px-2.5 text-xs font-semibold text-white"
                     >
                       {t('components.staff_dashboard.views.StaffMyQR.copy')}
                     </button>
@@ -1136,7 +1136,7 @@ export default function StaffMyQR() {
                 <button
                   type="button"
                   onClick={handleSharePaymentUrl}
-                  className="flex h-8 w-full items-center justify-center gap-1.5 rounded-full bg-[#EEE9FF] px-3 text-[11px] font-semibold text-nexoraBrandDark transition hover:bg-[#E5DFFF]"
+                  className="flex h-8 w-full items-center justify-center gap-1.5 rounded-full bg-[#EEE9FF] px-3 text-xs font-semibold text-nexoraBrandDark transition hover:bg-[#E5DFFF]"
                 >
                   <Share2 className="h-3.5 w-3.5" />
                   {t('staff_dashboard.qr.share_short')}
@@ -1147,11 +1147,11 @@ export default function StaffMyQR() {
           {readyStaffPaymentMethods.length > 0 && (
             <section className={compactPanel}>
               <div className="mb-2 flex items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold text-nexoraText">{t('staff_dashboard.qr.payout_settings')}</h3>
+                <h3 className="text-nexoraText text-sm font-semibold leading-snug">{t('staff_dashboard.qr.payout_settings')}</h3>
                 <button
                   type="button"
                   onClick={handleSetupPayout}
-                  className="inline-flex h-7 items-center justify-center rounded-md px-2 text-[11px] font-semibold text-nexoraBrandDark"
+                  className="inline-flex h-7 items-center justify-center rounded-md px-2 text-xs font-semibold text-nexoraBrandDark"
                 >
                   {t('staff_dashboard.qr.settings')}
                 </button>
@@ -1165,8 +1165,8 @@ export default function StaffMyQR() {
                         {WalletLogos[(method.uiKey || '') as keyof typeof WalletLogos] || <CreditCard className="h-4 w-4" />}
                       </span>
                       <div className="min-w-0 text-left">
-                        <p className="truncate text-[12px] font-semibold text-nexoraText">{label}</p>
-                        <p className="truncate text-[10px] font-medium text-nexoraMuted">
+                        <p className="truncate text-sm font-semibold text-nexoraText">{label}</p>
+                        <p className="truncate text-xs font-medium text-nexoraMuted">
                           {formatPaymentMethodAccountDisplay(
                             method.uiKey || '',
                             method.accountInfo,
@@ -1179,7 +1179,7 @@ export default function StaffMyQR() {
                           type="button"
                           onClick={() => setViewingMethod(method)}
                           aria-label={`View ${label} Payout Details`}
-                          className="inline-flex h-7 items-center justify-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-2 text-[10px] font-semibold text-sky-700 transition hover:bg-sky-100 hover:text-sky-800"
+                          className="inline-flex h-7 items-center justify-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-2 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 hover:text-sky-800"
                         >
                           <Eye className="h-3 w-3" />
                           <span>{t('components.staff_dashboard.views.StaffPay.view')}</span>
@@ -1212,10 +1212,10 @@ export default function StaffMyQR() {
             </button>
 
             <div className="space-y-1 text-center">
-              <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
+              <h3 className="r text-slate-800 text-sm font-semibold leading-snug">
                 {t('components.staff_dashboard.views.StaffMyQR.scanSalonQrCode')}
               </h3>
-              <p className="text-center text-[10px] font-medium leading-normal text-slate-500">
+              <p className="text-center text-xs font-medium leading-normal text-slate-500">
                 {t('components.staff_dashboard.views.StaffMyQR.scanTheSalonReferral')}
               </p>
             </div>
@@ -1247,7 +1247,7 @@ export default function StaffMyQR() {
             </div>
 
             {scannerCameraState !== 'ready' && scannerCameraState !== 'loading' ? (
-              <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-center text-[11px] font-semibold text-slate-500">
+              <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs font-semibold text-slate-500">
                 {t('components.staff_dashboard.views.StaffMyQR.cameraScanNotAvailableYet')}
               </p>
             ) : null}
@@ -1376,7 +1376,7 @@ export default function StaffMyQR() {
             ) : (
               <>
                 <div className="space-y-1 text-center">
-                  <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
+                  <h3 className="r text-slate-800 text-sm font-semibold leading-snug">
                     {t('staff_dashboard.qr.payment_title')}
                   </h3>
                 </div>
@@ -1398,7 +1398,7 @@ export default function StaffMyQR() {
                   type="button"
                   onClick={handleDownloadZoomedQr}
                   disabled={isSavingQr}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet py-3 text-sm font-extrabold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet py-3 text-xs font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isSavingQr ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                   {t('dashboard.master_gateway.btn_download')}
@@ -1410,6 +1410,7 @@ export default function StaffMyQR() {
       )}
 
       <PayoutMethodDetailModal
+        className="[&_button]:text-xs [&_button]:font-semibold [&_button_span]:text-xs [&_button_span]:font-semibold [&_h3]:text-base [&_h3]:font-semibold [&_h3]:normal-case [&_h3]:tracking-normal [&_h3]:leading-snug"
         method={viewingMethod}
         logo={viewingMethodLogo}
         onClose={() => setViewingMethod(null)}

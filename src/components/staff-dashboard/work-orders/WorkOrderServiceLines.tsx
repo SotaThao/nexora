@@ -41,9 +41,9 @@ const LINE_STATUS_BADGE_CLASS: Record<string, string> = {
 }
 
 const LINE_ACTION_PRIMARY_CLASS =
-  'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-3 text-[11px] font-extrabold text-white disabled:opacity-60'
+  'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-3 text-xs font-semibold text-white disabled:opacity-60'
 const LINE_ACTION_SECONDARY_CLASS =
-  'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder px-3 text-[11px] font-extrabold text-nexoraText disabled:opacity-60'
+  'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder px-3 text-xs font-semibold text-nexoraText disabled:opacity-60'
 
 interface WorkOrderServiceLinesProps {
   items: WorkOrderEditableLine[]
@@ -188,7 +188,7 @@ function WorkOrderServiceLineRow({
         {formatWorkOrderDurationMinutes(line.durationMinutes, t)}
       </div>
       {canEdit ? (
-        <div className={`${WORK_ORDERS_LAYOUT_CLASS.serviceActionCell} max-[400px]:col-span-full max-[400px]:justify-start max-[400px]:pl-0`}>
+        <div className={`${WORK_ORDERS_LAYOUT_CLASS.serviceActionCell} max-[639px]:col-span-full max-[639px]:justify-start max-[639px]:pl-0`}>
           {line.isAddOn ? null : (
             <span className={WORK_ORDERS_LAYOUT_CLASS.serviceActionGroup}>
               <button
@@ -220,7 +220,7 @@ function WorkOrderServiceLineRow({
           {workOrderAssignedTechnicianLabel(line.technicianName, t)}
         </p>
         {!line.isAddOn && line.lineStatus ? (
-          <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${
+          <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-black uppercase ${
             LINE_STATUS_BADGE_CLASS[line.lineStatus] ?? LINE_STATUS_BADGE_CLASS[PosOrderItemStatus.Unassigned]
           }`}>
             {t(posOrderItemStatusLabelKey(line.lineStatus))}

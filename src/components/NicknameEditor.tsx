@@ -30,6 +30,7 @@ interface NicknameEditorProps {
   onSave: (nickname: string | null) => Promise<NicknameEditorSaveResult>
   triggerVariant?: 'text' | 'icon' | 'outline-brand' | 'solid'
   containerClassName?: string
+  dialogClassName?: string
   stopPropagation?: boolean
 }
 
@@ -58,6 +59,7 @@ export default function NicknameEditor({
   onSave,
   triggerVariant = 'text',
   containerClassName = '',
+  dialogClassName = '',
   stopPropagation = false,
 }: NicknameEditorProps) {
   const { t } = useTranslation()
@@ -434,7 +436,7 @@ export default function NicknameEditor({
         aria-modal='true'
         aria-labelledby={titleId}
         onKeyDown={handleFocusTrap}
-        className='w-full max-h-[92dvh] rounded-t-2xl bg-white pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl'
+        className={`w-full max-h-[92dvh] rounded-t-2xl bg-white pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ${dialogClassName}`}
       >
         {editorContent}
       </div>
@@ -455,7 +457,7 @@ export default function NicknameEditor({
         visibility: popoverPosition ? 'visible' : 'hidden',
         zIndex: 100,
       }}
-      className='max-h-[calc(100dvh-16px)] overflow-y-auto rounded-xl border border-nexoraBorder bg-white shadow-2xl'
+      className={`max-h-[calc(100dvh-16px)] overflow-y-auto rounded-xl border border-nexoraBorder bg-white shadow-2xl ${dialogClassName}`}
     >
       {editorContent}
     </div>

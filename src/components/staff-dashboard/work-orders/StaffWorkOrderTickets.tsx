@@ -84,7 +84,7 @@ export default function StaffWorkOrderTickets({
 
   const visibleTickets = useMemo(
     () => sortWorkOrderTicketsByTime(
-      tickets.filter((ticket) => workOrderTicketMatchesFilter(ticket.status, filter)),
+      tickets.filter((ticket) => workOrderTicketMatchesFilter(ticket.myStatus, filter)),
       salon.timeZone,
     ),
     [filter, salon.timeZone, tickets],

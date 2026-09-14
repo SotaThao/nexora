@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { BarChart3, CalendarDays, ChevronDown, Store } from 'lucide-react'
+import { BarChart3, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Store } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 
 import {
@@ -113,7 +113,7 @@ export default function StaffSalonReport() {
     () => Array.from({ length: 12 }, (_, index) => ({
       value: String(index + 1),
       label: new Intl.DateTimeFormat(currentLanguage === 'vi' ? 'vi-VN' : 'en-US', {
-        month: 'long',
+        month: 'short',
       }).format(new Date(2024, index, 1)),
     })),
     [currentLanguage],
@@ -227,6 +227,41 @@ export default function StaffSalonReport() {
     setSelectedWeekYear(yearValue)
   }
 
+  const periodNavigationClass = 'inline-flex h-11 w-9 shrink-0 items-center justify-center rounded-xl border border-nexoraBrand/25 bg-white text-nexoraBrand transition hover:bg-nexoraBrandSoft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand/30 disabled:cursor-not-allowed disabled:opacity-40'
+
+  const canMovePeriod = (direction: -1 | 1) => {
+    if (activeTab === 'daily') return true
+    if (activeTab === 'weekly') {
+      return direction === -1
+        ? Number(selectedWeekYear) > weekYears[weekYears.length - 1] || Number(selectedWeek) > 1
+        : Number(selectedWeekYear) < weekYears[0] || Number(selectedWeek) < getIsoWeeksInYear(Number(selectedWeekYear))
+    }
+    return direction === -1
+      ? Number(selectedYear) > years[years.length - 1] || (activeTab === 'monthly' && Number(selectedMonth) > 1)
+      : Number(selectedYear) < years[0] || (activeTab === 'monthly' && Number(selectedMonth) < 12)
+  }
+
+  const movePeriod = (direction: -1 | 1) => {
+    if (!canMovePeriod(direction)) return
+    if (activeTab === 'daily') {
+      const date = new Date(`${selectedDate}T12:00:00`)
+      date.setDate(date.getDate() + direction)
+      setSelectedDate(toLocalIsoDate(date))
+    } else if (activeTab === 'weekly') {
+      const date = new Date(`${getIsoWeekStart(Number(selectedWeekYear), Number(selectedWeek))}T12:00:00`)
+      date.setDate(date.getDate() + direction * 7)
+      const next = getIsoWeekSelection(date)
+      setSelectedWeek(String(next.week))
+      setSelectedWeekYear(String(next.year))
+    } else if (activeTab === 'monthly') {
+      const date = new Date(Number(selectedYear), Number(selectedMonth) - 1 + direction, 1, 12)
+      setSelectedMonth(String(date.getMonth() + 1))
+      setSelectedYear(String(date.getFullYear()))
+    } else {
+      setSelectedYear(String(Number(selectedYear) + direction))
+    }
+  }
+
   const renderYearSelect = (
     value: string,
     onChange: (value: string) => void,
@@ -234,14 +269,14 @@ export default function StaffSalonReport() {
     isFullWidth = false,
   ) => (
     <label className={`relative flex min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted ${
-      isFullWidth ? 'w-full' : 'w-auto'
+      isFullWidth ? 'w-full' : 'w-[80px] shrink-0'
     }`}>
       <span className="sr-only">{t('staff_salon_report.year')}</span>
       <select
         aria-label={t('staff_salon_report.year')}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className={`${controlClass} appearance-none pr-9 ${isFullWidth ? 'w-full pl-10' : 'w-auto'}`}
+        className={`${controlClass} w-full appearance-none pr-7 ${isFullWidth ? 'pl-10' : 'pl-2'}`}
       >
         {options.map((year) => <option key={year} value={year}>{year}</option>)}
       </select>
@@ -257,11 +292,11 @@ export default function StaffSalonReport() {
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-nexoraBrandSoft text-nexoraBrand sm:h-9 sm:w-9 sm:rounded-xl">
               <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
             </span>
-            <h1 className="text-xl font-extrabold leading-tight text-nexoraText sm:text-[30px] sm:leading-9">
+            <h1 className="text-nexoraText text-xl lg:text-2xl font-semibold leading-snug">
               {t('staff_salon_report.title')}
             </h1>
           </div>
-          <p className="text-xs font-medium leading-5 text-nexoraMuted sm:text-sm">
+          <p className="text-nexoraMuted text-[13px] font-normal leading-5">
             {t('staff_salon_report.subtitle')}
           </p>
         </div>
@@ -278,7 +313,7 @@ export default function StaffSalonReport() {
             aria-label={t('staff_salon_report.scope')}
             className="min-w-0 lg:flex-1"
           >
-            <div className="text-[11px] font-extrabold text-nexoraBrand sm:text-xs">
+            <div className="text-xs font-extrabold text-nexoraBrand sm:text-xs">
               {t('staff_salon_report.scope')}
             </div>
 
@@ -325,7 +360,7 @@ export default function StaffSalonReport() {
                   aria-selected={isActive}
                   aria-controls="staff-report-panel"
                   onClick={() => setActiveTab(tab)}
-                  className={`inline-flex h-11 min-w-0 flex-1 items-center justify-center whitespace-nowrap rounded-lg px-2 py-0 text-xs font-extrabold leading-4 transition sm:flex-none sm:px-3 sm:text-sm ${
+                  className={`inline-flex h-11 min-w-0 flex-1 items-center justify-center whitespace-nowrap rounded-lg px-2 py-0 text-xs font-semibold leading-4 transition sm:flex-none sm:px-3 sm:text-xs ${
                     isActive
                       ? 'bg-nexoraBrand text-white shadow-sm'
                       : 'text-nexoraBrand hover:bg-white/70 hover:text-nexoraBrandDark'
@@ -340,80 +375,100 @@ export default function StaffSalonReport() {
           <span aria-hidden="true" className="hidden w-px self-stretch bg-nexoraBorder lg:block" />
 
           <div className="min-w-0 lg:flex-1">
-            <div className="text-[11px] font-extrabold text-violet-700 sm:text-xs">
+            <div className="text-xs font-extrabold text-violet-700 sm:text-xs">
               {t('staff_salon_report.period')}
             </div>
 
-            <div className="relative mt-1.5">
-              <CalendarDays
-                className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-nexoraBrand"
-                aria-hidden="true"
-              />
-              <div className={`flex min-w-0 flex-nowrap gap-2 ${
-                activeTab === 'weekly' || activeTab === 'monthly' ? 'w-auto' : 'w-full'
-              }`}>
-                {activeTab === 'daily' && (
-                  <label className="flex w-full min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
-                    <span className="sr-only">{t('staff_salon_report.date')}</span>
-                    <input
-                      type="date"
-                      data-staff-report-date
-                      aria-label={t('staff_salon_report.date')}
-                      value={selectedDate}
-                      onChange={(event) => {
-                        if (event.target.value) setSelectedDate(event.target.value)
-                      }}
-                      className={`${controlClass} w-full pl-10`}
-                    />
-                  </label>
-                )}
-
-                {activeTab === 'weekly' && (
-                  <>
-                    <label className="relative flex w-auto min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
-                      <span className="sr-only">{t('staff_salon_report.week')}</span>
-                      <select
-                        aria-label={t('staff_salon_report.week')}
-                        value={selectedWeek}
-                        onChange={(event) => setSelectedWeek(event.target.value)}
-                        className={`${controlClass} w-auto appearance-none pl-10 pr-9`}
-                      >
-                        {availableWeeks.map((week) => (
-                          <option key={week} value={week}>
-                            {t('staff_salon_report.filters.week_option', { week })}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nexoraMuted" />
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <button
+                type="button"
+                aria-label={t('staff_salon_report.previousPeriod')}
+                title={t('staff_salon_report.previousPeriod')}
+                disabled={!canMovePeriod(-1)}
+                onClick={() => movePeriod(-1)}
+                className={periodNavigationClass}
+              >
+                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <div className="relative min-w-0 flex-1">
+                <CalendarDays
+                  className={`pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-nexoraBrand ${activeTab === 'weekly' || activeTab === 'monthly' ? 'hidden sm:block' : ''}`}
+                  aria-hidden="true"
+                />
+                <div className="flex w-full min-w-0 flex-nowrap gap-2">
+                  {activeTab === 'daily' && (
+                    <label className="flex w-full min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
+                      <span className="sr-only">{t('staff_salon_report.date')}</span>
+                      <input
+                        type="date"
+                        data-staff-report-date
+                        aria-label={t('staff_salon_report.date')}
+                        value={selectedDate}
+                        onChange={(event) => {
+                          if (event.target.value) setSelectedDate(event.target.value)
+                        }}
+                        className={`${controlClass} w-full pl-10`}
+                      />
                     </label>
-                    {renderYearSelect(selectedWeekYear, setSelectedIsoWeekYear, weekYears)}
-                  </>
-                )}
+                  )}
 
-                {activeTab === 'monthly' && (
-                  <>
-                    <label className="relative flex w-auto min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
-                      <span className="sr-only">{t('staff_salon_report.month')}</span>
-                      <select
-                        aria-label={t('staff_salon_report.month')}
-                        value={selectedMonth}
-                        onChange={(event) => setSelectedMonth(event.target.value)}
-                        className={`${controlClass} w-auto appearance-none pl-10 pr-9`}
-                      >
-                        {months.map((month) => (
-                          <option key={month.value} value={month.value}>{month.label}</option>
-                        ))}
-                      </select>
-                      <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nexoraMuted" />
-                    </label>
-                    {renderYearSelect(selectedYear, setSelectedYear)}
-                  </>
-                )}
+                  {activeTab === 'weekly' && (
+                    <>
+                      <label className="relative flex min-w-0 flex-1 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
+                        <span className="sr-only">{t('staff_salon_report.week')}</span>
+                        <select
+                          aria-label={t('staff_salon_report.week')}
+                          value={selectedWeek}
+                          onChange={(event) => setSelectedWeek(event.target.value)}
+                          className={`${controlClass} w-full appearance-none pl-2 pr-6 sm:pl-10 sm:pr-9`}
+                        >
+                          {availableWeeks.map((week) => (
+                            <option key={week} value={week}>
+                              {t('staff_salon_report.filters.week_option', { week })}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nexoraMuted" />
+                      </label>
+                      {renderYearSelect(selectedWeekYear, setSelectedIsoWeekYear, weekYears)}
+                    </>
+                  )}
 
-                {activeTab === 'yearly' && (
-                  renderYearSelect(selectedYear, setSelectedYear, years, true)
-                )}
+                  {activeTab === 'monthly' && (
+                    <>
+                      <label className="relative flex min-w-0 flex-1 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
+                        <span className="sr-only">{t('staff_salon_report.month')}</span>
+                        <select
+                          aria-label={t('staff_salon_report.month')}
+                          value={selectedMonth}
+                          onChange={(event) => setSelectedMonth(event.target.value)}
+                          className={`${controlClass} w-full appearance-none pl-2 pr-6 sm:pl-10 sm:pr-9`}
+                        >
+                          {months.map((month) => (
+                            <option key={month.value} value={month.value}>{month.label}</option>
+                          ))}
+                        </select>
+                        <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nexoraMuted" />
+                      </label>
+                      {renderYearSelect(selectedYear, setSelectedYear)}
+                    </>
+                  )}
+
+                  {activeTab === 'yearly' && (
+                    renderYearSelect(selectedYear, setSelectedYear, years, true)
+                  )}
+                </div>
               </div>
+              <button
+                type="button"
+                aria-label={t('staff_salon_report.nextPeriod')}
+                title={t('staff_salon_report.nextPeriod')}
+                disabled={!canMovePeriod(1)}
+                onClick={() => movePeriod(1)}
+                className={periodNavigationClass}
+              >
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              </button>
             </div>
           </div>
         </div>
@@ -439,7 +494,7 @@ export default function StaffSalonReport() {
               <button
                 type="button"
                 onClick={() => void reportQuery.refetch()}
-                className="mt-3 h-10 rounded-lg bg-nexoraBrand px-4 text-sm font-bold text-white transition hover:bg-nexoraBrandDark"
+                className="mt-3 h-10 rounded-lg bg-nexoraBrand px-4 text-xs font-semibold text-white transition hover:bg-nexoraBrandDark"
               >
                 {t('staff_salon_report.states.retry')}
               </button>
@@ -533,17 +588,17 @@ export default function StaffSalonReport() {
                     <div
                       key={metric.key}
                       role="listitem"
-                      className={`min-w-0 rounded-xl p-3.5 ${
+                      className={`min-w-0 rounded-xl p-2.5 sm:p-3.5 ${
                         isFullWidth ? 'col-span-2' : ''
                       } ${cardTone}`}
                     >
-                      <dt className={`text-[11px] font-extrabold leading-4 ${labelTone}`}>
+                      <dt className={`text-xs font-semibold leading-4 ${labelTone}`}>
                         {t(`staff_salon_report.${metric.key}`)}
                       </dt>
-                      <dd className={`mt-2 break-words font-black leading-tight ${
+                      <dd className={`mt-1 break-words font-semibold leading-6 tabular-nums ${
                         isPrimary ? 'text-white' : 'text-nexoraText'
                       } ${
-                        isFullWidth ? 'text-2xl' : 'text-lg'
+                        isFullWidth ? 'text-xl' : 'text-lg'
                       }`}>
                         {formatMetric(metric)}
                       </dd>

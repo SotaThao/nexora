@@ -58,6 +58,10 @@ import {
   REPORT_WEEKS_PARAM,
   POS_FRONT_DESK_TABS,
   PosFrontDeskTab,
+  TURN_BOARD_STATUS_FILTERS,
+  TURN_BOARD_VIEW_MODE_STORAGE_KEY,
+  TurnBoardStatusFilter,
+  TurnBoardViewMode,
 } from '../../../../constants/posFrontDesk'
 import type {
   BookingListItemApiDto,
@@ -99,6 +103,8 @@ import TimeClockTab from './timeclock/TimeClockTab'
 import { beepCooldownUntil, useCooldownSeconds } from './timeclock/beepCooldown'
 import BeepInteractions from './timeclock/BeepInteractions'
 import BeepMessageModal from './timeclock/BeepMessageModal'
+import WeightedTurnSettingsModal from './modals/WeightedTurnSettingsModal'
+import TurnGridView, { formatServiceTotal, formatTurnCredit } from './TurnGridView'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { formatCurrency } from '../../utils'
 import { compareNextTurnRows, nextTurnServiceAmount, selectNextTurnTechnician, sortTurnBoardStations } from './posNextTurn'
@@ -522,9 +528,6 @@ export default function PosFrontDeskView({
     enabled: activeTab === PosFrontDeskTab.TurnBoard && Boolean(nextWaitingOrder),
   })
   const todayTurnRows = [...(todayRosterQuery.data?.rows ?? [])].sort(compareNextTurnRows)
-  const turnsTodayByStaffId = new Map(
-    todayTurnRows.map((row) => [row.posStaffProfileId, row.turnsToday]),
-  )
   const nextTurnRequiredServiceIds = Array.from(
     new Set(
       (nextWaitingOrderDetail?.serviceLines ?? [])
@@ -706,6 +709,52 @@ export default function PosFrontDeskView({
   // what the tech should see before anything is sent, instead of firing a message-less beep on tap.
   const [beepStation, setBeepStation] = useState<TurnBoardStationApiDto | null>(null)
   const [beepMessage, setBeepMessage] = useState('')
+  // Weighted turn rules. The same modal is reachable from the Bookings tab, against the same
+  // endpoint, so the salon maintains one set of numbers rather than one per screen.
+  const [isTurnSettingsOpen, setIsTurnSettingsOpen] = useState(false)
+  const [turnBoardStatusFilter, setTurnBoardStatusFilter] = useState<TurnBoardStatusFilter>(
+    TurnBoardStatusFilter.All,
+  )
+  const [turnBoardSearch, setTurnBoardSearch] = useState('')
+  const [turnBoardViewMode, setTurnBoardViewMode] = useState<TurnBoardViewMode>(() =>
+    storage.getItem(TURN_BOARD_VIEW_MODE_STORAGE_KEY) === TurnBoardViewMode.Grid
+      ? TurnBoardViewMode.Grid
+      : TurnBoardViewMode.Stations,
+  )
+  const handleChangeTurnBoardViewMode = (mode: TurnBoardViewMode) => {
+    setTurnBoardViewMode(mode)
+    storage.setItem(TURN_BOARD_VIEW_MODE_STORAGE_KEY, mode)
+  }
+
+  // Board summary and narrowing. All of it derives from the rows already on screen — no extra
+  // request. `isClockedIn` is optional in the contract, so a response without it reads as "on
+  // shift", which is what the board showed before it listed off-shift technicians at all.
+  const isStationClockedIn = (station: TurnBoardStationApiDto) => station.isClockedIn !== false
+  const isStationBusy = (station: TurnBoardStationApiDto) =>
+    station.currentStatus === PosOrderStatus.InService
+  const turnBoardCounts = {
+    total: turnBoard.length,
+    available: turnBoard.filter((s) => isStationClockedIn(s) && !isStationBusy(s)).length,
+    busy: turnBoard.filter((s) => isStationClockedIn(s) && isStationBusy(s)).length,
+    guestsWaiting: orderList.filter((o) => o.status === PosOrderStatus.Waiting).length,
+  }
+  const turnBoardSearchTerm = turnBoardSearch.trim().toLocaleLowerCase()
+  const visibleTurnBoard = turnBoard.filter((station) => {
+    const matchesStatus =
+      turnBoardStatusFilter === TurnBoardStatusFilter.All
+        ? true
+        : turnBoardStatusFilter === TurnBoardStatusFilter.ClockedOut
+          ? !isStationClockedIn(station)
+          : turnBoardStatusFilter === TurnBoardStatusFilter.Busy
+            ? isStationClockedIn(station) && isStationBusy(station)
+            : isStationClockedIn(station) && !isStationBusy(station)
+    if (!matchesStatus) return false
+    if (!turnBoardSearchTerm) return true
+    // Name or skill, same as the front desk asks out loud: "who can do acrylics?"
+    return [station.displayName, ...(station.serviceSkillNames ?? [])].some((value) =>
+      value.toLocaleLowerCase().includes(turnBoardSearchTerm),
+    )
+  })
   // Entry point for creating a booking (Ticket 3) — kept as the one global "+ New Booking"
   // action; Ticket 9 added the "Bookings" tab/management screen below for viewing, checking
   // in, cancelling, and rescheduling existing bookings.
@@ -953,7 +1002,6 @@ export default function PosFrontDeskView({
   const renderStationCard = (station: TurnBoardStationApiDto) => {
     const isBeeping = beepStaff.isPending && beepStation?.posStaffProfileId === station.posStaffProfileId
     const isNextTurn = station.posStaffProfileId === nextTurnTechnician?.posStaffProfileId
-    const turnsToday = turnsTodayByStaffId.get(station.posStaffProfileId) ?? 0
     return (
       <div
         key={station.posStaffProfileId}
@@ -982,7 +1030,10 @@ export default function PosFrontDeskView({
                 {t(tk(`stationStatus.${station.currentStatus}`))}
               </span>
               <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-extrabold tabular-nums text-slate-600">
-                {t(tk('stationTurnsToday'), { count: turnsToday })}
+                {t(tk('stationWeightedTurns'), {
+                  turns: formatTurnCredit(station.weightedTurnsToday),
+                  amount: formatServiceTotal(station.serviceTotalToday),
+                })}
               </span>
               {isNextTurn ? (
                 <span className="inline-flex rounded-full bg-violet-700 px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide text-white">
@@ -1125,7 +1176,10 @@ export default function PosFrontDeskView({
 
   const renderTodayTurnsPanel = () => {
     const rows = todayTurnRows
-    const totalTurnsToday = rows.reduce((total, row) => total + Math.max(0, row.turnsToday ?? 0), 0)
+    // Weighted, so the total matches the per-row figures below it and the badges on the board.
+    const totalTurnsToday = formatTurnCredit(
+      rows.reduce((total, row) => total + Math.max(0, row.weightedTurnsToday ?? 0), 0),
+    )
     // The completed-order list has ticket-level technician/service aggregates. They cannot
     // tell us which technician performed which service when a ticket has multiple techs, so
     // build the table from each order detail's serviceLines instead. Keep both identifiers as
@@ -1300,8 +1354,9 @@ export default function PosFrontDeskView({
                         </div>
                       </td>
                       <td className="px-3 py-2.5 text-right font-bold tabular-nums text-nexoraText">
-                        <p>{t('components.dashboard.views.pos.PosOrderWorkspace.technicianAssignedTurns', {
-                          count: row.turnsToday,
+                        <p>{t(tk('stationWeightedTurns'), {
+                          turns: formatTurnCredit(row.weightedTurnsToday),
+                          amount: formatServiceTotal(row.serviceTotalToday),
                         })}</p>
                         {todayNextTurnBalanceQuery.data ? (
                           <div className="mt-1 space-y-0.5 text-[10px] font-semibold text-nexoraMuted">
@@ -1762,6 +1817,75 @@ export default function PosFrontDeskView({
 
       {activeTab === PosFrontDeskTab.TurnBoard && (
         <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {([
+              ['turnBoardKpiTotal', turnBoardCounts.total],
+              ['turnBoardKpiAvailable', turnBoardCounts.available],
+              ['turnBoardKpiBusy', turnBoardCounts.busy],
+              ['turnBoardKpiWaiting', turnBoardCounts.guestsWaiting],
+            ] as const).map(([labelKey, value]) => (
+              <div key={labelKey} className="rounded-xl border border-nexoraBorder bg-white p-3">
+                <p className="text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
+                  {t(tk(labelKey))}
+                </p>
+                <p className="mt-1 text-xl font-extrabold tabular-nums text-nexoraText">{value}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex gap-1 rounded-xl border border-nexoraBorder bg-nexoraCanvas/70 p-1">
+              {TURN_BOARD_STATUS_FILTERS.map((filter) => (
+                <button
+                  key={filter}
+                  type="button"
+                  onClick={() => setTurnBoardStatusFilter(filter)}
+                  className={`rounded-md px-2.5 py-1 text-[11px] font-bold transition-colors ${
+                    turnBoardStatusFilter === filter
+                      ? 'bg-white text-nexoraBrandDark shadow-sm ring-1 ring-inset ring-nexoraBorder/70'
+                      : 'text-nexoraMuted hover:bg-nexoraBrandSoft hover:text-nexoraBrandDark'
+                  }`}
+                >
+                  {t(tk(`turnBoardStatusFilter.${filter}`))}
+                </button>
+              ))}
+            </div>
+
+            <div className="inline-flex gap-1 rounded-xl border border-nexoraBorder bg-nexoraCanvas/70 p-1">
+              {([TurnBoardViewMode.Stations, TurnBoardViewMode.Grid] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => handleChangeTurnBoardViewMode(mode)}
+                  className={`rounded-md px-2.5 py-1 text-[11px] font-bold transition-colors ${
+                    turnBoardViewMode === mode
+                      ? 'bg-white text-nexoraBrandDark shadow-sm ring-1 ring-inset ring-nexoraBorder/70'
+                      : 'text-nexoraMuted hover:bg-nexoraBrandSoft hover:text-nexoraBrandDark'
+                  }`}
+                >
+                  {t(tk(mode === TurnBoardViewMode.Grid ? 'turnBoardViewGrid' : 'turnBoardViewStations'))}
+                </button>
+              ))}
+            </div>
+
+            <input
+              type="search"
+              value={turnBoardSearch}
+              onChange={(event) => setTurnBoardSearch(event.target.value)}
+              placeholder={t(tk('turnBoardSearchPlaceholder'))}
+              aria-label={t(tk('turnBoardSearchPlaceholder'))}
+              className="h-8 min-w-[10rem] flex-1 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand sm:max-w-xs"
+            />
+
+            <button
+              type="button"
+              onClick={() => setIsTurnSettingsOpen(true)}
+              className="h-8 shrink-0 rounded-lg border border-nexoraBorder bg-white px-3 text-[11px] font-bold text-nexoraText transition-colors hover:bg-nexoraCanvas"
+            >
+              {t('components.dashboard.views.pos.WeightedTurnSettingsModal.openButton')}
+            </button>
+          </div>
+
           {isTurnBoardLoading ? (
             <div className="py-6">
               <SkeletonList count={3} lines={2} />
@@ -1770,11 +1894,20 @@ export default function PosFrontDeskView({
             <div className="py-8 text-center text-xs text-nexoraMuted">
               {t(tk('turnBoardEmpty'))}
             </div>
+          ) : visibleTurnBoard.length === 0 ? (
+            <div className="py-8 text-center text-xs text-nexoraMuted">
+              {t(tk('turnBoardNoMatches'))}
+            </div>
+          ) : turnBoardViewMode === TurnBoardViewMode.Grid ? (
+            <TurnGridView
+              stations={sortTurnBoardStations(visibleTurnBoard, nextTurnTechnician?.posStaffProfileId)}
+              nextTurnStaffId={nextTurnTechnician?.posStaffProfileId}
+            />
           ) : (
             <div
               className={`grid ${SCROLL_PANEL_MAX_HEIGHT} grid-cols-1 gap-4 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
             >
-              {sortTurnBoardStations(turnBoard, nextTurnTechnician?.posStaffProfileId).map(renderStationCard)}
+              {sortTurnBoardStations(visibleTurnBoard, nextTurnTechnician?.posStaffProfileId).map(renderStationCard)}
             </div>
           )}
           {renderTodayTurnsPanel()}
@@ -1825,6 +1958,13 @@ export default function PosFrontDeskView({
       )}
         </>
       )}
+
+      {isTurnSettingsOpen ? (
+        <WeightedTurnSettingsModal
+          businessId={businessId}
+          onClose={() => setIsTurnSettingsOpen(false)}
+        />
+      ) : null}
 
       <BeepMessageModal
         open={beepStation !== null}
