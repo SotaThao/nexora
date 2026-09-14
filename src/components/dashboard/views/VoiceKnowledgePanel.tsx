@@ -11,6 +11,7 @@ import {
 import {
   VoiceKnowledgeStatus as Status,
   VOICE_KNOWLEDGE_ERROR_KEYS,
+  VOICE_KNOWLEDGE_REQUEST_ERROR_KEYS,
 } from "@/constants/voiceKnowledge";
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
@@ -25,7 +26,8 @@ const buttonClass = "rounded-lg border px-3 py-2 text-sm disabled:opacity-50";
 export function VoiceKnowledgePanel() {
   const { t } = useTranslation();
   const text = (key: string) => t(`voiceKnowledge.${key}`);
-  const { query, mutation, actions } = useVoiceKnowledge();
+  const [page, setPage] = useState(1);
+  const { query, mutation, actions } = useVoiceKnowledge(page);
   const [message, setMessage] = useState("");
   const downloadsInProgress = useRef(new Set<string>());
   const [downloadingIds, setDownloadingIds] = useState<ReadonlySet<string>>(
@@ -35,11 +37,11 @@ export function VoiceKnowledgePanel() {
   const [facts, setFacts] = useState<
     Array<{ question: string; answer: string }>
   >([]);
-  const documents = query.data ?? [];
-  const count = documents.filter((d) => d.status !== Status.Failed).length;
-  const activeChars = documents
-    .filter((d) => d.status === Status.Active)
-    .reduce((total, d) => total + (d.condensedContent?.length ?? 0), 0);
+  const documents = query.data?.items ?? [];
+  // Tenant-wide totals from the server, not derived from `documents`: these gate the upload button and
+  // the budget meter, and the page on screen is only part of the picture once history grows.
+  const count = query.data?.slotsUsed ?? 0;
+  const activeChars = query.data?.activeCharacters ?? 0;
   const locked = (query.error as { status?: number })?.status === 403;
   const run = async (action: () => Promise<unknown>) => {
     setMessage("");
@@ -48,7 +50,13 @@ export function VoiceKnowledgePanel() {
       return true;
     } catch (error) {
       const code = String((error as { errorCode?: string })?.errorCode ?? "");
-      setMessage(text(VOICE_KNOWLEDGE_ERROR_KEYS[code] ?? "error"));
+      setMessage(
+        text(
+          VOICE_KNOWLEDGE_REQUEST_ERROR_KEYS[code] ??
+            VOICE_KNOWLEDGE_ERROR_KEYS[code] ??
+            "error",
+        ),
+      );
       return false;
     }
   };
@@ -186,6 +194,11 @@ export function VoiceKnowledgePanel() {
             </p>
           )}
           {d.isManuallyEdited && <p>{text("manual")}</p>}
+          {d.isEditedAfterApproval && (
+            <p role="alert" className="font-medium text-amber-700">
+              {text("editedAfterApproval")}
+            </p>
+          )}
           {d.isOverBudget && <p role="status">{text("overBudget")}</p>}
           {d.injectionFlags.length > 0 && (
             <p role="alert">
@@ -373,6 +386,31 @@ export function VoiceKnowledgePanel() {
           )}
         </article>
       ))}
+      {query.data && query.data.totalPages > 1 && (
+        <nav className="flex items-center gap-3" aria-label={text("pagination")}>
+          <button
+            type="button"
+            className={buttonClass}
+            disabled={!query.data.hasPreviousPage || query.isFetching}
+            onClick={() => setPage((current) => current - 1)}
+          >
+            {text("previousPage")}
+          </button>
+          <span role="status">
+            {text("pageOf")
+              .replace("{page}", String(query.data.pageNumber))
+              .replace("{total}", String(query.data.totalPages))}
+          </span>
+          <button
+            type="button"
+            className={buttonClass}
+            disabled={!query.data.hasNextPage || query.isFetching}
+            onClick={() => setPage((current) => current + 1)}
+          >
+            {text("nextPage")}
+          </button>
+        </nav>
+      )}
     </section>
   );
 }

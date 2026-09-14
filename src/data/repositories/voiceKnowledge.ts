@@ -16,11 +16,32 @@ export interface VoiceKnowledgeDocument {
   isOverBudget: boolean;
   regenerateCount: number;
   lastRegeneratedAt: string | null;
+  approvedAt: string | null;
+  isEditedAfterApproval: boolean;
+}
+
+/**
+ * A page of documents plus tenant-wide totals. `slotsUsed` and `activeCharacters` are supplied by the
+ * server rather than derived from `items`, because they gate the upload button and the budget meter and
+ * would be wrong the moment failed history spills onto a later page.
+ */
+export interface VoiceKnowledgeDocumentPage {
+  items: VoiceKnowledgeDocument[];
+  pageNumber: number;
+  totalPages: number;
+  totalCount: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+  slotsUsed: number;
+  activeCharacters: number;
 }
 
 const base = "/api/v1/merchant/nexora-voice/knowledge-documents";
 export const voiceKnowledgeRepository = {
-  list: () => httpClient.get<VoiceKnowledgeDocument[]>(base),
+  list: (pageNumber = 1) =>
+    httpClient.get<VoiceKnowledgeDocumentPage>(
+      `${base}?pageNumber=${pageNumber}`,
+    ),
   upload: (file: File) => {
     const form = new FormData();
     form.append("file", file);

@@ -10,7 +10,10 @@
 const EMPTY = {}
 
 export const qk = {
-  voiceKnowledge: () => ['merchant-voice-knowledge'],
+  voiceKnowledge: (pageNumber?: number) =>
+    pageNumber === undefined
+      ? ['merchant-voice-knowledge']
+      : ['merchant-voice-knowledge', pageNumber],
   voiceUnanswered: (from: string, to: string) => ['merchant-voice-unanswered', from, to],
   merchantSetup:    ()         => ['merchantSetup'],
   profileSettings:  ()         => ['profileSettings'],

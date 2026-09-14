@@ -21,3 +21,8 @@ export const VOICE_KNOWLEDGE_ERROR_KEYS: Record<string, string> = {
   VOICE_KNOWLEDGE_ILLEGAL_TRANSITION: "error",
   VOICE_KNOWLEDGE_FILE_STORAGE_FAILED: "ExtractionFailed",
 };
+
+export const VOICE_KNOWLEDGE_REQUEST_ERROR_KEYS: Record<string, string> = {
+  VOICE_KNOWLEDGE_UPLOAD_DAILY_LIMIT_REACHED: "uploadDailyLimit",
+  VOICE_KNOWLEDGE_UPLOAD_DAILY_BYTES_EXCEEDED: "uploadDailyBytes",
+};

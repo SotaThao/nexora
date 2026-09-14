@@ -2,13 +2,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { qk } from "@/data/queryKeys";
 import { voiceKnowledgeRepository as repository } from "@/data/repositories/voiceKnowledge";
 import { VoiceKnowledgeStatus } from "@/constants/voiceKnowledge";
-export function useVoiceKnowledge() {
+export function useVoiceKnowledge(pageNumber = 1) {
   const client = useQueryClient();
   const query = useQuery({
-    queryKey: qk.voiceKnowledge(),
-    queryFn: repository.list,
+    queryKey: qk.voiceKnowledge(pageNumber),
+    queryFn: () => repository.list(pageNumber),
     refetchInterval: (query) =>
-      query.state.data?.some(
+      query.state.data?.items.some(
         (d) => d.status === VoiceKnowledgeStatus.Processing,
       )
         ? 3000
