@@ -4286,6 +4286,8 @@
             "remaining": "Remaining",
             "inUse": "In use",
             "autoFilled": "Auto-filled",
+            "removePayment": "Remove payment {{number}}",
+            "removeDisabled": "A split needs at least two payment methods.",
             "updatesAutomatically": "Updates automatically when other amounts change.",
             "customerGaveMore": "Customer gave more",
             "cashReceived": "Cash received",
