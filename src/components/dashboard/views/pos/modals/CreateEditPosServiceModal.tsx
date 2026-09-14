@@ -78,7 +78,7 @@ export default function CreateEditPosServiceModal({
     setTags(service?.tags ?? [])
     setTagDraft('')
     setStatus(service?.status ?? 'Active')
-    setRequireCustomerApproval(false)
+    setRequireCustomerApproval(Boolean(service?.isRequiredApproval))
     setPhotoFile(null)
     setPhotoPreviewUrl(service?.photoUrl ?? null)
     setFieldErrors({})
@@ -179,6 +179,7 @@ export default function CreateEditPosServiceModal({
       categoryIds: selectedCategoryIds,
       tags: submittedTags,
       status,
+      ...(isEditMode ? { isRequiredApproval: requireCustomerApproval } : {}),
       photo: photoFile,
     })
   }
@@ -345,18 +346,20 @@ export default function CreateEditPosServiceModal({
               ))}
             </datalist>
           </div>
-          <label className="settings-service-modal-approval">
-            <input
-              type="checkbox"
-              checked={requireCustomerApproval}
-              disabled={isSubmitting}
-              onChange={(event) => setRequireCustomerApproval(event.target.checked)}
-            />
-            <span>
-              <strong>{t(`${POS_TK}.requireApprovalLabel`)}</strong>
-              <small>{t(`${POS_TK}.requireApprovalHint`)}</small>
-            </span>
-          </label>
+          {isEditMode ? (
+            <label className="settings-service-modal-approval">
+              <input
+                type="checkbox"
+                checked={requireCustomerApproval}
+                disabled={isSubmitting}
+                onChange={(event) => setRequireCustomerApproval(event.target.checked)}
+              />
+              <span>
+                <strong>{t(`${POS_TK}.requireApprovalLabel`)}</strong>
+                <small>{t(`${POS_TK}.requireApprovalHint`)}</small>
+              </span>
+            </label>
+          ) : null}
         </div>
       }
       extension={

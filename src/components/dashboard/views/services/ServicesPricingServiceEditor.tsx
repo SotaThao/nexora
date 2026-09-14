@@ -40,6 +40,13 @@ export interface ServicesPricingServiceRowAdapter<TItem> {
       }
     | null
     | undefined
+  getApproval?: (item: TItem) =>
+    | {
+        required: boolean
+        label: string
+      }
+    | null
+    | undefined
 }
 
 export interface ServicesPricingServiceRowController<TItem> {
@@ -97,6 +104,7 @@ export function ServicesPricingServiceRow<TItem>({
   const name = adapter.getName(item)
   const photoUrl = adapter.getPhotoUrl(item)
   const status = adapter.getStatus?.(item)
+  const approval = adapter.getApproval?.(item)
   const isPending = controller.isPending?.(item) ?? false
   const isDirty = controller.isDirty?.(item) ?? false
 
@@ -166,8 +174,20 @@ export function ServicesPricingServiceRow<TItem>({
             {labels.durationUnit}
           </span>
         </div>
-        {status ? (
-          <span className={`settings-service-status is-${status.tone}`}>{status.label}</span>
+        {status || approval ? (
+          <div className="settings-service-row-flags">
+            {status ? (
+              <span className={`settings-service-status is-${status.tone}`}>{status.label}</span>
+            ) : null}
+            {approval ? (
+              <span
+                className={`settings-service-approval is-${approval.required ? 'required' : 'optional'}`}
+                title={approval.label}
+              >
+                {approval.label}
+              </span>
+            ) : null}
+          </div>
         ) : null}
         <div className="settings-service-row-actions">
           {actionsExtension}

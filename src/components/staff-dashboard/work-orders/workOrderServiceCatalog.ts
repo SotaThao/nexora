@@ -22,6 +22,7 @@ export type WorkOrderCatalogService = {
   name: string
   price: number
   durationMin: number
+  isRequiredApproval?: boolean
 }
 
 export type WorkOrderCatalogCategory = {
@@ -45,6 +46,7 @@ export type WorkOrderEditableLine = {
   /** Saved line waiting for customer approval before it is actually deleted. */
   pendingRemoval?: boolean
   lineStatus?: string
+  isRequiredApproval?: boolean
   isMine?: boolean
 }
 
@@ -121,6 +123,7 @@ export function toWorkOrderEditableLines(items: WorkOrderItem[]): WorkOrderEdita
     technicianName: item.technicianName,
     approval: null,
     lineStatus: item.lineStatus,
+    isRequiredApproval: item.isRequiredApproval,
     isMine: item.isMine,
   }))
 }
@@ -304,6 +307,7 @@ export function buildWorkOrderCatalogCategories(
       name: item.name,
       price: item.price,
       durationMin: item.durationMinutes,
+      isRequiredApproval: item.isRequiredApproval,
     }
     const matched = item.categories.filter((category) => byCategory.has(category.id))
     const targets = matched.length > 0
@@ -419,6 +423,7 @@ function lineFromCatalog(
   service: WorkOrderCatalogService,
   extras?: Partial<Pick<WorkOrderEditableLine, 'key' | 'id' | 'technicianName' | 'isAddOn' | 'lineStatus' | 'isMine'>>,
 ): WorkOrderEditableLine {
+  const requiresCustomerApproval = Boolean(service.isRequiredApproval)
   return {
     key: extras?.key ?? nextLocalLineKey(),
     id: extras?.id,
@@ -428,7 +433,8 @@ function lineFromCatalog(
     durationMinutes: service.durationMin,
     isAddOn: extras?.isAddOn ?? false,
     technicianName: extras?.technicianName ?? null,
-    approval: WORK_ORDER_SERVICE_APPROVAL.pending,
+    approval: requiresCustomerApproval ? WORK_ORDER_SERVICE_APPROVAL.pending : null,
+    isRequiredApproval: requiresCustomerApproval,
     lineStatus: extras?.lineStatus,
     isMine: extras?.isMine,
   }

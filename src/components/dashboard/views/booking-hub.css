@@ -4081,6 +4081,8 @@ body.booking-appointment-panel-modal-open {
   border: 1px solid var(--nexora-border);
   border-radius: 11px;
   background: #fff;
+  container-type: inline-size;
+  container-name: service-category;
 }
 
 .booking-hub-view .settings-service-category + .settings-service-category {
@@ -4250,6 +4252,10 @@ body.booking-appointment-panel-modal-open {
   --settings-service-grid-columns: 28px 34px minmax(88px, 1fr) 76px 88px 72px 76px;
 }
 
+.booking-hub-view .settings-service-category-body.has-status-column.has-approval-column {
+  --settings-service-grid-columns: 28px 34px minmax(72px, 1fr) 68px 76px 64px 58px 72px;
+}
+
 .booking-hub-view .settings-service-sort-item {
   min-width: 0;
 }
@@ -4380,6 +4386,46 @@ body.booking-appointment-panel-modal-open {
 .booking-hub-view .settings-service-status.is-inactive {
   background: #eef2f7;
   color: #64748b;
+}
+
+.booking-hub-view .settings-service-row-flags {
+  display: contents;
+}
+
+.booking-hub-view .settings-service-approval {
+  display: inline-flex;
+  min-height: 24px;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+  justify-self: start;
+  overflow: hidden;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 750;
+  line-height: 1.2;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.booking-hub-view .settings-service-approval.is-required {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.booking-hub-view .settings-service-approval.is-optional {
+  background: #eef2f7;
+  color: #64748b;
+}
+
+.booking-hub-view .settings-service-header-approval {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .booking-hub-view .settings-service-row.is-compact .settings-service-remove,
@@ -6116,6 +6162,11 @@ body.booking-appointment-panel-modal-open {
   padding-left: 9px;
 }
 
+.booking-hub-view .settings-service-category-body.has-approval-column .settings-service-header span:nth-child(6),
+.booking-hub-view .settings-service-category-body.has-approval-column .settings-service-header span:nth-child(7) {
+  padding-left: 0;
+}
+
 .booking-hub-view .settings-service-empty {
   display: grid;
   justify-items: start;
@@ -7504,6 +7555,30 @@ body.booking-appointment-panel-modal-open {
   }
 }
 
+@container service-category (max-width: 960px) {
+  .settings-service-category-body.has-status-column.has-approval-column {
+    --settings-service-grid-columns: 28px 32px minmax(64px, 1fr) 64px 72px 88px 68px;
+  }
+
+  .settings-service-category-body.has-approval-column .settings-service-row-flags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .settings-service-category-body.has-approval-column .settings-service-header-approval {
+    display: none;
+  }
+}
+
+@container service-category (max-width: 720px) {
+  .settings-service-category-body.has-status-column.has-approval-column {
+    --settings-service-grid-columns: 28px 30px minmax(56px, 1fr) 60px 68px 80px 60px;
+  }
+}
+
 @media (max-width: 639px) {
   .booking-hub-view .settings-service-header {
     display: none;
@@ -7554,13 +7629,38 @@ body.booking-appointment-panel-modal-open {
   .booking-hub-view
     .settings-service-category-body.has-status-column
     .settings-service-edit-grid
-    > .settings-service-status {
+    > .settings-service-row-flags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
     grid-column: 5;
     grid-row: 2;
     width: 100%;
-    padding-right: 4px;
-    padding-left: 4px;
-    white-space: normal;
+    min-width: 0;
+  }
+
+  .booking-hub-view
+    .settings-service-category-body.has-status-column.has-approval-column
+    .settings-service-edit-grid
+    > .settings-service-row-flags {
+    grid-column: 4 / 6;
+  }
+
+  .booking-hub-view
+    .settings-service-category-body.has-status-column
+    .settings-service-edit-grid
+    .settings-service-status,
+  .booking-hub-view
+    .settings-service-category-body.has-status-column
+    .settings-service-edit-grid
+    .settings-service-approval {
+    width: auto;
+    max-width: 100%;
+    padding-right: 6px;
+    padding-left: 6px;
+    white-space: nowrap;
   }
 
   .booking-hub-view .settings-service-edit-grid > .settings-service-input {
