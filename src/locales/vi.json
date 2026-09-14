@@ -4199,6 +4199,8 @@
             "remaining": "Còn lại",
             "inUse": "Đang dùng",
             "autoFilled": "Tự điền",
+            "removePayment": "Xóa thanh toán {{number}}",
+            "removeDisabled": "Thanh toán chia cần ít nhất hai phương thức.",
             "updatesAutomatically": "Tự cập nhật khi các số tiền khác thay đổi.",
             "customerGaveMore": "Khách đưa thêm",
             "cashReceived": "Tiền mặt nhận",
