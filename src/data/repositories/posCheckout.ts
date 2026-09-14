@@ -5,6 +5,7 @@
  * posTurnBoardRepository — a Staff caller may be linked to more than one business.
  */
 import httpClient from '../../lib/httpClient'
+import type { PosCheckoutPaymentMethodType } from '../../constants/posCheckoutPaymentMethod'
 import { unlessOptimisticId } from '../../utils/uuid'
 import type {
   AddOrderCustomServiceLinePayload,
@@ -229,6 +230,17 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
       return await client.put<boolean>(
         `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/tip`,
         { tipAmount },
+      )
+    },
+
+    async setOrderPaymentMethod(
+      businessId: string,
+      orderId: string,
+      paymentMethodType: PosCheckoutPaymentMethodType,
+    ): Promise<boolean> {
+      return await client.put<boolean>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/payment-method`,
+        { paymentMethodType },
       )
     },
 

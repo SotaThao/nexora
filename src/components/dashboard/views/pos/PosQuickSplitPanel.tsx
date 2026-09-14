@@ -315,6 +315,11 @@ export default function PosQuickSplitPanel({
   // succeeded, and never when there is nothing stored at all.
   const showSaved = savedAllocations.length > 0 && !isDirty && !isSaving
 
+  // Deliberately not gated on `isDirty`: a split reopened and left alone still answers Save by
+  // closing. Disabling the button there looks like a dead control — the cashier gets no action and
+  // no reason — when the honest answer is that the split on screen is already what the server holds.
+  const canSave = !disabled && !isSaving && !rows.some(carriesMoreTipThanAmount)
+
   const findSaveBlockMessage = (): string | null => {
     const tipRow = rows.find(carriesMoreTipThanAmount)
     if (tipRow) return t(`${TK}.errorTipExceedsAmount`, { amount: formatUsdAmount(tipAmount) })
@@ -350,7 +355,10 @@ export default function PosQuickSplitPanel({
       return
     }
 
-    if (!isDirty) return
+    if (!isDirty) {
+      onBack()
+      return
+    }
 
     onSave(payload)
   }

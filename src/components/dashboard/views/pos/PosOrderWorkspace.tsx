@@ -34,6 +34,7 @@ import {
   useSetOrderDiscount,
   useSetOrderNote,
   useSetOrderStaffTipSplit,
+  useSetOrderPaymentMethod,
   useSetOrderTip,
   useUpdateOrderProductLineQuantity,
 } from '../../../../data/hooks/usePosCheckout'
@@ -149,6 +150,10 @@ const CORE_CHECKOUT_PAYMENT_METHODS = new Set<PosCheckoutPaymentMethodType>([
 
 // Keep the existing change-service flow available from Ticket Detail.
 const SHOW_CHANGE_SERVICE_ACTION = true
+
+// Long enough to swallow a run through the chip row, short enough that stepping away right after
+// the last tap still writes before the cashier can reach anything that reads the order back.
+const PAYMENT_METHOD_SAVE_DELAY_MS = 500
 
 // Split amounts are compared in whole cents: a split that is one cent out has to read as one cent
 // out, and float dollars cannot be trusted to say so.
@@ -391,6 +396,49 @@ export default function PosOrderWorkspace({
   const orderSettings = useOrderSettings(businessId)
   const setOrderDiscount = useSetOrderDiscount(businessId)
   const setTip = useSetOrderTip(businessId)
+  const setOrderPaymentMethod = useSetOrderPaymentMethod(businessId)
+
+  // Picking a chip is instant on screen — the selection is local state — so the write behind it is
+  // coalesced rather than fired per tap. A cashier flicking Cash → Card → Split Pay leaves one
+  // request, not three, and nothing on screen waits for any of them.
+  const pendingPaymentMethodRef = useRef<PosCheckoutPaymentMethodType | null>(null)
+  const paymentMethodSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearPaymentMethodSave = () => {
+    if (paymentMethodSaveTimerRef.current !== null) clearTimeout(paymentMethodSaveTimerRef.current)
+    paymentMethodSaveTimerRef.current = null
+    pendingPaymentMethodRef.current = null
+  }
+
+  const flushPaymentMethodSave = () => {
+    const pending = pendingPaymentMethodRef.current
+    clearPaymentMethodSave()
+    if (pending === null) return
+    // A failed write costs only the persistence — the chip on screen still drives Pay — so it
+    // reports itself without pulling the cashier out of the checkout.
+    setOrderPaymentMethod.mutate({ orderId, paymentMethodType: pending }, { onError: reportError })
+  }
+
+  const queuePaymentMethodSave = (value: PosCheckoutPaymentMethodType) => {
+    // Landing back on what the order already holds cancels the pending write instead of sending a
+    // request that would change nothing.
+    if (order?.paymentMethodType === value) {
+      clearPaymentMethodSave()
+      return
+    }
+    pendingPaymentMethodRef.current = value
+    if (paymentMethodSaveTimerRef.current !== null) clearTimeout(paymentMethodSaveTimerRef.current)
+    paymentMethodSaveTimerRef.current = setTimeout(flushPaymentMethodSave, PAYMENT_METHOD_SAVE_DELAY_MS)
+  }
+
+  // Read through a ref so the unmount cleanup below runs the current closure rather than the one
+  // captured on first render, without re-subscribing on every keystroke elsewhere in the screen.
+  const flushPaymentMethodSaveRef = useRef(flushPaymentMethodSave)
+  flushPaymentMethodSaveRef.current = flushPaymentMethodSave
+
+  // Leaving the checkout is the cashier finishing with the chip, so the pending choice is written
+  // rather than dropped — otherwise a tap followed straight by Back would be silently lost.
+  useEffect(() => () => flushPaymentMethodSaveRef.current(), [])
   const setNote = useSetOrderNote(businessId)
   const setStaffTipSplit = useSetOrderStaffTipSplit(businessId)
   const setPaymentAllocations = useSetOrderPaymentAllocations(businessId)
@@ -662,7 +710,16 @@ export default function PosOrderWorkspace({
     setNoteInput(mode === 'edit' ? initialTicketNote ?? order.note ?? '' : order.note ?? '')
     if (mode !== 'success') {
       setReceiptChoice('none')
-      setPaymentMethod('Cash')
+      // The chip the cashier picked is stored on the order, so reopening checkout shows their
+      // choice rather than dropping back to the Cash default. Saved portions are the fallback:
+      // orders split before the method was persisted carry allocations but no method of their own.
+      setPaymentMethod(
+        isPosCheckoutPaymentMethod(order.paymentMethodType)
+          ? order.paymentMethodType
+          : order.paymentAllocations.length > 0
+            ? PosCheckoutPaymentMethod.SplitPay
+            : PosCheckoutPaymentMethod.Cash,
+      )
       cashReceivedWasEditedRef.current = false
       setCashReceived(formatUsdInputAmount(order.total))
       setCompletedPayment(null)
@@ -1420,6 +1477,9 @@ export default function PosOrderWorkspace({
   const runComplete = () => {
     if (!order) return
     if (!startTicketAction(TicketBusySurface.Complete)) return
+    // Complete carries the method itself and closes the order to edits, so a queued write landing
+    // after it would only fail — and show the cashier an error about a payment that went through.
+    clearPaymentMethodSave()
     const submittedReceiptMode = receiptChoice
     completeOrder.mutate(
       {
@@ -2175,6 +2235,9 @@ export default function PosOrderWorkspace({
                     value={paymentMethod}
                     onChange={(value) => {
                       setPaymentMethod(value)
+                      // Stored so the choice survives reopening the ticket, coalesced so holding
+                      // down the chip row does not become a request per tap.
+                      queuePaymentMethodSave(value)
                       // Split Pay is a doorway, not a method: picking it opens the dialog where the
                       // real portions get built. The payment is still confirmed by Pay below.
                       if (value === PosCheckoutPaymentMethod.SplitPay) setIsQuickSplitOpen(true)
