@@ -71,6 +71,7 @@ export default function ChangeTechnicianModal({
   const sortedTechnicians = sortTurnBoardStations(
     technicians.map(technician => ({
       ...technician,
+      staffLevelName: technician.staffLevelName?.replace(/^(Level\s+\d+)\s*[·•:–—-].*$/i, '$1'),
       currentStatus: technician.isBusy ? PosOrderStatus.InService : PosOrderStatus.Waiting,
       isClockedIn: !technician.isOffShift,
       weightedTurnsToday: technician.assignedTurns,
