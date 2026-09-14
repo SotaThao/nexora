@@ -11,7 +11,7 @@
 // page (PosCheckInTab / CheckInSurface), the same one the customer kiosk runs.
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowLeft, Loader2, Package, UserRound, X, Printer, ClipboardCheck } from 'lucide-react'
+import { ArrowLeft, Loader2, Package, UserRound, Plus, X, Printer, ClipboardCheck } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import type { TechnicianOption } from '../../../checkin/parts/TechnicianPickerGrid'
 import { useNotification } from '../../../../contexts/NotificationContext'
@@ -154,6 +154,13 @@ const SHOW_CHANGE_SERVICE_ACTION = true
 // out, and float dollars cannot be trusted to say so.
 function toPaymentCents(amount: number) {
   return Math.round(amount * 100)
+}
+
+function isRedundantEstimateLineNote(note: string | undefined, orderNote: string) {
+  // Older Estimate tickets saved this boilerplate on every quantity unit. Suppress only
+  // the exact persisted format when the shared quote is present; leave stored notes intact.
+  return /^Estimated unit price: \$\d+\.\d{2}\. Confirm at checkout\.$/.test(note?.trim() ?? '')
+    && /^Service estimate: subtotal \$\d+\.\d{2}; discount (?:\d+(?:\.\d+)?%|\$\d+\.\d{2}) \(\$\d+\.\d{2}\); estimated total \$\d+\.\d{2}\. Tax and tip excluded\. Confirm final prices and discount at checkout\.$/.test(orderNote.trim())
 }
 
 function round2(value: number) {
@@ -871,7 +878,8 @@ export default function PosOrderWorkspace({
   }
 
   const noteLines = visibleLines.filter(
-    (l): l is DisplayServiceLine => l.itemType === 'Service' && Boolean(l.note?.trim()),
+    (l): l is DisplayServiceLine => l.itemType === 'Service' && Boolean(l.note?.trim())
+      && !isRedundantEstimateLineNote(l.note, noteInput),
   )
 
   const reportError = (err: unknown) => {
@@ -1506,6 +1514,7 @@ export default function PosOrderWorkspace({
 
             <CategoryGroupedCatalogPicker
               variant="grid"
+              showDuration
               items={serviceCatalog}
               isPending={isServiceCatalogPending}
               onAdd={(itemId) => {
@@ -1553,8 +1562,9 @@ export default function PosOrderWorkspace({
                       })
                     }
                     disabled={isBusy}
-                    className="h-7 shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrandSoft/50 px-3 text-[11px] font-bold text-nexoraBrandDark transition-colors hover:bg-nexoraBrandSoft disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex h-7 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-nexoraBrand bg-nexoraBrandSoft/50 px-3 text-[11px] font-bold text-nexoraBrandDark transition-colors hover:bg-nexoraBrandSoft disabled:cursor-not-allowed disabled:opacity-60"
                   >
+                    <Plus aria-hidden="true" className="h-4 w-4 shrink-0" />
                     {t('components.dashboard.views.pos.PosOrderWorkspace.addCustomServiceButton')}
                   </button>
                 ) : null}
@@ -2484,7 +2494,7 @@ export default function PosOrderWorkspace({
       lines: group.lines.map((line) => ({
         id: line.key,
         name: line.serviceName,
-        note: line.note,
+        note: isRedundantEstimateLineNote(line.note, noteInput) ? undefined : line.note,
         amount: lineTotal(line),
         discountLabel: line.discountAmount > 0
           ? formatDiscountPriceBadge(line.discountType, line.discountValue, line.discountAmount)
