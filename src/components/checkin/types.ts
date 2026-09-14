@@ -16,6 +16,11 @@ export interface CheckInService {
   categories: { id: string; name: string; displayOrder?: number }[]
 }
 
+export interface CheckInSelectedService extends CheckInService {
+  // Identifies one occurrence, even when several lines use the same catalog service.
+  lineId: string
+}
+
 export interface CheckInTechnician {
   posStaffProfileId: string
   displayName: string
