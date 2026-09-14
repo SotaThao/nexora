@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Camera, FolderOpen, ImageOff } from 'lucide-react'
+import { Camera, FolderOpen, Image as ImageIcon, ImageOff } from 'lucide-react'
 import CameraCaptureModal from '../../../ui/CameraCaptureModal'
 import ImageFileInput from '../../../ui/ImageFileInput'
 import {
@@ -283,6 +283,7 @@ export interface ServicesPricingServiceModalLabels {
   close: string
   cancel: string
   submit: string
+  imageCompactHelp?: string
 }
 
 export function ServicesPricingFieldLabel({
@@ -313,11 +314,15 @@ export function ServicesPricingServiceModal({
   labels,
   nameAction,
   beforeImageExtension,
+  overviewFieldsExtension,
+  afterDescriptionExtension,
   extension,
   error,
   fieldErrors,
   categoriesError,
   isSubmitting = false,
+  layout = 'default',
+  size = 'default',
 }: {
   open: boolean
   mode: 'create' | 'edit'
@@ -327,20 +332,252 @@ export function ServicesPricingServiceModal({
   labels: ServicesPricingServiceModalLabels
   nameAction?: ReactNode
   beforeImageExtension?: ReactNode
+  overviewFieldsExtension?: ReactNode
+  afterDescriptionExtension?: ReactNode
   extension?: ReactNode
   error?: string
   fieldErrors?: ServicesPricingServiceModalFieldErrors
   categoriesError?: string
   isSubmitting?: boolean
+  layout?: 'default' | 'overview'
+  size?: 'default' | 'wide'
 }) {
   const [cameraOpen, setCameraOpen] = useState(false)
+  const isOverview = layout === 'overview'
 
   if (!open) return null
+
+  const categoriesField = (
+    <div
+      className={`settings-field settings-service-modal-field-name${categoriesError ? ' has-error' : ''}`}
+    >
+      <ServicesPricingFieldLabel
+        label={labels.categories}
+        requirement={labels.required}
+      />
+      <div
+        className={`settings-service-modal-categories${categoriesError ? ' has-error' : ''}`}
+        role="group"
+        aria-invalid={categoriesError ? 'true' : undefined}
+        aria-describedby={categoriesError ? 'shared-services-categories-error' : undefined}
+        aria-label={labels.categories}
+      >
+        {categories.length === 0 ? (
+          <div className="settings-service-modal-categories-empty">
+            {labels.categoriesEmpty}
+          </div>
+        ) : (
+          categories.map((category) => {
+            const checked = category.checked ?? value.categoryIds.includes(category.id)
+            return (
+              <label
+                key={category.id}
+                className={`settings-service-modal-category-option${checked ? ' is-selected' : ''}${category.disabled ? ' is-disabled' : ''}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  disabled={category.disabled || isSubmitting}
+                  onChange={() => controller.onToggleCategory(category.id)}
+                />
+                <span>{category.name}</span>
+              </label>
+            )
+          })
+        )}
+      </div>
+      {categoriesError ? (
+        <small id="shared-services-categories-error" className="settings-field-error" role="alert">
+          {categoriesError}
+        </small>
+      ) : (
+        <span className="settings-help">{labels.categoriesHelp}</span>
+      )}
+    </div>
+  )
+
+  const nameField = (
+    <div
+      className={`settings-field settings-service-modal-field-name${fieldErrors?.name ? ' has-error' : ''}`}
+    >
+      <div className="settings-service-modal-field-head">
+        <label htmlFor="shared-services-name-input">
+          <ServicesPricingFieldLabel label={labels.name} requirement={labels.required} />
+        </label>
+        {nameAction}
+      </div>
+      <input
+        id="shared-services-name-input"
+        className="settings-input"
+        type="text"
+        value={value.name}
+        placeholder={labels.namePlaceholder}
+        autoComplete="off"
+        disabled={isSubmitting}
+        aria-label={labels.name}
+        aria-invalid={fieldErrors?.name ? 'true' : undefined}
+        aria-describedby={fieldErrors?.name ? 'shared-services-name-error' : undefined}
+        onChange={(event) => controller.onFieldChange('name', event.target.value)}
+      />
+      {fieldErrors?.name ? (
+        <small id="shared-services-name-error" className="settings-field-error" role="alert">
+          {fieldErrors.name}
+        </small>
+      ) : null}
+    </div>
+  )
+
+  const priceField = (
+    <label className={`settings-field${fieldErrors?.price ? ' has-error' : ''}`}>
+      <ServicesPricingFieldLabel label={labels.price} requirement={labels.required} />
+      <div className="settings-service-input-wrap settings-service-modal-input-wrap">
+        <span className="settings-service-prefix" aria-hidden="true">$</span>
+        <input
+          className="settings-input settings-service-modal-affix-input is-price"
+          type="text"
+          inputMode="decimal"
+          maxLength={SERVICE_PRICE_INPUT_MAX_LENGTH}
+          value={value.price}
+          placeholder={labels.pricePlaceholder}
+          aria-label={labels.price}
+          aria-invalid={fieldErrors?.price ? 'true' : undefined}
+          aria-describedby={fieldErrors?.price ? 'shared-services-price-error' : undefined}
+          disabled={isSubmitting}
+          onChange={(event) =>
+            controller.onFieldChange('price', normalizeServicesPricingPrice(event.target.value))
+          }
+        />
+      </div>
+      {fieldErrors?.price ? (
+        <small id="shared-services-price-error" className="settings-field-error" role="alert">
+          {fieldErrors.price}
+        </small>
+      ) : null}
+    </label>
+  )
+
+  const durationField = (
+    <label className={`settings-field${fieldErrors?.duration ? ' has-error' : ''}`}>
+      <ServicesPricingFieldLabel label={labels.duration} requirement={labels.required} />
+      <div className="settings-service-input-wrap settings-service-modal-input-wrap">
+        <input
+          className="settings-input settings-service-modal-affix-input is-duration"
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          maxLength={SERVICE_DURATION_INPUT_MAX_LENGTH}
+          value={value.duration}
+          placeholder={labels.durationPlaceholder}
+          aria-label={labels.duration}
+          aria-invalid={fieldErrors?.duration ? 'true' : undefined}
+          aria-describedby={fieldErrors?.duration ? 'shared-services-duration-error' : undefined}
+          disabled={isSubmitting}
+          onChange={(event) =>
+            controller.onFieldChange(
+              'duration',
+              event.target.value.replace(/\D/g, '').slice(0, SERVICE_DURATION_INPUT_MAX_LENGTH),
+            )
+          }
+        />
+        <span className="settings-service-suffix" aria-hidden="true">
+          {labels.durationUnit}
+        </span>
+      </div>
+      {fieldErrors?.duration ? (
+        <small id="shared-services-duration-error" className="settings-field-error" role="alert">
+          {fieldErrors.duration}
+        </small>
+      ) : null}
+    </label>
+  )
+
+  const descriptionField = (
+    <label className={`settings-field settings-service-modal-field-name${isOverview ? ' settings-service-modal-description-field' : ''}`}>
+      <ServicesPricingFieldLabel
+        label={labels.description}
+        requirement={labels.optional}
+        optional
+      />
+      <textarea
+        className="settings-input settings-service-modal-description"
+        value={value.description}
+        maxLength={SERVICE_DESCRIPTION_MAX_LENGTH}
+        rows={isOverview ? 3 : 4}
+        aria-label={labels.description}
+        placeholder={labels.descriptionPlaceholder}
+        disabled={isSubmitting}
+        onChange={(event) =>
+          controller.onFieldChange(
+            'description',
+            event.target.value.slice(0, SERVICE_DESCRIPTION_MAX_LENGTH),
+          )
+        }
+      />
+      <span className="settings-service-modal-character-count">
+        {value.description.length}/{SERVICE_DESCRIPTION_MAX_LENGTH}
+      </span>
+    </label>
+  )
+
+  const photoField = (
+    <div className={`settings-field${isOverview ? '' : ' settings-service-modal-field-name'}`}>
+      <ServicesPricingFieldLabel
+        label={labels.image}
+        requirement={labels.optional}
+        optional
+      />
+      <div className="settings-service-modal-photo">
+        {isOverview || value.photoPreviewUrl ? (
+          <div className="settings-service-modal-photo-preview" aria-hidden="true">
+            {value.photoPreviewUrl ? (
+              <img src={value.photoPreviewUrl} alt="" />
+            ) : (
+              <ImageIcon />
+            )}
+          </div>
+        ) : null}
+        <div className="settings-service-modal-photo-actions">
+          <button
+            type="button"
+            className="settings-service-modal-photo-action"
+            disabled={isSubmitting}
+            aria-label={labels.takePhoto}
+            onClick={() => setCameraOpen(true)}
+          >
+            <Camera aria-hidden="true" />
+            <span>{labels.takePhoto}</span>
+          </button>
+          <ImageFileInput
+            as="label"
+            accept="image/jpeg,image/png,image/webp"
+            inputAriaLabel={labels.photoUploadAria}
+            disabled={isSubmitting}
+            onPickFile={controller.onPhotoChange}
+            className={`settings-service-modal-photo-action${isSubmitting ? ' is-disabled' : ''}`}
+          >
+            <FolderOpen aria-hidden="true" />
+            <span>{labels.chooseImage}</span>
+          </ImageFileInput>
+        </div>
+        <div className="settings-service-modal-photo-help">
+          {isOverview ? (
+            <p>{labels.imageCompactHelp ?? 'JPG, PNG, WebP · Up to 10MB'}</p>
+          ) : (
+            <>
+              <p>{labels.imageHelp}</p>
+              <p>{labels.imageFormats}</p>
+              <p>{labels.imageSizeHint}</p>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 
   return (
     <div className="booking-hub-view settings-service-modal" role="presentation">
       <div
-        className="settings-service-dialog"
+        className={`settings-service-dialog${size === 'wide' ? ' is-wide' : ''}${isOverview ? ' is-overview' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="shared-services-service-modal-title"
@@ -364,216 +601,45 @@ export function ServicesPricingServiceModal({
 
         <div className="settings-service-modal-body">
           <div className="settings-service-modal-grid items-start">
-            <div
-              className={`settings-field settings-service-modal-field-name${categoriesError ? ' has-error' : ''}`}
-            >
-              <ServicesPricingFieldLabel
-                label={labels.categories}
-                requirement={labels.required}
-              />
-              <div
-                className={`settings-service-modal-categories${categoriesError ? ' has-error' : ''}`}
-                role="group"
-                aria-invalid={categoriesError ? 'true' : undefined}
-                aria-describedby={categoriesError ? 'shared-services-categories-error' : undefined}
-                aria-label={labels.categories}
-              >
-                {categories.length === 0 ? (
-                  <div className="settings-service-modal-categories-empty">
-                    {labels.categoriesEmpty}
+            {categoriesField}
+
+            {isOverview ? (
+              <div className="settings-service-modal-overview">
+                <div className="settings-service-modal-overview-photo">{photoField}</div>
+                <div className="settings-service-modal-overview-fields">
+                  {nameField}
+                  <div className="settings-service-modal-metrics">
+                    {priceField}
+                    {durationField}
                   </div>
-                ) : (
-                  categories.map((category) => {
-                    const checked = category.checked ?? value.categoryIds.includes(category.id)
-                    return (
-                      <label
-                        key={category.id}
-                        className={`settings-service-modal-category-option${checked ? ' is-selected' : ''}${category.disabled ? ' is-disabled' : ''}`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          disabled={category.disabled || isSubmitting}
-                          onChange={() => controller.onToggleCategory(category.id)}
-                        />
-                        <span>{category.name}</span>
-                      </label>
-                    )
-                  })
-                )}
+                  {overviewFieldsExtension}
+                </div>
               </div>
-              {categoriesError ? (
-                <small id="shared-services-categories-error" className="settings-field-error" role="alert">
-                  {categoriesError}
-                </small>
-              ) : (
-                <span className="settings-help">{labels.categoriesHelp}</span>
-              )}
-            </div>
-
-            <div
-              className={`settings-field settings-service-modal-field-name${fieldErrors?.name ? ' has-error' : ''}`}
-            >
-              <div className="settings-service-modal-field-head">
-                <label htmlFor="shared-services-name-input">
-                  <ServicesPricingFieldLabel label={labels.name} requirement={labels.required} />
-                </label>
-                {nameAction}
-              </div>
-              <input
-                id="shared-services-name-input"
-                className="settings-input"
-                type="text"
-                value={value.name}
-                placeholder={labels.namePlaceholder}
-                autoComplete="off"
-                disabled={isSubmitting}
-                aria-label={labels.name}
-                aria-invalid={fieldErrors?.name ? 'true' : undefined}
-                aria-describedby={fieldErrors?.name ? 'shared-services-name-error' : undefined}
-                onChange={(event) => controller.onFieldChange('name', event.target.value)}
-              />
-              {fieldErrors?.name ? (
-                <small id="shared-services-name-error" className="settings-field-error" role="alert">
-                  {fieldErrors.name}
-                </small>
-              ) : null}
-            </div>
-
-            <label className={`settings-field${fieldErrors?.price ? ' has-error' : ''}`}>
-              <ServicesPricingFieldLabel label={labels.price} requirement={labels.required} />
-              <div className="settings-service-input-wrap settings-service-modal-input-wrap">
-                <span className="settings-service-prefix" aria-hidden="true">$</span>
-                <input
-                  className="settings-input settings-service-modal-affix-input is-price"
-                  type="text"
-                  inputMode="decimal"
-                  maxLength={SERVICE_PRICE_INPUT_MAX_LENGTH}
-                  value={value.price}
-                  placeholder={labels.pricePlaceholder}
-                  aria-label={labels.price}
-                  aria-invalid={fieldErrors?.price ? 'true' : undefined}
-                  aria-describedby={fieldErrors?.price ? 'shared-services-price-error' : undefined}
-                  disabled={isSubmitting}
-                  onChange={(event) =>
-                    controller.onFieldChange('price', normalizeServicesPricingPrice(event.target.value))
-                  }
-                />
-              </div>
-              {fieldErrors?.price ? (
-                <small id="shared-services-price-error" className="settings-field-error" role="alert">
-                  {fieldErrors.price}
-                </small>
-              ) : null}
-            </label>
-
-            <label className={`settings-field${fieldErrors?.duration ? ' has-error' : ''}`}>
-              <ServicesPricingFieldLabel label={labels.duration} requirement={labels.required} />
-              <div className="settings-service-input-wrap settings-service-modal-input-wrap">
-                <input
-                  className="settings-input settings-service-modal-affix-input is-duration"
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={SERVICE_DURATION_INPUT_MAX_LENGTH}
-                  value={value.duration}
-                  placeholder={labels.durationPlaceholder}
-                  aria-label={labels.duration}
-                  aria-invalid={fieldErrors?.duration ? 'true' : undefined}
-                  aria-describedby={fieldErrors?.duration ? 'shared-services-duration-error' : undefined}
-                  disabled={isSubmitting}
-                  onChange={(event) =>
-                    controller.onFieldChange(
-                      'duration',
-                      event.target.value.replace(/\D/g, '').slice(0, SERVICE_DURATION_INPUT_MAX_LENGTH),
-                    )
-                  }
-                />
-                <span className="settings-service-suffix" aria-hidden="true">
-                  {labels.durationUnit}
-                </span>
-              </div>
-              {fieldErrors?.duration ? (
-                <small id="shared-services-duration-error" className="settings-field-error" role="alert">
-                  {fieldErrors.duration}
-                </small>
-              ) : null}
-            </label>
-
-            <label className="settings-field settings-service-modal-field-name">
-              <ServicesPricingFieldLabel
-                label={labels.description}
-                requirement={labels.optional}
-                optional
-              />
-              <textarea
-                className="settings-input settings-service-modal-description"
-                value={value.description}
-                maxLength={SERVICE_DESCRIPTION_MAX_LENGTH}
-                rows={4}
-                aria-label={labels.description}
-                placeholder={labels.descriptionPlaceholder}
-                disabled={isSubmitting}
-                onChange={(event) =>
-                  controller.onFieldChange(
-                    'description',
-                    event.target.value.slice(0, SERVICE_DESCRIPTION_MAX_LENGTH),
-                  )
-                }
-              />
-              <span className="settings-service-modal-character-count">
-                {value.description.length}/{SERVICE_DESCRIPTION_MAX_LENGTH}
-              </span>
-            </label>
-
-            {beforeImageExtension ? (
-              <div className="settings-service-modal-before-image">
-                {beforeImageExtension}
-              </div>
-            ) : null}
-
-            <div className="settings-field settings-service-modal-field-name">
-              <ServicesPricingFieldLabel
-                label={labels.image}
-                requirement={labels.optional}
-                optional
-              />
-              <div className="settings-service-modal-photo">
-                {value.photoPreviewUrl ? (
-                  <div className="settings-service-modal-photo-preview" aria-hidden="true">
-                    <img src={value.photoPreviewUrl} alt="" />
+            ) : (
+              <>
+                {nameField}
+                {priceField}
+                {durationField}
+                {descriptionField}
+                {beforeImageExtension ? (
+                  <div className="settings-service-modal-before-image">
+                    {beforeImageExtension}
                   </div>
                 ) : null}
-                <div className="settings-service-modal-photo-actions">
-                  <button
-                    type="button"
-                    className="settings-service-modal-photo-action"
-                    disabled={isSubmitting}
-                    aria-label={labels.takePhoto}
-                    onClick={() => setCameraOpen(true)}
-                  >
-                    <Camera aria-hidden="true" />
-                    <span>{labels.takePhoto}</span>
-                  </button>
-                  <ImageFileInput
-                    as="label"
-                    accept="image/jpeg,image/png,image/webp"
-                    inputAriaLabel={labels.photoUploadAria}
-                    disabled={isSubmitting}
-                    onPickFile={controller.onPhotoChange}
-                    className={`settings-service-modal-photo-action${isSubmitting ? ' is-disabled' : ''}`}
-                  >
-                    <FolderOpen aria-hidden="true" />
-                    <span>{labels.chooseImage}</span>
-                  </ImageFileInput>
-                </div>
-                <div className="settings-service-modal-photo-help">
-                  <p>{labels.imageHelp}</p>
-                  <p>{labels.imageFormats}</p>
-                  <p>{labels.imageSizeHint}</p>
-                </div>
-              </div>
-            </div>
+                {photoField}
+              </>
+            )}
+
+            {isOverview ? (
+              <>
+                {descriptionField}
+                {afterDescriptionExtension ? (
+                  <div className="settings-service-modal-after-description">
+                    {afterDescriptionExtension}
+                  </div>
+                ) : null}
+              </>
+            ) : null}
           </div>
 
           {extension ? <div className="settings-service-modal-extension">{extension}</div> : null}

@@ -403,6 +403,13 @@ body:not(.homepage-active):not(.public-booking-active) input.vlinkpay-address-in
     font-size: 13px !important;
     font-weight: 600;
   }
+
+  /* POS Edit Service dialog — match HTML 12px fields, not the 16px iOS floor. */
+  body:not(.homepage-active):not(.public-booking-active) .booking-hub-view .settings-service-dialog.is-overview input.settings-input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+  body:not(.homepage-active):not(.public-booking-active) .booking-hub-view .settings-service-dialog.is-overview textarea.settings-input {
+    font-size: 12px !important;
+    font-weight: 400;
+  }
 }
 
 /* Prevent zoom on all other mobile browsers on narrow viewports */
@@ -417,6 +424,13 @@ body:not(.homepage-active):not(.public-booking-active) input.vlinkpay-address-in
   body:not(.homepage-active):not(.public-booking-active) .booking-hub-view .cust-modal select {
     font-size: 13px !important;
     font-weight: 600;
+  }
+
+  /* POS Edit Service dialog — match HTML 12px fields, not the 16px iOS floor. */
+  body:not(.homepage-active):not(.public-booking-active) .booking-hub-view .settings-service-dialog.is-overview input.settings-input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+  body:not(.homepage-active):not(.public-booking-active) .booking-hub-view .settings-service-dialog.is-overview textarea.settings-input {
+    font-size: 12px !important;
+    font-weight: 400;
   }
 }
 
