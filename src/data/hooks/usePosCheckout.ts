@@ -8,6 +8,7 @@ import { useQueries, useQuery, useMutation, useQueryClient, type QueryKey } from
 import { qk } from '../queryKeys'
 import { useSessionRole } from '../../auth/useSessionRole'
 import posCheckoutRepository from '../repositories/posCheckout'
+import type { PosCheckoutPaymentMethodType } from '../../constants/posCheckoutPaymentMethod'
 import { resolveOrderDiscountAmount, resolveOrderDiscountCap } from '../../utils/posOrderDiscount'
 import { isPersistedLineId, randomUuid, unlessOptimisticId } from '../../utils/uuid'
 import type {
@@ -731,6 +732,34 @@ export function useSetOrderTip(businessId?: string) {
     onSuccess: (_result, { orderId }) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
     },
+  })
+}
+
+// The chip the cashier picked on the checkout screen, stored on the order so reopening the ticket
+// shows what they chose instead of falling back to the Cash default.
+export function useSetOrderPaymentMethod(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<
+    boolean,
+    Error,
+    { orderId: string; paymentMethodType: PosCheckoutPaymentMethodType },
+    OrderMutationContext
+  >({
+    mutationFn: ({ orderId, paymentMethodType }) =>
+      posCheckoutRepository.setOrderPaymentMethod(businessId as string, orderId, paymentMethodType),
+    onMutate: async ({ orderId, paymentMethodType }) => {
+      const context = await snapshotOrderDetail(queryClient, businessId, orderId)
+      if (context.previousOrder) {
+        queryClient.setQueryData<OrderDetailApiDto>(
+          context.queryKey,
+          { ...context.previousOrder, paymentMethodType },
+        )
+      }
+      return context
+    },
+    onError: (_err, _vars, context) => rollbackOrderDetail(queryClient, context),
+    // No invalidate on success: the write changes one column whose new value is already in the
+    // cache from onMutate, so refetching the whole order would double the traffic this costs.
   })
 }
 
