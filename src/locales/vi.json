@@ -3336,6 +3336,7 @@
           "vlinkpayChangeAsset": "Đổi",
           "vlinkpayFixedNetwork": "Mạng: {{network}}",
           "vlinkpayReceiveAddress": "Địa chỉ ví nhận",
+          "vlinkpayScanQr": "Hoặc quét mã để thanh toán",
           "vlinkpayApproxUsd": "≈ ${{amount}}",
           "vlinkpayStepCopyAddress": "Sao chép địa chỉ ví nhận.",
           "vlinkpayStepOpenApp": "Mở ứng dụng VLINKPAY Wallet.",

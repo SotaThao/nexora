@@ -37,6 +37,8 @@ import {
   parseVlinkpayAddresses,
   serializeVlinkpayAddresses,
   toVlinkpayCryptoAddressesPayload,
+  toVlinkpayCryptoAddressImagesPayload,
+  type VlinkpayImagePendingMap,
 } from '../../payout/vlinkpayWallet'
 
 function resolveStaffIdDisplay(form: { nexoraStaffId?: string; staffCode?: string } | null | undefined) {
@@ -72,6 +74,9 @@ function StaffModal({
   const [payoutSetupOpen, setPayoutSetupOpen] = useState(false)
   const [payoutSetupWallet, setPayoutSetupWallet] = useState('venmo')
   const [tempPayoutValues, setTempPayoutValues] = useState({ value: '', qrCode: '', accountName: '' })
+  const [payoutSetupCryptoAddresses, setPayoutSetupCryptoAddresses] = useState<
+    PaymentMethodDto['cryptoAddresses'] | null
+  >(null)
   const [viewingMethod, setViewingMethod] = useState<PaymentMethodDto | null>(null)
 
   // Scanner states
@@ -281,11 +286,20 @@ function StaffModal({
       qrCode: config.qrCode || '',
       accountName: config.accountName || form.fullName || '',
     })
+    setPayoutSetupCryptoAddresses(
+      walletKey === PayoutUiKey.VlinkPay ? getPaymentMethodForWallet(walletKey).cryptoAddresses || null : null,
+    )
     setPayoutSetupWallet(walletKey)
     setPayoutSetupOpen(true)
   }
 
-  const handlePayoutSubmit = (value: string, qrCode: string, accountName: string, qrFile?: File | null) => {
+  const handlePayoutSubmit = (
+    value: string,
+    qrCode: string,
+    accountName: string,
+    qrFile?: File | null,
+    vlinkpayImages?: VlinkpayImagePendingMap,
+  ) => {
     if (isLocalStaff) {
       if (!staffProfileId) return
 
@@ -304,6 +318,9 @@ function StaffModal({
           accountName: toPayoutAccountNameDto(payoutSetupWallet, accountName),
           imageUrl: qrCode || null,
           imageFile: qrFile,
+          cryptoAddressImages: isVlinkpay && vlinkpayImages
+            ? toVlinkpayCryptoAddressImagesPayload(vlinkpayImages)
+            : undefined,
         },
         {
           onSuccess: (updated) => {
@@ -926,6 +943,7 @@ function StaffModal({
         staffName={form.fullName}
         initialValue={tempPayoutValues.value}
         initialQrCode={tempPayoutValues.qrCode}
+        initialCryptoAddresses={payoutSetupCryptoAddresses}
         initialAccountName={tempPayoutValues.accountName || ''}
         onClose={() => setPayoutSetupOpen(false)}
         onSubmit={handlePayoutSubmit}
