@@ -105,11 +105,11 @@ export default function StaffTaxIqOnboardingWizard({ taxYear }: { taxYear: numbe
       </div>
 
       <div className="nexora-card p-6">
-        <h2 className="text-lg font-extrabold text-nexoraText">{t('taxiq.staffOnboarding.title')}</h2>
+        <h2 className="text-nexoraText text-base font-semibold leading-snug">{t('taxiq.staffOnboarding.title')}</h2>
 
         {step === 1 && (
           <div className="mt-5 space-y-4">
-            <h3 className="text-sm font-bold text-nexoraText">{t('taxiq.staffOnboarding.step1.title')}</h3>
+            <h3 className="text-nexoraText text-sm font-semibold leading-snug">{t('taxiq.staffOnboarding.step1.title')}</h3>
             <div>
               <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.staffOnboarding.step1.contractTypeLabel')}</label>
               <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -118,7 +118,7 @@ export default function StaffTaxIqOnboardingWizard({ taxYear }: { taxYear: numbe
                     key={opt.key}
                     type="button"
                     onClick={() => setContractType(opt.key)}
-                    className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${
+                    className={`rounded-lg border px-3 py-2 text-xs font-semibold transition ${
                       contractType === opt.key
                         ? 'border-nexoraBrand bg-nexoraBrandSoft text-nexoraBrand'
                         : 'border-nexoraBorder text-nexoraMuted'
@@ -128,7 +128,7 @@ export default function StaffTaxIqOnboardingWizard({ taxYear }: { taxYear: numbe
                   </button>
                 ))}
               </div>
-              <p className="mt-1 text-[11px] font-medium text-nexoraMuted">
+              <p className="mt-1 text-xs font-medium text-nexoraMuted">
                 {t(CONTRACT_TYPE_OPTIONS.find((o) => o.key === contractType)?.tooltipKey ?? '')}
               </p>
             </div>
@@ -145,7 +145,7 @@ export default function StaffTaxIqOnboardingWizard({ taxYear }: { taxYear: numbe
                     key={opt.key}
                     type="button"
                     onClick={() => setW9Status(opt.key)}
-                    className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${
+                    className={`rounded-lg border px-3 py-2 text-xs font-semibold transition ${
                       w9Status === opt.key
                         ? 'border-nexoraBrand bg-nexoraBrandSoft text-nexoraBrand'
                         : 'border-nexoraBorder text-nexoraMuted'
@@ -155,7 +155,7 @@ export default function StaffTaxIqOnboardingWizard({ taxYear }: { taxYear: numbe
                   </button>
                 ))}
               </div>
-              <p className="mt-1 text-[11px] font-medium text-nexoraMuted">
+              <p className="mt-1 text-xs font-medium text-nexoraMuted">
                 {t(W9_STATUS_OPTIONS.find((o) => o.key === w9Status)?.tooltipKey ?? '')}
               </p>
             </div>
@@ -201,7 +201,7 @@ export default function StaffTaxIqOnboardingWizard({ taxYear }: { taxYear: numbe
 
         {step === 2 && (
           <div className="mt-5 space-y-3">
-            <h3 className="text-sm font-bold text-nexoraText">{t('taxiq.staffOnboarding.step2.title')}</h3>
+            <h3 className="text-nexoraText text-sm font-semibold leading-snug">{t('taxiq.staffOnboarding.step2.title')}</h3>
             {MODULE_OPTIONS.map((mod) => (
               <label key={mod.key} className="flex items-center gap-2.5 text-sm font-semibold text-nexoraText">
                 <input
@@ -221,7 +221,7 @@ export default function StaffTaxIqOnboardingWizard({ taxYear }: { taxYear: numbe
 
         {step === 3 && (
           <div className="mt-5 space-y-2 text-sm">
-            <h3 className="mb-2 text-sm font-bold text-nexoraText">{t('taxiq.staffOnboarding.step3.title')}</h3>
+            <h3 className="mb-2 text-nexoraText text-sm font-semibold leading-snug">{t('taxiq.staffOnboarding.step3.title')}</h3>
             <div className="flex justify-between">
               <span className="text-nexoraMuted">{t('taxiq.staffOnboarding.step3.reviewContractType')}</span>
               <span className="font-semibold">
@@ -256,7 +256,7 @@ export default function StaffTaxIqOnboardingWizard({ taxYear }: { taxYear: numbe
             type="button"
             onClick={goBack}
             disabled={step === 1}
-            className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold text-nexoraMuted disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-semibold text-nexoraMuted disabled:opacity-40"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             {t('taxiq.staffOnboarding.back')}
@@ -266,7 +266,7 @@ export default function StaffTaxIqOnboardingWizard({ taxYear }: { taxYear: numbe
             <button
               type="button"
               onClick={goNext}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-semibold text-white"
             >
               {t('taxiq.staffOnboarding.next')}
               <ArrowRight className="h-3.5 w-3.5" />
@@ -276,7 +276,7 @@ export default function StaffTaxIqOnboardingWizard({ taxYear }: { taxYear: numbe
               type="button"
               onClick={handleSubmit}
               disabled={createStaffTaxYear.isPending}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-semibold text-white disabled:opacity-60"
             >
               {createStaffTaxYear.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               {createStaffTaxYear.isPending ? t('taxiq.staffOnboarding.submitting') : t('taxiq.staffOnboarding.submit')}

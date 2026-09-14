@@ -11,6 +11,7 @@ import { X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import IconButton from '../../../../ui/IconButton'
 import TechnicianPickerGrid, { type TechnicianOption } from '../../../../checkin/parts/TechnicianPickerGrid'
+import { formatTurnCredit } from '../TurnGridView'
 
 const K = 'components.dashboard.views.pos.PosOrderWorkspace'
 
@@ -112,7 +113,9 @@ export default function ChangeTechnicianModal({
             availableLabel={t(`${K}.technicianAvailable`)}
             offShiftLabel={t(`${K}.technicianOffShift`)}
             completedTurnsLabel={(count) => t(`${K}.technicianCompletedTurns`, { count })}
-            assignedTurnsLabel={(count) => t(`${K}.technicianAssignedTurns`, { count })}
+            assignedTurnsLabel={(count) => t(`${K}.technicianAssignedWeightedTurns`, {
+              turns: formatTurnCredit(count),
+            })}
             nextTurnLabel={t(`${K}.technicianNextTurn`)}
           />
 

@@ -24,7 +24,7 @@ export default function PosTechnicianReportPrintDocument({ report, fontSize = 12
     </section>) : <p style={{ textAlign: 'center', padding: '1em 0' }}>{report.emptyLabel}</p>}
     <div style={{ borderTop: '1px dashed #777', marginTop: '1em', paddingTop: '0.65em' }}>
       {report.totals.map((total, index) => <div key={index} style={{ ...pair, padding: '0.15em 0', fontWeight: index === 0 ? 900 : 400 }}>
-        <span>{total.label}</span><strong>{total.value}</strong>
+        <span>{total.label}</span><strong style={total.isDeduction ? { color: '#EF4444', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' } : undefined}>{total.value}</strong>
       </div>)}
     </div>
   </div>

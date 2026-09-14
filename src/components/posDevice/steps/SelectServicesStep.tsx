@@ -1,7 +1,7 @@
 // Step 3 — what the customer came in for.
 //
 // Reuses CategoryGroupedCatalogPicker in its check-in mode (grid cards, per-category counts,
-// tap-to-toggle) so the kiosk and the front desk present the same menu the same way. Selecting
+// tap-to-add) so the kiosk and the front desk present the same menu the same way. Selecting
 // nothing is a supported outcome — "just get me in the queue, I'll explain in person" — so the
 // primary button changes label rather than being disabled.
 import { useMemo, type ReactNode } from 'react'
@@ -23,7 +23,7 @@ export default function SelectServicesStep({
   // no technician step to fail on, so the submit error has to land back here.
   isSubmitting,
   errorMessage,
-  onToggle,
+  onAdd,
   onBack,
   onContinue,
   header,
@@ -31,12 +31,12 @@ export default function SelectServicesStep({
   disabledItemIds,
   primaryLabel,
 }: {
-  services: SelfCheckInServiceApiDto[]
+  services: (SelfCheckInServiceApiDto & { tags?: string[]; displayOrder?: number })[]
   isLoading: boolean
   selectedServiceIds: string[]
   isSubmitting: boolean
   errorMessage: string | null
-  onToggle: (serviceId: string) => void
+  onAdd: (serviceId: string) => void
   onBack: () => void
   onContinue: () => void
   // Front desk only: a Services/Products tab strip above the same picker, and a running total
@@ -55,6 +55,8 @@ export default function SelectServicesStep({
         name: s.name,
         price: s.price,
         categories: s.categories,
+        tags: s.tags,
+        displayOrder: s.displayOrder,
         durationMinutes: s.durationMinutes,
         description: s.description,
         photoUrl: s.photoUrl,
@@ -86,9 +88,11 @@ export default function SelectServicesStep({
       ) : (
         <CategoryGroupedCatalogPicker
           items={items}
-          onAdd={onToggle}
+          onAdd={onAdd}
+          isPending={isSubmitting}
           variant="grid"
           selectedItemIds={selectedServiceIds}
+          allowRepeatedItems
           disabledItemIds={disabledItemIds}
           addLabel={t(`${K}.catalogAdd`)}
           emptyLabel={t(`${K}.catalogEmpty`)}

@@ -6,6 +6,7 @@ import { usePublicServices } from '../../../data/hooks/usePublicServices'
 import { usePublicOneQrBookingLink } from '../../../data/hooks/usePublicOneQr'
 import { buildOneQrPath, ONEQR_ROUTE } from '../../../constants/oneQr'
 import { useMediaQuery } from '../../../hooks/useMediaQuery'
+import type { PublicServiceItem } from '../../../types/publicServices'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import './public-service-menu.css'
 
@@ -16,6 +17,54 @@ const formatPrice = (price: number) => new Intl.NumberFormat('en-US', {
   style: 'currency', currency: 'USD',
   minimumFractionDigits: Number.isInteger(price) ? 0 : 2, maximumFractionDigits: 2,
 }).format(price)
+
+function ServiceImage({ src, name }: { src: string; name: string }) {
+  const [failed, setFailed] = useState(false)
+  if (failed) return null
+  return <img className="menu-service-image" src={src} alt={name} width={64} height={64}
+    loading="lazy" decoding="async" onError={() => setFailed(true)} />
+}
+
+function groupServicesByTag(services: PublicServiceItem[]) {
+  const tagged = new Map<string, { tag: string | null; services: PublicServiceItem[] }>()
+  const untagged: PublicServiceItem[] = []
+  for (const service of services) {
+    if (!service.tags?.length) {
+      untagged.push(service)
+      continue
+    }
+    for (const tag of service.tags) {
+      const key = tag.toLowerCase()
+      if (!tagged.has(key)) tagged.set(key, { tag, services: [] })
+      const group = tagged.get(key)!
+      if (!group.services.some(item => item.id === service.id)) group.services.push(service)
+    }
+  }
+  return [...tagged.values(), ...(untagged.length ? [{ tag: null, services: untagged }] : [])]
+}
+
+function MenuService({ service, grouped }: { service: PublicServiceItem; grouped: boolean }) {
+  const { t } = useTranslation()
+  const Heading = grouped ? 'h4' : 'h3'
+  return (
+    <article className={`menu-service${service.description?.trim() ? ' has-description' : ''}`}>
+      {service.imageUrl ? <ServiceImage key={service.imageUrl} src={service.imageUrl} name={service.name} /> : null}
+      <div className="menu-service-content">
+        <div className="menu-service-line">
+          <div className="menu-service-title">
+            <Heading>{service.name}</Heading>
+            {service.durationMinutes > 0 ? (
+              <span className="menu-duration">{t(`${K}.duration`, { count: service.durationMinutes })}</span>
+            ) : null}
+          </div>
+          <span className="menu-price-leader" aria-hidden />
+          <span className="menu-price">{service.price != null ? formatPrice(service.price) : t(`${K}.ask_price`)}</span>
+        </div>
+        {service.description?.trim() ? <p className="menu-description">{service.description}</p> : null}
+      </div>
+    </article>
+  )
+}
 
 export default function PublicServiceMenuPage() {
   const { businessSlug = '' } = useParams()
@@ -39,12 +88,13 @@ export default function PublicServiceMenuPage() {
   const visible = useMemo(() => categories
     .filter(group => category === null || group.key === category)
     .map(group => ({ ...group, services: group.services.filter(service =>
-      !query || normalizeSearch(`${group.categoryName} ${service.name} ${service.description ?? ''}`).includes(query),
+      !query || normalizeSearch(`${group.categoryName} ${service.name} ${service.description ?? ''} ${(service.tags ?? []).join(' ')}`).includes(query),
     ) }))
     .filter(group => group.services.length > 0), [categories, category, query])
   const serviceCount = new Set(categories.flatMap(group => group.services.map(service => service.id))).size
   const backPath = `${buildOneQrPath(businessSlug)}?${ONEQR_ROUTE.asQuery}=${ONEQR_ROUTE.asCustomerValue}`
   const showBookingLink = Boolean(bookingUrl && data && !isPending && !isError && serviceCount > 0)
+  const showFooterBooking = showBookingLink
   const resetFilters = () => { setSearch(''); setCategory(null) }
 
   return (
@@ -95,6 +145,12 @@ export default function PublicServiceMenuPage() {
                   <X className="h-4 w-4" aria-hidden />
                 </button> : null}
               </div>
+              {showBookingLink && isDesktop ? (
+                <a href={bookingUrl!} className="menu-button menu-search-booking" target="_blank" rel="noopener noreferrer">
+                  {t(`${K}.book_appointment`)}
+                  <ArrowUpRight className="h-4 w-4 shrink-0" aria-hidden />
+                </a>
+              ) : null}
               {isDesktop && <div className="menu-filters" role="group" aria-label={t(`${K}.categories`)}>
                 <button type="button" aria-pressed={category === null} onClick={() => setCategory(null)}>
                   {t(`${K}.all`)}
@@ -109,7 +165,9 @@ export default function PublicServiceMenuPage() {
             {visible.length ? (
               <div className="menu-grid">
                 {visible.map(group => {
-                  const expanded = expandedCategories[group.key] ?? Boolean(query || category !== null)
+                  const expanded = expandedCategories[group.key] ?? true
+                  const tagGroups = groupServicesByTag(group.services)
+                  const hasTags = tagGroups.some(item => item.tag !== null)
                   const panelId = `${panelIdPrefix}-${encodeURIComponent(group.key)}`
                   return (
                     <section className={`menu-category${expanded ? '' : ' is-collapsed'}`} key={group.key}>
@@ -124,7 +182,6 @@ export default function PublicServiceMenuPage() {
                             onClick={() => setExpandedCategories(previous => ({ ...previous, [group.key]: !expanded }))}
                           >
                             <span className="menu-category-title">
-                              <span className="menu-eyebrow" aria-hidden>{data.businessName}</span>
                               <span className="menu-category-name">{group.categoryName}</span>
                             </span>
                             <ChevronDown className="menu-category-chevron" aria-hidden />
@@ -132,18 +189,19 @@ export default function PublicServiceMenuPage() {
                         </h2>
                       </div>
                       <div id={panelId} hidden={!expanded}>
-                        {group.services.map(service => (
-                          <article className="menu-service" key={service.id}>
-                            <div className="menu-service-line">
-                              <h3>{service.name}</h3>
-                              <span className="menu-price">{service.price != null ? formatPrice(service.price) : t(`${K}.ask_price`)}</span>
-                            </div>
-                            {service.description ? <p className="menu-description">{service.description}</p> : null}
-                            {service.durationMinutes > 0 ? (
-                              <span className="menu-duration">{t(`${K}.duration`, { count: service.durationMinutes })}</span>
-                            ) : null}
-                          </article>
-                        ))}
+                        {tagGroups.map(tagGroup => {
+                          const title = tagGroup.tag ?? undefined
+                          return (
+                            <section className="menu-tag-group" key={tagGroup.tag === null ? 'untagged' : `tag:${tagGroup.tag}`} aria-label={title}>
+                              {title ? <h3 className="menu-tag-title">{title}</h3> : null}
+                              <div className="menu-services">
+                                {tagGroup.services.map(service => (
+                                  <MenuService key={service.id} service={service} grouped={hasTags} />
+                                ))}
+                              </div>
+                            </section>
+                          )
+                        })}
                       </div>
                     </section>
                   )
@@ -159,24 +217,24 @@ export default function PublicServiceMenuPage() {
           </>
         )}
 
-        <div className={`menu-bottom${showBookingLink ? ' menu-booking' : ''}`}>
+        <div className={`menu-bottom${showFooterBooking ? ' menu-booking' : ''}`}>
           <div>
-            {showBookingLink ? (
+            {showFooterBooking ? (
               <>
                 <p className="menu-eyebrow">{t(`${K}.booking_eyebrow`)}</p>
-                <h2>{t(`${K}.booking_title_lead`)}{' '}<em>{t(`${K}.booking_title_accent`)}</em></h2>
+                <h2>{t(`${K}.booking_title_lead`)} <em>{t(`${K}.booking_title_accent`)}</em></h2>
               </>
             ) : <h2>{t(`${K}.footer_title`)}</h2>}
-            <p>{t(showBookingLink ? `${K}.booking_hint` : `${K}.footer_hint`)}</p>
           </div>
-          {showBookingLink ? (
-            <a href={bookingUrl!} className="menu-button" target="_blank" rel="noopener noreferrer">
-              {t(`${K}.book_appointment`)}
-              <ArrowUpRight className="h-4 w-4 shrink-0" aria-hidden />
-            </a>
-          ) : (
-            <Link to={backPath} className="menu-button">{t(`${K}.back`)}<ArrowLeft className="h-4 w-4" aria-hidden /></Link>
-          )}
+          <div className="menu-footer-action">
+            <p>{t(showFooterBooking ? `${K}.booking_hint` : `${K}.footer_hint`)}</p>
+            {showFooterBooking ? (
+              <a href={bookingUrl!} className="menu-button" target="_blank" rel="noopener noreferrer">
+                {t(`${K}.book_appointment`)}
+                <ArrowUpRight className="h-4 w-4 shrink-0" aria-hidden />
+              </a>
+            ) : null}
+          </div>
         </div>
       </main>
       <footer className="menu-brand" lang={currentLanguage}>

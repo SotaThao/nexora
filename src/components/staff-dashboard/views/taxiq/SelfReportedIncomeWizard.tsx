@@ -195,7 +195,7 @@ export default function SelfReportedIncomeWizard({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
       <div className="nexora-modal-card max-w-lg">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-extrabold text-nexoraText">
+          <h2 className="text-nexoraText text-base font-semibold leading-snug">
             {isEditing ? t('taxiq.selfReportedIncome.edit') : t('taxiq.selfReportedIncome.add')}
           </h2>
           <IconButton label={t('common.cancel')} onClick={onClose}>
@@ -220,7 +220,7 @@ export default function SelfReportedIncomeWizard({
             <button
               type="button"
               onClick={() => navigate('/staff/taxiq/export')}
-              className="self-start rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white"
+              className="self-start rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white"
             >
               {t('taxiq.deductionCenter.errors.lockedAction')}
             </button>
@@ -230,7 +230,7 @@ export default function SelfReportedIncomeWizard({
         <div className="flex-1 space-y-4 overflow-y-auto">
           {currentStep === 'basic' && (
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-nexoraText">{t('taxiq.selfReportedIncome.form.step1Title')}</h3>
+              <h3 className="text-nexoraText text-sm font-semibold leading-snug">{t('taxiq.selfReportedIncome.form.step1Title')}</h3>
               <PeriodPicker
                 taxYear={taxYear}
                 periodMode={periodMode}
@@ -273,7 +273,7 @@ export default function SelfReportedIncomeWizard({
 
           {currentStep === 'details' && (
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-nexoraText">{t('taxiq.selfReportedIncome.form.step2Title')}</h3>
+              <h3 className="text-nexoraText text-sm font-semibold leading-snug">{t('taxiq.selfReportedIncome.form.step2Title')}</h3>
               <div>
                 <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.selfReportedIncome.form.incomeTypeLabel')}</label>
                 <select
@@ -289,7 +289,7 @@ export default function SelfReportedIncomeWizard({
                   ))}
                 </select>
                 {INCOME_TYPE_TOOLTIP_KEYS[incomeType] && (
-                  <p className="mt-1 text-[11px] font-medium text-nexoraMuted">{t(INCOME_TYPE_TOOLTIP_KEYS[incomeType])}</p>
+                  <p className="mt-1 text-xs font-medium text-nexoraMuted">{t(INCOME_TYPE_TOOLTIP_KEYS[incomeType])}</p>
                 )}
               </div>
 
@@ -338,7 +338,7 @@ export default function SelfReportedIncomeWizard({
           {currentStep === 'receipt' && incomeId && (
             <div className="space-y-4">
               <div>
-                <h3 className="mb-1 text-sm font-bold text-nexoraText">{t('taxiq.selfReportedIncome.form.step3Title')}</h3>
+                <h3 className="mb-1 text-nexoraText text-sm font-semibold leading-snug">{t('taxiq.selfReportedIncome.form.step3Title')}</h3>
                 <p className="text-xs text-nexoraMuted">{t('taxiq.selfReportedIncome.receiptOptional')}</p>
               </div>
               <ReceiptUploadStep
@@ -362,7 +362,7 @@ export default function SelfReportedIncomeWizard({
             type="button"
             onClick={goBack}
             disabled={stepIndex === 0}
-            className="rounded-lg px-4 py-2 text-xs font-bold text-nexoraMuted disabled:opacity-40"
+            className="rounded-lg px-4 py-2 text-xs font-semibold text-nexoraMuted disabled:opacity-40"
           >
             {t('taxiq.selfReportedIncome.form.back')}
           </button>
@@ -372,7 +372,7 @@ export default function SelfReportedIncomeWizard({
               type="button"
               onClick={handleBasicNext}
               disabled={isSubmittingStep}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-semibold text-white disabled:opacity-60"
             >
               {isSubmittingStep && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               {t('taxiq.selfReportedIncome.form.next')}
@@ -384,7 +384,7 @@ export default function SelfReportedIncomeWizard({
               type="button"
               onClick={handleDetailsNext}
               disabled={isSubmittingStep}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-semibold text-white disabled:opacity-60"
             >
               {isSubmittingStep && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               {t('taxiq.selfReportedIncome.form.next')}
@@ -395,7 +395,7 @@ export default function SelfReportedIncomeWizard({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white"
+              className="rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-semibold text-white"
             >
               {t('taxiq.selfReportedIncome.form.save')}
             </button>

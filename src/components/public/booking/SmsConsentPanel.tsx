@@ -7,14 +7,29 @@
  * Both checkboxes are unchecked on every render and are never pre-checked from stored state on the
  * booking pages — a pre-ticked consent box is not consent.
  */
+import { Fragment, type ReactNode } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { SMS_CONSENT_MODE, type SmsConsentMode } from '../../../constants/smsConsent'
 import en from '../../../locales/en.json'
 import vi from '../../../locales/vi.json'
+import { resolveTranslation } from '../../../utils/translate'
 
-const CONSENT_STRINGS: Record<string, Record<string, string>> = {
-  en: en.public.smsConsent,
-  vi: vi.public.smsConsent,
+/** Bold the salon name inside muted consent copy without injecting HTML from the locale. */
+function highlightBusinessName(copy: string, businessName?: string): ReactNode {
+  const name = businessName?.trim()
+  if (!name) return copy
+
+  const parts = copy.split(name)
+  if (parts.length === 1) return copy
+
+  return parts.map((part, index) => (
+    <Fragment key={`${name}-${index}`}>
+      {part}
+      {index < parts.length - 1 ? (
+        <strong className="font-bold text-nexoraText">{name}</strong>
+      ) : null}
+    </Fragment>
+  ))
 }
 
 interface SmsConsentPanelProps {
@@ -34,6 +49,8 @@ interface SmsConsentPanelProps {
    * the form around it.
    */
   lang?: string
+  /** End business shown as the direct sender in public consent evidence. */
+  businessName?: string
 }
 
 export default function SmsConsentPanel({
@@ -43,14 +60,16 @@ export default function SmsConsentPanel({
   mode = SMS_CONSENT_MODE.grantOnly,
   disabled = false,
   lang,
+  businessName,
 }: SmsConsentPanelProps) {
   const { t: translate } = useTranslation()
 
   // Both paths read the same locale entries, so the legal wording can never diverge between the
   // two booking pages — which is the reason this panel is a single shared component.
-  const forced = lang ? CONSENT_STRINGS[lang] ?? CONSENT_STRINGS.en : null
-  const t = (key: string) =>
-    forced ? forced[key.replace('public.smsConsent.', '')] : translate(key)
+  const forcedLocale = lang ? (lang === 'vi' ? vi : en) : null
+  const t = (key: string, variables: Record<string, string | number> = {}) =>
+    forcedLocale ? resolveTranslation(forcedLocale, key, variables) : translate(key, variables)
+  const senderVariables = { businessName: businessName?.trim() ?? '' }
 
   const options = [
     {
@@ -59,7 +78,9 @@ export default function SmsConsentPanel({
       title: t('public.smsConsent.transactionalTitle'),
       badge: t('public.smsConsent.transactionalBadge'),
       badgeClass: 'bg-emerald-50 text-emerald-700',
-      copy: t('public.smsConsent.transactionalCopy'),
+      copy: businessName?.trim()
+        ? t('public.smsConsent.transactionalBusinessCopy', senderVariables)
+        : t('public.smsConsent.transactionalCopy'),
       toggle: () => onChange({ transactional: !transactional, marketing }),
     },
     {
@@ -68,7 +89,9 @@ export default function SmsConsentPanel({
       title: t('public.smsConsent.marketingTitle'),
       badge: t('public.smsConsent.marketingBadge'),
       badgeClass: 'bg-amber-50 text-amber-700',
-      copy: t('public.smsConsent.marketingCopy'),
+      copy: businessName?.trim()
+        ? t('public.smsConsent.marketingBusinessCopy', senderVariables)
+        : t('public.smsConsent.marketingCopy'),
       toggle: () => onChange({ transactional, marketing: !marketing }),
     },
   ]
@@ -110,7 +133,9 @@ export default function SmsConsentPanel({
                   {option.badge}
                 </span>
               </span>
-              <span className="mt-1 block text-[11px] leading-relaxed text-nexoraMuted">{option.copy}</span>
+              <span className="mt-1 block text-[11px] leading-relaxed text-nexoraMuted">
+                {highlightBusinessName(option.copy, businessName)}
+              </span>
             </span>
           </label>
         ))}

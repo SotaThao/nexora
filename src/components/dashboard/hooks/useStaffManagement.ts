@@ -2,10 +2,12 @@
 // Dashboard. Refactored to use API mutation hooks instead of local setStaff().
 // Extracted from Dashboard.jsx (Group 5).
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { DEFAULT_PAYOUT_CONFIGS } from '../constants'
 import { getPayoutConfigsFromMember } from '../utils'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
+import { posSalonSettingsPath, PosSalonSettingsTab } from '../../../constants/posSalonSettings'
 import {
   useInviteStaff,
   useResendStaffInvite,
@@ -138,6 +140,7 @@ export function useStaffManagement({
 }) {
   const { t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
+  const navigate = useNavigate()
   const fallbackDialCode = PhoneDialCode.US
 
   // API mutation hooks — all invalidate qk.merchantStaff() on success
@@ -556,6 +559,7 @@ export function useStaffManagement({
   /**
    * Accept a join request — update status to Active.
    * Calls PUT /api/v1/merchant/staff/{staffLinkId}/status.
+   * After success, offer to open POS Staff setup so the salon does not skip role/pay/skills.
    */
   const handleAcceptJoinRequest = (memberOrId) => {
     const member = resolveStaffMember(memberOrId)
@@ -563,8 +567,19 @@ export function useStaffManagement({
     if (!member || !linkId) return
 
     approveLinkMutation.mutate(linkId, {
-      onSuccess: () => {
+      onSuccess: async () => {
         showToast(t('components.dashboard.hooks.useStaffManagement.joinAccepted', { name: member.fullName }), 'success')
+        const setupPos = await showConfirm(
+          t('components.dashboard.hooks.useStaffManagement.setupPosStaffAfterApproveMessage', {
+            name: member.fullName,
+          }),
+          t('components.dashboard.hooks.useStaffManagement.setupPosStaffAfterApproveTitle'),
+        )
+        if (!setupPos) return
+        const params = new URLSearchParams({ staff: linkId })
+        const staffName = String(member.fullName || '').trim()
+        if (staffName) params.set('name', staffName)
+        navigate(`${posSalonSettingsPath(PosSalonSettingsTab.Staff)}?${params.toString()}`)
       },
       onError: (err) => {
         showToast(t('components.dashboard.hooks.useStaffManagement.acceptFailed', { error: errMsg(err) }), 'error')

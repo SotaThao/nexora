@@ -39,6 +39,8 @@ function toTransactionDetail(tip: StaffTipItem) {
     staffConfirmedAt: tip.staffConfirmedAt,
     touchpoint: tip.touchPointName || '',
     tipItems: [],
+    categoryId: tip.categoryId ?? null,
+    categoryName: tip.categoryName ?? null,
   }
 }
 
@@ -72,7 +74,9 @@ function tipMetaLine(tip: StaffTipItem) {
 export default function StaffTips() {
   const { t, currentLanguage } = useTranslation()
   const [pageNumber, setPageNumber] = useState(1)
-  const [selectedTip, setSelectedTip] = useState<StaffTipItem | null>(null)
+  // Tracks the id, not the tip object, so the modal re-reads the live list item after a
+  // category mutation invalidates it — a snapshot copy would keep showing the pre-mutation value.
+  const [selectedTipId, setSelectedTipId] = useState<string | null>(null)
   const {
     data: tipsPage = null,
     isPending,
@@ -105,6 +109,7 @@ export default function StaffTips() {
   }
 
   const tips = tipsPage?.items ?? []
+  const selectedTip = tips.find((tip) => tip.id === selectedTipId) ?? null
   const totalPages = tipsPage?.totalPages ?? 0
   const canGoPrev = tipsPage?.hasPreviousPage ?? pageNumber > 1
   const canGoNext = tipsPage?.hasNextPage ?? (totalPages > 0 && pageNumber < totalPages)
@@ -113,9 +118,9 @@ export default function StaffTips() {
     <div className="space-y-4">
       <section className={panel}>
         <div className="mb-3 flex items-center justify-between gap-2">
-          <h3 className="text-base font-extrabold text-nexoraText">{t('staff_dashboard.tips.activity')}</h3>
+          <h3 className="text-nexoraText text-base font-semibold leading-snug">{t('staff_dashboard.tips.activity')}</h3>
           {tipsPage?.totalCount != null && tipsPage.totalCount > 0 ? (
-            <span className="text-[10px] font-bold uppercase tracking-wider text-nexoraSubtle">
+            <span className="text-sm font-bold uppercase tracking-wider text-nexoraSubtle">
               {t('staff_dashboard.tips.total_count', { count: tipsPage.totalCount })}
             </span>
           ) : null}
@@ -124,7 +129,7 @@ export default function StaffTips() {
         {isFetching ? (
           <SkeletonList count={5} lines={2} showAction />
         ) : tips.length === 0 ? (
-            <p className="py-4 text-center text-xs text-nexoraSubtle">{t('staff_dashboard.tips.empty')}</p>
+            <p className="py-4 text-center text-sm text-nexoraSubtle">{t('staff_dashboard.tips.empty')}</p>
           ) : (
             <div className="divide-y divide-nexoraBorder">
               {tips.map((tip) => (
@@ -132,9 +137,9 @@ export default function StaffTips() {
                 key={tip.id}
                 role="button"
                 tabIndex={0}
-                onClick={() => setSelectedTip(tip)}
+                onClick={() => setSelectedTipId(tip.id)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') setSelectedTip(tip)
+                  if (e.key === 'Enter' || e.key === ' ') setSelectedTipId(tip.id)
                 }}
                 className="flex cursor-pointer select-none flex-col gap-2 rounded-lg py-3 transition-colors hover:bg-nexoraCanvas/40"
               >
@@ -145,7 +150,7 @@ export default function StaffTips() {
                         {formatTipAmount(tipDisplayAmount(tip))}
                       </span>
                       {tip.paymentMethod ? (
-                        <span className="flex items-center gap-1 text-[13px] font-medium text-nexoraMuted">
+                        <span className="flex items-center gap-1 text-sm font-medium text-nexoraMuted">
                           ·
                           {WalletLogos[payoutTypeToUiKey(tip.paymentMethod) as keyof typeof WalletLogos] ? (
                             <span className="flex items-center [&>svg]:h-3.5 [&>svg]:w-3.5 [&>img]:h-3.5 [&>img]:w-3.5">
@@ -157,10 +162,10 @@ export default function StaffTips() {
                       ) : null}
                     </div>
                     {tipMetaLine(tip) ? (
-                      <div className="mt-0.5 truncate text-xs text-nexoraMuted">{tipMetaLine(tip)}</div>
+                      <div className="mt-0.5 truncate text-sm text-nexoraMuted">{tipMetaLine(tip)}</div>
                     ) : null}
                     {tip.createdAt ? (
-                      <div className="mt-0.5 text-[10px] font-semibold text-nexoraSubtle">
+                      <div className="mt-0.5 text-sm font-semibold text-nexoraSubtle">
                         {formatTipDate(tip.createdAt, currentLanguage)}
                       </div>
                     ) : null}
@@ -168,7 +173,7 @@ export default function StaffTips() {
                   <div className="flex shrink-0 items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                     {tip.isMultiStaff ? (
                       <span
-                        className={`max-w-[140px] truncate rounded-full px-2.5 py-1 text-[11px] font-black ${
+                        className={`max-w-[140px] truncate rounded-full px-2.5 py-1 text-xs font-black ${
                           tip.merchantConfirmedAt
                             ? 'bg-emerald-50 text-emerald-600'
                             : 'bg-amber-50 text-amber-700'
@@ -183,7 +188,7 @@ export default function StaffTips() {
                       </span>
                     ) : (
                       <span
-                        className={`rounded-full px-2.5 py-1 text-[11px] font-black ${
+                        className={`rounded-full px-2.5 py-1 text-xs font-black ${
                           STATUS_STYLE[tip.status as TipStatus] || 'bg-nexoraCanvas text-nexoraMuted'
                         }`}
                       >
@@ -203,9 +208,9 @@ export default function StaffTips() {
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation()
-                      setSelectedTip(tip)
+                      setSelectedTipId(tip.id)
                     }}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-50 py-2 text-[11px] font-black uppercase tracking-wider text-emerald-700 transition hover:bg-emerald-100"
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-50 py-2 text-xs font-semibold uppercase tracking-wider text-emerald-700 transition hover:bg-emerald-100"
                   >
                     <CheckCircle className="h-3.5 w-3.5" />
                     {t('staff_dashboard.home.confirm')}
@@ -232,7 +237,7 @@ export default function StaffTips() {
       {selectedTip ? (
         <TransactionDetailModal
           selectedTx={toTransactionDetail(selectedTip)}
-          onClose={() => setSelectedTip(null)}
+          onClose={() => setSelectedTipId(null)}
           businessName={selectedTip.businessName || ''}
           audience="staff"
         />

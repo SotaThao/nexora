@@ -1220,6 +1220,7 @@ body.public-booking-active #root {
   border-color: transparent !important;
   background: transparent !important;
   box-shadow: none !important;
+  outline: none !important;
   -webkit-appearance: none;
   appearance: none;
   /* Force 12-hour clock in the native picker (SMS campaign schedule pattern). */
@@ -1229,9 +1230,17 @@ body.public-booking-active #root {
   text-align: left;
   color: transparent !important;
   caret-color: transparent !important;
+  -webkit-tap-highlight-color: transparent;
   cursor: pointer;
   font-size: 13px;
   font-weight: 750;
+}
+
+.public-booking-root .booking-datetime-input:focus,
+.public-booking-root .booking-datetime-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
 }
 
 .public-booking-root .booking-datetime-shell[lang^="vi"] .booking-datetime-input {
@@ -1244,6 +1253,7 @@ body.public-booking-active #root {
   max-width: 100%;
 }
 
+/* Hide native edit UI so WebKit focus/selection highlight (ô xanh) never shows. */
 .public-booking-root .booking-datetime-input::-webkit-date-and-time-value,
 .public-booking-root .booking-datetime-input::-webkit-datetime-edit,
 .public-booking-root .booking-datetime-input::-webkit-datetime-edit-fields-wrapper,
@@ -1256,10 +1266,26 @@ body.public-booking-active #root {
 .public-booking-root .booking-datetime-input::-webkit-datetime-edit-second-field,
 .public-booking-root .booking-datetime-input::-webkit-datetime-edit-ampm-field {
   color: transparent !important;
+  background: transparent !important;
   min-width: 0;
   max-width: 100%;
   padding: 0;
+  margin: 0;
   overflow: hidden;
+  opacity: 0;
+}
+
+.public-booking-root .booking-datetime-input::-webkit-datetime-edit-year-field:focus,
+.public-booking-root .booking-datetime-input::-webkit-datetime-edit-month-field:focus,
+.public-booking-root .booking-datetime-input::-webkit-datetime-edit-day-field:focus,
+.public-booking-root .booking-datetime-input::-webkit-datetime-edit-hour-field:focus,
+.public-booking-root .booking-datetime-input::-webkit-datetime-edit-minute-field:focus,
+.public-booking-root .booking-datetime-input::-webkit-datetime-edit-second-field:focus,
+.public-booking-root .booking-datetime-input::-webkit-datetime-edit-ampm-field:focus {
+  background-color: transparent !important;
+  color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .public-booking-root .booking-datetime-input::-webkit-calendar-picker-indicator {

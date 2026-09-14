@@ -74,7 +74,7 @@ export default function StaffLinkRequestCard({
             <div className="min-w-0 max-w-full truncate text-sm font-extrabold text-nexoraText">
               {businessName}
             </div>
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-600">
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-black uppercase tracking-wider text-amber-600">
               <Clock className="h-2.5 w-2.5" />
               {t('staff_dashboard.qr.link_request_pending')}
             </span>
@@ -92,7 +92,7 @@ export default function StaffLinkRequestCard({
           type="button"
           onClick={handleAccept}
           disabled={isPending}
-          className="inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-3 text-xs font-extrabold text-white transition hover:bg-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          className="inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-3 text-xs font-semibold text-white transition hover:bg-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         >
           <Check className="h-4 w-4 shrink-0" />
           {t('staff_dashboard.notifications.accept_link_request')}
@@ -101,7 +101,7 @@ export default function StaffLinkRequestCard({
           type="button"
           onClick={handleReject}
           disabled={isPending}
-          className="inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-nexoraDanger/20 bg-nexoraDanger/10 px-3 text-xs font-extrabold text-nexoraDanger transition hover:bg-nexoraDanger/15 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          className="inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-nexoraDanger/20 bg-nexoraDanger/10 px-3 text-xs font-semibold text-nexoraDanger transition hover:bg-nexoraDanger/15 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         >
           <XCircle className="h-4 w-4 shrink-0" />
           {t('staff_dashboard.notifications.reject_link_request')}

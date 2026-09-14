@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   CircleDollarSign,
@@ -10,6 +10,7 @@ import {
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { formatCurrency } from '../../dashboard/utils'
 import TipsTrendChart from '../../dashboard/charts/TipsTrendChart'
+import IncomeByCategoryPanel from '../../dashboard/charts/IncomeByCategoryPanel'
 import ReportsView from '../../dashboard/views/ReportsView'
 import StaffPayouts from './StaffPayouts'
 import { useStaffEarningsData } from '../hooks/useStaffEarningsData'
@@ -39,26 +40,26 @@ function BalanceCard({
   t: (key: string, params?: Record<string, unknown>) => string
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#6C4DF6] via-[#5B4AE8] to-[#4648D8] p-5 text-white shadow-[0_16px_40px_rgba(70,72,216,0.28)]">
+    <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#6C4DF6] via-[#5B4AE8] to-[#4648D8] p-3 sm:p-5 text-white shadow-[0_16px_40px_rgba(70,72,216,0.28)]">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-white/75">
+          <p className="text-xs sm:text-sm font-semibold text-white/75">
             {t('staff_earnings.available_balance')}
           </p>
-          <p className="mt-1 text-3xl font-black tracking-tight">
+          <p className="mt-1 break-words text-xl font-semibold leading-7 tabular-nums sm:text-3xl sm:font-black">
             {isLoading ? '—' : formatCurrency(availableBalance)}
           </p>
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-4 border-t border-white/20 pt-4">
+      <div className="mt-3 grid grid-cols-2 gap-3 border-t border-white/20 pt-3 sm:mt-5 sm:gap-4 sm:pt-4">
         <div>
-          <p className="text-[11px] font-semibold text-white/70">{t('staff_earnings.pending')}</p>
-          <p className="mt-1 text-lg font-bold">{isLoading ? '—' : formatCurrency(pendingAmount)}</p>
+          <p className="text-xs sm:text-sm font-semibold text-white/70">{t('staff_earnings.pending')}</p>
+          <p className="mt-1 break-words text-base font-semibold tabular-nums sm:text-lg sm:font-bold">{isLoading ? '—' : formatCurrency(pendingAmount)}</p>
         </div>
-        <div className="border-l border-white/20 pl-4">
-          <p className="text-[11px] font-semibold text-white/70">{t('staff_earnings.lifetime_earnings')}</p>
-          <p className="mt-1 text-lg font-bold">{isLoading ? '—' : formatCurrency(lifetimeEarnings)}</p>
+        <div className="min-w-0 border-l border-white/20 pl-3 sm:pl-4">
+          <p className="text-xs sm:text-sm font-semibold text-white/70">{t('staff_earnings.lifetime_earnings')}</p>
+          <p className="mt-1 break-words text-base font-semibold tabular-nums sm:text-lg sm:font-bold">{isLoading ? '—' : formatCurrency(lifetimeEarnings)}</p>
         </div>
       </div>
     </div>
@@ -107,7 +108,7 @@ function EarningsOverview({
           return (
             <div
               key={row.id}
-              className={`flex items-center gap-3 px-4 py-3.5 ${
+              className={`flex items-center gap-3 px-3 py-2.5 sm:px-4 sm:py-3.5 ${
                 index < breakdownRows.length - 1 ? 'border-b border-nexoraBorder/70' : ''
               }`}
             >
@@ -121,7 +122,7 @@ function EarningsOverview({
                 <p className="text-sm font-bold text-nexoraText">
                   {isLoading ? '—' : formatCurrency(row.amount)}
                 </p>
-                <p className="text-[11px] font-semibold text-nexoraMuted">
+                <p className="text-sm font-semibold text-nexoraMuted">
                   {isLoading ? '—' : `${row.percent}%`}
                 </p>
               </div>
@@ -130,17 +131,17 @@ function EarningsOverview({
         })}
       </div>
 
-      <div className="rounded-2xl border border-nexoraBorder bg-white p-4 shadow-sm">
+      <div className="rounded-2xl border border-nexoraBorder bg-white p-3 shadow-sm sm:p-4">
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-nexoraMuted">
+            <p className="text-xs font-semibold text-nexoraMuted sm:text-sm sm:font-bold">
               {t('staff_earnings.this_week')}
             </p>
-            <p className="mt-1 text-2xl font-black text-nexoraText">
+            <p className="mt-1 break-words text-lg font-semibold tabular-nums text-nexoraText sm:text-2xl sm:font-black">
               {isLoading ? '—' : formatCurrency(thisWeekTotal)}
             </p>
           </div>
-          <p className={`text-xs font-bold ${weekTrendClass}`}>{weekTrendLabel}</p>
+          <p className={`text-[11px] font-medium leading-4 sm:text-sm sm:font-bold ${weekTrendClass}`}>{weekTrendLabel}</p>
         </div>
 
         {isLoading ? (
@@ -218,7 +219,7 @@ export default function StaffMyEarnings() {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`-mb-px border-b-2 pb-3 text-sm font-bold transition ${
+                className={`-mb-px border-b-2 pb-3 text-xs font-semibold transition ${
                   isActive
                     ? 'border-nexoraBrand text-nexoraBrand'
                     : 'border-transparent text-nexoraMuted hover:text-nexoraText'
@@ -232,7 +233,10 @@ export default function StaffMyEarnings() {
       </div>
 
       {activeTab === TAB_OVERVIEW ? (
-        <EarningsOverview {...earningsData} t={t} />
+        <>
+          <EarningsOverview {...earningsData} t={t} />
+          <IncomeByCategoryPanel scope="staff" onManageCategories={() => navigate('/staff/categories')} />
+        </>
       ) : null}
 
       {activeTab === TAB_TRANSACTIONS ? (

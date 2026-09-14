@@ -29,7 +29,8 @@ export function buildTechnicianReportReceipt(detail: PosStaffReportDetail, name:
       totals: [
         {label:t(`${TK}.totalAmount`),value:formatCurrency(detail.totalAmount)},
         {label:t(`${TK}.totalTips`),value:formatCurrency(detail.totalTips)},
-        {label:t(`${TK}.totalDiscount`),value:formatCurrency(detail.totalDiscount)},
+        {label:t(`${TK}.totalDiscount`),value:detail.totalDiscount > 0 ? `−${formatCurrency(detail.totalDiscount)}` : formatCurrency(0),isDeduction:detail.totalDiscount > 0},
+        {label:t(`${TK}.totalSupplyFee`),value:detail.totalSupplyFee > 0 ? `−${formatCurrency(detail.totalSupplyFee)}` : formatCurrency(0),isDeduction:detail.totalSupplyFee > 0},
         {label:t(`${TK}.totalCommission`),value:formatCurrency(detail.totalCommission)},
         ...detail.paymentTotals.map(payment => ({label:t(`${TK}.collected`,{method:getPosCheckoutPaymentMethodLabel(payment.paymentMethod,t)}),value:formatCurrency(payment.amount)})),
       ],

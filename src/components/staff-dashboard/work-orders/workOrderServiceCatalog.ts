@@ -1,5 +1,8 @@
 import { PosOrderStatus } from '../../../constants/posOrderStatus'
-import type { StaffWorkOrderCatalogItem } from '../../../data/repositories/staffWorkOrders'
+import type {
+  StaffWorkOrderCatalogCategory,
+  StaffWorkOrderCatalogItem,
+} from '../../../data/repositories/staffWorkOrders'
 import type { SaveStaffWorkOrderServiceLinePayload } from '../../../types/repositories'
 import { PosOrderItemStatus } from '../../../constants/posOrderItemStatus'
 
@@ -24,6 +27,7 @@ export type WorkOrderCatalogService = {
 export type WorkOrderCatalogCategory = {
   id: string
   name: string
+  displayOrder?: number
   services: WorkOrderCatalogService[]
 }
 
@@ -239,13 +243,60 @@ export function workOrderCallerWorkDone(lines: WorkOrderEditableLine[]): boolean
     && callerLines.every((line) => line.lineStatus === PosOrderItemStatus.Completed)
 }
 
-// find something, not a statement about where a service "really" belongs. Anything with no category
-// still has to be reachable, hence the trailing bucket.
+/**
+ * Badge/filter status from this technician's own parent lines — not the shared ticket status.
+ * Cancelled / checkout-Completed stay order-level. Otherwise: all Done → Completed, any
+ * Started → InService, else Waiting (UI "Assigned").
+ */
+export function deriveWorkOrderCallerDisplayStatus(
+  orderStatus: PosOrderStatus,
+  lines: Array<Pick<WorkOrderEditableLine, 'isAddOn' | 'isMine' | 'lineStatus' | 'pendingRemoval'>>,
+): PosOrderStatus {
+  if (orderStatus === PosOrderStatus.Cancelled || orderStatus === PosOrderStatus.Completed) {
+    return orderStatus
+  }
+
+  const callerParents = lines.filter((line) => (
+    !line.isAddOn && Boolean(line.isMine) && !line.pendingRemoval
+  ))
+  if (callerParents.length === 0) {
+    if (orderStatus === PosOrderStatus.Pending || orderStatus === PosOrderStatus.Confirmed) {
+      return PosOrderStatus.Waiting
+    }
+    return orderStatus
+  }
+
+  if (callerParents.every((line) => line.lineStatus === PosOrderItemStatus.Completed)) {
+    return PosOrderStatus.Completed
+  }
+  if (callerParents.some((line) => line.lineStatus === PosOrderItemStatus.Started)) {
+    return PosOrderStatus.InService
+  }
+  return PosOrderStatus.Waiting
+}
+
+// A service can sit in more than one category — grouping is just a way to find it, not a
+// statement about where a service "really" belongs. Anything with no category still has to
+// be reachable, hence the trailing bucket.
+//
+// Seed `allCategories` first so the picker matches POS Settings > Services: every salon
+// category is a group, even when it currently has no Active service. Services with no
+// matching category land in the trailing uncategorized bucket (Settings' "Other Services").
 export function buildWorkOrderCatalogCategories(
   items: StaffWorkOrderCatalogItem[],
   uncategorizedLabel: string,
+  allCategories: StaffWorkOrderCatalogCategory[] = [],
 ): WorkOrderCatalogCategory[] {
   const byCategory = new Map<string, WorkOrderCatalogCategory>()
+
+  allCategories.forEach((category) => {
+    byCategory.set(category.id, {
+      id: category.id,
+      name: category.name,
+      displayOrder: category.displayOrder,
+      services: [],
+    })
+  })
 
   items.forEach((item) => {
     const service: WorkOrderCatalogService = {
@@ -254,11 +305,14 @@ export function buildWorkOrderCatalogCategories(
       price: item.price,
       durationMin: item.durationMinutes,
     }
-    const categories = item.categories.length > 0
-      ? item.categories
-      : [{ id: UNCATEGORIZED_ID, name: uncategorizedLabel }]
+    const matched = item.categories.filter((category) => byCategory.has(category.id))
+    const targets = matched.length > 0
+      ? matched
+      : allCategories.length > 0 || item.categories.length === 0
+        ? [{ id: UNCATEGORIZED_ID, name: uncategorizedLabel }]
+        : item.categories
 
-    categories.forEach((category) => {
+    targets.forEach((category) => {
       const existing = byCategory.get(category.id)
       if (existing) {
         existing.services.push(service)
@@ -271,6 +325,9 @@ export function buildWorkOrderCatalogCategories(
   return [...byCategory.values()].sort((a, b) => {
     if (a.id === UNCATEGORIZED_ID) return 1
     if (b.id === UNCATEGORIZED_ID) return -1
+    const orderA = a.displayOrder ?? Number.MAX_SAFE_INTEGER
+    const orderB = b.displayOrder ?? Number.MAX_SAFE_INTEGER
+    if (orderA !== orderB) return orderA - orderB
     return a.name.localeCompare(b.name)
   })
 }
@@ -337,6 +394,10 @@ export function matchWorkOrderCatalogServiceByName(
   return flattenWorkOrderCatalog(categories).find((service) => service.name.toLowerCase() === needle)
 }
 
+/**
+ * Search hides groups that have nothing left to show. That is not the same as omitting salon
+ * categories that were empty before the search — `buildWorkOrderCatalogCategories` keeps those.
+ */
 export function filterWorkOrderCatalogCategories(
   query: string,
   categories: WorkOrderCatalogCategory[],
@@ -356,7 +417,7 @@ export function filterWorkOrderCatalogCategories(
 
 function lineFromCatalog(
   service: WorkOrderCatalogService,
-  extras?: Pick<WorkOrderEditableLine, 'key' | 'id' | 'technicianName' | 'isAddOn' | 'lineStatus' | 'isMine'>,
+  extras?: Partial<Pick<WorkOrderEditableLine, 'key' | 'id' | 'technicianName' | 'isAddOn' | 'lineStatus' | 'isMine'>>,
 ): WorkOrderEditableLine {
   return {
     key: extras?.key ?? nextLocalLineKey(),
@@ -377,7 +438,7 @@ export function addWorkOrderCatalogService(
   lines: WorkOrderEditableLine[],
   service: WorkOrderCatalogService,
 ): WorkOrderEditableLine[] {
-  return [...lines, lineFromCatalog(service)]
+  return [...lines, lineFromCatalog(service, { isMine: true })]
 }
 
 // Keeps the line's identity (id/key) so the save swaps the existing service rather than deleting
@@ -427,6 +488,7 @@ export function addWorkOrderCustomService(
       isAddOn: false,
       technicianName: null,
       approval: WORK_ORDER_SERVICE_APPROVAL.pending,
+      isMine: true,
     },
   ]
 }
