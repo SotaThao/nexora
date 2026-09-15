@@ -20,6 +20,7 @@ import type {
   PosWaitlistOrderApiDto,
   ReassignableStaffApiDto,
   ReassignPayrollWarningApiDto,
+  SaveOrderServiceLineAssignmentPayload,
   ServiceLineReassignmentApiDto,
 } from '../../types/repositories'
 import { mapOrderList } from './mapPosOrderList'
@@ -134,6 +135,20 @@ export function createPosOrdersRepository(client: HttpClient = httpClient) {
             { posStaffProfileId, note },
           ),
         false,
+      )
+    },
+
+    // The front desk's Assign Services button — every technician picked on the ticket, confirmed
+    // in one call. One transaction server-side, so a rejected technician leaves every line on the
+    // person it already had, and the technicians hear about it only once the desk confirms.
+    async saveOrderServiceLineAssignments(
+      businessId: string,
+      orderId: string,
+      assignments: SaveOrderServiceLineAssignmentPayload[],
+    ): Promise<boolean> {
+      return await client.post<boolean>(
+        `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/assign-batch`,
+        { assignments },
       )
     },
 

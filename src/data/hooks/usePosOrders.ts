@@ -23,6 +23,7 @@ import type {
   PosWaitlistOrderApiDto,
   ReassignableStaffApiDto,
   ReassignPayrollWarningApiDto,
+  SaveOrderServiceLineAssignmentPayload,
   ServiceLineReassignmentApiDto,
 } from '../../types/repositories'
 
@@ -202,6 +203,32 @@ export function useAssignStaffToServiceLine(businessId?: string) {
         queryClient.setQueryData(context.queryKey, context.previousOrder)
       }
     },
+    onSuccess: async (_result, { orderId }) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) }),
+        queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) }),
+        queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) }),
+        queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) }),
+        queryClient.invalidateQueries({ queryKey: qk.merchantPosCheckInOverview(businessId) }),
+      ])
+    },
+  })
+}
+
+// The front desk's Assign Services button (#1569) — the technician picks staged on the ticket,
+// confirmed in one call so the technicians are paged once, after the desk is done deciding.
+//
+// No optimistic patch on purpose: until this succeeds the ticket still belongs to whoever it
+// belonged to before, and the screen shows the staged picks from its own draft state.
+export function useSaveOrderServiceLineAssignments(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<
+    boolean,
+    Error,
+    { orderId: string; assignments: SaveOrderServiceLineAssignmentPayload[] }
+  >({
+    mutationFn: ({ orderId, assignments }) =>
+      posOrdersRepository.saveOrderServiceLineAssignments(businessId as string, orderId, assignments),
     onSuccess: async (_result, { orderId }) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) }),
