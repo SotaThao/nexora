@@ -99,6 +99,8 @@ import NewBookingForm from './booking/NewBookingForm'
 import BookingTab from './booking/BookingTab'
 import { formatBookingWallClockTime, resolveBookingWallClockParts } from './booking/bookingFormatters'
 import CustomerTab from './customer/CustomerTab'
+import CheckInsTodayCard from './checkin-overview/CheckInsTodayCard'
+import CheckInOverviewPanel from './checkin-overview/CheckInOverviewPanel'
 import TimeClockTab from './timeclock/TimeClockTab'
 import { beepCooldownUntil, useCooldownSeconds } from './timeclock/beepCooldown'
 import BeepInteractions from './timeclock/BeepInteractions'
@@ -615,6 +617,7 @@ export default function PosFrontDeskView({
     )
   }
   const [orderListFilter, setOrderListFilter] = useState<OrderListFilter>(OrderListFilter.Waiting)
+  const [showCheckInOverview, setShowCheckInOverview] = useState(false)
   const [viewMode, setViewMode] = useState<OrderListViewMode>(() =>
     storage.getItem(ORDER_LIST_VIEW_MODE_STORAGE_KEY) === OrderListViewMode.Card
       ? OrderListViewMode.Card
@@ -1496,28 +1499,12 @@ export default function PosFrontDeskView({
           <div className="py-6">
             <SkeletonList count={3} lines={1} />
           </div>
+        ) : showCheckInOverview ? (
+          <CheckInOverviewPanel businessId={businessId} onBack={() => setShowCheckInOverview(false)} />
         ) : (
-          <div className="flex min-h-0 flex-1 flex-col gap-3">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap gap-1.5 rounded-xl bg-nexoraCanvas/70 p-1.5">
-                {ORDER_LIST_FILTERS.map((filter) => (
-                  <button
-                    key={filter}
-                    type="button"
-                    onClick={() => setOrderListFilter(filter)}
-                    aria-pressed={orderListFilter === filter}
-                    className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold transition-all ${
-                      orderListFilter === filter
-                        ? ORDER_LIST_FILTER_STYLES[filter].active
-                        : ORDER_LIST_FILTER_STYLES[filter].inactive
-                    }`}
-                  >
-                    {/* Counted over the whole queue, not the active filter — the point of the
-                        number is deciding which chip to tap next. */}
-                    {t(tk(`orderListFilter.${filter}`))} ({orderListFilterCounts[filter]})
-                  </button>
-                ))}
-              </div>
+          <div className="relative flex min-h-0 flex-1 flex-col gap-3">
+            <div className="flex flex-col items-end gap-2 sm:absolute sm:right-0 sm:top-0">
+              <CheckInsTodayCard businessId={businessId} onViewOverview={() => setShowCheckInOverview(true)} />
               <div className="flex gap-1 rounded-xl border border-nexoraBorder bg-nexoraCanvas/70 p-1">
                 <button
                   type="button"
@@ -1544,6 +1531,26 @@ export default function PosFrontDeskView({
                   <LayoutGrid className="h-4 w-4" />
                 </button>
               </div>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 rounded-xl bg-nexoraCanvas/70 p-1.5 sm:max-w-[65%]">
+              {ORDER_LIST_FILTERS.map((filter) => (
+                <button
+                  key={filter}
+                  type="button"
+                  onClick={() => setOrderListFilter(filter)}
+                  aria-pressed={orderListFilter === filter}
+                  className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold transition-all ${
+                    orderListFilter === filter
+                      ? ORDER_LIST_FILTER_STYLES[filter].active
+                      : ORDER_LIST_FILTER_STYLES[filter].inactive
+                  }`}
+                >
+                  {/* Counted over the whole queue, not the active filter — the point of the
+                      number is deciding which chip to tap next. */}
+                  {t(tk(`orderListFilter.${filter}`))} ({orderListFilterCounts[filter]})
+                </button>
+              ))}
             </div>
 
             {orderListFilter === OrderListFilter.NotArrived ? renderNotArrivedList() : (() => {
@@ -1689,7 +1696,7 @@ export default function PosFrontDeskView({
                   <div className="flex min-h-0 flex-1 flex-col gap-3">
                   {attentionBadges}
                   <div
-                    className={`grid ${ORDER_LIST_FILL_MAIN_HEIGHT} content-start grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
+                    className={`grid ${ORDER_LIST_FILL_MAIN_HEIGHT} mt-8 content-start grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
                   >
                     {filteredOrderList.map((order) => (
                       <div
@@ -1737,7 +1744,7 @@ export default function PosFrontDeskView({
                 <div className="flex min-h-0 flex-1 flex-col gap-3">
                 {attentionBadges}
                 <div
-                  className={`${ORDER_LIST_FILL_MAIN_HEIGHT} overflow-auto rounded-xl border border-nexoraBorder bg-white`}
+                  className={`${ORDER_LIST_FILL_MAIN_HEIGHT} mt-8 overflow-auto rounded-xl border border-nexoraBorder bg-white`}
                 >
                   <table className="w-full min-w-[1100px] table-auto text-left text-xs">
                     <thead className="sticky top-0 z-[1] bg-nexoraCanvas/90">
