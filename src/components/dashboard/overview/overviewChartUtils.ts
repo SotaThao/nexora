@@ -14,7 +14,7 @@ function formatChartAxisLabel(dateStr: string, totalPoints: number, currentLangu
     if (totalPoints <= 7) {
       return d.toLocaleDateString('vi-VN', { weekday: 'short', timeZone: 'UTC' })
     }
-    return `${d.getUTCDate()} thg ${d.getUTCMonth() + 1}`
+    return `${d.getUTCDate()} tháng ${d.getUTCMonth() + 1}`
   }
 
   if (totalPoints <= 7) {

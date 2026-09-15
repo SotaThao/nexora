@@ -235,7 +235,7 @@ function Overview({
       const d = new Date(str + 'T00:00:00Z');
       if (isNaN(d.getTime())) return str;
       if (currentLanguage === 'vi') {
-        return `${d.getUTCDate()} thg ${d.getUTCMonth() + 1}, ${d.getUTCFullYear()}`;
+        return `${d.getUTCDate()} tháng ${d.getUTCMonth() + 1}, ${d.getUTCFullYear()}`;
       }
       return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
     };
@@ -295,7 +295,7 @@ function Overview({
         const d = new Date(str + 'T00:00:00Z');
         if (isNaN(d.getTime())) return str;
         if (currentLanguage === 'vi') {
-          return `${d.getUTCDate()} thg ${d.getUTCMonth() + 1}, ${d.getUTCFullYear()}`;
+          return `${d.getUTCDate()} tháng ${d.getUTCMonth() + 1}, ${d.getUTCFullYear()}`;
         }
         return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
       };
