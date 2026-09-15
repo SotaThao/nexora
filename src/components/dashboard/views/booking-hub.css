@@ -5579,6 +5579,24 @@ body.booking-appointment-panel-modal-open {
   grid-column: 1 / -1;
 }
 
+/* The knowledge library lives inside the AI Voice card, whose width varies independently
+   from the viewport. A container query keeps the table readable before adding its guide rail. */
+.booking-hub-view .voice-knowledge-container {
+  container-type: inline-size;
+}
+
+@container (min-width: 960px) {
+  .booking-hub-view .voice-knowledge-layout {
+    grid-template-columns: minmax(0, 1fr) 260px;
+  }
+
+  .booking-hub-view .voice-knowledge-guide {
+    border-color: transparent;
+    background: transparent;
+    padding: 16px 8px;
+  }
+}
+
 .booking-hub-view .settings-social-links {
   display: grid;
   grid-column: 1 / -1;
@@ -7794,8 +7812,8 @@ body.booking-appointment-panel-modal-open {
   }
 
   .booking-hub-view .settings-grid > [data-settings-card="voice"] {
-    grid-column: 2;
-    grid-row: 2;
+    grid-column: 1 / -1;
+    grid-row: 3;
   }
 
   .booking-hub-view .settings-save-bar {

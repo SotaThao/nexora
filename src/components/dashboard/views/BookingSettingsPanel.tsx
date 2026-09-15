@@ -3296,7 +3296,6 @@ export default function BookingSettingsPanel() {
         </div>
       </div>
 
-      <VoiceKnowledgePanel />
       <div className="settings-grid">
         <SettingsCard
           cardId="salon"
@@ -4384,6 +4383,8 @@ export default function BookingSettingsPanel() {
                 </div>
               </div>
             </label>
+
+            <VoiceKnowledgePanel />
 
             <div className="settings-first-call-sms settings-span-full">
               <div className="settings-first-call-sms-head">
