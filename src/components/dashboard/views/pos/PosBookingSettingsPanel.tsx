@@ -16,7 +16,7 @@ import BookingLinkShare from './booking/BookingLinkShare'
 const DEFAULT_SETTINGS: PosBookingSettingsApiDto = {
   autoConfirmEnabled: true,
   minLeadTimeMinutes: 15,
-  maxAdvanceDays: 7,
+  maxAdvanceDays: 365,
   reminderHoursBefore: 12,
   notifyCustomerSmsEnabled: true,
   notifyBusinessSmsEnabled: true,
