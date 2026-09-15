@@ -95,7 +95,7 @@ export function shiftLocalMonth(year: number, month: number, delta: number): { y
 }
 
 export function formatWorkOrderMonthLabel(year: number, month: number, language: string): string {
-  return new Intl.DateTimeFormat(workOrderDateLocale(language), { month: 'short', year: 'numeric' })
+  return new Intl.DateTimeFormat(workOrderDateLocale(language), { month: workOrderDateLocale(language) === 'vi-VN' ? 'long' : 'short', year: 'numeric' })
     .format(new Date(year, month - 1, 1))
 }
 

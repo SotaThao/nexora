@@ -28,7 +28,7 @@ export function formatHeaderMessageDateTime(value: string, language: string): st
   if (!date) return ''
 
   return new Intl.DateTimeFormat(getHeaderMessagesIntlLocale(language), {
-    month: 'short',
+    month: language === HEADER_MESSAGES_LANGUAGE_VI ? 'long' : 'short',
     day: 'numeric',
     year: 'numeric',
     hour: 'numeric',

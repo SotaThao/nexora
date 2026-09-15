@@ -327,12 +327,30 @@ function TipsOverTimePanel({
                 </div>
               </div>
             </div>
-            <div className="mt-1 flex justify-between gap-0.5 text-[10px] font-medium text-nexoraSubtle sm:text-sm">
-              {series.map((point, index) => (
-                <span key={`${point.label}-${index}`} className="min-w-0 flex-1 truncate text-center first:text-left last:text-right">
-                  {shouldShowChartAxisLabel(index, series.length, isCompactChart) ? point.label : ''}
-                </span>
-              ))}
+            <div className="relative mt-1 h-4 text-[10px] font-medium text-nexoraSubtle sm:h-5 sm:text-sm">
+              {series.map((point, index) => {
+                const lastIndex = series.length - 1
+                const showLabel = series.length <= 7
+                  ? shouldShowChartAxisLabel(index, series.length, isCompactChart)
+                  : index === 0 || index === lastIndex
+                    || (!isCompactChart && index === Math.floor(lastIndex / 2))
+                if (!showLabel) return null
+
+                return (
+                  <span
+                    key={`${point.label}-${index}`}
+                    className="absolute whitespace-nowrap"
+                    style={{
+                      left: `${lastIndex === 0 ? 50 : (index / lastIndex) * 100}%`,
+                      transform: lastIndex === 0 ? 'translateX(-50%)'
+                        : index === 0 ? undefined
+                          : index === lastIndex ? 'translateX(-100%)' : 'translateX(-50%)',
+                    }}
+                  >
+                    {point.label}
+                  </span>
+                )
+              })}
             </div>
           </div>
         </div>
