@@ -128,6 +128,58 @@ export function getBookingCalendarStatusGroup(status: string): BookingCalendarSt
   }
 }
 
+export type BookingCalendarStatusSummary = {
+  total: number
+  completed: number
+  upcoming: number
+  pending: number
+  cancelled: number
+}
+
+/** Appointment Status Summary (#1303) — same buckets as the calendar color legend. */
+export function summarizeBookingCalendarStatuses(
+  bookings: ReadonlyArray<Pick<BookingListItemApiDto, 'status'>>,
+): BookingCalendarStatusSummary {
+  const summary: BookingCalendarStatusSummary = {
+    total: bookings.length,
+    completed: 0,
+    upcoming: 0,
+    pending: 0,
+    cancelled: 0,
+  }
+  for (const booking of bookings) {
+    switch (getBookingCalendarStatusGroup(booking.status)) {
+      case BookingCalendarStatusGroup.Completed:
+        summary.completed += 1
+        break
+      case BookingCalendarStatusGroup.Upcoming:
+        summary.upcoming += 1
+        break
+      case BookingCalendarStatusGroup.Pending:
+        summary.pending += 1
+        break
+      case BookingCalendarStatusGroup.Cancelled:
+        summary.cancelled += 1
+        break
+    }
+  }
+  return summary
+}
+
+/**
+ * Prior period of equal shape for the "X% busier than …" comparison on the status summary.
+ * Day compares to the same weekday last week (e.g. this Saturday vs last Saturday).
+ */
+export function getBookingCalendarCompareRange(
+  anchorDate: string,
+  mode: PosBookingCalendarViewMode,
+): BookingCalendarRange {
+  if (mode === PosBookingCalendarViewMode.Day) {
+    return getBookingCalendarRange(formatLocalDateIso(addLocalDays(parseLocalDateIso(anchorDate), -7)), mode)
+  }
+  return getBookingCalendarRange(shiftBookingCalendarAnchor(anchorDate, mode, -1), mode)
+}
+
 function compareBookingWallClock(
   left: BookingListItemApiDto,
   right: BookingListItemApiDto,

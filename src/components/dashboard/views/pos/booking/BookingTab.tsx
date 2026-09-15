@@ -41,6 +41,7 @@ import { formatLocalDateIso } from '../../../../../utils/localDate'
 import { shiftLocalDateIso } from '../../bookingCalendarUtils'
 import {
   buildBookingCalendarOverviewDays,
+  getBookingCalendarCompareRange,
   getBookingCalendarRange,
   PosBookingCalendarViewMode,
 } from './bookingCalendarView'
@@ -118,12 +119,35 @@ export default function BookingTab({
     calendarRequestRange,
     { enabled: viewMode === 'calendar' },
   )
+  const compareRange = useMemo(
+    () => getBookingCalendarCompareRange(calendarAnchorDate, calendarViewMode),
+    [calendarAnchorDate, calendarViewMode],
+  )
+  const compareRequestRange = useMemo(
+    () => ({
+      dateFrom: shiftLocalDateIso(compareRange.dateFrom, -1),
+      dateTo: shiftLocalDateIso(compareRange.dateTo, 1),
+    }),
+    [compareRange],
+  )
+  const compareQuery = useAllBookingListPages(
+    businessId,
+    compareRequestRange,
+    { enabled: viewMode === 'calendar' },
+  )
   const calendarBookings = useMemo(
     () => (calendarQuery.data?.items ?? []).filter((booking) => {
       const date = bookingDateKey(booking.scheduledAt, booking.source)
       return date >= calendarRange.dateFrom && date <= calendarRange.dateTo
     }),
     [calendarQuery.data?.items, calendarRange],
+  )
+  const comparePeriodTotal = useMemo(
+    () => (compareQuery.data?.items ?? []).filter((booking) => {
+      const date = bookingDateKey(booking.scheduledAt, booking.source)
+      return date >= compareRange.dateFrom && date <= compareRange.dateTo
+    }).length,
+    [compareQuery.data?.items, compareRange],
   )
   const overviewDays = useMemo(
     () => buildBookingCalendarOverviewDays(
@@ -379,6 +403,7 @@ export default function BookingTab({
             anchorDate={calendarAnchorDate}
             range={calendarRange}
             overviewDays={overviewDays}
+            comparePeriodTotal={comparePeriodTotal}
             loading={calendarQuery.isLoading}
             error={calendarQuery.isError}
             onRetry={() => { void calendarQuery.refetch() }}
