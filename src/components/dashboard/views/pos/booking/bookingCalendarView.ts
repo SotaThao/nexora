@@ -78,6 +78,24 @@ export function getBookingCalendarRange(
   }
 }
 
+/**
+ * Date bounds for appointment-status metrics. Month mode stays inside the selected
+ * calendar month; the visual grid may still include adjacent spillover days.
+ */
+export function getBookingCalendarStatsRange(
+  anchorDate: string,
+  mode: PosBookingCalendarViewMode,
+): BookingCalendarRange {
+  if (mode !== PosBookingCalendarViewMode.Month) {
+    return getBookingCalendarRange(anchorDate, mode)
+  }
+  const anchor = parseLocalDateIso(anchorDate)
+  return {
+    dateFrom: formatLocalDateIso(new Date(anchor.getFullYear(), anchor.getMonth(), 1, 12)),
+    dateTo: formatLocalDateIso(new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0, 12)),
+  }
+}
+
 export function shiftBookingCalendarAnchor(
   anchorDate: string,
   mode: PosBookingCalendarViewMode,
@@ -126,6 +144,62 @@ export function getBookingCalendarStatusGroup(status: string): BookingCalendarSt
     default:
       return BookingCalendarStatusGroup.Upcoming
   }
+}
+
+export type BookingCalendarStatusSummary = {
+  total: number
+  completed: number
+  upcoming: number
+  pending: number
+  cancelled: number
+}
+
+/** Appointment Status Summary (#1303) — same buckets as the calendar color legend. */
+export function summarizeBookingCalendarStatuses(
+  bookings: ReadonlyArray<Pick<BookingListItemApiDto, 'status'>>,
+): BookingCalendarStatusSummary {
+  const summary: BookingCalendarStatusSummary = {
+    total: bookings.length,
+    completed: 0,
+    upcoming: 0,
+    pending: 0,
+    cancelled: 0,
+  }
+  for (const booking of bookings) {
+    switch (getBookingCalendarStatusGroup(booking.status)) {
+      case BookingCalendarStatusGroup.Completed:
+        summary.completed += 1
+        break
+      case BookingCalendarStatusGroup.Upcoming:
+        summary.upcoming += 1
+        break
+      case BookingCalendarStatusGroup.Pending:
+        summary.pending += 1
+        break
+      case BookingCalendarStatusGroup.Cancelled:
+        summary.cancelled += 1
+        break
+    }
+  }
+  return summary
+}
+
+/**
+ * Prior period of equal shape for the "X% busier than …" comparison on the status summary.
+ * Day compares to the same weekday last week (e.g. this Saturday vs last Saturday).
+ * Month compares the prior calendar month only (not the spillover grid used for rendering).
+ */
+export function getBookingCalendarCompareRange(
+  anchorDate: string,
+  mode: PosBookingCalendarViewMode,
+): BookingCalendarRange {
+  if (mode === PosBookingCalendarViewMode.Day) {
+    return getBookingCalendarStatsRange(
+      formatLocalDateIso(addLocalDays(parseLocalDateIso(anchorDate), -7)),
+      mode,
+    )
+  }
+  return getBookingCalendarStatsRange(shiftBookingCalendarAnchor(anchorDate, mode, -1), mode)
 }
 
 function compareBookingWallClock(
