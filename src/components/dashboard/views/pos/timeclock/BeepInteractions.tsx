@@ -18,6 +18,7 @@ import type { PosBeepApiDto } from '../../../../../types/repositories'
 import { beepCooldownUntil, useCooldownSeconds } from './beepCooldown'
 import PosBeepStatusPill from './PosBeepStatusPill'
 import { tk } from './timeClockI18n'
+import { TOAST_SNACK_DURATION_MS } from '../../../../../constants/toast'
 
 const ACTION_BUTTON =
   'flex h-8 shrink-0 items-center gap-1 rounded-lg border px-2 text-[11px] font-bold transition-colors disabled:opacity-60'
@@ -54,7 +55,7 @@ export default function BeepInteractions({
     if (isBusy) return
     try {
       await nudge.mutateAsync({ posStaffProfileId: beep.posStaffProfileId })
-      showToast(t(tk('beepNudgeSent'), { name: staffName }))
+      showToast(t(tk('beepNudgeSent'), { name: staffName }), 'success', TOAST_SNACK_DURATION_MS)
     } catch (err: unknown) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
     }
@@ -70,7 +71,7 @@ export default function BeepInteractions({
 
     try {
       await resolve.mutateAsync({ beepId: beep.beepId })
-      showToast(t(tk('beepResolveSuccess'), { name: staffName }))
+      showToast(t(tk('beepResolveSuccess'), { name: staffName }), 'success', TOAST_SNACK_DURATION_MS)
     } catch (err: unknown) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
     }

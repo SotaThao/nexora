@@ -26,6 +26,7 @@ import ToggleSwitch from '../../../../ui/ToggleSwitch'
 import IconButton from '../../../../ui/IconButton'
 import { SkeletonList } from '../../../../ui/skeleton'
 import WeeklyScheduleEditor, { type WeeklyScheduleEditorDay } from '../WeeklyScheduleEditor'
+import { TOAST_SNACK_DURATION_MS } from '../../../../../constants/toast'
 
 const PAY_STRUCTURE_TYPES = ['Commission', 'WeeklySalary', 'AgreedAmount'] as const
 type PayStructureType = (typeof PAY_STRUCTURE_TYPES)[number]
@@ -78,7 +79,7 @@ function TinField({
     try {
       await setTin.mutateAsync(payload)
       setInputValue('')
-      showToast(t('components.dashboard.views.pos.PosStaffProfileView.tinSavedSuccess'), 'success')
+      showToast(t('components.dashboard.views.pos.PosStaffProfileView.tinSavedSuccess'), 'success', TOAST_SNACK_DURATION_MS)
     } catch (err) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
     }
@@ -227,7 +228,7 @@ export default function PosStaffProfileDetailModal({
         agreedAmount: payStructureType === 'AgreedAmount' ? Number(agreedAmount) : null,
         tipsEnabled,
       })
-      showToast(t('components.dashboard.views.pos.PosStaffProfileView.profileSavedSuccess'), 'success')
+      showToast(t('components.dashboard.views.pos.PosStaffProfileView.profileSavedSuccess'), 'success', TOAST_SNACK_DURATION_MS)
     } catch (err) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
     }
@@ -239,7 +240,6 @@ export default function PosStaffProfileDetailModal({
     setStatus(newStatus)
     try {
       await setStaffStatus.mutateAsync({ businessStaffLinkId: linkId, status: newStatus })
-      showToast(t('components.dashboard.views.pos.PosStaffProfileView.statusSavedSuccess'), 'success')
     } catch (err) {
       setStatus(previousStatus)
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
@@ -249,7 +249,7 @@ export default function PosStaffProfileDetailModal({
   const handleSaveContractType = async () => {
     try {
       await updateContractType.mutateAsync({ businessStaffLinkId: linkId, contractType })
-      showToast(t('components.dashboard.views.pos.PosStaffProfileView.contractTypeSavedSuccess'), 'success')
+      showToast(t('components.dashboard.views.pos.PosStaffProfileView.contractTypeSavedSuccess'), 'success', TOAST_SNACK_DURATION_MS)
     } catch (err) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
     }
@@ -285,7 +285,7 @@ export default function PosStaffProfileDetailModal({
         businessStaffLinkId: linkId,
         posServiceIds: Array.from(checkedServiceIds),
       })
-      showToast(t('components.dashboard.views.pos.PosStaffProfileView.servicesSavedSuccess'), 'success')
+      showToast(t('components.dashboard.views.pos.PosStaffProfileView.servicesSavedSuccess'), 'success', TOAST_SNACK_DURATION_MS)
     } catch (err) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
     }
@@ -338,7 +338,7 @@ export default function PosStaffProfileDetailModal({
           endTime: day.isWorking ? toApiScheduleTime(day.endTime) : null,
         })),
       })
-      showToast(t('components.dashboard.views.pos.PosStaffProfileView.scheduleSavedSuccess'), 'success')
+      showToast(t('components.dashboard.views.pos.PosStaffProfileView.scheduleSavedSuccess'), 'success', TOAST_SNACK_DURATION_MS)
     } catch (err) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
     }
