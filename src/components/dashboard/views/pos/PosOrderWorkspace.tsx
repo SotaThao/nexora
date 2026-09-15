@@ -1316,7 +1316,6 @@ export default function PosOrderWorkspace({
   const runStartService = () => {
     if (!startTicketAction(TicketBusySurface.Status)) return
     startOrderService.mutate(orderId, {
-      onSuccess: () => showToast(t('components.dashboard.views.pos.PosOrderWorkspace.startServiceSuccess')),
       onError: reportError,
       onSettled: endTicketAction,
     })

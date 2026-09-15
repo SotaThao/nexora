@@ -40,6 +40,7 @@ import {
 } from '../bookingSettingsNewServiceDrafts'
 import { CheckCircleFillIcon } from '../BookingHubIcons'
 import CreateEditPosServiceModal from './modals/CreateEditPosServiceModal'
+import { TOAST_SNACK_DURATION_MS } from '../../../../constants/toast'
 
 type PosServiceSection = {
   id: string
@@ -275,14 +276,13 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
     try {
       if (modalState.service) {
         await updateService.mutateAsync({ serviceId: modalState.service.id, input })
-        showToast(t(`${TK}.updatedSuccess`), 'success')
       } else {
         await createService.mutateAsync(input)
         const successMessage =
           input.categoryIds.length > 0
             ? `${t(`${TK}.createdSuccess`)} ${t(`${TK}.revisitAssignmentNudge`)}`
             : t(`${TK}.createdSuccess`)
-        showToast(successMessage, 'success')
+        showToast(successMessage, 'success', TOAST_SNACK_DURATION_MS)
       }
       setModalState({ open: false, service: null, defaultCategoryId: null })
     } catch (error) {
@@ -438,7 +438,7 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
       setNewServiceDraftErrors(failedNew)
 
       if (firstFailure) showToast(firstFailure, 'error')
-      else showToast(t(`${TK}.updatedSuccess`), 'success')
+      else showToast(t(`${TK}.updatedSuccess`), 'success', TOAST_SNACK_DURATION_MS)
     } finally {
       setIsSavingAllServices(false)
     }
@@ -475,6 +475,7 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
             category: categoryName,
           }),
           'success',
+          TOAST_SNACK_DURATION_MS,
         )
       } catch (error) {
         showToast(t(getErrorI18nKey(getApiErrorCode(error))), 'error')
@@ -489,7 +490,7 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
     if (!confirmed) return
     try {
       await deleteService.mutateAsync(service.id)
-      showToast(t(`${TK}.deletedSuccess`), 'success')
+      showToast(t(`${TK}.deletedSuccess`), 'success', TOAST_SNACK_DURATION_MS)
     } catch (error) {
       showToast(t(getErrorI18nKey(getApiErrorCode(error))), 'error')
     }
@@ -590,7 +591,7 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
       setCategoryDrafts(savedDrafts)
       setDeletedCategoryIds([])
       setCategoryManagerOpen(false)
-      showToast(t('components.dashboard.views.pos.PosCategoriesView.updatedSuccess'), 'success')
+      showToast(t('components.dashboard.views.pos.PosCategoriesView.updatedSuccess'), 'success', TOAST_SNACK_DURATION_MS)
     } catch (error) {
       setCategoryError(t(getErrorI18nKey(getApiErrorCode(error))))
       showToast(t(`${TK}.categorySaveFailed`), 'error')

@@ -11,6 +11,7 @@ import { useNotification } from '../../../../../contexts/NotificationContext'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useBusinessHours, useUpdateBusinessHours } from '../../../../../data/hooks/useMerchantSetup'
 import type { BusinessHourEntry } from '../../../../../types/domain'
+import { TOAST_SNACK_DURATION_MS } from '../../../../../constants/toast'
 
 type SettingsFormErrors = Record<string, string>
 
@@ -101,7 +102,7 @@ export default function useBusinessHoursForm(_options: { verificationStatus?: st
 
     updateBusinessHoursMutation.mutate(days, {
       onSuccess: () => {
-        notify(t('components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully'))
+        notify(t('components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully'), 'success', TOAST_SNACK_DURATION_MS)
         setIsEditingHours(false)
       },
     })

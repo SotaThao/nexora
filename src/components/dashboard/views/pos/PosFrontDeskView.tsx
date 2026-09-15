@@ -120,6 +120,7 @@ import {
   DEFAULT_SETTINGS_TIMEZONE,
   detectTimeZoneFromAddressText,
 } from '../settingsLocationDetect'
+import { TOAST_SNACK_DURATION_MS } from '../../../../constants/toast'
 
 // Every string this screen passes to t() lives under one namespace — building them through tk()
 // keeps the prefix in a single place instead of repeating it two dozen times inline.
@@ -786,7 +787,7 @@ export default function PosFrontDeskView({
   const handleCheckInBooking = async (bookingId: string) => {
     try {
       await checkInBooking.mutateAsync(bookingId)
-      showToast(t(tk('notArrivedCheckInSuccess')))
+      showToast(t(tk('notArrivedCheckInSuccess')), 'success', TOAST_SNACK_DURATION_MS)
     } catch (err: unknown) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
     }
@@ -967,6 +968,7 @@ export default function PosFrontDeskView({
           ? t(tk('beepSent'), { name: station.displayName })
           : t(tk('beepNotDelivered'), { name: station.displayName }),
         result.delivered ? 'success' : 'error',
+        result.delivered ? TOAST_SNACK_DURATION_MS : undefined,
       )
     } catch (err: unknown) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')

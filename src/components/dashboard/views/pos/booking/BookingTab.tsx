@@ -46,6 +46,7 @@ import {
   getBookingCalendarStatsRange,
   PosBookingCalendarViewMode,
 } from './bookingCalendarView'
+import { TOAST_SNACK_DURATION_MS } from '../../../../../constants/toast'
 
 type ViewMode = 'table' | 'cards' | 'calendar'
 
@@ -201,7 +202,7 @@ export default function BookingTab({
     setCheckingInId(bookingId)
     try {
       await checkInMutation.mutateAsync(bookingId)
-      showToast(t(p + 'checkInSuccess'))
+      showToast(t(p + 'checkInSuccess'), 'success', TOAST_SNACK_DURATION_MS)
     } catch (err: unknown) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
     } finally {
@@ -217,7 +218,7 @@ export default function BookingTab({
     }
     try {
       await cancelMutation.mutateAsync({ bookingId: cancelTargetId, payload: { cancellationReason: cancelReason.trim() } })
-      showToast(t(p + 'cancelSuccess'))
+      showToast(t(p + 'cancelSuccess'), 'success', TOAST_SNACK_DURATION_MS)
       setCancelTargetId(null)
       setCancelReason('')
       setCancelReasonError('')
@@ -261,7 +262,7 @@ export default function BookingTab({
           })),
         },
       })
-      showToast(t(p + 'rescheduleSuccess'))
+      showToast(t(p + 'rescheduleSuccess'), 'success', TOAST_SNACK_DURATION_MS)
       closeReschedule()
     } catch (err: unknown) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
