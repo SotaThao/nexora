@@ -13,6 +13,7 @@ export enum PosFrontDeskTab {
   TurnBoard = 'turnboard',
   Completed = 'completed',
   Booking = 'booking',
+  Estimate = 'estimate',
   TimeClock = 'timeclock',
   Customer = 'customer',
   Report = 'report',
@@ -26,6 +27,7 @@ export const POS_FRONT_DESK_TABS: PosFrontDeskTab[] = [
   PosFrontDeskTab.CheckoutCustomer,
   PosFrontDeskTab.Completed,
   PosFrontDeskTab.Booking,
+  PosFrontDeskTab.Estimate,
   PosFrontDeskTab.TimeClock,
   PosFrontDeskTab.Customer,
 ]

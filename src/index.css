@@ -403,6 +403,13 @@ body:not(.homepage-active):not(.public-booking-active) input.vlinkpay-address-in
     font-size: 13px !important;
     font-weight: 600;
   }
+
+  /* POS Edit Service dialog — match HTML 12px fields, not the 16px iOS floor. */
+  body:not(.homepage-active):not(.public-booking-active) .booking-hub-view .settings-service-dialog.is-overview input.settings-input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+  body:not(.homepage-active):not(.public-booking-active) .booking-hub-view .settings-service-dialog.is-overview textarea.settings-input {
+    font-size: 12px !important;
+    font-weight: 400;
+  }
 }
 
 /* Prevent zoom on all other mobile browsers on narrow viewports */
@@ -417,6 +424,13 @@ body:not(.homepage-active):not(.public-booking-active) input.vlinkpay-address-in
   body:not(.homepage-active):not(.public-booking-active) .booking-hub-view .cust-modal select {
     font-size: 13px !important;
     font-weight: 600;
+  }
+
+  /* POS Edit Service dialog — match HTML 12px fields, not the 16px iOS floor. */
+  body:not(.homepage-active):not(.public-booking-active) .booking-hub-view .settings-service-dialog.is-overview input.settings-input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+  body:not(.homepage-active):not(.public-booking-active) .booking-hub-view .settings-service-dialog.is-overview textarea.settings-input {
+    font-size: 12px !important;
+    font-weight: 400;
   }
 }
 
@@ -483,6 +497,16 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 @layer components {
   .nexora-card {
     @apply rounded-xl border border-nexoraBorder bg-nexoraSurface shadow-nexora-card;
+  }
+
+  @media (min-width: 768px) {
+    .pos-estimate-card {
+      /* Reserve the 64px header and 56px spacing, including Safari's browser chrome. */
+      max-height: calc(100vh - 120px);
+      max-height: calc(100dvh - 120px);
+      overflow-y: auto;
+      overscroll-behavior-y: contain;
+    }
   }
 
   .nexora-modal-card {

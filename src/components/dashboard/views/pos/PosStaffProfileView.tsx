@@ -16,12 +16,17 @@ import {
   POS_TABLE_STICKY_ACTION_CELL_CLASS,
   POS_TABLE_STICKY_ACTION_HEADER_CLASS,
 } from './posTableStyles'
+import { formatPhoneDisplayPreservingDigits } from '../../../CountryCodeSelect'
 
 const SEARCH_DEBOUNCE_MS = 350
 const STAFF_TABLE_PAGE_SIZE = 10
 
 interface StaffTableItem {
   linkId: string | null
+  staffProfileId?: string | null
+  staffCode?: string | null
+  isLocalStaff?: boolean
+  bio?: string | null
   fullName: string
   displayName: string | null
   avatar: string | null
@@ -31,7 +36,10 @@ interface StaffTableItem {
   email: string | null
 }
 
-export default function PosStaffProfileView({ embedded = false }: { embedded?: boolean }) {
+export const formatStaffPhoneDisplay = (phone: string | null | undefined): string =>
+  formatPhoneDisplayPreservingDigits(phone)
+
+export default function PosStaffProfileView({ embedded = false, businessId }: { embedded?: boolean; businessId?: string }) {
   const { t } = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
   const selectedLinkId = searchParams.get('staff') ?? undefined
@@ -76,7 +84,9 @@ export default function PosStaffProfileView({ embedded = false }: { embedded?: b
     : staffNameFromQuery
   const selectedStaffAvatar = selectedStaff?.avatar ?? null
   const selectedStaffPosition = selectedStaff?.position ?? null
-  const selectedStaffContact = selectedStaff ? selectedStaff.phone || selectedStaff.email : null
+  const selectedStaffContact = selectedStaff
+    ? (selectedStaff.phone ? formatStaffPhoneDisplay(selectedStaff.phone) : selectedStaff.email)
+    : null
 
   return (
     <div className="space-y-6">
@@ -158,6 +168,7 @@ export default function PosStaffProfileView({ embedded = false }: { embedded?: b
                   staffItems.map((member, index) => {
                     const linkId = member.linkId ?? ''
                     const label = member.displayName || member.fullName
+                    const phoneDisplay = formatStaffPhoneDisplay(member.phone)
                     return (
                       <tr
                         key={linkId || index}
@@ -186,7 +197,7 @@ export default function PosStaffProfileView({ embedded = false }: { embedded?: b
                           {member.staffLevelName || '—'}
                         </td>
                         <td className={`px-5 py-4 text-xs font-semibold text-nexoraMuted ${member.phone ? 'whitespace-nowrap tabular-nums' : ''}`}>
-                          {member.phone || member.email || '—'}
+                          {phoneDisplay || member.email || '—'}
                         </td>
                         <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} px-5 py-4 text-center`}>
                           <div className="inline-flex w-max justify-center">
@@ -196,7 +207,7 @@ export default function PosStaffProfileView({ embedded = false }: { embedded?: b
                               disabled={!linkId}
                               className="rounded-lg border border-nexoraBorder px-2.5 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand disabled:opacity-60"
                             >
-                              {t('common.view')}
+                              {t('components.dashboard.views.pos.PosStaffProfileView.viewEditButton')}
                             </button>
                           </div>
                         </td>
@@ -227,11 +238,13 @@ export default function PosStaffProfileView({ embedded = false }: { embedded?: b
       {selectedLinkId && (
         <PosStaffProfileDetailModal
           key={selectedLinkId}
+          businessId={businessId}
           linkId={selectedLinkId}
           staffLabel={selectedStaffLabel}
           staffAvatar={selectedStaffAvatar}
           staffPosition={selectedStaffPosition}
           staffContact={selectedStaffContact}
+          staffInfo={selectedStaff}
           onClose={handleCloseModal}
         />
       )}

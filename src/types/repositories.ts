@@ -133,6 +133,7 @@ export interface PosServiceApiDto {
   displayOrder: number
   categoryIds: string[]
   tags: string[]
+  isRequiredApproval?: boolean
 }
 
 export interface PosTagApiDto {
@@ -377,6 +378,7 @@ export interface StaffWorkOrderItemApiDto {
   posStaffProfileId?: string | null
   /** See PosOrderItemStatus — drives the Accept/Decline/Start/Complete buttons. */
   lineStatus?: string | null
+  isRequiredApproval?: boolean
   isMine?: boolean
   acceptedAt?: string | null
   startedAt?: string | null
@@ -460,6 +462,7 @@ export interface StaffWorkOrderCatalogItemApiDto {
   durationMinutes?: number
   description?: string | null
   photoUrl?: string | null
+  isRequiredApproval?: boolean
   categories?: { id?: string; name?: string }[]
 }
 
@@ -1154,6 +1157,7 @@ export interface CheckoutServiceCatalogItemApiDto {
   durationMinutes: number
   description?: string | null
   photoUrl?: string | null
+  isRequiredApproval?: boolean
   categories: CatalogCategoryApiDto[]
 }
 

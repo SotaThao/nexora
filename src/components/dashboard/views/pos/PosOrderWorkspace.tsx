@@ -11,7 +11,7 @@
 // page (PosCheckInTab / CheckInSurface), the same one the customer kiosk runs.
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowLeft, Loader2, Package, UserRound, X, Printer, ClipboardCheck } from 'lucide-react'
+import { ArrowLeft, Loader2, Package, UserRound, Plus, X, Printer, ClipboardCheck } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import type { TechnicianOption } from '../../../checkin/parts/TechnicianPickerGrid'
 import { useNotification } from '../../../../contexts/NotificationContext'
@@ -34,6 +34,7 @@ import {
   useSetOrderDiscount,
   useSetOrderNote,
   useSetOrderStaffTipSplit,
+  useSetOrderPaymentMethod,
   useSetOrderTip,
   useUpdateOrderProductLineQuantity,
 } from '../../../../data/hooks/usePosCheckout'
@@ -50,6 +51,7 @@ import ServiceLineMismatchWarningModal, {
 import { useCheckInTechnicians } from '../../../../data/hooks/usePosCheckIn'
 import { usePosNextTurnBalance } from '../../../../data/hooks/usePosNextTurnBalance'
 import { useTimeClockRoster } from '../../../../data/hooks/usePosTimeClock'
+import { useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
 import { usePublicBusinessPaymentMethods } from '../../../../data/hooks/usePublicTouch'
 import { SHOW_SERVICE_ADD_ONS } from '../../../../constants/posFeatureVisibility'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
@@ -124,7 +126,7 @@ import { DASHBOARD_MENU_ID } from '../../constants'
 import { DEFAULT_POS_RECEIPT_SETTINGS, PosPrintTransport } from '../../../../constants/posPrinter'
 import { usePosReceiptSettings, usePosTicketPrinted } from '../../../../data/hooks/usePosPrinterSettings'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
-import { selectNextTurnTechnician } from './posNextTurn'
+import { selectNextTurnStation } from './posNextTurn'
 import type { PosReceiptMode } from './posWorkspaceUrl'
 import { todayIso as reportTodayIso } from './report/posReportPeriod'
 
@@ -150,10 +152,21 @@ const CORE_CHECKOUT_PAYMENT_METHODS = new Set<PosCheckoutPaymentMethodType>([
 // Keep the existing change-service flow available from Ticket Detail.
 const SHOW_CHANGE_SERVICE_ACTION = true
 
+// Long enough to swallow a run through the chip row, short enough that stepping away right after
+// the last tap still writes before the cashier can reach anything that reads the order back.
+const PAYMENT_METHOD_SAVE_DELAY_MS = 500
+
 // Split amounts are compared in whole cents: a split that is one cent out has to read as one cent
 // out, and float dollars cannot be trusted to say so.
 function toPaymentCents(amount: number) {
   return Math.round(amount * 100)
+}
+
+function isRedundantEstimateLineNote(note: string | undefined, orderNote: string) {
+  // Older Estimate tickets saved this boilerplate on every quantity unit. Suppress only
+  // the exact persisted format when the shared quote is present; leave stored notes intact.
+  return /^Estimated unit price: \$\d+\.\d{2}\. Confirm at checkout\.$/.test(note?.trim() ?? '')
+    && /^Service estimate: subtotal \$\d+\.\d{2}; discount (?:\d+(?:\.\d+)?%|\$\d+\.\d{2}) \(\$\d+\.\d{2}\); estimated total \$\d+\.\d{2}\. Tax and tip excluded\. Confirm final prices and discount at checkout\.$/.test(orderNote.trim())
 }
 
 function round2(value: number) {
@@ -384,6 +397,49 @@ export default function PosOrderWorkspace({
   const orderSettings = useOrderSettings(businessId)
   const setOrderDiscount = useSetOrderDiscount(businessId)
   const setTip = useSetOrderTip(businessId)
+  const setOrderPaymentMethod = useSetOrderPaymentMethod(businessId)
+
+  // Picking a chip is instant on screen — the selection is local state — so the write behind it is
+  // coalesced rather than fired per tap. A cashier flicking Cash → Card → Split Pay leaves one
+  // request, not three, and nothing on screen waits for any of them.
+  const pendingPaymentMethodRef = useRef<PosCheckoutPaymentMethodType | null>(null)
+  const paymentMethodSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearPaymentMethodSave = () => {
+    if (paymentMethodSaveTimerRef.current !== null) clearTimeout(paymentMethodSaveTimerRef.current)
+    paymentMethodSaveTimerRef.current = null
+    pendingPaymentMethodRef.current = null
+  }
+
+  const flushPaymentMethodSave = () => {
+    const pending = pendingPaymentMethodRef.current
+    clearPaymentMethodSave()
+    if (pending === null) return
+    // A failed write costs only the persistence — the chip on screen still drives Pay — so it
+    // reports itself without pulling the cashier out of the checkout.
+    setOrderPaymentMethod.mutate({ orderId, paymentMethodType: pending }, { onError: reportError })
+  }
+
+  const queuePaymentMethodSave = (value: PosCheckoutPaymentMethodType) => {
+    // Landing back on what the order already holds cancels the pending write instead of sending a
+    // request that would change nothing.
+    if (order?.paymentMethodType === value) {
+      clearPaymentMethodSave()
+      return
+    }
+    pendingPaymentMethodRef.current = value
+    if (paymentMethodSaveTimerRef.current !== null) clearTimeout(paymentMethodSaveTimerRef.current)
+    paymentMethodSaveTimerRef.current = setTimeout(flushPaymentMethodSave, PAYMENT_METHOD_SAVE_DELAY_MS)
+  }
+
+  // Read through a ref so the unmount cleanup below runs the current closure rather than the one
+  // captured on first render, without re-subscribing on every keystroke elsewhere in the screen.
+  const flushPaymentMethodSaveRef = useRef(flushPaymentMethodSave)
+  flushPaymentMethodSaveRef.current = flushPaymentMethodSave
+
+  // Leaving the checkout is the cashier finishing with the chip, so the pending choice is written
+  // rather than dropped — otherwise a tap followed straight by Back would be silently lost.
+  useEffect(() => () => flushPaymentMethodSaveRef.current(), [])
   const setNote = useSetOrderNote(businessId)
   const setStaffTipSplit = useSetOrderStaffTipSplit(businessId)
   const setPaymentAllocations = useSetOrderPaymentAllocations(businessId)
@@ -442,6 +498,10 @@ export default function PosOrderWorkspace({
   const technicianTurnWindow = getLocalDayWindow(new Date(), businessTimeZone?.trim() || 'America/Chicago')
   // Warm the shared next-turn data while the operator reviews the ticket, before opening a picker.
   const technicianTurnRosterQuery = useTimeClockRoster(businessId, technicianTurnWindow, {
+    enabled: canEditLines,
+    refetchInterval: 5000,
+  })
+  const technicianTurnBoardQuery = useTurnBoard(businessId, {
     enabled: canEditLines,
     refetchInterval: 5000,
   })
@@ -655,7 +715,16 @@ export default function PosOrderWorkspace({
     setNoteInput(mode === 'edit' ? initialTicketNote ?? order.note ?? '' : order.note ?? '')
     if (mode !== 'success') {
       setReceiptChoice('none')
-      setPaymentMethod('Cash')
+      // The chip the cashier picked is stored on the order, so reopening checkout shows their
+      // choice rather than dropping back to the Cash default. Saved portions are the fallback:
+      // orders split before the method was persisted carry allocations but no method of their own.
+      setPaymentMethod(
+        isPosCheckoutPaymentMethod(order.paymentMethodType)
+          ? order.paymentMethodType
+          : order.paymentAllocations.length > 0
+            ? PosCheckoutPaymentMethod.SplitPay
+            : PosCheckoutPaymentMethod.Cash,
+      )
       cashReceivedWasEditedRef.current = false
       setCashReceived(formatUsdInputAmount(order.total))
       setCompletedPayment(null)
@@ -842,36 +911,33 @@ export default function PosOrderWorkspace({
       eligibleTechnicians.map((technician) => technician.posStaffProfileId),
     )
     const rosterRows = technicianTurnRosterQuery.data?.rows ?? []
-    // Weighted, so the picker's figure matches the Turn Board badge for the same technician.
-    const assignedTurnsToday = new Map(
-      rosterRows.map((row) => [row.posStaffProfileId, row.weightedTurnsToday ?? 0]),
-    )
-    const serviceAmountsByTechnicianId = technicianNextTurnBalanceQuery.data?.completedAmounts ?? new Map<string, number>()
-    const nextTurnTechnician = technicianNextTurnBalanceQuery.data
-      && !technicianNextTurnBalanceQuery.isRecalculating
-      && !technicianNextTurnBalanceQuery.isError && !technicianTurnRosterQuery.isError
-      ? selectNextTurnTechnician(
+    const stations = technicianTurnBoardQuery.data ?? []
+    const nextTurnTechnician = !technicianTurnBoardQuery.isError && !technicianTurnRosterQuery.isError
+      ? selectNextTurnStation(
+          stations.filter(station => eligibleTechnicianIds.has(station.posStaffProfileId)),
           rosterRows,
-          eligibleTechnicianIds,
-          serviceAmountsByTechnicianId,
-          technicianNextTurnBalanceQuery.data,
+          technicianNextTurnBalanceQuery.data?.availableSince,
         )
       : undefined
 
-    return eligibleTechnicians.map((technician) => ({
-      ...technician,
-      // The polled roster reflects current work more recently than the catalog roster.
-      isBusy: rosterRows.find(row => row.posStaffProfileId === technician.posStaffProfileId)?.currentOrderId
-        ? true : rosterRows.some(row => row.posStaffProfileId === technician.posStaffProfileId)
-          ? false : technician.isBusy,
-      completedTurns: technicianNextTurnBalanceQuery.data?.completedTurns?.get(technician.posStaffProfileId) ?? (technicianNextTurnBalanceQuery.data ? 0 : undefined),
-      assignedTurns: assignedTurnsToday.get(technician.posStaffProfileId),
-      isNextTurn: technician.posStaffProfileId === nextTurnTechnician?.posStaffProfileId,
-    }))
+    return eligibleTechnicians.map((technician) => {
+      const station = stations.find(row => row.posStaffProfileId === technician.posStaffProfileId)
+      const rosterRow = rosterRows.find(row => row.posStaffProfileId === technician.posStaffProfileId)
+      return {
+        ...technician,
+        isBusy: station ? station.currentStatus === PosOrderStatus.InService
+          : rosterRow ? Boolean(rosterRow.currentOrderId) : technician.isBusy,
+        // All weighted turns assigned today, including completed and provisional services.
+        assignedTurns: station?.weightedTurnsToday ?? rosterRow?.weightedTurnsToday,
+        // Completed ticket counts cannot represent weighted turns completed today.
+        isNextTurn: technician.posStaffProfileId === nextTurnTechnician?.posStaffProfileId,
+      }
+    })
   }
 
   const noteLines = visibleLines.filter(
-    (l): l is DisplayServiceLine => l.itemType === 'Service' && Boolean(l.note?.trim()),
+    (l): l is DisplayServiceLine => l.itemType === 'Service' && Boolean(l.note?.trim())
+      && !isRedundantEstimateLineNote(l.note, noteInput),
   )
 
   const reportError = (err: unknown) => {
@@ -1412,6 +1478,9 @@ export default function PosOrderWorkspace({
   const runComplete = () => {
     if (!order) return
     if (!startTicketAction(TicketBusySurface.Complete)) return
+    // Complete carries the method itself and closes the order to edits, so a queued write landing
+    // after it would only fail — and show the cashier an error about a payment that went through.
+    clearPaymentMethodSave()
     const submittedReceiptMode = receiptChoice
     completeOrder.mutate(
       {
@@ -1506,6 +1575,7 @@ export default function PosOrderWorkspace({
 
             <CategoryGroupedCatalogPicker
               variant="grid"
+              showDuration
               items={serviceCatalog}
               isPending={isServiceCatalogPending}
               onAdd={(itemId) => {
@@ -1553,8 +1623,9 @@ export default function PosOrderWorkspace({
                       })
                     }
                     disabled={isBusy}
-                    className="h-7 shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrandSoft/50 px-3 text-[11px] font-bold text-nexoraBrandDark transition-colors hover:bg-nexoraBrandSoft disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex h-7 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-nexoraBrand bg-nexoraBrandSoft/50 px-3 text-[11px] font-bold text-nexoraBrandDark transition-colors hover:bg-nexoraBrandSoft disabled:cursor-not-allowed disabled:opacity-60"
                   >
+                    <Plus aria-hidden="true" className="h-4 w-4 shrink-0" />
                     {t('components.dashboard.views.pos.PosOrderWorkspace.addCustomServiceButton')}
                   </button>
                 ) : null}
@@ -2165,6 +2236,9 @@ export default function PosOrderWorkspace({
                     value={paymentMethod}
                     onChange={(value) => {
                       setPaymentMethod(value)
+                      // Stored so the choice survives reopening the ticket, coalesced so holding
+                      // down the chip row does not become a request per tap.
+                      queuePaymentMethodSave(value)
                       // Split Pay is a doorway, not a method: picking it opens the dialog where the
                       // real portions get built. The payment is still confirmed by Pay below.
                       if (value === PosCheckoutPaymentMethod.SplitPay) setIsQuickSplitOpen(true)
@@ -2484,7 +2558,7 @@ export default function PosOrderWorkspace({
       lines: group.lines.map((line) => ({
         id: line.key,
         name: line.serviceName,
-        note: line.note,
+        note: isRedundantEstimateLineNote(line.note, noteInput) ? undefined : line.note,
         amount: lineTotal(line),
         discountLabel: line.discountAmount > 0
           ? formatDiscountPriceBadge(line.discountType, line.discountValue, line.discountAmount)
@@ -2710,7 +2784,7 @@ export default function PosOrderWorkspace({
         isLoading={areTechniciansPending && allTechnicians.length === 0}
         selectedStaffId={technicianTarget?.posStaffProfileId ?? null}
         currentTechnicianName={technicianTarget?.technicianName}
-        turnsError={technicianNextTurnBalanceQuery.isError || technicianTurnRosterQuery.isError}
+        turnsError={technicianTurnBoardQuery.isError || technicianTurnRosterQuery.isError}
         note={noteDraft}
         onChangeNote={setNoteDraft}
         onSelect={handleSelectTechnician}

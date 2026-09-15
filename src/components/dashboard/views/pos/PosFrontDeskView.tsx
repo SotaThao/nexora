@@ -38,7 +38,6 @@ import { formatPosTime } from './posDateTime'
 import { useCancelOrder, useCompletedOrders, useOrderList } from '../../../../data/hooks/usePosOrders'
 import { useInServiceOrders, useOrderDetails } from '../../../../data/hooks/usePosCheckout'
 import { useBookingList, useCheckInBookingFromList } from '../../../../data/hooks/usePosBooking'
-import { useCheckInTechnicians } from '../../../../data/hooks/usePosCheckIn'
 import { useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
 import { useBeepStaff, useTimeClockRoster } from '../../../../data/hooks/usePosTimeClock'
 import { useMerchantBeepFeed } from '../../../../data/hooks/usePosBeep'
@@ -94,6 +93,7 @@ import {
   type PosReportSelection,
 } from './report/posReportPeriod'
 import PosCheckInTab from './PosCheckInTab'
+import PosEstimateTab from './PosEstimateTab'
 import PosCompletedOrdersPanel from './PosCompletedOrdersPanel'
 import NewBookingForm from './booking/NewBookingForm'
 import BookingTab from './booking/BookingTab'
@@ -107,7 +107,7 @@ import WeightedTurnSettingsModal from './modals/WeightedTurnSettingsModal'
 import TurnGridView, { formatServiceTotal, formatTurnCredit } from './TurnGridView'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { formatCurrency } from '../../utils'
-import { compareNextTurnRows, nextTurnServiceAmount, selectNextTurnTechnician, sortTurnBoardStations } from './posNextTurn'
+import { compareNextTurnRows, nextTurnServiceAmount, selectNextTurnStation, sortTurnBoardStations } from './posNextTurn'
 import {
   POS_TABLE_HEADER_CELL_CLASS,
   POS_TABLE_HEADER_ROW_CLASS,
@@ -432,6 +432,10 @@ export default function PosFrontDeskView({
   const initialTab: PosFrontDeskTab =
     tabFromUrl && availableTabs.includes(tabFromUrl) ? tabFromUrl : DEFAULT_POS_FRONT_DESK_TAB
   const [activeTab, setActiveTabState] = useState<PosFrontDeskTab>(initialTab)
+  const [estimateOpened, setEstimateOpened] = useState(initialTab === PosFrontDeskTab.Estimate)
+  useEffect(() => {
+    if (activeTab === PosFrontDeskTab.Estimate) setEstimateOpened(true)
+  }, [activeTab])
   const previousActiveTabRef = useRef<PosFrontDeskTab | null>(null)
   // Each Front Desk data set is loaded only while its tab is open. Leaving a tab disables its
   // observer; returning to it or reloading triggers a fresh request instead of background polls.
@@ -512,47 +516,13 @@ export default function PosFrontDeskView({
     },
   )
   const todayCompletedOrderItems = todayCompletedOrdersQuery.data?.items ?? []
-  // "Next turn" is a suggestion for the oldest Waiting ticket, not a fixed rotation leader.
-  // Load only that ticket's service ids so the recommendation can respect the skill matrix.
-  const nextWaitingOrder = useMemo(
-    () => orderList.find((order) => order.status === PosOrderStatus.Waiting),
-    [orderList],
-  )
-  const nextWaitingOrderDetails = useOrderDetails(
-    businessId,
-    nextWaitingOrder ? [nextWaitingOrder.id] : [],
-    { enabled: activeTab === PosFrontDeskTab.TurnBoard },
-  )
-  const nextWaitingOrderDetail = nextWaitingOrderDetails[0]?.data
-  const nextTurnTechniciansQuery = useCheckInTechnicians(businessId, {
-    enabled: activeTab === PosFrontDeskTab.TurnBoard && Boolean(nextWaitingOrder),
-  })
   const todayTurnRows = [...(todayRosterQuery.data?.rows ?? [])].sort(compareNextTurnRows)
-  const nextTurnRequiredServiceIds = Array.from(
-    new Set(
-      (nextWaitingOrderDetail?.serviceLines ?? [])
-        .map((line) => line.posServiceId)
-        .filter(Boolean),
-    ),
-  )
-  const nextTurnSkilledTechnicianIds = new Set(
-    (nextTurnTechniciansQuery.data ?? [])
-      .filter(
-        (technician) =>
-          nextTurnRequiredServiceIds.length > 0 &&
-          nextTurnRequiredServiceIds.every((serviceId) => technician.serviceIds.includes(serviceId)),
-      )
-      .map((technician) => technician.posStaffProfileId),
-  )
   const serviceAmountsTodayByStaffId = todayNextTurnBalanceQuery.data?.completedAmounts ?? new Map<string, number>()
-  const nextTurnTechnician = todayNextTurnBalanceQuery.data
-    && !todayNextTurnBalanceQuery.isRecalculating
-    && !todayNextTurnBalanceQuery.isError && !todayRosterQuery.isError
-    ? selectNextTurnTechnician(
-        todayTurnRows,
-        nextTurnSkilledTechnicianIds,
-        serviceAmountsTodayByStaffId,
-        todayNextTurnBalanceQuery.data,
+  const nextTurnTechnician = !turnBoardQuery.isError && !todayRosterQuery.isError
+    ? selectNextTurnStation(
+        turnBoard,
+        todayRosterQuery.data?.rows ?? [],
+        todayNextTurnBalanceQuery.data?.availableSince,
       )
     : undefined
   // A ticket with one technician is already unambiguous from the list response. Only fetch
@@ -794,6 +764,7 @@ export default function PosFrontDeskView({
     queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
     queryClient.invalidateQueries({ queryKey: qk.merchantPosTimeClockRoster(businessId) })
     queryClient.invalidateQueries({ queryKey: qk.merchantPosCompletedOrders(businessId) })
+    queryClient.invalidateQueries({ queryKey: qk.merchantPosCheckInTechnicians(businessId) })
   }
 
   const handleCancel = async (orderId: string, name: string) => {
@@ -1390,7 +1361,7 @@ export default function PosFrontDeskView({
   }
 
   return (
-    <div className="pos-front-desk-action-surface flex h-full min-h-0 flex-col gap-4">
+    <div className="pos-front-desk-action-surface flex flex-col gap-4">
       {/* Hidden while an Order Workspace is open (Check-in draft or editing an existing
           order) — iPad space optimization: this title/description block is
           "where am I" chrome that's redundant once the staff is heads-down on one
@@ -1446,6 +1417,26 @@ export default function PosFrontDeskView({
           </button>
         ))}
       </ScrollableTabStrip>
+
+      {estimateOpened ? (
+        <div className={!updateWorkspace && activeTab === PosFrontDeskTab.Estimate ? '' : 'hidden'}>
+          <PosEstimateTab
+            key={businessId}
+            businessId={businessId}
+            onCheckedIn={refreshFrontDeskLists}
+            onFinished={() => {
+              setActiveTab(PosFrontDeskTab.OrderList)
+              setOrderListFilter(OrderListFilter.All)
+              refreshFrontDeskLists()
+            }}
+            onViewTickets={() => {
+              setActiveTab(PosFrontDeskTab.OrderList)
+              setOrderListFilter(OrderListFilter.All)
+              refreshFrontDeskLists()
+            }}
+          />
+        </div>
+      ) : null}
 
       {updateWorkspace ? (
         <PosOrderWorkspace

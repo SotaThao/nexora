@@ -46,9 +46,12 @@ import {
   canEditWorkOrderServices,
   removeWorkOrderServiceLine,
   replaceWorkOrderCatalogService,
+  retainPendingLocalWorkOrderLines,
+  toDirectSaveWorkOrderServiceLinesPayload,
   toSaveWorkOrderServiceLinesPayload,
   toWorkOrderEditableLines,
   workOrderEditableServiceTotal,
+  workOrderServiceLinePayloadsEqual,
   WORK_ORDER_TICKET_FOOTER_ACTION,
   workOrderTicketFooterAction,
   workOrderCallerWorkDone,
@@ -246,6 +249,33 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
     setLines(ticket ? toWorkOrderEditableLines(ticket.items) : [])
     setApprovalError(null)
   }
+
+  const applyServiceLineEdits = (next: WorkOrderEditableLine[]) => {
+    setApprovalError(null)
+    setLines(next)
+    if (!ticket) return
+
+    const payload = toDirectSaveWorkOrderServiceLinesPayload(next)
+    if (!payload) return
+
+    const currentPayload = toSaveWorkOrderServiceLinesPayload(toWorkOrderEditableLines(ticket.items))
+    if (workOrderServiceLinePayloadsEqual(payload, currentPayload)) return
+
+    saveServiceLines.mutate(
+      { customerPhoneLast4: null, lines: payload },
+      {
+        onSuccess: (saved) => {
+          if (saved) {
+            setLines((current) => retainPendingLocalWorkOrderLines(saved.items, current))
+          }
+        },
+        onError: (err) => {
+          showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), WORK_ORDER_TOAST_TYPE.error)
+          setLines((current) => retainPendingLocalWorkOrderLines(ticket.items, current))
+        },
+      },
+    )
+  }
   
   const handleStartTicket = async () => {
     const succeeded = await runAction(
@@ -325,10 +355,7 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
         onAddService={() => setPicker({ mode: WORK_ORDER_PICKER_MODE.add })}
         onAddCustomService={() => setIsCustomOpen(true)}
         onChangeService={(key) => setPicker({ mode: WORK_ORDER_PICKER_MODE.edit, lineKey: key })}
-        onRemoveService={(key) => {
-          setLines((current) => removeWorkOrderServiceLine(current, key))
-          setApprovalError(null)
-        }}
+        onRemoveService={(key) => applyServiceLineEdits(removeWorkOrderServiceLine(lines, key))}
         isSaving={saveServiceLines.isPending}
         approvalError={approvalError}
         onApprovePending={handleApproveChanges}
@@ -401,13 +428,10 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
               : ''
           }
           onConfirm={(services: WorkOrderCatalogService[]) => {
-            setApprovalError(null)
-            setLines((current) => {
-              if (picker.mode === WORK_ORDER_PICKER_MODE.edit && picker.lineKey) {
-                return replaceWorkOrderCatalogService(current, picker.lineKey, services[0])
-              }
-              return services.reduce(addWorkOrderCatalogService, current)
-            })
+            const next = picker.mode === WORK_ORDER_PICKER_MODE.edit && picker.lineKey
+              ? replaceWorkOrderCatalogService(lines, picker.lineKey, services[0])
+              : services.reduce(addWorkOrderCatalogService, lines)
+            applyServiceLineEdits(next)
             setPicker(null)
           }}
           onClose={() => setPicker(null)}

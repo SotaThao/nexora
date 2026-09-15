@@ -89,7 +89,8 @@ export default function SinglePageCheckInLayout({
             services={session.catalog}
             isLoading={session.isCatalogLoading}
             selectedServiceIds={session.selectedServiceIds}
-            onToggle={session.toggleService}
+            onAdd={session.addService}
+            isSubmitting={session.isSubmitting}
           />
         </div>
 
@@ -97,7 +98,10 @@ export default function SinglePageCheckInLayout({
           <SelectedServicesSummary
             services={session.selectedServices}
             totalPrice={session.totalPrice}
-            onRemove={session.toggleService}
+            onAdd={session.addService}
+            onRemove={session.removeService}
+            onRemoveGroup={session.removeServiceGroup}
+            isSubmitting={session.isSubmitting}
           />
 
           <FrontDeskNoteCard note={session.note} onChangeNote={session.setNote} />

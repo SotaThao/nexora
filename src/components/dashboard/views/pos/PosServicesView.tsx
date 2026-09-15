@@ -83,7 +83,12 @@ function toServiceInput(service: PosServiceApiDto): PosServiceInput {
     categoryIds: service.categoryIds,
     tags: service.tags,
     status: service.status,
+    isRequiredApproval: Boolean(service.isRequiredApproval),
   }
+}
+
+function toApprovalBadge(required: boolean, label: string) {
+  return { required, label }
 }
 
 function groupServicesByCategory(
@@ -659,6 +664,7 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
                 price: t(`${TK}.priceColumn`),
                 duration: t(`${TK}.durationColumn`),
                 status: t(`${TK}.statusColumn`),
+                approval: t(`${TK}.approvalColumn`),
                 empty: t(`${TK}.categoryEmpty`),
               }}
               renderItem={(service, dragHandle) => {
@@ -682,6 +688,11 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
                             ),
                             tone: item.status === 'Active' ? 'active' : 'inactive',
                           }),
+                          getApproval: (item) =>
+                            toApprovalBadge(
+                              Boolean(item.isRequiredApproval),
+                              t(`${TK}.${item.isRequiredApproval ? 'approvalYes' : 'approvalNo'}`),
+                            ),
                         }}
                         controller={{
                           onChange: updateInlineServiceDraft,
@@ -724,6 +735,7 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
                         label: t(`${TK}.activeBadge`),
                         tone: 'active',
                       }),
+                      getApproval: () => toApprovalBadge(false, t(`${TK}.approvalNo`)),
                     }}
                     controller={{
                       onChange: updateNewServiceDraft,
