@@ -764,6 +764,7 @@ export default function PosFrontDeskView({
     queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
     queryClient.invalidateQueries({ queryKey: qk.merchantPosTimeClockRoster(businessId) })
     queryClient.invalidateQueries({ queryKey: qk.merchantPosCompletedOrders(businessId) })
+    queryClient.invalidateQueries({ queryKey: qk.merchantPosCheckInTechnicians(businessId) })
   }
 
   const handleCancel = async (orderId: string, name: string) => {
