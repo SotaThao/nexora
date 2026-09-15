@@ -194,8 +194,8 @@ export default function StaffTaxProfileCard() {
 
   return (
     <div className="nexora-card p-6">
-      <h2 className="text-sm font-extrabold text-nexoraText">{t('taxiq.taxProfile.title')}</h2>
-      <p className="mt-1 text-xs text-nexoraMuted">{t('taxiq.taxProfile.description')}</p>
+      <h2 className="text-nexoraText text-sm font-semibold leading-snug">{t('taxiq.taxProfile.title')}</h2>
+      <p className="mt-1 text-nexoraMuted text-[13px] font-normal leading-5">{t('taxiq.taxProfile.description')}</p>
 
       {isLoading ? (
         <div className="mt-4 h-16 animate-pulse rounded-lg bg-nexoraCanvas" />
@@ -231,15 +231,15 @@ export default function StaffTaxProfileCard() {
             type="button"
             onClick={handleSave}
             disabled={upsertProfile.isPending}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
           >
             {upsertProfile.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
             {t('taxiq.taxProfile.saveButton')}
           </button>
 
           <div className="mt-6 border-t border-nexoraRule pt-4">
-            <h3 className="text-xs font-extrabold uppercase text-nexoraMuted">{t('taxiq.taxProfile.w9.title')}</h3>
-            <p className="mt-1 text-xs text-nexoraMuted">{t('taxiq.taxProfile.w9.description')}</p>
+            <h3 className="text-nexoraMuted text-sm font-semibold leading-snug">{t('taxiq.taxProfile.w9.title')}</h3>
+            <p className="mt-1 text-nexoraMuted text-[13px] font-normal leading-5">{t('taxiq.taxProfile.w9.description')}</p>
 
             <div className="mt-3 space-y-3">
               <div>
@@ -353,7 +353,7 @@ export default function StaffTaxProfileCard() {
                     className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
                   />
                   {w9Errors.otherClassificationDescription && (
-                    <p className="mt-1 text-xs font-semibold text-rose-500">{w9Errors.otherClassificationDescription}</p>
+                    <p className="mt-1 text-rose-500 text-[13px] font-normal leading-5">{w9Errors.otherClassificationDescription}</p>
                   )}
                 </div>
               )}
@@ -375,7 +375,7 @@ export default function StaffTaxProfileCard() {
                 type="button"
                 onClick={handleSaveW9}
                 disabled={upsertW9Record.isPending}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white disabled:opacity-60"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
               >
                 {upsertW9Record.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 {t('taxiq.taxProfile.w9.saveButton')}
@@ -405,7 +405,7 @@ export default function StaffTaxProfileCard() {
                         href={profile.w9Record.signedDocumentUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-xs font-bold text-nexoraBrand hover:underline"
+                        className="text-xs font-semibold text-nexoraBrand hover:underline"
                       >
                         {t('taxiq.taxProfile.w9.documentAttached')}
                       </a>
@@ -433,7 +433,7 @@ export default function StaffTaxProfileCard() {
                       type="button"
                       onClick={handleCertify}
                       disabled={certifyW9Record.isPending}
-                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-bold text-nexoraText disabled:opacity-60"
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-semibold text-nexoraText disabled:opacity-60"
                     >
                       {certifyW9Record.isPending ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />

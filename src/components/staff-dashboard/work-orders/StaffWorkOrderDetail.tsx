@@ -52,6 +52,7 @@ import {
   WORK_ORDER_TICKET_FOOTER_ACTION,
   workOrderTicketFooterAction,
   workOrderCallerWorkDone,
+  deriveWorkOrderCallerDisplayStatus,
   workOrderPendingServiceLines,
   workOrderRemovedServiceLines,
   type WorkOrderCatalogService,
@@ -109,8 +110,9 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
   const catalogQuery = useStaffWorkOrderServiceCatalog(picker ? orderId : undefined)
   const catalogCategories = useMemo(
     () => buildWorkOrderCatalogCategories(
-      catalogQuery.data ?? [],
+      catalogQuery.data?.services ?? [],
       t(WORK_ORDERS_I18N.pickerUncategorized),
+      catalogQuery.data?.categories ?? [],
     ),
     [catalogQuery.data, t],
   )
@@ -143,7 +145,7 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
   if (detailQuery.isPending) return <WorkOrderDetailSkeleton />
 
   const ticketStamp = ticket
-    ? `${ticket.status}:${ticket.items.map((item) => `${item.id}:${item.lineStatus}`).join(',')}`
+    ? `${ticket.status}:${ticket.myStatus}:${ticket.items.map((item) => `${item.id}:${item.lineStatus}:${item.isMine ? 1 : 0}`).join(',')}`
     : ''
   const hasPendingLineEdits = lines.some((line) => (
     Boolean(line.pendingRemoval) || line.approval === WORK_ORDER_SERVICE_APPROVAL.pending
@@ -155,12 +157,14 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
     setLines(toWorkOrderEditableLines(ticket.items))
     setApprovalError(null)
   } else if (ticket && seededStamp !== ticketStamp && !hasPendingLineEdits) {
-    // After ticket/line start-complete, refetch must redraw badges even when the order id is unchanged.
+    // Refetch after start/complete/reassign must redraw badges and isMine even when order id is unchanged.
     setSeededStamp(ticketStamp)
     setLines(toWorkOrderEditableLines(ticket.items))
   }
 
-  const displayStatus = ticket?.status
+  const displayStatus = ticket
+    ? deriveWorkOrderCallerDisplayStatus(ticket.status, lines)
+    : undefined
   const localCompletionNote = completedSession?.orderId === orderId
     ? completedSession.note
     : null
@@ -274,6 +278,14 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
               canStartService: false,
               canCompleteService: false,
               completionNote: note ?? current.completionNote,
+              myStatus: deriveWorkOrderCallerDisplayStatus(
+                current.status,
+                current.items.map((item) => (
+                  item.isAddOn || item.isMine === false || item.lineStatus !== PosOrderItemStatus.Started
+                    ? item
+                    : { ...item, lineStatus: PosOrderItemStatus.Completed }
+                )),
+              ),
               items: current.items.map((item) => (
                 item.isAddOn || item.isMine === false || item.lineStatus !== PosOrderItemStatus.Started
                   ? item
@@ -295,7 +307,7 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
       <WorkOrderDetailHeader
         onBack={onBack}
         orderNumber={ticket?.orderNumber}
-        status={displayStatus}
+        myStatus={displayStatus}
       />
       <WorkOrderDetailBody
         isError={detailQuery.isError}
@@ -338,17 +350,17 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
             aria-modal="true"
             className="w-full max-w-xs rounded-2xl bg-white p-5 shadow-xl"
           >
-            <h3 className="text-sm font-black text-nexoraText">
+            <h3 className="text-nexoraText text-sm font-semibold leading-snug">
               {t(`${LINE_STATUS_I18N}.declineConfirmTitle`)}
             </h3>
-            <p className="mt-2 text-xs leading-relaxed text-nexoraMuted">
+            <p className="mt-2 text-sm leading-relaxed text-nexoraMuted">
               {t(`${LINE_STATUS_I18N}.declineConfirmBody`)}
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setDeclineTarget(null)}
-                className="h-10 rounded-lg border border-nexoraBorder px-3 text-[11px] font-extrabold text-nexoraText"
+                className="h-10 rounded-lg border border-nexoraBorder px-3 text-xs font-semibold text-nexoraText"
               >
                 {t('common.cancel')}
               </button>
@@ -360,7 +372,7 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
                   setDeclineTarget(null)
                   runLineAction(rejectLine, target, 'decline')
                 }}
-                className="h-10 rounded-lg bg-rose-500 px-3 text-[11px] font-extrabold text-white disabled:opacity-60"
+                className="h-10 rounded-lg bg-rose-500 px-3 text-xs font-semibold text-white disabled:opacity-60"
               >
                 {t(`${LINE_STATUS_I18N}.declineAction`)}
               </button>
@@ -388,13 +400,14 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
               ? lines.find((line) => line.key === picker.lineKey)?.posServiceId ?? ''
               : ''
           }
-          onConfirm={(service: WorkOrderCatalogService) => {
+          onConfirm={(services: WorkOrderCatalogService[]) => {
             setApprovalError(null)
-            setLines((current) => (
-              picker.mode === WORK_ORDER_PICKER_MODE.edit && picker.lineKey
-                ? replaceWorkOrderCatalogService(current, picker.lineKey, service)
-                : addWorkOrderCatalogService(current, service)
-            ))
+            setLines((current) => {
+              if (picker.mode === WORK_ORDER_PICKER_MODE.edit && picker.lineKey) {
+                return replaceWorkOrderCatalogService(current, picker.lineKey, services[0])
+              }
+              return services.reduce(addWorkOrderCatalogService, current)
+            })
             setPicker(null)
           }}
           onClose={() => setPicker(null)}
@@ -495,12 +508,14 @@ function WorkOrderDetailBody({
   }
 
   const todayIso = formatDateIsoInTimeZone(new Date(), timeZone)
-  const status = displayStatus ?? ticket.status
-  const isCompleted = isWorkOrderCompletedStatus(status)
-  // The ticket stays In Service until the front desk checks out, so the technician's wrap-up view
-  // follows their own service lines rather than the order status.
-  const isCallerWorkDone = isCompleted || workOrderCallerWorkDone(lines)
-  const canEdit = canEditWorkOrderServices(status)
+  // Order-level status drives edit/start-day rules; myStatus drives wrap-up "Done" for this tech.
+  const orderStatus = ticket.status
+  const myStatus = displayStatus ?? ticket.myStatus ?? orderStatus
+  const isCheckoutClosed = isWorkOrderCompletedStatus(orderStatus)
+  const isCallerWorkDone = isCheckoutClosed
+    || myStatus === PosOrderStatus.Completed
+    || workOrderCallerWorkDone(lines)
+  const canEdit = canEditWorkOrderServices(orderStatus)
   const pendingServices = workOrderPendingServiceLines(lines)
   const removedLines = workOrderRemovedServiceLines(lines)
   const customerNotes = ticket.customerNotes?.trim() ?? ''
@@ -583,7 +598,7 @@ function WorkOrderDetailBody({
         actions={lineActions}
       />
 
-      {!isCompleted && (pendingServices.length > 0 || removedLines.length > 0) ? (
+      {canEdit && (pendingServices.length > 0 || removedLines.length > 0) ? (
         <WorkOrderCustomerApproval
           services={pendingServices}
           removedServices={removedLines}
@@ -628,11 +643,12 @@ function WorkOrderPrimaryAction({
 function WorkOrderDetailHeader({
   onBack,
   orderNumber,
-  status,
+  myStatus,
 }: {
   onBack: () => void
   orderNumber?: string
-  status?: PosOrderStatus
+  /** Caller-local progress only — not PosOrder.Status. */
+  myStatus?: PosOrderStatus
 }) {
   const { t } = useTranslation()
 
@@ -656,9 +672,9 @@ function WorkOrderDetailHeader({
           </p>
         </div>
       </div>
-      {status ? (
-        <span className={workOrderStatusClass(status, WORK_ORDER_STATUS_BADGE_VARIANT.detail)}>
-          {t(WORK_ORDER_STATUS_I18N[status])}
+      {myStatus ? (
+        <span className={workOrderStatusClass(myStatus, WORK_ORDER_STATUS_BADGE_VARIANT.detail)}>
+          {t(WORK_ORDER_STATUS_I18N[myStatus])}
         </span>
       ) : null}
     </div>

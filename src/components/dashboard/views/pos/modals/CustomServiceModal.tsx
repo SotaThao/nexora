@@ -49,6 +49,9 @@ export default function CustomServiceModal({
   onSubmit,
   onPickFromMenu,
   onClose,
+  showTechnician = true,
+  hint,
+  addButtonLabel,
 }: {
   target: CustomServiceTarget | null
   isSaving: boolean
@@ -60,6 +63,9 @@ export default function CustomServiceModal({
   // how work that turned out to be on the menu after all stops being a one-off.
   onPickFromMenu?: () => void
   onClose: () => void
+  showTechnician?: boolean
+  hint?: string
+  addButtonLabel?: string
 }) {
   const { t } = useTranslation()
   const [name, setName] = useState('')
@@ -119,18 +125,22 @@ export default function CustomServiceModal({
         </div>
 
         <div className="relative flex-1 space-y-4 overflow-y-auto">
-          <p className="text-[11px] text-nexoraMuted">{t(`${K}.customServiceHint`)}</p>
+          <p className="text-[11px] text-nexoraMuted">{hint ?? t(`${K}.customServiceHint`)}</p>
 
           <div className="space-y-1.5">
             <label
               htmlFor="custom-service-name"
-              className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted"
+              className="text-xs font-bold text-nexoraText"
             >
               {t(`${K}.customServiceNameLabel`)}
+              <small aria-hidden="true" className="ml-1 text-[10px] font-normal text-nexoraMuted">
+                {t(`${K}.customServiceRequiredHint`)}
+              </small>
             </label>
             <input
               id="custom-service-name"
               type="text"
+              required
               autoComplete="off"
               maxLength={MAX_CUSTOM_SERVICE_NAME_LENGTH}
               value={name}
@@ -176,7 +186,7 @@ export default function CustomServiceModal({
 
           {/* Add mode only. On a line that already exists the technician is changed from the line's
               own technician field, the same way a menu service is — one control per fact. */}
-          {isEditing ? null : (
+          {isEditing || !showTechnician ? null : (
             <div className="space-y-1.5">
               <span className="block text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
                 {t(`${K}.customServiceTechnicianLabel`)}
@@ -240,7 +250,7 @@ export default function CustomServiceModal({
             disabled={!canSubmit}
             className="h-10 flex-1 rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
           >
-            {t(isEditing ? `${K}.customServiceSaveButton` : `${K}.customServiceAddButton`)}
+            {isEditing ? t(`${K}.customServiceSaveButton`) : addButtonLabel ?? t(`${K}.customServiceAddButton`)}
           </button>
         </div>
       </div>

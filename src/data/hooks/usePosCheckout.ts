@@ -8,6 +8,7 @@ import { useQueries, useQuery, useMutation, useQueryClient, type QueryKey } from
 import { qk } from '../queryKeys'
 import { useSessionRole } from '../../auth/useSessionRole'
 import posCheckoutRepository from '../repositories/posCheckout'
+import type { PosCheckoutPaymentMethodType } from '../../constants/posCheckoutPaymentMethod'
 import { resolveOrderDiscountAmount, resolveOrderDiscountCap } from '../../utils/posOrderDiscount'
 import { isPersistedLineId, randomUuid, unlessOptimisticId } from '../../utils/uuid'
 import type {
@@ -21,6 +22,7 @@ import type {
   ServiceLineAddOnOptionApiDto,
   SetOrderDiscountPayload,
   SetOrderServiceLineDiscountPayload,
+  SetOrderPaymentAllocationsPayload,
   SetOrderStaffTipSplitPayload,
 } from '../../types/repositories'
 
@@ -229,6 +231,10 @@ export function useAddOrderServiceLine(businessId?: string) {
             lineTotalAfterDiscount: lineTotal,
             canAssignDiscountToStaff: false,
             completedAt: null,
+            // Stamped client-side so the line lands in the right place in the ticket order right
+            // away; the refetch below replaces it with the server's own timestamp.
+            addedAt: new Date().toISOString(),
+            assignedAt: null,
             addOns: [],
           }))
         : null
@@ -303,6 +309,10 @@ export function useAddOrderCustomServiceLine(businessId?: string) {
             note,
             assignedPosStaffProfileId: posStaffProfileId,
             technicianName,
+            // See above — a custom line may arrive with its technician already picked, so both
+            // timestamps matter to where it sits until the refetch lands.
+            addedAt: new Date().toISOString(),
+            assignedAt: posStaffProfileId ? new Date().toISOString() : null,
             addOns: [],
           }))
         : null
@@ -725,6 +735,34 @@ export function useSetOrderTip(businessId?: string) {
   })
 }
 
+// The chip the cashier picked on the checkout screen, stored on the order so reopening the ticket
+// shows what they chose instead of falling back to the Cash default.
+export function useSetOrderPaymentMethod(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<
+    boolean,
+    Error,
+    { orderId: string; paymentMethodType: PosCheckoutPaymentMethodType },
+    OrderMutationContext
+  >({
+    mutationFn: ({ orderId, paymentMethodType }) =>
+      posCheckoutRepository.setOrderPaymentMethod(businessId as string, orderId, paymentMethodType),
+    onMutate: async ({ orderId, paymentMethodType }) => {
+      const context = await snapshotOrderDetail(queryClient, businessId, orderId)
+      if (context.previousOrder) {
+        queryClient.setQueryData<OrderDetailApiDto>(
+          context.queryKey,
+          { ...context.previousOrder, paymentMethodType },
+        )
+      }
+      return context
+    },
+    onError: (_err, _vars, context) => rollbackOrderDetail(queryClient, context),
+    // No invalidate on success: the write changes one column whose new value is already in the
+    // cache from onMutate, so refetching the whole order would double the traffic this costs.
+  })
+}
+
 export function useSetOrderNote(businessId?: string) {
   const queryClient = useQueryClient()
   return useMutation<boolean, Error, { orderId: string; note: string | null }, OrderMutationContext>({
@@ -751,6 +789,20 @@ export function useSetOrderStaffTipSplit(businessId?: string) {
   return useMutation<boolean, Error, { orderId: string; payload: SetOrderStaffTipSplitPayload }>({
     mutationFn: ({ orderId, payload }) =>
       posCheckoutRepository.setOrderStaffTipSplit(businessId as string, orderId, payload),
+    onSuccess: (_result, { orderId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
+    },
+  })
+}
+
+// Auto-save for the Quick Split screen: replaces the whole set of payment portions on every edit.
+// Only the order detail is invalidated — a draft split changes nothing any list, board or report
+// reads, and those caches only need to move once the order is actually completed.
+export function useSetOrderPaymentAllocations(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<boolean, Error, { orderId: string; payload: SetOrderPaymentAllocationsPayload }>({
+    mutationFn: ({ orderId, payload }) =>
+      posCheckoutRepository.setOrderPaymentAllocations(businessId as string, orderId, payload),
     onSuccess: (_result, { orderId }) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
     },

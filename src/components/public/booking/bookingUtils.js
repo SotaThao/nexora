@@ -103,7 +103,7 @@ export function openDateTimePicker(input) {
     try {
       input.showPicker()
     } catch {
-      // Browser may block showPicker without a trusted user gesture.
+      // Some browsers block showPicker without a trusted user gesture.
     }
   }
 }

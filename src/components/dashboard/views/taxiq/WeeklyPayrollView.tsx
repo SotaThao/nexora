@@ -150,7 +150,7 @@ export default function WeeklyPayrollView({ businessId }: { businessId: string }
             </div>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
-              <table className="w-full min-w-[1000px] text-left text-xs">
+              <table className="w-full min-w-[1120px] text-left text-xs">
                 <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase text-nexoraMuted">
                   <tr>
                     <th className="px-4 py-3">{t('taxiq.weeklyPayroll.columns.employee')}</th>
@@ -162,6 +162,7 @@ export default function WeeklyPayrollView({ businessId }: { businessId: string }
                     <th className="px-4 py-3">{t('taxiq.weeklyPayroll.columns.bonus')}</th>
                     <th className="px-4 py-3">{t('taxiq.weeklyPayroll.columns.tips')}</th>
                     <th className="px-4 py-3">{t('taxiq.weeklyPayroll.columns.discountBorne')}</th>
+                    <th className="px-4 py-3" title={t('taxiq.weeklyPayroll.supplyFeeHint')}>{t('taxiq.weeklyPayroll.columns.supplyFeeBorne')}</th>
                     <th className="px-4 py-3">{t('taxiq.weeklyPayroll.columns.takeHome')}</th>
                     <th className="px-4 py-3">{t('taxiq.weeklyPayroll.columns.actions')}</th>
                   </tr>
@@ -191,6 +192,9 @@ export default function WeeklyPayrollView({ businessId }: { businessId: string }
                         ) : (
                           '—'
                         )}
+                      </td>
+                      <td className="px-4 py-3 tabular-nums text-nexoraText">
+                        {row.supplyFeeBorne > 0 ? <span className="font-bold text-nexoraDanger">−{formatCurrency(row.supplyFeeBorne)}</span> : formatCurrency(0)}
                       </td>
                       <td className="px-4 py-3 font-bold text-nexoraText">{formatCurrency(row.takeHome)}</td>
                       <td className="px-4 py-3">

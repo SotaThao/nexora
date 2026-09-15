@@ -4,7 +4,8 @@
 // The twin of useKioskCheckInSource, and deliberately shaped to be indistinguishable from it —
 // the page must not be able to tell which one it is running on.
 import { useMemo } from 'react'
-import { useCheckoutServiceCatalog } from '../../../data/hooks/usePosCheckout'
+import { useCheckoutServiceCatalog, useSetOrderNote } from '../../../data/hooks/usePosCheckout'
+import { logger } from '../../../utils/logger'
 import { useCheckInActiveVisit, useCheckInTechnicians } from '../../../data/hooks/usePosCheckIn'
 import { useCheckInOrder, useCustomerLookupByPhone } from '../../../data/hooks/usePosOrders'
 import { useBookingDetail, useBookingList, useCheckInBookingWithDraft } from '../../../data/hooks/usePosBooking'
@@ -55,6 +56,12 @@ export default function createPosCheckInSource(businessId: string): CheckInSourc
 
     const checkInOrder = useCheckInOrder(businessId)
     const checkInBooking = useCheckInBookingWithDraft(businessId)
+    const setOrderNote = useSetOrderNote(businessId)
+
+    const saveNoteBestEffort = (orderId: string, note: string) =>
+      setOrderNote.mutateAsync({ orderId, note }).catch((error) => {
+        logger.error('Failed to save check-in note on order', orderId, error)
+      })
 
     const catalog = useMemo(
       () =>
@@ -80,6 +87,7 @@ export default function createPosCheckInSource(businessId: string): CheckInSourc
           photoUrl: tech.photoUrl,
           serviceIds: tech.serviceIds,
           isBusy: tech.isBusy,
+          queueCount: tech.queueCount,
         })),
       [techniciansQuery.data],
     )
@@ -118,29 +126,33 @@ export default function createPosCheckInSource(businessId: string): CheckInSourc
       booking,
       activeVisitOrderNumber: activeVisitQuery.data ?? null,
       areLookupsSettled: !customerQuery.isPending && !activeVisitQuery.isPending && isBookingSettled,
-      submitOrder: (payload) =>
-        checkInOrder.mutateAsync({
+      submitOrder: async (payload) => {
+        const result = await checkInOrder.mutateAsync({
           customerName: payload.customerName,
           customerPhone: payload.customerPhone,
           items: payload.items.map((item) => ({
             itemType: 'Service' as const,
             id: item.posServiceId,
             posStaffProfileId: item.posStaffProfileId ?? undefined,
-            note: item.note ?? undefined,
           })),
-        }),
-      submitBooking: (payload) =>
-        checkInBooking.mutateAsync({
+        })
+        if (payload.note) await saveNoteBestEffort(result.orderId, payload.note)
+        return result
+      },
+      submitBooking: async (payload) => {
+        const result = await checkInBooking.mutateAsync({
           bookingId: payload.bookingId,
           customerName: payload.customerName || undefined,
           items: payload.items.map((item) => ({
             itemType: 'Service' as const,
             id: item.posServiceId,
             posStaffProfileId: item.posStaffProfileId ?? undefined,
-            note: item.note ?? undefined,
           })),
-        }),
-      isSubmitting: checkInOrder.isPending || checkInBooking.isPending,
+        })
+        if (payload.note) await saveNoteBestEffort(result.orderId, payload.note)
+        return result
+      },
+      isSubmitting: checkInOrder.isPending || checkInBooking.isPending || setOrderNote.isPending,
     }
   }
 }

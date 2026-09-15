@@ -33,7 +33,11 @@ export default function PaymentsPayoutsHeader() {
               type="button"
               aria-current={isActive ? 'page' : undefined}
               onClick={() =>
-                navigate(`/dashboard/${item.screen}?tab=${encodeURIComponent(item.params.tab)}`)
+                navigate(
+                  item.params?.tab
+                    ? `/dashboard/${item.screen}?tab=${encodeURIComponent(item.params.tab)}`
+                    : `/dashboard/${item.screen}`,
+                )
               }
               className={`h-9 rounded-lg px-4 text-xs font-bold transition-all min-w-[44px] ${
                 isActive

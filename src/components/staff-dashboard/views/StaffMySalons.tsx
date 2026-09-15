@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ChevronDown, ClipboardList, Loader2, MapPin, X } from 'lucide-react'
+import { ChevronDown, Loader2, MapPin, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -47,7 +47,7 @@ import { STAFF_SALONS_PATH } from '../staffSalonPaths'
 import { staffWorkOrdersPath } from '../work-orders/constants'
 
 const SALON_ACTION_BTN_BASE =
-  'inline-flex h-[38px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-[10px] px-3.5 text-[13px] font-bold transition disabled:cursor-not-allowed disabled:opacity-60'
+  'inline-flex h-[38px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-[10px] px-3.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60'
 const SALON_ACTION_BTN_DANGER = `${SALON_ACTION_BTN_BASE} border border-nexoraDanger bg-white text-nexoraDanger hover:bg-nexoraDanger/5`
 const SALON_ACTION_BTN_BRAND = `${SALON_ACTION_BTN_BASE} border border-nexoraBrand bg-white text-nexoraBrand hover:bg-nexoraBrand/5`
 const SALON_ACTION_BTN_SOLID = `${SALON_ACTION_BTN_BASE} border border-transparent bg-nexoraBrand text-white shadow-sm hover:bg-nexoraBrand/90`
@@ -263,7 +263,7 @@ function EditWorkSkillModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between gap-3 px-6 pb-0 pt-6">
-          <h2 className="text-lg font-extrabold text-nexoraText">{t('staff_salons.edit_work_skill')}</h2>
+          <h2 className="text-nexoraText text-base font-semibold leading-snug">{t('staff_salons.edit_work_skill')}</h2>
           <button
             type="button"
             onClick={handleClose}
@@ -294,7 +294,7 @@ function EditWorkSkillModal({
               <button
                 type="button"
                 onClick={() => toggleAll(!allChecked)}
-                className="mb-2 flex w-full cursor-pointer items-center justify-between gap-2 rounded-[9px] border border-nexoraBrand/28 bg-nexoraBrand/5 px-2.5 py-2 text-[11px] font-black text-nexoraText"
+                className="mb-2 flex w-full cursor-pointer items-center justify-between gap-2 rounded-[9px] border border-nexoraBrand/28 bg-nexoraBrand/5 px-2.5 py-2 text-xs font-semibold text-nexoraText"
               >
                 <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
                   <input
@@ -306,7 +306,7 @@ function EditWorkSkillModal({
                   />
                   <span>{t('staff_salons.skill_select_all')}</span>
                 </span>
-                <span className="shrink-0 rounded-full bg-[#e9edff] px-1.5 py-0.5 text-[10px] font-extrabold text-nexoraBrand">
+                <span className="shrink-0 rounded-full bg-[#e9edff] px-1.5 py-0.5 text-xs font-semibold text-nexoraBrand">
                   {totalServices}
                 </span>
               </button>
@@ -333,10 +333,10 @@ function EditWorkSkillModal({
                         onClick={(e) => e.stopPropagation()}
                         onChange={(e) => toggleCategory(cat.key, e.target.checked)}
                       />
-                      <span className="min-w-0 truncate text-[10px] font-black uppercase tracking-wider text-nexoraText">
+                      <span className="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-nexoraText">
                         {cat.label}
                       </span>
-                      <span className="shrink-0 rounded-full bg-[#e9edff] px-1.5 py-0.5 text-[10px] font-extrabold text-nexoraBrand">
+                      <span className="shrink-0 rounded-full bg-[#e9edff] px-1.5 py-0.5 text-xs font-semibold text-nexoraBrand">
                         {cat.services.length}
                       </span>
                       <ChevronDown
@@ -355,7 +355,7 @@ function EditWorkSkillModal({
                             return (
                               <label
                                 key={service.id}
-                                className={`flex min-h-[34px] cursor-pointer items-center gap-1.5 rounded-[9px] border px-2 py-1.5 text-[11px] font-bold transition ${
+                                className={`flex min-h-[34px] cursor-pointer items-center gap-1.5 rounded-[9px] border px-2 py-1.5 text-xs font-bold transition ${
                                   checked
                                     ? 'border-nexoraBrand/40 bg-nexoraBrand/[.07] text-nexoraText'
                                     : 'border-nexoraBorder bg-white text-nexoraMuted'
@@ -388,7 +388,7 @@ function EditWorkSkillModal({
           <button
             type="button"
             onClick={handleClose}
-            className="inline-flex h-10 items-center justify-center rounded-[10px] border border-nexoraBorder bg-white px-5 text-[13px] font-bold text-nexoraMuted transition hover:bg-nexoraSurfaceMuted hover:text-nexoraText"
+            className="inline-flex h-10 items-center justify-center rounded-[10px] border border-nexoraBorder bg-white px-5 text-xs font-semibold text-nexoraMuted transition hover:bg-nexoraSurfaceMuted hover:text-nexoraText"
           >
             {t('staff_salons.skill_cancel')}
           </button>
@@ -396,7 +396,7 @@ function EditWorkSkillModal({
             type="button"
             onClick={handleSave}
             disabled={saveMutation.isPending || isLoading || isEmpty}
-            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-[10px] border border-transparent bg-nexoraBrand px-5 text-[13px] font-bold text-white shadow-md transition hover:bg-nexoraBrand/90 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-[10px] border border-transparent bg-nexoraBrand px-5 text-xs font-semibold text-white shadow-md transition hover:bg-nexoraBrand/90 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saveMutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
             {t('staff_salons.skill_save')}
@@ -454,18 +454,18 @@ function SalonCard({
         showChatStartHint ? 'pb-10' : ''
       }`}
     >
-      <div className="flex gap-3 px-5 pb-4 pt-5">
+      <div className="flex gap-2.5 px-5 pb-4 pt-5 sm:gap-3">
         {business.logoUrl ? (
           <img
             src={business.logoUrl}
             alt=""
             width={56}
             height={56}
-            className="h-14 w-14 shrink-0 rounded-full object-cover"
+            className="h-9 w-9 shrink-0 rounded-full object-cover sm:h-14 sm:w-14"
           />
         ) : (
           <span
-            className={`grid h-14 w-14 shrink-0 place-items-center rounded-full text-sm font-extrabold ${getSalonAvatarClass(index)}`}
+            className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-xs font-semibold sm:h-14 sm:w-14 sm:text-sm ${getSalonAvatarClass(index)}`}
           >
             {initials}
           </span>
@@ -473,7 +473,7 @@ function SalonCard({
 
         <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="truncate text-base font-extrabold text-nexoraText">
+            <h3 className="truncate text-nexoraText text-base font-semibold leading-snug">
               {business.businessName}
             </h3>
             {location ? (
@@ -485,9 +485,14 @@ function SalonCard({
             {timeline ? (
               <p className="mt-1 text-xs font-medium text-nexoraMuted">{timeline}</p>
             ) : null}
+            {business.staffLevelName ? (
+              <span className="mt-1.5 inline-flex w-fit items-center rounded-full bg-nexoraBrand/10 px-2 py-0.5 text-xs font-bold text-nexoraBrand">
+                {t('staff_salons.staff_level_value', { name: business.staffLevelName })}
+              </span>
+            ) : null}
           </div>
           <span className="flex shrink-0 items-center gap-1">
-            <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${status.className}`}>
+            <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${status.className}`}>
               {status.label}
             </span>
             <Tooltip
@@ -520,6 +525,7 @@ function SalonCard({
                   manageLabelKey={STAFF_CHAT_I18N.salonManage}
                   manageUnreadLabelKey={STAFF_CHAT_I18N.salonManageUnread}
                   hintPlacement={SALON_CHAT_START_HINT_PLACEMENT}
+                  className="relative inline-flex h-9 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-nexoraBrand/30 bg-nexoraBrandSoft px-2.5 text-xs font-semibold text-nexoraBrand transition hover:border-nexoraBrand hover:bg-nexoraBrand/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2"
                 />
               ) : null}
             </div>
@@ -550,7 +556,8 @@ function SalonCard({
                 onRefresh={onRefreshNickname}
                 onSave={onSaveNickname}
                 triggerVariant="outline-brand"
-                containerClassName="shrink-0"
+                containerClassName="shrink-0 [&>button]:text-xs [&>button]:font-semibold"
+                dialogClassName="[&_button]:text-xs [&_button]:font-semibold [&_h2]:text-base [&_h2]:font-semibold"
                 stopPropagation
               />
               <Link
@@ -558,7 +565,6 @@ function SalonCard({
                 state={{ from: STAFF_SALONS_PATH }}
                 className={SALON_ACTION_BTN_SOLID}
               >
-                <ClipboardList className="h-4 w-4" aria-hidden="true" />
                 {t('staff_salons.open_work_orders')}
               </Link>
             </div>
@@ -646,13 +652,13 @@ export default function StaffMySalons() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-2xl font-extrabold text-nexoraText">{t('staff_salons.title')}</h2>
-        <p className="mt-1 text-sm text-nexoraMuted">{t('staff_salons.subtitle')}</p>
+        <h2 className="text-nexoraText text-xl lg:text-2xl font-semibold leading-snug">{t('staff_salons.title')}</h2>
+        <p className="mt-1 text-nexoraMuted text-[13px] font-normal leading-5">{t('staff_salons.subtitle')}</p>
       </div>
 
       {pendingLinkRequests.length > 0 && (
         <section className="rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm">
-          <h3 className="mb-3 text-base font-extrabold text-nexoraText">
+          <h3 className="mb-3 text-nexoraText text-base font-semibold leading-snug">
             {t('staff_dashboard.qr.link_requests_title')}
           </h3>
           <div className="space-y-2">
@@ -674,7 +680,7 @@ export default function StaffMySalons() {
           <button
             type="button"
             onClick={() => navigate('/staff/qr?tab=tipping')}
-            className="mt-4 inline-flex h-9 items-center justify-center rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white"
+            className="mt-4 inline-flex h-9 items-center justify-center rounded-lg bg-nexoraBrand px-4 text-xs font-semibold text-white"
           >
             {t('staff_salons.link_salon_cta')}
           </button>
@@ -720,7 +726,7 @@ export default function StaffMySalons() {
           aria-modal="true" aria-labelledby="staff-unlink-error-title" aria-describedby="staff-unlink-error-message"
         >
           <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl">
-            <h4 id="staff-unlink-error-title" className="mb-2 text-sm font-black uppercase tracking-wide text-slate-900">
+            <h4 id="staff-unlink-error-title" className="mb-2 text-slate-900 text-sm font-semibold leading-snug">
               {unlinkError.title}
             </h4>
             <p id="staff-unlink-error-message" className="mb-6 text-xs font-semibold leading-relaxed text-slate-600">
@@ -730,7 +736,7 @@ export default function StaffMySalons() {
               <button
                 type="button"
                 onClick={() => setUnlinkError(null)}
-                className="rounded-xl bg-nexoraBrand px-4.5 py-2.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-sm transition-colors hover:bg-nexoraBrand/90"
+                className="rounded-xl bg-nexoraBrand px-4.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-white shadow-sm transition-colors hover:bg-nexoraBrand/90"
               >
                 {t('common.confirm')}
               </button>

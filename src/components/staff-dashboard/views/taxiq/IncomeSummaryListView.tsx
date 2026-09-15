@@ -105,14 +105,14 @@ export default function IncomeSummaryListView({
     <div className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-extrabold text-nexoraText">{t('taxiq.selfReportedIncome.title')}</h2>
-          <p className="mt-1 text-xs text-nexoraMuted">{t('taxiq.selfReportedIncome.subtitle')}</p>
+          <h2 className="text-nexoraText text-xl lg:text-2xl font-semibold leading-snug">{t('taxiq.selfReportedIncome.title')}</h2>
+          <p className="mt-1 text-nexoraMuted text-[13px] font-normal leading-5">{t('taxiq.selfReportedIncome.subtitle')}</p>
         </div>
         <button
           type="button"
           onClick={openAddWizard}
           disabled={isLocked}
-          className="inline-flex items-center gap-1.5 self-start rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white disabled:opacity-60 sm:self-auto"
+          className="inline-flex items-center gap-1.5 self-start rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-semibold text-white disabled:opacity-60 sm:self-auto"
         >
           <Plus className="h-3.5 w-3.5" />
           {t('taxiq.selfReportedIncome.add')}
@@ -126,7 +126,7 @@ export default function IncomeSummaryListView({
           <button
             type="button"
             onClick={() => navigate('/staff/taxiq/export')}
-            className="ml-auto shrink-0 rounded-lg bg-nexoraBrand px-3 py-1.5 text-[11px] font-bold text-white"
+            className="ml-auto shrink-0 rounded-lg bg-nexoraBrand px-3 py-1.5 text-xs font-semibold text-white"
           >
             {t('taxiq.deductionCenter.errors.lockedAction')}
           </button>
@@ -135,7 +135,7 @@ export default function IncomeSummaryListView({
 
       <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
         <table className="w-full min-w-[860px] text-left text-xs">
-          <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase text-nexoraMuted">
+          <thead className="bg-nexoraCanvas text-xs font-extrabold uppercase text-nexoraMuted">
             <tr>
               <th className="px-4 py-3">{t('taxiq.selfReportedIncome.columns.date')}</th>
               <th className="px-4 py-3">{t('taxiq.selfReportedIncome.columns.amount')}</th>
@@ -179,14 +179,14 @@ export default function IncomeSummaryListView({
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold ${statusBadgeClass(record.status)}`}>
+                      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-bold ${statusBadgeClass(record.status)}`}>
                         {t(statusLabelKey(record.status))}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
                         {isLocked ? (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-nexoraBorder px-2 py-0.5 text-[10px] font-bold text-nexoraMuted">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-nexoraBorder px-2 py-0.5 text-xs font-bold text-nexoraMuted">
                             <Lock className="h-3 w-3" />
                             {t('taxiq.selfReportedIncome.status.locked')}
                           </span>
@@ -195,7 +195,7 @@ export default function IncomeSummaryListView({
                             <button
                               type="button"
                               onClick={() => openEditWizard(record.id)}
-                              className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-nexoraBrand hover:underline"
                             >
                               <Pencil className="h-3 w-3" />
                               {t('taxiq.selfReportedIncome.edit')}
@@ -203,7 +203,7 @@ export default function IncomeSummaryListView({
                             <button
                               type="button"
                               onClick={() => setDeletingRecord(record)}
-                              className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 hover:underline"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:underline"
                             >
                               <Trash2 className="h-3 w-3" />
                               {t('taxiq.selfReportedIncome.delete')}

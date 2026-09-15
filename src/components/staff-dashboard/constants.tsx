@@ -14,6 +14,7 @@ import {
 import {
   openCommunityChatFromNotification,
 } from '../header-messages/openCommunityChatSession'
+import { openStaffBeepSheetFromNotification } from './openStaffBeepSheet'
 
 // Bottom-nav / sidebar items. Icons align with merchant dashboard MENU_ITEMS.
 // 'taxiq' carries `children` (Tax IQ sub-nav) — StaffSidebar renders it as an
@@ -273,6 +274,10 @@ export function navigateStaffNotification(
   fallbackNavigate: (screen: string) => void,
 ) {
   if (openCommunityChatFromNotification(notification)) return
+
+  // A beep is answered in the shell sheet, not on a screen. If the tech closed or minimised it,
+  // tapping the row brings the sheet back where they already are instead of navigating them away.
+  if (openStaffBeepSheetFromNotification(notification)) return
 
   if (notification.type === 'StaffLinkRequest') {
     navigate('/staff/qr')

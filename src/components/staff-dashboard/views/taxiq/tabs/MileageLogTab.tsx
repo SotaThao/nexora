@@ -185,7 +185,7 @@ export default function MileageLogTab({
           type="button"
           onClick={openCreateModal}
           disabled={isLocked}
-          className="inline-flex items-center gap-1.5 self-start rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white disabled:opacity-60 sm:self-auto"
+          className="inline-flex items-center gap-1.5 self-start rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-semibold text-white disabled:opacity-60 sm:self-auto"
         >
           <Plus className="h-3.5 w-3.5" />
           {t('taxiq.staffLogs.mileage.addButton')}
@@ -194,7 +194,7 @@ export default function MileageLogTab({
 
       <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
         <table className="w-full min-w-[820px] text-left text-xs">
-          <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase text-nexoraMuted">
+          <thead className="bg-nexoraCanvas text-xs font-extrabold uppercase text-nexoraMuted">
             <tr>
               <th className="px-4 py-3">{t('taxiq.staffLogs.mileage.columns.date')}</th>
               <th className="px-4 py-3">{t('taxiq.staffLogs.mileage.columns.purpose')}</th>
@@ -229,12 +229,12 @@ export default function MileageLogTab({
                   <td className="px-4 py-3">
                     <div className="flex flex-col items-start gap-1">
                       <span
-                        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold ${statusBadgeClass(item.status)}`}
+                        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-bold ${statusBadgeClass(item.status)}`}
                       >
                         {t(statusLabelKey(item.status))}
                       </span>
                       {item.status === 'CPAReview' && (
-                        <span className="text-[10px] text-nexoraMuted">{t('taxiq.staffLogs.mileage.cpaReviewExplanation')}</span>
+                        <span className="text-xs text-nexoraMuted">{t('taxiq.staffLogs.mileage.cpaReviewExplanation')}</span>
                       )}
                     </div>
                   </td>
@@ -244,7 +244,7 @@ export default function MileageLogTab({
                         type="button"
                         onClick={() => openEditModal(item)}
                         disabled={isLocked}
-                        className="rounded-lg border border-nexoraBorder px-3 py-1 text-[11px] font-bold text-nexoraText disabled:opacity-60"
+                        className="rounded-lg border border-nexoraBorder px-3 py-1 text-xs font-semibold text-nexoraText disabled:opacity-60"
                       >
                         {t('taxiq.staffLogs.mileage.editButton')}
                       </button>
@@ -252,7 +252,7 @@ export default function MileageLogTab({
                         type="button"
                         onClick={() => setDeletingItem(item)}
                         disabled={isLocked}
-                        className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-3 py-1 text-[11px] font-bold text-rose-600 disabled:opacity-60 dark:border-rose-500/30"
+                        className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-600 disabled:opacity-60 dark:border-rose-500/30"
                       >
                         <Trash2 className="h-3 w-3" />
                         {t('taxiq.staffLogs.mileage.delete')}
@@ -270,7 +270,7 @@ export default function MileageLogTab({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
           <div className="nexora-modal-card max-w-lg">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-extrabold text-nexoraText">
+              <h2 className="text-nexoraText text-sm font-semibold leading-snug">
                 {editingId ? t('taxiq.staffLogs.mileage.editButton') : t('taxiq.staffLogs.mileage.addButton')}
               </h2>
               <IconButton label={t('common.cancel')} onClick={closeModal}>
@@ -344,18 +344,18 @@ export default function MileageLogTab({
                 />
               </div>
 
-              <p className="text-[11px] font-semibold text-nexoraMuted">{t('taxiq.staffLogs.mileage.form.missingFieldsHint')}</p>
+              <p className="text-nexoraMuted text-[13px] font-normal leading-5">{t('taxiq.staffLogs.mileage.form.missingFieldsHint')}</p>
             </div>
 
             <div className="mt-6 flex justify-end gap-2">
-              <button type="button" onClick={closeModal} className="rounded-lg px-4 py-2 text-xs font-bold text-nexoraMuted">
+              <button type="button" onClick={closeModal} className="rounded-lg px-4 py-2 text-xs font-semibold text-nexoraMuted">
                 {t('common.cancel')}
               </button>
               <button
                 type="button"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white disabled:opacity-60"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-semibold text-white disabled:opacity-60"
               >
                 {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 {t('taxiq.staffLogs.mileage.form.submit')}

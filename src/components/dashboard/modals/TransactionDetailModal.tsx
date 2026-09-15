@@ -17,10 +17,14 @@ import { buildQrImageUrl, slugify, toLocalCustomerTouchUrl } from '../../../util
 import { QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { useConfirmMerchantTipsReceipt } from '../../../data/hooks/useTransactions'
-import { useConfirmStaffTipsReceipt } from '../../../data/hooks/useStaffSelf'
+import { useConfirmStaffTipsReceipt, useSetTipCategory } from '../../../data/hooks/useStaffSelf'
+import { useCreateStaffCategory, useStaffCategories } from '../../../data/hooks/useTransactionCategories'
+import { getErrorMessage } from '../../../data/errorCodes'
 import QrModal from './QrModal'
 import CopyableTransactionId from '../../ui/CopyableTransactionId'
 import QrImage from '../../ui/QrImage'
+import CategorySelect from '../categories/CategorySelect'
+import AddEditCategoryModal from '../categories/AddEditCategoryModal'
 
 function buildStaffCodeLookup(staff = []) {
   const map = new Map()
@@ -179,6 +183,13 @@ export default function TransactionDetailModal({
     ? staffConfirmReceiptMutation
     : merchantConfirmReceiptMutation
 
+  // Income/Payout Categories (issue #584) — Staff-only: Merchant never sees/edits a Tip's category.
+  const { data: staffCategories = [] } = useStaffCategories({ enabled: isStaffAudience })
+  const setTipCategoryMutation = useSetTipCategory()
+  const createStaffCategoryMutation = useCreateStaffCategory()
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false)
+  const [addCategoryError, setAddCategoryError] = useState<string | null>(null)
+
   const staffCodeByProfileId = useMemo(() => buildStaffCodeLookup(staff), [staff])
   const tipItems = useMemo(
     () => normalizeTipItems(selectedTx, staffCodeByProfileId),
@@ -298,6 +309,30 @@ export default function TransactionDetailModal({
     )
   }
 
+  const handleCategoryChange = (categoryId: string | null) => {
+    if (!selectedTx?.id) return
+    setTipCategoryMutation.mutate(
+      { tipId: selectedTx.id, categoryId },
+      { onError: (err) => showToast(getErrorMessage(err, t), 'error') },
+    )
+  }
+
+  const handleCreateCategory = (name: string) => {
+    createStaffCategoryMutation.mutate(name, {
+      onSuccess: (category) => {
+        setIsAddCategoryOpen(false)
+        setAddCategoryError(null)
+        if (selectedTx?.id) {
+          setTipCategoryMutation.mutate(
+            { tipId: selectedTx.id, categoryId: category.id },
+            { onError: (err) => showToast(getErrorMessage(err, t), 'error') },
+          )
+        }
+      },
+      onError: (err) => setAddCategoryError(getErrorMessage(err, t)),
+    })
+  }
+
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center modal-overlay-safe bg-slate-900/60 backdrop-blur-sm">
@@ -389,6 +424,21 @@ export default function TransactionDetailModal({
                 </div>
               ) : null}
             </div>
+
+            {isStaffAudience ? (
+              <div className="border-t border-nexoraBorder pt-4">
+                <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-nexoraMuted">
+                  {t('transaction_categories.category_label')}
+                </span>
+                <CategorySelect
+                  categories={staffCategories}
+                  value={selectedTx.categoryId ?? null}
+                  onChange={handleCategoryChange}
+                  onRequestCreateNew={() => setIsAddCategoryOpen(true)}
+                  disabled={setTipCategoryMutation.isPending}
+                />
+              </div>
+            ) : null}
 
             {hasStaffBreakdown ? (
               <div className="rounded-xl border border-nexoraBorder bg-nexoraCanvas/40 p-3 space-y-2">
@@ -550,6 +600,20 @@ export default function TransactionDetailModal({
           target={qrTarget}
           businessName={businessName}
           onClose={() => setQrTarget(null)}
+        />
+      ) : null}
+
+      {isStaffAudience ? (
+        <AddEditCategoryModal
+          open={isAddCategoryOpen}
+          mode="create"
+          onSave={handleCreateCategory}
+          onClose={() => {
+            setIsAddCategoryOpen(false)
+            setAddCategoryError(null)
+          }}
+          isSaving={createStaffCategoryMutation.isPending}
+          errorMessage={addCategoryError}
         />
       ) : null}
     </>

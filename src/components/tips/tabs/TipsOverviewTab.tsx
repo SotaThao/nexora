@@ -1,8 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DollarSign, ArrowUpRight, TrendingUp } from 'lucide-react';
 import { useTranslation } from '../../../contexts/LanguageContext';
 import { formatUSD } from '../../../utils/tipsFormatters';
 import TipsTrendChart from '../../dashboard/charts/TipsTrendChart';
+import IncomeByCategoryPanel from '../../dashboard/charts/IncomeByCategoryPanel';
+import { buildDashboardMenuPath, DASHBOARD_MENU_ID } from '../../dashboard/constants';
 
 export function isLeadingOddCard(itemCount: number, index: number) {
   return itemCount % 2 === 1 && index === 0;
@@ -24,6 +27,7 @@ export default function TipsOverviewTab({
   donutTotal,
 }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const hasCrypto = cryptoTips > 0;
   const overviewCards = [
     {
@@ -99,26 +103,32 @@ export default function TipsOverviewTab({
         })}
       </div>
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        {/* Week Summary Chart */}
-        <div className="card-elevated lg:col-span-3">
-          <h4 className="mb-6 text-sm font-black uppercase tracking-wider text-inkBlue dark:text-white">
-            {t('dashboard.tips.charts.weekly_title')}
-          </h4>
+      {/* Week Summary Chart — full width */}
+      <div className="card-elevated">
+        <h4 className="mb-6 text-sm font-black uppercase tracking-wider text-inkBlue dark:text-white">
+          {t('dashboard.tips.charts.weekly_title')}
+        </h4>
 
-          <TipsTrendChart
-            svgMetrics={svgMetrics}
-            yTicks={yTicks}
-            chartBars={chartBars}
-            chartRef={chartRef}
-            hoverIndex={hoverIndex}
-            setHoverIndex={setHoverIndex}
-            activePoint={activePoint}
+        <TipsTrendChart
+          svgMetrics={svgMetrics}
+          yTicks={yTicks}
+          chartBars={chartBars}
+          chartRef={chartRef}
+          hoverIndex={hoverIndex}
+          setHoverIndex={setHoverIndex}
+          activePoint={activePoint}
+        />
+      </div>
+
+      {/* Income by category + Payment Method Split */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+        <div className="lg:col-span-3">
+          <IncomeByCategoryPanel
+            scope="merchant"
+            onManageCategories={() => navigate(buildDashboardMenuPath(DASHBOARD_MENU_ID.categoryManagement))}
           />
         </div>
 
-        {/* Payment Method Split */}
         <div className="card-elevated lg:col-span-2 flex flex-col justify-between">
           <div>
             <h4 className="text-sm font-black text-inkBlue dark:text-white uppercase tracking-wider mb-6">

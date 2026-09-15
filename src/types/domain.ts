@@ -47,6 +47,8 @@ export interface StaffMember {
   refCode?: string | null
   source?: string | null
   paymentAccounts?: Record<string, string>
+  /** POS Staff Level name assigned at this business, when the backend returns one. */
+  staffLevelName?: string | null
   [key: string]: unknown
 }
 
@@ -219,6 +221,9 @@ export interface MerchantPaymentRecord {
   accountInfo?: string | null
   imageUrl?: string | null
   cryptoWallet?: PaymentCryptoWallet | null
+  /** Income/Payout Categories (issue #584) — Merchant-assigned category (DirectPayment only). */
+  categoryId?: string | null
+  categoryName?: string | null
 }
 
 export interface MerchantPaymentsListPage {
@@ -272,6 +277,9 @@ export interface StaffPaymentRecord {
   accountInfo?: string | null
   imageUrl?: string | null
   cryptoWallet?: PaymentCryptoWallet | null
+  /** Income/Payout Categories (issue #584) — Staff-assigned category. */
+  categoryId?: string | null
+  categoryName?: string | null
 }
 
 export interface StaffPaymentsListPage {
@@ -422,6 +430,11 @@ export interface StaffBusinessLink {
   role: string | null
   roleLabel: string | null
   roleAtBusiness: string | null
+  // POS Staff Level assigned to this staff member at this salon (business-defined,
+  // optional — see PosStaffLevelApiDto). Not yet returned by the backend's
+  // GET /api/v1/staff/businesses; renders only once BE adds it.
+  staffLevelId?: string | null
+  staffLevelName?: string | null
   linkStatus: string | null
   linkStatusLabel: string | null
   linkedAt: string | null
@@ -534,6 +547,9 @@ export interface StaffTipItem {
   confirmedAt: string | null
   staffConfirmedAt: string | null
   merchantConfirmedAt: string | null
+  /** Income/Payout Categories (issue #584) — this staff member's own category for their share. */
+  categoryId?: string | null
+  categoryName?: string | null
 }
 
 export interface StaffTipsPage {
@@ -618,6 +634,9 @@ export interface TransactionRecord extends DomainEntity {
   isMultiStaff?: boolean
   isLocalStaff?: boolean
   tipItems?: unknown[]
+  /** Income/Payout Categories (issue #584) — Staff-assigned category on a Tip (staff audience only). */
+  categoryId?: string | null
+  categoryName?: string | null
   [key: string]: unknown
 }
 
@@ -805,6 +824,9 @@ export interface PayoutRecord {
   lastModified: string | null
   /** Present on payout detail — snapshot of staff wallet at payout time. */
   staffPaymentAccountInfo?: string | null
+  /** Income/Payout Categories (issue #584) — Staff-assigned category, null/absent = Uncategorized. */
+  categoryId?: string | null
+  categoryName?: string | null
 }
 
 /** GET /api/v1/staff/payouts/{id} — full detail for staff viewer. */
@@ -826,6 +848,33 @@ export interface StaffPayoutDetailRecord {
   evidenceUrls: string[]
   status: number
   staffConfirmedAt: string | null
+  /** Income/Payout Categories (issue #584) — Staff-assigned category, null/absent = Uncategorized. */
+  categoryId?: string | null
+  categoryName?: string | null
+}
+
+/**
+ * Income/Payout Categories (issue #584) — a Merchant's or Staff's self-defined label
+ * ("Rent", "Salary", ...) attached to a money transaction. `categoryId: null` on a
+ * transaction/stat row means "Uncategorized" — a virtual value, never a real row here.
+ */
+export interface TransactionCategory {
+  id: string
+  name: string
+  displayOrder: number
+}
+
+export interface IncomeByCategoryStat {
+  categoryId: string | null
+  categoryName: string
+  amount: number
+  transactionCount: number
+}
+
+/** GET .../transaction-categories/stats — verified against IncomeByCategoryStatsDto (backend). */
+export interface IncomeByCategoryStats {
+  items: IncomeByCategoryStat[]
+  totalAmount: number
 }
 
 /** GET /api/v1/merchant/payouts/staff/{staffProfileId}/debt */
@@ -1005,7 +1054,7 @@ export interface PosTechnicianReportPrint {
     services?: string[]
     discount?: { label: string; value: string }
   }>
-  totals: Array<{ label: string; value: string }>
+  totals: Array<{ label: string; value: string; isDeduction?: boolean }>
 }
 
 export interface PosReceiptDocument {
