@@ -43,6 +43,7 @@ import {
   buildBookingCalendarOverviewDays,
   getBookingCalendarCompareRange,
   getBookingCalendarRange,
+  getBookingCalendarStatsRange,
   PosBookingCalendarViewMode,
 } from './bookingCalendarView'
 
@@ -119,6 +120,10 @@ export default function BookingTab({
     calendarRequestRange,
     { enabled: viewMode === 'calendar' },
   )
+  const statsRange = useMemo(
+    () => getBookingCalendarStatsRange(calendarAnchorDate, calendarViewMode),
+    [calendarAnchorDate, calendarViewMode],
+  )
   const compareRange = useMemo(
     () => getBookingCalendarCompareRange(calendarAnchorDate, calendarViewMode),
     [calendarAnchorDate, calendarViewMode],
@@ -141,6 +146,14 @@ export default function BookingTab({
       return date >= calendarRange.dateFrom && date <= calendarRange.dateTo
     }),
     [calendarQuery.data?.items, calendarRange],
+  )
+  // Metrics exclude month-grid spillover days; the overview grid still uses calendarBookings.
+  const statsBookings = useMemo(
+    () => calendarBookings.filter((booking) => {
+      const date = bookingDateKey(booking.scheduledAt, booking.source)
+      return date >= statsRange.dateFrom && date <= statsRange.dateTo
+    }),
+    [calendarBookings, statsRange],
   )
   const comparePeriodTotal = useMemo(
     () => (compareQuery.data?.items ?? []).filter((booking) => {
@@ -398,12 +411,13 @@ export default function BookingTab({
       ) : (
         <div className="min-w-0">
           <BookingCalendar
-            bookings={bookings}
+            bookings={statsBookings}
             mode={calendarViewMode}
             anchorDate={calendarAnchorDate}
             range={calendarRange}
             overviewDays={overviewDays}
             comparePeriodTotal={comparePeriodTotal}
+            compareReady={compareQuery.isSuccess}
             loading={calendarQuery.isLoading}
             error={calendarQuery.isError}
             onRetry={() => { void calendarQuery.refetch() }}

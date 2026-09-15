@@ -78,6 +78,24 @@ export function getBookingCalendarRange(
   }
 }
 
+/**
+ * Date bounds for appointment-status metrics. Month mode stays inside the selected
+ * calendar month; the visual grid may still include adjacent spillover days.
+ */
+export function getBookingCalendarStatsRange(
+  anchorDate: string,
+  mode: PosBookingCalendarViewMode,
+): BookingCalendarRange {
+  if (mode !== PosBookingCalendarViewMode.Month) {
+    return getBookingCalendarRange(anchorDate, mode)
+  }
+  const anchor = parseLocalDateIso(anchorDate)
+  return {
+    dateFrom: formatLocalDateIso(new Date(anchor.getFullYear(), anchor.getMonth(), 1, 12)),
+    dateTo: formatLocalDateIso(new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0, 12)),
+  }
+}
+
 export function shiftBookingCalendarAnchor(
   anchorDate: string,
   mode: PosBookingCalendarViewMode,
@@ -169,15 +187,19 @@ export function summarizeBookingCalendarStatuses(
 /**
  * Prior period of equal shape for the "X% busier than …" comparison on the status summary.
  * Day compares to the same weekday last week (e.g. this Saturday vs last Saturday).
+ * Month compares the prior calendar month only (not the spillover grid used for rendering).
  */
 export function getBookingCalendarCompareRange(
   anchorDate: string,
   mode: PosBookingCalendarViewMode,
 ): BookingCalendarRange {
   if (mode === PosBookingCalendarViewMode.Day) {
-    return getBookingCalendarRange(formatLocalDateIso(addLocalDays(parseLocalDateIso(anchorDate), -7)), mode)
+    return getBookingCalendarStatsRange(
+      formatLocalDateIso(addLocalDays(parseLocalDateIso(anchorDate), -7)),
+      mode,
+    )
   }
-  return getBookingCalendarRange(shiftBookingCalendarAnchor(anchorDate, mode, -1), mode)
+  return getBookingCalendarStatsRange(shiftBookingCalendarAnchor(anchorDate, mode, -1), mode)
 }
 
 function compareBookingWallClock(

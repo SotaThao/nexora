@@ -93,19 +93,6 @@ function weekdayLabel(dateIso: string, locale: string): string {
   }).format(new Date(year, month - 1, day, 12))
 }
 
-function totalAppointmentsLabelKey(mode: PosBookingCalendarViewMode): string {
-  switch (mode) {
-    case PosBookingCalendarViewMode.Day:
-      return 'metricTotalToday'
-    case PosBookingCalendarViewMode.Week:
-      return 'metricTotalWeek'
-    case PosBookingCalendarViewMode.Month:
-      return 'metricTotalMonth'
-    default:
-      return 'metricTotalPeriod'
-  }
-}
-
 export default function BookingCalendar({
   bookings,
   mode,
@@ -113,6 +100,7 @@ export default function BookingCalendar({
   range,
   overviewDays,
   comparePeriodTotal,
+  compareReady,
   loading,
   error,
   onRetry,
@@ -128,6 +116,8 @@ export default function BookingCalendar({
   range: BookingCalendarRange
   overviewDays: BookingCalendarOverviewDay[]
   comparePeriodTotal: number
+  /** False while the prior-period query is loading or failed — hides misleading trend copy. */
+  compareReady: boolean
   loading: boolean
   error: boolean
   onRetry: () => void
@@ -214,6 +204,8 @@ export default function BookingCalendar({
   const rangeLabel = calendarRangeLabel(mode, anchorDate, range, currentLanguage)
   const statusSummary = useMemo(() => summarizeBookingCalendarStatuses(bookings), [bookings])
   const compareTrend = useMemo(() => {
+    if (!compareReady) return null
+
     const current = statusSummary.total
     const previous = comparePeriodTotal
     if (previous === 0 && current === 0) return null
@@ -240,7 +232,7 @@ export default function BookingCalendar({
       tone: busier ? 'up' as const : 'down' as const,
       text: t(p + (busier ? 'metricCompareBusier' : 'metricCompareQuieter'), { percent, reference }),
     }
-  }, [anchorDate, comparePeriodTotal, currentLanguage, mode, p, statusSummary.total, t])
+  }, [anchorDate, comparePeriodTotal, compareReady, currentLanguage, mode, p, statusSummary.total, t])
 
   const summaryTiles: ReadonlyArray<{
     key: string
@@ -253,7 +245,8 @@ export default function BookingCalendar({
   }> = [
     {
       key: 'total',
-      label: t(p + totalAppointmentsLabelKey(mode)),
+      // Neutral label — toolbar already shows the selected period; "today/this week" is wrong when navigating history.
+      label: t(p + 'metricTotal'),
       value: statusSummary.total,
       trend: compareTrend,
       highlighted: true,
@@ -298,6 +291,7 @@ export default function BookingCalendar({
     <div className="booking-hub-view pos-booking-calendar">
       <div
         className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
+        role="region"
         aria-label={t(p + 'metricSummaryLabel')}
       >
         {summaryTiles.map((tile) => (
