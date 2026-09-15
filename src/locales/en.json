@@ -3336,6 +3336,7 @@
           "vlinkpayChangeAsset": "Change",
           "vlinkpayFixedNetwork": "Network: {{network}}",
           "vlinkpayReceiveAddress": "Receive wallet address",
+          "vlinkpayScanQr": "Or scan to pay",
           "vlinkpayApproxUsd": "≈ ${{amount}}",
           "vlinkpayStepCopyAddress": "Copy the receive wallet address.",
           "vlinkpayStepOpenApp": "Open the VLINKPAY Wallet app.",

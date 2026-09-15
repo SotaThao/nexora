@@ -83,6 +83,8 @@ export interface PaymentMethodCryptoAddressDto {
   network: string
   symbol: string
   address: string
+  /** Per-coin QR image (US-1488). */
+  imageUrl?: string | null
 }
 
 export interface PaymentMethodDto {

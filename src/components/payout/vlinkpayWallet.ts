@@ -65,7 +65,19 @@ export type VlinkpayCryptoAddressDto = {
   network: string
   symbol: string
   address: string
+  imageUrl?: string | null
 }
+
+/** UI map of per-coin QR image preview (data/blob/remote URL, or '' when none). */
+export type VlinkpayImages = {
+  [VlinkpayCoin.Usdv]: string
+  [VlinkpayCoin.Usdt]: string
+}
+
+/** Per-coin QR image pending upload — a picked File takes precedence over an existing url. */
+export type VlinkpayImagePendingMap = Partial<
+  Record<VlinkpayCoinKey, { file?: File | null; url?: string | null }>
+>
 
 const EMPTY_ADDRESSES: VlinkpayAddresses = {
   [VlinkpayCoin.Usdv]: '',
@@ -79,6 +91,15 @@ const SYMBOL_TO_COIN: Record<string, VlinkpayCoinKey> = {
 
 export function emptyVlinkpayAddresses(): VlinkpayAddresses {
   return { ...EMPTY_ADDRESSES }
+}
+
+const EMPTY_IMAGES: VlinkpayImages = {
+  [VlinkpayCoin.Usdv]: '',
+  [VlinkpayCoin.Usdt]: '',
+}
+
+export function emptyVlinkpayImages(): VlinkpayImages {
+  return { ...EMPTY_IMAGES }
 }
 
 /** Wallet addresses are a single token — strip all whitespace (typed, pasted, or stored). */
@@ -156,6 +177,42 @@ export function parseVlinkpayAddressesFromMethod(method?: {
     return parseVlinkpayCryptoAddresses(method.cryptoAddresses)
   }
   return parseVlinkpayAddresses(method.accountInfo)
+}
+
+/** Parse BE cryptoAddresses[] into a per-coin QR image URL map (no legacy fallback — new field). */
+export function parseVlinkpayCryptoAddressImages(
+  cryptoAddresses?: Array<{ symbol?: string; imageUrl?: string | null }> | null,
+): VlinkpayImages {
+  const next = emptyVlinkpayImages()
+  if (!Array.isArray(cryptoAddresses)) return next
+
+  for (const entry of cryptoAddresses) {
+    const symbol = String(entry?.symbol || '').trim().toUpperCase()
+    const coin = SYMBOL_TO_COIN[symbol]
+    if (!coin) continue
+    next[coin] = String(entry?.imageUrl || '').trim()
+  }
+  return next
+}
+
+export function parseVlinkpayImagesFromMethod(method?: {
+  cryptoAddresses?: Array<{ symbol?: string; imageUrl?: string | null }> | null
+} | null): VlinkpayImages {
+  if (!method) return emptyVlinkpayImages()
+  return parseVlinkpayCryptoAddressImages(method.cryptoAddresses)
+}
+
+/** Build the cryptoAddressImages payload (keyed by coin symbol) for the update mutation. */
+export function toVlinkpayCryptoAddressImagesPayload(
+  pending: VlinkpayImagePendingMap,
+): Record<string, { file?: File | null; url?: string | null }> {
+  const payload: Record<string, { file?: File | null; url?: string | null }> = {}
+  for (const coin of VLINKPAY_COINS) {
+    const entry = pending[coin.key]
+    if (!entry) continue
+    payload[coin.symbol] = entry
+  }
+  return payload
 }
 
 /** Build PUT body cryptoAddresses — only non-empty addresses. */
@@ -245,6 +302,16 @@ export function mergeVlinkpayAddresses(...sources: VlinkpayAddresses[]): Vlinkpa
       sources.map((source) => sanitizeAddress(source[VlinkpayCoin.Usdv])).find(Boolean) || '',
     [VlinkpayCoin.Usdt]:
       sources.map((source) => sanitizeAddress(source[VlinkpayCoin.Usdt])).find(Boolean) || '',
+  }
+}
+
+/** First source that has a QR image for each coin wins (US-1488). */
+export function mergeVlinkpayImages(...sources: VlinkpayImages[]): VlinkpayImages {
+  return {
+    [VlinkpayCoin.Usdv]:
+      sources.map((source) => String(source[VlinkpayCoin.Usdv] || '').trim()).find(Boolean) || '',
+    [VlinkpayCoin.Usdt]:
+      sources.map((source) => String(source[VlinkpayCoin.Usdt] || '').trim()).find(Boolean) || '',
   }
 }
 
