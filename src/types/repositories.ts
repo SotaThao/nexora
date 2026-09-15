@@ -256,6 +256,14 @@ export interface CheckInOrderItemPayload {
   note?: string
 }
 
+// One line of the front desk's Assign Services confirmation. `posStaffProfileId` omitted is
+// "First available" — the line goes back to the floor.
+export interface SaveOrderServiceLineAssignmentPayload {
+  serviceLineId: string
+  posStaffProfileId?: string
+  note?: string
+}
+
 export interface CheckInOrderPayload {
   customerName: string
   customerEmail?: string
