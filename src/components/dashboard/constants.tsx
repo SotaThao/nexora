@@ -176,6 +176,8 @@ export const DASHBOARD_MENU_ID = {
   payments: 'payments',
   pos: 'pos',
   newsLibrary: 'news-library',
+  /** Income/Payout Categories (issue #584) — Merchant's own category set + income breakdown. */
+  categoryManagement: 'category-management',
 } as const
 
 export type DashboardMenuId = (typeof DASHBOARD_MENU_ID)[keyof typeof DASHBOARD_MENU_ID]
@@ -637,6 +639,12 @@ export const PAYMENTS_PAYOUTS_SUBMENU = [
     labelKey: "dashboard.tips.tabs.savings",
     params: { tab: "savings" },
   },
+  {
+    id: "category_management",
+    screen: DASHBOARD_MENU_ID.categoryManagement,
+    labelKey: "transaction_categories.management_title",
+    params: {},
+  },
 ];
 
 // Maps a Tax IQ sidebar sub-item id -> the OwnerTaxYear.enabledModules entry that must be
@@ -680,7 +688,8 @@ export function isPaymentsPayoutsRouteActive(
 ): boolean {
   if (
     activeMenu !== DASHBOARD_MENU_ID.tips &&
-    activeMenu !== DASHBOARD_MENU_ID.reports
+    activeMenu !== DASHBOARD_MENU_ID.reports &&
+    activeMenu !== DASHBOARD_MENU_ID.categoryManagement
   )
     return false;
   return PAYMENTS_PAYOUTS_SUBMENU.some((item) =>

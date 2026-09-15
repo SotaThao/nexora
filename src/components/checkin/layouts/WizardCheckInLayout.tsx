@@ -16,6 +16,7 @@ import CustomerNameStep from '../../posDevice/steps/CustomerNameStep'
 import SelectTechnicianStep from '../../posDevice/steps/SelectTechnicianStep'
 import SelectServicesStep from '../../posDevice/steps/SelectServicesStep'
 import OverviewStep from '../../posDevice/steps/OverviewStep'
+import SelectedServicesSummary from '../parts/SelectedServicesSummary'
 import type { CheckInSession } from '../useCheckInSession'
 
 const K = 'components.checkin.WizardCheckInLayout'
@@ -93,9 +94,19 @@ export default function WizardCheckInLayout({
           selectedServiceIds={session.selectedServiceIds}
           isSubmitting={session.isSubmitting}
           errorMessage={session.submitError}
-          onToggle={session.toggleService}
+          onAdd={session.addService}
           onBack={() => setStep('technician')}
           onContinue={() => setStep('overview')}
+          footerNote={
+            <SelectedServicesSummary
+              services={session.selectedServices}
+              totalPrice={session.totalPrice}
+              onAdd={session.addService}
+              onRemove={session.removeService}
+              onRemoveGroup={session.removeServiceGroup}
+              isSubmitting={session.isSubmitting}
+            />
+          }
         />
       ) : null}
 
@@ -108,7 +119,6 @@ export default function WizardCheckInLayout({
           customerPhone={session.phone}
           bookingTime={session.bookingTimeLabel}
           isSubmitting={session.isSubmitting}
-          primaryDisabled={!session.canSubmit}
           errorMessage={session.submitError}
           onChoose={session.chooseServiceTechnician}
           onBack={() => setStep('services')}

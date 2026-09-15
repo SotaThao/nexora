@@ -77,7 +77,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
 
       {/* Screen title (desktop) */}
       <div className="hidden min-w-0 lg:block">
-        <h1 className="truncate text-lg font-extrabold text-nexoraText">{t(`staff_dashboard.titles.${activeScreen}`)}</h1>
+        <h1 className="truncate text-nexoraText text-xl lg:text-2xl font-semibold leading-snug">{t(`staff_dashboard.titles.${activeScreen}`)}</h1>
       </div>
 
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
@@ -106,7 +106,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                 <div className="truncate text-sm font-bold text-nexoraText">
                   {account.fullName || staffMember.fullName || displayName}
                 </div>
-                <div className="mt-0.5 truncate text-[11px] text-nexoraMuted">
+                <div className="mt-0.5 truncate text-xs text-nexoraMuted">
                   {t('staff_dashboard.staff_id')}: {account.staffCode || staffMember.id}
                 </div>
               </div>
@@ -115,7 +115,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                 <button
                   type="button"
                   onClick={() => handleProfileNav('account')}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-nexoraText transition hover:bg-nexoraCanvas"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-nexoraText transition hover:bg-nexoraCanvas"
                 >
                   <Settings className="h-4 w-4 text-nexoraMuted" />
                   <span>{t('staff_dashboard.nav.profile_account')}</span>
@@ -123,7 +123,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                 <button
                   type="button"
                   onClick={() => handleProfileNav('kyc')}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-nexoraText transition hover:bg-nexoraCanvas"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-nexoraText transition hover:bg-nexoraCanvas"
                 >
                   <ShieldCheck className="h-4 w-4 text-nexoraMuted" />
                   <span>{t('staff_dashboard.nav.profile_kyc')}</span>
@@ -136,7 +136,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                     onNavigate(MY_CERTIFICATIONS_PATH_SEGMENT)
                     setIsProfileOpen(false)
                   }}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-nexoraText transition hover:bg-nexoraCanvas"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-nexoraText transition hover:bg-nexoraCanvas"
                 >
                   <Award className="h-4 w-4 text-nexoraMuted" />
                   <span>{t('certifications.menu')}</span>
@@ -147,7 +147,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                 <button
                   type="button"
                   onClick={() => { setIsProfileOpen(false); onLogout?.() }}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-red-500 transition hover:bg-red-50"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-red-500 transition hover:bg-red-50"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>{t('staff_dashboard.sign_out')}</span>
@@ -169,7 +169,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
           >
             <Bell className="h-5 w-5" aria-hidden="true" />
             {unreadCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-black text-white ring-2 ring-white">
+              <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-xs font-semibold text-white ring-2 ring-white">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
@@ -186,7 +186,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                     type="button"
                     onClick={() => markAllRead()}
                     disabled={isMarkAllPending}
-                    className="text-[10px] font-bold text-nexoraBrand hover:underline disabled:opacity-50"
+                    className="text-xs font-semibold text-nexoraBrand hover:underline disabled:opacity-50"
                   >
                     {t('staff_dashboard.notifications.mark_all_read')}
                   </button>
@@ -239,15 +239,15 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                           <IconComponent className="h-4 w-4" />
                         </span>
                         <div className="min-w-0 flex-grow">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className={`truncate text-xs ${isUnread ? 'font-extrabold text-nexoraText' : 'font-bold text-nexoraMuted'}`}>
+                          <div className="flex flex-wrap items-start justify-between gap-2">
+                            <span className={`break-words text-sm ${isUnread ? 'font-extrabold text-nexoraText' : 'font-bold text-nexoraMuted'}`}>
                               {item.title}
                             </span>
-                            <span className="shrink-0 text-[10px] font-medium text-nexoraSubtle">
+                            <span className="shrink-0 text-xs font-medium text-nexoraSubtle">
                               {formatNotificationDateTime(item.createdAt || item.time, currentLanguage)}
                             </span>
                           </div>
-                          <p className={`mt-1 break-words text-[11px] leading-normal ${isUnread ? 'font-semibold text-nexoraText' : 'font-medium text-nexoraMuted'}`}>
+                          <p className={`mt-1 break-words text-sm leading-normal ${isUnread ? 'font-semibold text-nexoraText' : 'font-medium text-nexoraMuted'}`}>
                             {item.message}
                           </p>
                         </div>

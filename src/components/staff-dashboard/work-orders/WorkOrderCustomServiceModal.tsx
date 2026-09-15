@@ -6,6 +6,7 @@ import {
   clampWorkOrderDurationInput,
   clampWorkOrderPriceInput,
   isValidCustomWorkOrderService,
+  WORK_ORDER_CUSTOM_SERVICE_MAX_NAME_LENGTH,
   type WorkOrderCustomServiceInput,
 } from './workOrderServiceCatalog'
 import WorkOrderModalFrame from './WorkOrderModalFrame'
@@ -72,7 +73,7 @@ export default function WorkOrderCustomServiceModal({
             id="work-order-custom-name"
             type="text"
             autoComplete="off"
-            maxLength={200}
+            maxLength={WORK_ORDER_CUSTOM_SERVICE_MAX_NAME_LENGTH}
             value={name}
             placeholder={t(WORK_ORDERS_I18N.customNamePlaceholder)}
             className={WORK_ORDERS_LAYOUT_CLASS.customInput}

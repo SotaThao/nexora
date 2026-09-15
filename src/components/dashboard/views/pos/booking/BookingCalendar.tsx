@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import type { BookingListItemApiDto, TimeClockRosterRowApiDto } from '../../../../../types/repositories'
 import BookingTeamCalendar from '../../BookingTeamCalendar'
+import { formatTurnCredit } from '../TurnGridView'
 import type { BookingCalendarSlotSelect } from '../../BookingTeamCalendar'
 import {
   escapeBookingCalendarHtml,
@@ -57,7 +58,7 @@ function staffColumnHtml(row: TimeClockRosterRowApiDto, workingTodayLabel: strin
     `<div class="pos-booking-staff-header">`
     + avatar
     + `<span class="pos-booking-staff-copy">`
-    + `<span class="pos-booking-staff-name">${displayName} · ${Math.max(0, row.turnsToday ?? 0)}</span>`
+    + `<span class="pos-booking-staff-name">${displayName} · ${formatTurnCredit(row.weightedTurnsToday)}T</span>`
     + working
     + `</span>`
     + `</div>`
@@ -129,7 +130,7 @@ export default function BookingCalendar({
       const displayName = row.displayName.trim()
       if (!displayName || seen.has(displayName)) return []
       seen.add(displayName)
-      const label = `${displayName} · ${Math.max(0, row.turnsToday ?? 0)}`
+      const label = `${displayName} · ${formatTurnCredit(row.weightedTurnsToday)}T`
       return [{
         id: displayName,
         name: label,

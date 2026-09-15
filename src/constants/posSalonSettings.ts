@@ -3,6 +3,7 @@ export const PosSalonSettingsTab = {
   Staff: 'staff',
   Services: 'services',
   RolesPermissions: 'roles-permissions',
+  StaffLevels: 'staff-levels',
 } as const
 
 export type PosSalonSettingsTab =

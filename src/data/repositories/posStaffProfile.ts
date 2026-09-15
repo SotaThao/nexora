@@ -10,6 +10,10 @@ type HttpClient = typeof httpClient
 export interface SaveStaffPosProfileParams {
   businessStaffLinkId: string
   posRoleId: string
+  // Not yet accepted by CreateOrUpdateStaffPosProfileRequestDto on the backend (read-only via
+  // StaffPosProfileDto today) — sent anyway so this starts working the moment BE adds it, with
+  // no FE change needed. Until then the backend silently ignores it.
+  staffLevelId?: string | null
   payStructureType: string
   commissionPercent?: number | null
   weeklySalaryAmount?: number | null

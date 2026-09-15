@@ -11,10 +11,15 @@ export interface TechnicianOption {
   displayName: string
   photoUrl?: string | null
   isBusy?: boolean
-  turnsToday?: number
   completedTurns?: number
   assignedTurns?: number
   isNextTurn?: boolean
+  // Clocked out, and offered anyway because they are already working the ticket being edited.
+  // Check-in surfaces never set this — opening a ticket still takes a technician on shift.
+  isOffShift?: boolean
+  // Business-defined staff proficiency level (e.g. Basic/Advanced/Senior), when assigned.
+  staffLevelName?: string | null
+  queueCount?: number
 }
 
 // Above this many people the grid becomes hard to scan, and a name is faster to type than to hunt.
@@ -41,10 +46,11 @@ export default function TechnicianPickerGrid({
   emptyLabel,
   busyLabel,
   availableLabel,
-  turnsLabel,
+  offShiftLabel,
   completedTurnsLabel,
   assignedTurnsLabel,
   nextTurnLabel,
+  queueLabel,
   compact = false,
   autoWrap = false,
   technicianNameClassName = 'truncate text-xs font-bold',
@@ -62,10 +68,12 @@ export default function TechnicianPickerGrid({
   // passes neither, so its cards stay exactly as they were).
   busyLabel?: string
   availableLabel?: string
-  turnsLabel?: (count: number) => string
-  completedTurnsLabel?: (count: number) => string
+  // Only passed where an off-shift technician can appear at all; without it they read as available.
+  offShiftLabel?: string
+  completedTurnsLabel?: (count?: number) => string
   assignedTurnsLabel?: (count: number) => string
   nextTurnLabel?: string
+  queueLabel?: (count: number) => string
   compact?: boolean
   // Check-in surfaces use content-width choices that wrap; other consumers keep the existing grid.
   autoWrap?: boolean
@@ -80,21 +88,35 @@ export default function TechnicianPickerGrid({
       : technicians.filter((s) => s.displayName.toLowerCase().includes(query))
   }, [technicians, searchQuery])
 
-  const cardClass = (isSelected: boolean) =>
+  const cardClass = (isSelected: boolean, isNextTurn = false) =>
     `${autoWrap ? 'min-w-0 w-auto max-w-full flex-none ' : ''}${compact
       ? 'flex min-h-11 flex-col items-start gap-0.5 rounded-lg border px-3 py-2 text-left'
       : 'flex flex-col items-center justify-center gap-1 rounded-xl border p-3 text-center'} ${
-      isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder hover:border-nexoraBrand'
+      isNextTurn
+        ? 'border-violet-500 bg-violet-50 shadow-md shadow-violet-200/60 ring-2 ring-inset ring-violet-500'
+        : isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder hover:border-nexoraBrand'
     }`
 
   const optionLabelClass = `${autoWrap ? 'max-w-full' : 'w-full'} truncate text-xs font-bold text-nexoraText`
   const fullRowClass = autoWrap ? 'w-full' : 'col-span-full'
 
   const renderBadge = (staff: TechnicianOption) => {
+    if (staff.isOffShift && offShiftLabel) {
+      return <span className="text-[10px] font-semibold text-amber-600">{offShiftLabel}</span>
+    }
     if (!busyLabel || !availableLabel || staff.isBusy === undefined) return null
     return (
       <span className={`text-[10px] font-semibold ${staff.isBusy ? 'text-rose-600' : 'text-emerald-600'}`}>
         {staff.isBusy ? busyLabel : availableLabel}
+      </span>
+    )
+  }
+
+  const renderQueuePill = (staff: TechnicianOption) => {
+    if (!queueLabel || !staff.queueCount) return null
+    return (
+      <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold leading-none text-amber-700">
+        {queueLabel(staff.queueCount)}
       </span>
     )
   }
@@ -141,7 +163,7 @@ export default function TechnicianPickerGrid({
                 key={staff.posStaffProfileId}
                 type="button"
                 onClick={() => onSelect(staff.posStaffProfileId)}
-                className={cardClass(selectedStaffId === staff.posStaffProfileId)}
+                className={cardClass(selectedStaffId === staff.posStaffProfileId, Boolean(staff.isNextTurn && nextTurnLabel))}
               >
                 {!compact ? (
                   <span className="flex h-11 w-11 items-center justify-center rounded-full bg-nexoraCanvas text-xs font-bold text-nexoraText">
@@ -153,9 +175,9 @@ export default function TechnicianPickerGrid({
                   </span>
                 ) : null}
                 <span className={`${autoWrap ? 'max-w-full' : 'w-full'} text-nexoraText ${technicianNameClassName}`}>{staff.displayName}</span>
-                {staff.turnsToday !== undefined && turnsLabel ? (
-                  <span className="text-[10px] font-semibold tabular-nums text-nexoraMuted">
-                    {turnsLabel(staff.turnsToday)}
+                {staff.staffLevelName ? (
+                  <span className="max-w-full truncate rounded-full bg-nexoraBrand/10 px-2 py-0.5 text-[10px] font-bold text-nexoraBrand">
+                    {staff.staffLevelName}
                   </span>
                 ) : null}
                 {staff.assignedTurns !== undefined && assignedTurnsLabel ? (
@@ -163,17 +185,18 @@ export default function TechnicianPickerGrid({
                     {assignedTurnsLabel(staff.assignedTurns)}
                   </span>
                 ) : null}
-                {staff.completedTurns !== undefined && completedTurnsLabel ? (
+                {completedTurnsLabel ? (
                   <span className="text-[10px] font-semibold tabular-nums text-nexoraMuted">
                     {completedTurnsLabel(staff.completedTurns)}
                   </span>
                 ) : null}
                 {staff.isNextTurn && nextTurnLabel ? (
-                  <span className="rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-extrabold text-violet-700">
+                  <span className="rounded-full bg-violet-700 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-white">
                     {nextTurnLabel}
                   </span>
                 ) : null}
                 {renderBadge(staff)}
+                {renderQueuePill(staff)}
               </button>
             ))}
 

@@ -22,6 +22,7 @@ export interface WeeklyPayrollStaffRow {
   tips: number
   /** Service discounts this technician agreed to absorb. Deducted from pay, never from tips. */
   discountBorne: number
+  supplyFeeBorne: number
   takeHome: number
   // Ready | Review | PayrollTax | Paid
   status: string
@@ -53,6 +54,7 @@ export interface DailyDetailRow {
   sales: number
   tips: number
   discountBorne: number
+  supplyFeeBorne: number
   discountDetails: DiscountBorneDetail[]
   estimatedPay: number
 }
@@ -66,6 +68,7 @@ export interface WeeklyPayrollDailyDetail {
   totalSales: number
   totalTips: number
   totalDiscountBorne: number
+  totalSupplyFeeBorne: number
   totalEstimatedPay: number
 }
 
@@ -101,13 +104,19 @@ function withWeekStart(path: string, weekStart?: string) {
 export function createWeeklyPayrollRepository(client: HttpClient = httpClient) {
   return {
     async getWeeklyPayroll(weekStart?: string): Promise<WeeklyPayroll> {
-      return await client.get<WeeklyPayroll>(withWeekStart('/api/v1/merchant/pos/weekly-payroll', weekStart))
+      const data = await client.get<WeeklyPayroll>(withWeekStart('/api/v1/merchant/pos/weekly-payroll', weekStart))
+      return { ...data, staff: (data.staff ?? []).map((row) => ({ ...row, supplyFeeBorne: row.supplyFeeBorne ?? 0 })) }
     },
 
     async getDailyDetail(businessStaffLinkId: string, weekStart?: string): Promise<WeeklyPayrollDailyDetail> {
-      return await client.get<WeeklyPayrollDailyDetail>(
+      const data = await client.get<WeeklyPayrollDailyDetail>(
         withWeekStart(`/api/v1/merchant/pos/weekly-payroll/${encodeURIComponent(businessStaffLinkId)}/daily-detail`, weekStart),
       )
+      return {
+        ...data,
+        days: (data.days ?? []).map((day) => ({ ...day, supplyFeeBorne: day.supplyFeeBorne ?? 0 })),
+        totalSupplyFeeBorne: data.totalSupplyFeeBorne ?? 0,
+      }
     },
 
     async pay(params: PayWeeklyPayrollParams): Promise<string> {

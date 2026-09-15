@@ -52,8 +52,8 @@ export default function WorkOrderTicketCard({
             })}
           </span>
         </span>
-        <span className={workOrderStatusClass(ticket.status, WORK_ORDER_STATUS_BADGE_VARIANT.ticket)}>
-          {t(WORK_ORDER_STATUS_I18N[ticket.status])}
+        <span className={workOrderStatusClass(ticket.myStatus, WORK_ORDER_STATUS_BADGE_VARIANT.ticket)}>
+          {t(WORK_ORDER_STATUS_I18N[ticket.myStatus])}
         </span>
       </span>
     </button>

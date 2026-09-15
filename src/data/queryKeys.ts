@@ -78,6 +78,8 @@ export const qk = {
   merchantBusinessHours: ()    => ['merchantSettings', 'businessHours'],
   // POS Owner Setup — Roles & Permissions (US-015)
   merchantPosRoles: ()         => ['merchantSettings', 'posRoles'],
+  // POS Owner Setup — Staff Levels
+  merchantPosStaffLevels: ()   => ['merchantSettings', 'posStaffLevels'],
   // POS Owner Setup — Categories (US-016)
   merchantPosCategories: ()    => ['merchantSettings', 'posCategories'],
   // POS Owner Setup — Services (US-017)
@@ -132,6 +134,18 @@ export const qk = {
   },
   merchantPosStoreIncomeReport: (businessId?: string, selection?: string) => {
     const key: unknown[] = ['merchantSettings', 'posStoreIncomeReport', businessId ?? '']
+    if (selection) key.push(selection)
+    return key
+  },
+  merchantPosServiceIncomeReport: (businessId?: string, selection?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posServiceIncomeReport', businessId ?? '']
+    if (selection) key.push(selection)
+    return key
+  },
+  // `selection` here also carries the clicked row + page, so every drill-down page is its own entry
+  // while an omitted selection still prefix-matches every drill-down for the business.
+  merchantPosServiceIncomeLines: (businessId?: string, selection?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posServiceIncomeLines', businessId ?? '']
     if (selection) key.push(selection)
     return key
   },
@@ -193,9 +207,12 @@ export const qk = {
   posPrinterProfile: () => ['posDevice', 'printerProfile'],
   posReceiptSettings: () => ['posDevice', 'receiptSettings'],
   posTicketPrinted: (businessId: string, orderId: string) => ['posDevice', 'ticketPrinted', businessId, orderId],
+  // Front desk's own saved beep quick messages — device-scoped for the same reason.
+  posBeepSuggestions: () => ['posDevice', 'beepSuggestions'],
   // POS Booking — per-business settings (Ticket 2)
   merchantPosBookingSettings: (businessId?: string) => ['merchantSettings', 'posBookingSettings', businessId ?? ''],
   merchantPosOrderSettings: (businessId?: string) => ['merchantSettings', 'posOrderSettings', businessId ?? ''],
+  merchantPosTurnSettings: (businessId?: string) => ['merchantSettings', 'posTurnSettings', businessId ?? ''],
   staffPosPendingAcceptanceCount: () => ['staff', 'posPendingAcceptanceCount'],
   // POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filtered.
   // `filters` is only appended when explicitly passed — omitting it (e.g. from an
@@ -299,6 +316,27 @@ export const qk = {
   // slot (each technician's own weekly working hours are checked server-side).
   merchantPosAssignableStaff: (businessId?: string, posServiceId?: string, scheduledAt?: string) =>
     ['merchantSettings', 'posAssignableStaff', businessId ?? '', posServiceId ?? '', scheduledAt ?? ''],
+  // Reassigning a COMPLETED ticket. Keyed by the service LINE (not the service) because both the
+  // option list and the warning depend on who is credited on that specific line today.
+  merchantPosReassignableStaff: (businessId?: string, orderId?: string, serviceLineId?: string) =>
+    ['merchantSettings', 'posReassignableStaff', businessId ?? '', orderId ?? '', serviceLineId ?? ''],
+  // newPosStaffProfileId is part of the key: "has this week been paid?" has a different answer once
+  // a receiving technician is chosen, and serving the pre-selection answer would hide a real warning.
+  merchantPosReassignPayrollWarning: (
+    businessId?: string,
+    orderId?: string,
+    serviceLineId?: string,
+    newPosStaffProfileId?: string,
+  ) => [
+    'merchantSettings',
+    'posReassignPayrollWarning',
+    businessId ?? '',
+    orderId ?? '',
+    serviceLineId ?? '',
+    newPosStaffProfileId ?? '',
+  ],
+  merchantPosServiceLineReassignments: (businessId?: string, orderId?: string, serviceLineId?: string) =>
+    ['merchantSettings', 'posServiceLineReassignments', businessId ?? '', orderId ?? '', serviceLineId ?? ''],
   // Add-on picker — keyed by the service LINE, not the service: the options are scoped to the
   // line the picker was opened from.
   merchantPosServiceLineAddOnOptions: (businessId?: string, orderId?: string, serviceLineId?: string) =>
@@ -405,6 +443,12 @@ export const qk = {
   staffPayoutDetail: (payoutId: string) => ['staffPayouts', 'detail', payoutId],
   staffPayoutStats: () => ['staffPayouts', 'stats'],
   staffUnpaidDebt: () => ['staffPayouts', 'unpaidDebt'],
+
+  // Income/Payout Categories (issue #584)
+  merchantTransactionCategories: () => ['merchantTransactionCategories'],
+  merchantIncomeByCategoryStats: (filters = EMPTY) => ['merchantTransactionCategories', 'stats', filters],
+  staffTransactionCategories: () => ['staffTransactionCategories'],
+  staffIncomeByCategoryStats: (filters = EMPTY) => ['staffTransactionCategories', 'stats', filters],
 
   // Staff Payment Methods
   staffPaymentMethods: ()      => ['staffPaymentMethods'],

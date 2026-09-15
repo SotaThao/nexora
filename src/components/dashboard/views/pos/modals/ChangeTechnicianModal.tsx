@@ -11,6 +11,9 @@ import { X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import IconButton from '../../../../ui/IconButton'
 import TechnicianPickerGrid, { type TechnicianOption } from '../../../../checkin/parts/TechnicianPickerGrid'
+import { formatTurnCredit } from '../TurnGridView'
+import { sortTurnBoardStations } from '../posNextTurn'
+import { PosOrderStatus } from '../../../../../constants/posOrderStatus'
 
 const K = 'components.dashboard.views.pos.PosOrderWorkspace'
 
@@ -31,7 +34,8 @@ export default function ChangeTechnicianModal({
 }: {
   open: boolean
   serviceName: string
-  // Already narrowed to the people who can perform this line's service.
+  // Already narrowed to the people who can perform this line's service, plus anyone on this
+  // ticket who has clocked out since — they carry isOffShift and stay pickable.
   technicians: TechnicianOption[]
   isLoading?: boolean
   // null = First available, which clears the assignment rather than picking someone.
@@ -64,6 +68,16 @@ export default function ChangeTechnicianModal({
     : currentTechnicianName?.trim()
       || technicians.find((technician) => technician.posStaffProfileId === selectedStaffId)?.displayName
       || t(`${K}.technicianNameUnavailable`)
+  const sortedTechnicians = sortTurnBoardStations(
+    technicians.map(technician => ({
+      ...technician,
+      staffLevelName: technician.staffLevelName?.replace(/^(Level\s+\d+)\s*[·•:–—-].*$/i, '$1'),
+      currentStatus: technician.isBusy ? PosOrderStatus.InService : PosOrderStatus.Waiting,
+      isClockedIn: !technician.isOffShift,
+      weightedTurnsToday: technician.assignedTurns,
+    })),
+    technicians.find(technician => technician.isNextTurn)?.posStaffProfileId,
+  )
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
@@ -100,7 +114,7 @@ export default function ChangeTechnicianModal({
           ) : null}
           <TechnicianPickerGrid
             technicianNameClassName="break-words text-sm font-extrabold uppercase"
-            technicians={[...technicians].sort((a, b) => Number(Boolean(b.isNextTurn)) - Number(Boolean(a.isNextTurn)))}
+            technicians={sortedTechnicians}
             isLoading={isLoading}
             selectedStaffId={selectedStaffId}
             onSelect={handleSelect}
@@ -109,8 +123,10 @@ export default function ChangeTechnicianModal({
             emptyLabel={t(`${K}.noTechnicians`)}
             busyLabel={t(`${K}.technicianBusy`)}
             availableLabel={t(`${K}.technicianAvailable`)}
-            completedTurnsLabel={(count) => t(`${K}.technicianCompletedTurns`, { count })}
-            assignedTurnsLabel={(count) => t(`${K}.technicianAssignedTurns`, { count })}
+            offShiftLabel={t(`${K}.technicianOffShift`)}
+            assignedTurnsLabel={(count) => t(`${K}.technicianTodayWeightedTurns`, {
+              turns: formatTurnCredit(count),
+            })}
             nextTurnLabel={t(`${K}.technicianNextTurn`)}
           />
 

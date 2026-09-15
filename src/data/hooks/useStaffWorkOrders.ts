@@ -9,7 +9,7 @@ import { qk } from '../queryKeys'
 import { useSessionRole } from '../../auth/useSessionRole'
 import staffWorkOrdersRepository, {
   type StaffBookingCalendar,
-  type StaffWorkOrderCatalogItem,
+  type StaffWorkOrderCatalog,
   type StaffWorkOrderDetail,
   type StaffWorkOrderListItem,
 } from '../repositories/staffWorkOrders'
@@ -72,7 +72,7 @@ export function useStaffWorkOrderDetail(orderId: string | undefined) {
 export function useStaffWorkOrderServiceCatalog(orderId: string | undefined) {
   const { isStaff } = useSessionRole()
 
-  return useQuery<StaffWorkOrderCatalogItem[]>({
+  return useQuery<StaffWorkOrderCatalog>({
     queryKey: qk.staffWorkOrderServiceCatalog(orderId),
     queryFn: () => staffWorkOrdersRepository.getMyServiceCatalog(orderId ?? ''),
     enabled: isStaff && Boolean(orderId),

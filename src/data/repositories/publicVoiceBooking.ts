@@ -61,6 +61,19 @@ function staffInitials(fullName: string): string {
   return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase()
 }
 
+/** Only http(s) photo URLs from the booking page payload; anything else falls back to initials. */
+export function toPublicBookingAvatarUrl(value: unknown): string | null {
+  const raw = String(value ?? '').trim()
+  if (!raw) return null
+  try {
+    const parsed = new URL(raw)
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null
+    return raw
+  } catch {
+    return null
+  }
+}
+
 function normalizeService(
   raw: unknown,
   categoryMeta?: { categoryId: string; categoryName: string },
@@ -120,7 +133,12 @@ function normalizeStaff(raw: unknown): PublicBookingStaff | null {
     readField(dto, 'fullName', 'FullName') ?? readField(dto, 'name', 'Name') ?? '',
   ).trim()
   if (!id || !fullName) return null
-  return { id, fullName, initials: staffInitials(fullName) }
+  return {
+    id,
+    fullName,
+    initials: staffInitials(fullName),
+    avatarUrl: toPublicBookingAvatarUrl(readField(dto, 'avatarUrl', 'AvatarUrl')),
+  }
 }
 
 function normalizeOperatingHour(raw: unknown): PublicBookingOperatingHour | null {

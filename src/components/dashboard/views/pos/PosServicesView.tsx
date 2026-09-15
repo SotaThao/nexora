@@ -87,6 +87,46 @@ function toServiceInput(service: PosServiceApiDto): PosServiceInput {
   }
 }
 
+function groupServicesByCategory(
+  services: PosServiceApiDto[],
+  categories: { id: string; name: string }[],
+  otherSectionId: string,
+  otherSectionName: string,
+): PosServiceSection[] {
+  const sections = categories.map((category) => ({
+    id: category.id,
+    name: category.name,
+    services: [] as PosServiceApiDto[],
+  }))
+  const sectionById = new Map(sections.map((section) => [section.id, section]))
+  const otherServices: PosServiceApiDto[] = []
+
+  services.forEach((service) => {
+    const matchedCategoryIds = [...new Set(service.categoryIds)].filter((categoryId) =>
+      sectionById.has(categoryId),
+    )
+    if (matchedCategoryIds.length === 0) {
+      otherServices.push(service)
+      return
+    }
+    matchedCategoryIds.forEach((categoryId) => {
+      const section = sectionById.get(categoryId)
+      if (!section || section.services.some((row) => row.id === service.id)) return
+      section.services.push(service)
+    })
+  })
+
+  if (otherServices.length > 0) {
+    sections.push({
+      id: otherSectionId,
+      name: otherSectionName,
+      services: otherServices,
+    })
+  }
+
+  return sections
+}
+
 export default function PosServicesView({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
@@ -137,31 +177,16 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
     )
   }, [services])
 
-  const serviceSections = useMemo<PosServiceSection[]>(() => {
-    const sections = (categories ?? []).map((category) => ({
-      id: category.id,
-      name: category.name,
-      services: [] as PosServiceApiDto[],
-    }))
-    const sectionById = new Map(sections.map((section) => [section.id, section]))
-    const otherServices: PosServiceApiDto[] = []
-
-    items.forEach((service) => {
-      const primaryCategory = service.categoryIds.find((categoryId) => sectionById.has(categoryId))
-      if (primaryCategory) sectionById.get(primaryCategory)?.services.push(service)
-      else otherServices.push(service)
-    })
-
-    if (otherServices.length > 0) {
-      sections.push({
-        id: OTHER_SERVICES_SECTION_ID,
-        name: t(`${TK}.otherServices`),
-        services: otherServices,
-      })
-    }
-
-    return sections
-  }, [categories, items, t])
+  const serviceSections = useMemo<PosServiceSection[]>(
+    () =>
+      groupServicesByCategory(
+        items,
+        categories ?? [],
+        OTHER_SERVICES_SECTION_ID,
+        t(`${TK}.otherServices`),
+      ),
+    [categories, items, t],
+  )
 
   const serviceMutationBusy =
     isSavingAllServices ||
@@ -414,7 +439,45 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
     }
   }
 
-  const handleDelete = async (service: PosServiceApiDto) => {
+  const handleDelete = async (service: PosServiceApiDto, categoryId: string) => {
+    const belongsToMultipleCategories =
+      categoryId !== OTHER_SERVICES_SECTION_ID &&
+      service.categoryIds.includes(categoryId) &&
+      service.categoryIds.length > 1
+
+    if (belongsToMultipleCategories) {
+      const categoryName =
+        (categories ?? []).find((category) => category.id === categoryId)?.name ?? ''
+      const confirmed = await showConfirm(
+        t(`${TK}.removeFromCategoryConfirmBody`, {
+          name: service.name,
+          category: categoryName,
+        }),
+        t(`${TK}.removeFromCategoryConfirmTitle`),
+      )
+      if (!confirmed) return
+      try {
+        await updateService.mutateAsync({
+          serviceId: service.id,
+          input: {
+            ...toServiceInput(service),
+            categoryIds: service.categoryIds.filter((id) => id !== categoryId),
+          },
+        })
+        showToast(
+          t(`${TK}.removedFromCategorySuccess`, {
+            name: service.name,
+            category: categoryName,
+          }),
+          'success',
+          TOAST_SNACK_DURATION_MS,
+        )
+      } catch (error) {
+        showToast(t(getErrorI18nKey(getApiErrorCode(error))), 'error')
+      }
+      return
+    }
+
     const confirmed = await showConfirm(
       t(`${TK}.deleteConfirmBody`, { name: service.name }),
       t(`${TK}.deleteConfirmTitle`),
@@ -625,7 +688,7 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
                           onChange: updateInlineServiceDraft,
                           onEdit: (item) =>
                             setModalState({ open: true, service: item, defaultCategoryId: null }),
-                          onRemove: handleDelete,
+                          onRemove: (item) => handleDelete(item, section.id),
                           isDirty: () => isInlineServiceDraftDirty(service, draft),
                           isPending: () => isDeleting,
                         }}

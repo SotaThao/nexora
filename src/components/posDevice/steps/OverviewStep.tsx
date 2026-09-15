@@ -5,10 +5,12 @@
 // different for one item — inline rather than behind an overlay, because the point of this screen
 // is seeing every line at once, and an overlay hides exactly that.
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { ChevronDown } from 'lucide-react'
 import CheckInStepFrame from '../../checkin/parts/CheckInStepFrame'
 import CheckInServiceLineRow from '../../checkin/parts/CheckInServiceLineRow'
 import { initialsOf } from './technicianDisplay'
-import type { SelfCheckInServiceApiDto, SelfCheckInTechnicianApiDto } from '../../../types/repositories'
+import type { SelfCheckInTechnicianApiDto } from '../../../types/repositories'
+import type { CheckInSelectedService } from '../../checkin/types'
 
 const K = 'components.posDevice.SelfCheckInFlow'
 
@@ -29,9 +31,9 @@ export default function OverviewStep({
   onBack,
   onSubmit,
 }: {
-  services: SelfCheckInServiceApiDto[]
+  services: CheckInSelectedService[]
   technicians: SelfCheckInTechnicianApiDto[]
-  // serviceId → posStaffProfileId, or null for Anyone.
+  // lineId → posStaffProfileId, or null for Anyone.
   choices: Record<string, string | null>
   customerName: string
   customerPhone: string
@@ -42,7 +44,7 @@ export default function OverviewStep({
   // button says so rather than silently doing nothing.
   primaryDisabled?: boolean
   errorMessage: string | null
-  onChoose: (serviceId: string, posStaffProfileId: string | null) => void
+  onChoose: (lineId: string, posStaffProfileId: string | null) => void
   onBack: () => void
   onSubmit: () => void
 }) {
@@ -76,7 +78,7 @@ export default function OverviewStep({
 
       <div className="space-y-2">
         {services.map((service) => {
-          const selectedId = choices[service.id] ?? null
+          const selectedId = choices[service.lineId] ?? null
           // Only technicians actually assigned to this service — offering anyone else would let
           // the kiosk pin a line to someone who cannot perform it.
           const eligible = technicians.filter((tech) => tech.serviceIds.includes(service.id))
@@ -84,28 +86,32 @@ export default function OverviewStep({
 
           return (
             <CheckInServiceLineRow
-              key={service.id}
+              key={service.lineId}
               serviceName={service.name}
               price={service.price}
               durationMinutes={service.durationMinutes}
               technicianInitials={selected ? initialsOf(selected.displayName) : null}
               technicianSelect={
-                <select
-                  value={selectedId ?? ANYONE}
-                  aria-label={t(`${K}.technicianForService`, { serviceName: service.name })}
-                  onChange={(e) => onChoose(service.id, e.target.value === ANYONE ? null : e.target.value)}
-                  // A fixed width, not a percentage: this select sits inside a shrink-0 flex
-                  // container whose own width comes from its content, so a percentage max-width
-                  // resolves against an indefinite parent and collapses the control to its arrow.
-                  className="h-11 w-40 rounded-lg border border-nexoraBorder bg-white px-3 text-sm font-bold text-nexoraText outline-none focus:border-nexoraBrand"
-                >
-                  <option value={ANYONE}>{t(`${K}.anyone`)}</option>
-                  {eligible.map((tech) => (
-                    <option key={tech.posStaffProfileId} value={tech.posStaffProfileId}>
-                      {tech.displayName}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    value={selectedId ?? ANYONE}
+                    disabled={isSubmitting}
+                    aria-label={t(`${K}.technicianForService`, { serviceName: service.name })}
+                    onChange={(e) => onChoose(service.lineId, e.target.value === ANYONE ? null : e.target.value)}
+                    // A fixed width, not a percentage: this select sits inside a shrink-0 flex
+                    // container whose own width comes from its content, so a percentage max-width
+                    // resolves against an indefinite parent and collapses the control to its arrow.
+                    className="h-11 w-40 appearance-none rounded-lg border border-nexoraBorder bg-white pl-3 pr-9 text-sm font-bold text-nexoraText outline-none focus:border-nexoraBrand disabled:opacity-60"
+                  >
+                    <option value={ANYONE}>{t(`${K}.anyone`)}</option>
+                    {eligible.map((tech) => (
+                      <option key={tech.posStaffProfileId} value={tech.posStaffProfileId}>
+                        {tech.displayName}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nexoraMuted" />
+                </div>
               }
             />
           )

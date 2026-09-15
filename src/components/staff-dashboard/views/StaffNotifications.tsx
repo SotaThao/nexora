@@ -9,6 +9,7 @@ import {
   useNotifications,
   useUnreadCount,
 } from '../../../data/hooks/useNotifications'
+import { isPosStaffBeepNotification } from '../../../constants/posStaffBeep'
 import type { NotificationRecord } from '../../../types/domain'
 import { SkeletonLayout } from '../../ui/skeleton'
 import ToggleSwitch from '../../ui/ToggleSwitch'
@@ -43,8 +44,8 @@ const TYPE_ICON: Record<string, typeof Bell> = {
   TaxIqDisputeResolved: Wallet,
   TaxIqDisputeRejected: AlertTriangle,
   BookingConfirmed: Calendar,
-  // Front desk calling the tech out — the actionable version lives in the shell sheet, these rows
-  // are the history of it.
+  // Front desk calling the tech out. The answer buttons live in the shell sheet, so a PosStaffBeep
+  // row does not open a screen — it reopens that sheet when the tech closed or minimised it.
   PosStaffBeep: BellRing,
   PosStaffBeepResponse: BellRing,
   // Work-order assignment lands on the ticket itself via actionUrl, so these rows are tappable.
@@ -92,7 +93,9 @@ export default function StaffNotifications({ showPushPreferences = true } = {}) 
     const title = n.title?.trim() || t('staff_dashboard.notifications.generic_title')
     const message = (n.message || n.body || '').trim()
     const hasAction =
-      n.type === 'StaffLinkRequest' || Boolean(resolveStaffNotificationActionUrl(n.actionUrl))
+      n.type === 'StaffLinkRequest'
+      || isPosStaffBeepNotification(n.type)
+      || Boolean(resolveStaffNotificationActionUrl(n.actionUrl))
 
     return (
       <button
@@ -113,12 +116,12 @@ export default function StaffNotifications({ showPushPreferences = true } = {}) 
             {title}
           </div>
           {message ? (
-            <p className="mt-0.5 text-xs leading-normal text-nexoraMuted">
+            <p className="mt-0.5 text-sm leading-normal text-nexoraMuted">
               {message}
             </p>
           ) : null}
           {n.createdAt || n.time ? (
-            <p className="mt-1 text-[10px] text-nexoraSubtle">
+            <p className="mt-1 text-sm text-nexoraSubtle">
               {formatNotificationDateTime(
                 n.createdAt || n.time,
                 currentLanguage,
@@ -137,7 +140,7 @@ export default function StaffNotifications({ showPushPreferences = true } = {}) 
     <div className="space-y-4">
       <section className={panel}>
         <div className="mb-3 flex items-center justify-between gap-2">
-          <h3 className="text-base font-extrabold text-nexoraText">
+          <h3 className="text-nexoraText text-base font-semibold leading-snug">
             {t("staff_dashboard.titles.notifications")}
           </h3>
           {unreadCount > 0 && (
@@ -145,14 +148,14 @@ export default function StaffNotifications({ showPushPreferences = true } = {}) 
               type="button"
               onClick={handleMarkAllRead}
               disabled={markAllReadMutation.isPending}
-              className="shrink-0 text-xs font-bold text-nexoraBrand transition hover:opacity-80 disabled:opacity-50"
+              className="shrink-0 text-xs font-semibold text-nexoraBrand transition hover:opacity-80 disabled:opacity-50"
             >
               {t("staff_dashboard.notifications.mark_all_read")}
             </button>
           )}
         </div>
         {notifications.length === 0 ? (
-          <p className="py-6 text-center text-xs text-nexoraSubtle">
+          <p className="py-6 text-center text-sm text-nexoraSubtle">
             {t("staff_dashboard.notifications.empty")}
           </p>
         ) : (
@@ -164,7 +167,7 @@ export default function StaffNotifications({ showPushPreferences = true } = {}) 
 
       {showPushPreferences ? (
       <section className={panel}>
-        <h3 className="mb-3 text-base font-extrabold text-nexoraText">{t('staff_dashboard.notifications.push_prefs')}</h3>
+        <h3 className="mb-3 text-nexoraText text-base font-semibold leading-snug">{t('staff_dashboard.notifications.push_prefs')}</h3>
         <div className="space-y-1">
           {PREF_KEYS.map((key) => (
             <div key={key} className={`flex items-center justify-between gap-3 ${listRowBase}`}>

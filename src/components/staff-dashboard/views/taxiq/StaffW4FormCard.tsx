@@ -85,8 +85,8 @@ export default function StaffW4FormCard({ staffTaxYear }: { staffTaxYear: StaffT
 
   return (
     <div className="nexora-card p-6">
-      <h2 className="text-sm font-extrabold text-nexoraText">{t('taxiq.w4.title')}</h2>
-      <p className="mt-1 text-xs text-nexoraMuted">{t('taxiq.w4.description', { taxYear: staffTaxYear.taxYear })}</p>
+      <h2 className="text-nexoraText text-sm font-semibold leading-snug">{t('taxiq.w4.title')}</h2>
+      <p className="mt-1 text-nexoraMuted text-[13px] font-normal leading-5">{t('taxiq.w4.description', { taxYear: staffTaxYear.taxYear })}</p>
 
       {isLocked && (
         <div className="mt-3 rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3 py-2 text-xs font-semibold text-nexoraMuted">
@@ -211,7 +211,7 @@ export default function StaffW4FormCard({ staffTaxYear }: { staffTaxYear: StaffT
         type="button"
         onClick={handleSave}
         disabled={isLocked || upsertW4.isPending}
-        className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white disabled:opacity-60"
+        className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
       >
         {upsertW4.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
         {t('taxiq.w4.saveButton')}

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Mail, Printer } from 'lucide-react'
 import PosReportPrintAll, { type TechnicianPrintReport } from './PosReportPrintAll'
+import PosReportEmailAll from './PosReportEmailAll'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { SkeletonList } from '../../../../ui/skeleton'
 import { formatCurrency } from '../../../utils'
@@ -15,7 +16,7 @@ import posReportRepository, {
 import { PosReportMode } from '../../../../../constants/posReportMode'
 import PosReportPeriodPicker from './PosReportPeriodPicker'
 import PosReportTable from './PosReportTable'
-import PosReportDetailModal, { POS_REPORT_EMAIL_ENABLED } from './PosReportDetailModal'
+import PosReportDetailModal from './PosReportDetailModal'
 import {
   defaultSelectionFor,
   isoWeekBounds,
@@ -81,7 +82,20 @@ export default function PosReportPanel({
     pageNumber: 1,
     pageSize: 20,
     keyword: detailRow?.displayName,
-    enabled: POS_REPORT_EMAIL_ENABLED && isOwner && detailRow !== null,
+    enabled: isOwner && detailRow !== null,
+  })
+
+  const [isPreparingEmailAll, setIsPreparingEmailAll] = useState(false)
+  const [emailAllError, setEmailAllError] = useState(false)
+  const [emailAllReports, setEmailAllReports] = useState<TechnicianPrintReport[] | null>(null)
+  const emailAllRequestRef = useRef(0)
+  const preparingEmailAllRef = useRef(false)
+  // The bulk roster (every technician's email, not just one) is only needed once the Send mail all
+  // dialog is actually being prepared — Owner-only, same restriction as the single-technician roster read.
+  const emailAllStaffQuery = useMerchantStaff({
+    pageNumber: 1,
+    pageSize: 200,
+    enabled: isOwner && (isPreparingEmailAll || emailAllReports !== null),
   })
 
   const params = useMemo(
@@ -109,6 +123,17 @@ export default function PosReportPanel({
   const data = reportQuery.data
   const rows = data?.rows ?? []
   const totals = data?.totals
+  const staffEmailByStaffId = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const row of rows) {
+      const staff = emailAllStaffQuery.data?.items.find((item) =>
+        String(item.linkId ?? item.staffLinkId ?? item.id ?? '') === row.businessStaffLinkId)
+      const email = typeof staff?.email === 'string' ? staff.email.trim() : ''
+      if (email) map.set(row.posStaffProfileId, email)
+    }
+    return map
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, emailAllStaffQuery.data?.items])
   const detailPeriod = useMemo(() => {
     if (selection.mode === PosReportMode.Daily) {
       const date = selection.dates[0]
@@ -185,6 +210,29 @@ export default function PosReportPanel({
     }
   }
 
+  const canEmailAll = selection.mode !== PosReportMode.Monthly
+
+  const handleOpenEmailAll = async () => {
+    if (preparingEmailAllRef.current || !isOwner || !canEmailAll || !data || !params || !rows.length
+      || reportQuery.isFetching || reportQuery.isPlaceholderData || reportQuery.isError || !data.periods[0]) return
+    const request = ++emailAllRequestRef.current
+    preparingEmailAllRef.current = true
+    setIsPreparingEmailAll(true)
+    setEmailAllError(false)
+    setEmailAllReports(null)
+    try {
+      const reports = await posReportRepository.getStaffReportsForPrint(params, rows, data.periods[0])
+      if (request === emailAllRequestRef.current) setEmailAllReports(reports)
+    } catch {
+      if (request === emailAllRequestRef.current) setEmailAllError(true)
+    } finally {
+      if (request === emailAllRequestRef.current) {
+        preparingEmailAllRef.current = false
+        setIsPreparingEmailAll(false)
+      }
+    }
+  }
+
   return (
     <section className="space-y-3" aria-label={t(`${TK}.title`)} data-testid="report-panel">
       <div
@@ -206,14 +254,16 @@ export default function PosReportPanel({
             <Printer className="h-4 w-4" aria-hidden="true" />
             {t(`${TK}.${isPreparingPrint ? 'preparingPrint' : 'printAll'}`)}
           </button>
-          <span title={t(`${TK}.detail.emailComingSoon`)} className="inline-flex">
+          <span title={!isOwner ? t(`${TK}.emailAllOwnerOnly`) : undefined} className="inline-flex">
             <button
               type="button"
-              disabled
-              className="inline-flex h-9 cursor-not-allowed items-center gap-1.5 rounded-lg border border-nexoraBorder bg-nexoraSurface px-3 text-xs font-bold text-nexoraText opacity-50"
+              onClick={handleOpenEmailAll}
+              disabled={!isOwner || !canEmailAll || isPreparingEmailAll || !params || !rows.length
+                || !data?.periods.length || reportQuery.isFetching || reportQuery.isPlaceholderData || reportQuery.isError}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-nexoraBorder bg-nexoraSurface px-3 text-xs font-bold text-nexoraText hover:bg-nexoraCanvas disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Mail className="h-4 w-4" aria-hidden="true" />
-              {t(`${TK}.sendMailAll`)}
+              {t(`${TK}.${isPreparingEmailAll ? 'preparingPrint' : 'sendMailAll'}`)}
             </button>
           </span>
           <button
@@ -233,8 +283,22 @@ export default function PosReportPanel({
       {printError ? (
         <p className="text-xs font-semibold text-nexoraDanger" role="alert">{t(`${TK}.printError`)}</p>
       ) : null}
+      {emailAllError ? (
+        <p className="text-xs font-semibold text-nexoraDanger" role="alert">{t(`${TK}.emailAllPrepareError`)}</p>
+      ) : null}
       {isActive && printReports ? (
         <PosReportPrintAll reports={printReports} onClose={() => setPrintReports(null)} />
+      ) : null}
+      {isActive && emailAllReports && businessId && detailPeriod
+        && (selection.mode === PosReportMode.Daily || selection.mode === PosReportMode.Weekly) ? (
+        <PosReportEmailAll
+          businessId={businessId}
+          mode={selection.mode}
+          periodKey={detailPeriod.key}
+          reports={emailAllReports}
+          staffEmailByStaffId={staffEmailByStaffId}
+          onClose={() => setEmailAllReports(null)}
+        />
       ) : null}
 
       {reportQuery.isPending && reportQuery.fetchStatus !== 'idle' ? (
@@ -256,9 +320,10 @@ export default function PosReportPanel({
 
       {!reportQuery.isError && data ? (
         <>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
             <StatTile label={t(`${TK}.kpi.serviceAmount`)} value={formatCurrency(totals?.serviceAmount ?? 0)} />
             <StatTile label={t(`${TK}.kpi.tips`)} value={formatCurrency(totals?.tips ?? 0)} />
+            <StatTile label={t(`${TK}.kpi.supplyFee`)} value={formatCurrency(totals?.supplyFee ?? 0)} />
             <StatTile label={t(`${TK}.kpi.techTakes`)} value={formatCurrency(totals?.techTakes ?? 0)} />
             <StatTile label={t(`${TK}.kpi.turns`)} value={String(totals?.turns ?? 0)} />
           </div>

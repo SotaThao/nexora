@@ -9,10 +9,12 @@
 //
 // Where the data comes from is injected: the kiosk passes a hook backed by its device token, the
 // front desk one backed by the merchant session. Swapping them changes nothing below.
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useNotification } from '../../contexts/NotificationContext'
 import type {
   CheckInBookingPrefill,
   CheckInService,
+  CheckInSelectedService,
   CheckInSourceHook,
   CheckInSubmitResult,
   CheckInTechnician,
@@ -21,6 +23,12 @@ import type {
 // phone -> lookingUp -> either activeVisit (a soft stop) or form -> done.
 // The wizard's four steps all live inside 'form'.
 export type CheckInPhase = 'phone' | 'lookingUp' | 'activeVisit' | 'form' | 'done'
+
+interface ServiceSelection {
+  lineId: string
+  serviceId: string
+  posStaffProfileId: string | null
+}
 
 export interface CheckInSession {
   phase: CheckInPhase
@@ -45,11 +53,13 @@ export interface CheckInSession {
   catalog: CheckInService[]
   isCatalogLoading: boolean
   selectedServiceIds: string[]
-  selectedServices: CheckInService[]
-  toggleService: (serviceId: string) => void
-  // serviceId -> posStaffProfileId | null, seeded from the preference and overridable per line.
+  selectedServices: CheckInSelectedService[]
+  addService: (serviceId: string) => void
+  removeService: (lineId: string) => void
+  removeServiceGroup: (serviceId: string) => void
+  // lineId -> posStaffProfileId | null, seeded from the preference and overridable per line.
   technicianChoices: Record<string, string | null>
-  chooseServiceTechnician: (serviceId: string, posStaffProfileId: string | null) => void
+  chooseServiceTechnician: (lineId: string, posStaffProfileId: string | null) => void
 
   note: string
   setNote: (next: string) => void
@@ -79,22 +89,27 @@ export interface CheckInSession {
 export default function useCheckInSession({
   useSource,
   submitErrorMessage,
+  nameRequiredMessage,
+  consentRequiredMessage,
   onCheckedIn,
 }: {
   useSource: CheckInSourceHook
   submitErrorMessage: string
+  nameRequiredMessage: string
+  consentRequiredMessage: string
   // Fired the moment the order exists, before the guest has dismissed the thank-you screen — the
   // front desk's lists should already be right behind it. The full result comes along for callers
   // that need more than the number (the public page reads its receipt token off it).
   onCheckedIn?: (orderNumber: string, result: CheckInSubmitResult) => void
 }): CheckInSession {
+  const { showToast } = useNotification()
   const [phase, setPhase] = useState<CheckInPhase>('phone')
   const [phone, setPhone] = useState('')
   const [customerName, setCustomerName] = useState('')
   const [smsConsent, setSmsConsent] = useState(true)
-  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([])
+  const [serviceSelections, setServiceSelections] = useState<ServiceSelection[]>([])
+  const nextLineId = useRef(0)
   const [preferredStaffId, setPreferredStaffId] = useState<string | null>(null)
-  const [technicianChoices, setTechnicianChoices] = useState<Record<string, string | null>>({})
   const [note, setNote] = useState('')
   const [booking, setBooking] = useState<CheckInBookingPrefill | null>(null)
   // Remembers that the guest passed the active-visit screen on purpose, so the submit can say so
@@ -120,9 +135,8 @@ export default function useCheckInSession({
   const clearDraft = useCallback(() => {
     setCustomerName('')
     setSmsConsent(true)
-    setSelectedServiceIds([])
+    setServiceSelections([])
     setPreferredStaffId(null)
-    setTechnicianChoices({})
     setNote('')
     setBooking(null)
     setIsAdditionalGuest(false)
@@ -164,10 +178,11 @@ export default function useCheckInSession({
     if (source.booking) {
       setBooking(source.booking)
       if (source.booking.customerName) setCustomerName(source.booking.customerName)
-      setSelectedServiceIds(source.booking.items.map((item) => item.posServiceId))
-      setTechnicianChoices(
-        Object.fromEntries(source.booking.items.map((item) => [item.posServiceId, item.posStaffProfileId])),
-      )
+      setServiceSelections(source.booking.items.map((item) => ({
+        lineId: `checkin-line-${++nextLineId.current}`,
+        serviceId: item.posServiceId,
+        posStaffProfileId: item.posStaffProfileId,
+      })))
     }
 
     setPhase('form')
@@ -178,46 +193,62 @@ export default function useCheckInSession({
     setPhase('form')
   }, [])
 
-  const toggleService = useCallback(
+  const addService = useCallback(
     (serviceId: string) => {
-      const isRemoving = selectedServiceIds.includes(serviceId)
-      setSelectedServiceIds((prev) =>
-        isRemoving ? prev.filter((id) => id !== serviceId) : [...prev, serviceId],
-      )
-      setTechnicianChoices((prev) => {
-        const next = { ...prev }
-        // Removing drops the choice too: keeping it would resurrect a stale override if the guest
-        // added the same service back after changing their mind.
-        if (isRemoving) delete next[serviceId]
-        else next[serviceId] = staffForService(serviceId, preferredStaffId)
-        return next
-      })
+      const selection: ServiceSelection = {
+        lineId: `checkin-line-${++nextLineId.current}`,
+        serviceId,
+        posStaffProfileId: staffForService(serviceId, preferredStaffId),
+      }
+      setServiceSelections((prev) => [...prev, selection])
     },
-    [selectedServiceIds, preferredStaffId, staffForService],
+    [preferredStaffId, staffForService],
   )
+
+  const removeService = useCallback((lineId: string) => {
+    setServiceSelections((prev) => prev.filter((line) => line.lineId !== lineId))
+  }, [])
+
+  const removeServiceGroup = useCallback((serviceId: string) => {
+    setServiceSelections((prev) => prev.filter((line) => line.serviceId !== serviceId))
+  }, [])
 
   // Changing the preference re-seeds every line — going back to pick a different person means the
   // earlier answer no longer holds.
   const choosePreferredStaff = useCallback(
     (staffId: string | null) => {
       setPreferredStaffId(staffId)
-      setTechnicianChoices(() =>
-        Object.fromEntries(selectedServiceIds.map((id) => [id, staffForService(id, staffId)])),
-      )
+      setServiceSelections((prev) => prev.map((line) => ({
+        ...line,
+        posStaffProfileId: staffForService(line.serviceId, staffId),
+      })))
     },
-    [selectedServiceIds, staffForService],
+    [staffForService],
   )
 
   // The per-line escape hatch: one service goes to someone other than the person asked for up
   // front. Deliberately not folded into choosePreferredStaff — changing the preference re-seeds
   // every line and would wipe an override made here.
-  const chooseServiceTechnician = useCallback((serviceId: string, posStaffProfileId: string | null) => {
-    setTechnicianChoices((prev) => ({ ...prev, [serviceId]: posStaffProfileId }))
+  const chooseServiceTechnician = useCallback((lineId: string, posStaffProfileId: string | null) => {
+    setServiceSelections((prev) => prev.map((line) =>
+      line.lineId === lineId ? { ...line, posStaffProfileId } : line,
+    ))
   }, [])
 
-  const selectedServices = useMemo(
-    () => catalog.filter((service) => selectedServiceIds.includes(service.id)),
-    [catalog, selectedServiceIds],
+  const selectedServiceIds = useMemo(() => serviceSelections.map((line) => line.serviceId), [serviceSelections])
+  const technicianChoices = useMemo(
+    () => Object.fromEntries(serviceSelections.map((line) => [line.lineId, line.posStaffProfileId])),
+    [serviceSelections],
+  )
+  const selectedServices = useMemo<CheckInSelectedService[]>(
+    () => {
+      const catalogById = new Map(catalog.map((service) => [service.id, service]))
+      return serviceSelections.flatMap((line) => {
+        const service = catalogById.get(line.serviceId)
+        return service ? [{ ...service, lineId: line.lineId }] : []
+      })
+    },
+    [catalog, serviceSelections],
   )
 
   const totalMinutes = selectedServices.reduce((sum, s) => sum + s.durationMinutes, 0)
@@ -228,13 +259,21 @@ export default function useCheckInSession({
   const canSubmit = customerName.trim().length > 0 && smsConsent
 
   const submit = useCallback(() => {
-    if (!canSubmit || source.isSubmitting) return
+    if (source.isSubmitting) return
+    if (customerName.trim().length === 0) {
+      showToast(nameRequiredMessage, 'error')
+      return
+    }
+    if (!smsConsent) {
+      showToast(consentRequiredMessage, 'error')
+      return
+    }
     setSubmitError(null)
 
     const trimmedNote = note.trim() || null
-    const items = selectedServiceIds.map((serviceId) => ({
-      posServiceId: serviceId,
-      posStaffProfileId: technicianChoices[serviceId] ?? null,
+    const items = serviceSelections.map((line) => ({
+      posServiceId: line.serviceId,
+      posStaffProfileId: line.posStaffProfileId,
       note: trimmedNote,
     }))
     const trimmedName = customerName.trim()
@@ -242,11 +281,12 @@ export default function useCheckInSession({
     // Two endpoints, one button. A booked guest converts the appointment they already have;
     // anyone else opens a new order.
     const request = booking
-      ? source.submitBooking({ bookingId: booking.bookingId, customerName: trimmedName, items })
+      ? source.submitBooking({ bookingId: booking.bookingId, customerName: trimmedName, items, note: trimmedNote })
       : source.submitOrder({
           customerName: trimmedName,
           customerPhone: phone,
           items,
+          note: trimmedNote,
           ...(isAdditionalGuest ? { allowDuplicatePhone: true } : {}),
         })
 
@@ -258,8 +298,8 @@ export default function useCheckInSession({
       })
       .catch(() => setSubmitError(submitErrorMessage))
   }, [
-    booking, canSubmit, customerName, isAdditionalGuest, note, onCheckedIn, phone,
-    selectedServiceIds, source, submitErrorMessage, technicianChoices,
+    booking, consentRequiredMessage, customerName, isAdditionalGuest, nameRequiredMessage, note,
+    onCheckedIn, phone, serviceSelections, showToast, smsConsent, source, submitErrorMessage,
   ])
 
   return {
@@ -279,7 +319,9 @@ export default function useCheckInSession({
     isCatalogLoading: source.isCatalogLoading,
     selectedServiceIds,
     selectedServices,
-    toggleService,
+    addService,
+    removeService,
+    removeServiceGroup,
     technicianChoices,
     chooseServiceTechnician,
     note,

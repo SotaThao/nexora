@@ -1740,6 +1740,10 @@ body.booking-appointment-panel-modal-open {
   line-height: 12px;
 }
 
+.booking-hub-view .tech-pos-profile-section .field-error-slot:empty {
+  display: none;
+}
+
 .booking-hub-view .tech-modal-grid .field-error {
   display: block;
   margin: 0;
@@ -1801,6 +1805,16 @@ body.booking-appointment-panel-modal-open {
 
 .booking-hub-view .phone-input-shell > .relative > button:hover:not(:disabled) {
   background: #f8fafc !important;
+}
+
+.booking-hub-view .phone-input-shell[data-disabled="true"] {
+  background: var(--nexora-canvas);
+  cursor: not-allowed;
+}
+
+.booking-hub-view .phone-input-shell[data-disabled="true"] > .relative > button {
+  background: var(--nexora-canvas) !important;
+  color: var(--nexora-muted);
 }
 
 .booking-hub-view .phone-input-shell > .relative > button:focus,

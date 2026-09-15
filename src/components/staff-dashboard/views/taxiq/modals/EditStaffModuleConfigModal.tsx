@@ -73,7 +73,7 @@ export default function EditStaffModuleConfigModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
       <div className="nexora-card flex max-h-[90vh] w-full max-w-md flex-col p-6" style={{ maxHeight: '90dvh' }}>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-nexoraText">{t('taxiq.staffHome.editModulesModal.title')}</h2>
+          <h2 className="text-nexoraText text-sm font-semibold leading-snug">{t('taxiq.staffHome.editModulesModal.title')}</h2>
           <IconButton label={t('common.cancel')} onClick={onClose}>
             <X className="h-4 w-4" />
           </IconButton>
@@ -137,7 +137,7 @@ export default function EditStaffModuleConfigModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg px-4 py-2 text-xs font-bold text-nexoraMuted"
+            className="rounded-lg px-4 py-2 text-xs font-semibold text-nexoraMuted"
           >
             {t('taxiq.staffHome.editModulesModal.cancel')}
           </button>
@@ -145,7 +145,7 @@ export default function EditStaffModuleConfigModal({
             type="button"
             onClick={handleSave}
             disabled={updateModules.isPending}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-semibold text-white disabled:opacity-60"
           >
             {updateModules.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
             {t('taxiq.staffHome.editModulesModal.save')}

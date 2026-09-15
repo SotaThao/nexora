@@ -5,6 +5,7 @@
  * posTurnBoardRepository — a Staff caller may be linked to more than one business.
  */
 import httpClient from '../../lib/httpClient'
+import type { PosCheckoutPaymentMethodType } from '../../constants/posCheckoutPaymentMethod'
 import { unlessOptimisticId } from '../../utils/uuid'
 import type {
   AddOrderCustomServiceLinePayload,
@@ -18,6 +19,7 @@ import type {
   ServiceLineAddOnOptionApiDto,
   SetOrderDiscountPayload,
   SetOrderServiceLineDiscountPayload,
+  SetOrderPaymentAllocationsPayload,
   SetOrderStaffTipSplitPayload,
   UpdateOrderServiceLineTarget,
 } from '../../types/repositories'
@@ -231,6 +233,17 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
       )
     },
 
+    async setOrderPaymentMethod(
+      businessId: string,
+      orderId: string,
+      paymentMethodType: PosCheckoutPaymentMethodType,
+    ): Promise<boolean> {
+      return await client.put<boolean>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/payment-method`,
+        { paymentMethodType },
+      )
+    },
+
     async setOrderNote(businessId: string, orderId: string, note: string | null): Promise<boolean> {
       return await client.put<boolean>(
         `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/note`,
@@ -245,6 +258,17 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
     ): Promise<boolean> {
       return await client.put<boolean>(
         `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/tip-split`,
+        payload,
+      )
+    },
+
+    async setOrderPaymentAllocations(
+      businessId: string,
+      orderId: string,
+      payload: SetOrderPaymentAllocationsPayload,
+    ): Promise<boolean> {
+      return await client.put<boolean>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/payment-allocations`,
         payload,
       )
     },

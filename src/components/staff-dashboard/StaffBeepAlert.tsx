@@ -9,6 +9,10 @@
 // a floating bell. Both states are keyed by beepId:nudgeCount, so the front desk ringing again
 // always brings the call back.
 //
+// Because closing hides the only place to answer, the notification row is the way back in: tapping
+// a PosStaffBeep row fires OPEN_STAFF_BEEP_SHEET_EVENT and the listener below restores the sheet.
+// The feed stays history — it holds no beep state of its own and never answers a call.
+//
 // Sound is deliberately absent: browsers block un-gestured audio, so a chime would fail silently on
 // the first beep — the worst possible time. The push notification already carries a sound for when
 // the app is backgrounded, which is where it actually helps. Vibration is best-effort only and is
@@ -30,6 +34,7 @@ import {
 import type { ActiveStaffBeepApiDto } from '../../types/repositories'
 import { parseApiDateTime } from '../dashboard/utils'
 import { useElapsedLabel } from '../../hooks/useElapsedLabel'
+import { OPEN_STAFF_BEEP_SHEET_EVENT } from './openStaffBeepSheet'
 
 const VIBRATE_PATTERN = [200, 100, 200]
 
@@ -45,17 +50,41 @@ const SHEET_POSITION =
 const MINIMIZED_POSITION = 'staff-beep-dock fixed right-4 z-40 lg:right-6'
 
 const PRIMARY_BUTTON =
-  'flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-extrabold text-white transition disabled:opacity-60'
+  'flex h-11 w-full items-center justify-center gap-2 rounded-xl text-xs font-semibold text-white transition disabled:opacity-60'
 
 // 44pt targets, not the compact chip variant — these are primary controls used one-handed.
 const CHIP_BUTTON =
-  'flex h-11 flex-1 items-center justify-center rounded-xl border border-nexoraBorder bg-white text-sm font-extrabold text-nexoraText transition hover:border-nexoraBrand hover:text-nexoraBrandDark disabled:opacity-60'
+  'flex h-11 flex-1 items-center justify-center rounded-xl border border-nexoraBorder bg-white text-xs font-semibold text-nexoraText transition hover:border-nexoraBrand hover:text-nexoraBrandDark disabled:opacity-60'
 
 type Branch = 'none' | 'busy' | 'decline'
 
 // Identity of one *ring*, not one call: the front desk nudging bumps nudgeCount, which is what
 // makes a dismissed or minimised call resurface.
 const beepKey = (beep: ActiveStaffBeepApiDto) => `${beep.beepId}:${beep.nudgeCount}`
+
+// Persisted so an explicit X survives a reload (bug: reload was resurrecting a call the tech had
+// just closed). sessionStorage, not localStorage: it should still clear itself between shifts
+// rather than accumulate forever, and a nudge already gets a fresh key via beepKey above.
+const DISMISSED_KEYS_STORAGE_KEY = 'staffBeepDismissedKeys'
+const DISMISSED_KEYS_MAX = 50
+
+const readDismissedKeys = (): string[] => {
+  try {
+    const raw = sessionStorage.getItem(DISMISSED_KEYS_STORAGE_KEY)
+    const parsed = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+const writeDismissedKeys = (keys: string[]) => {
+  try {
+    sessionStorage.setItem(DISMISSED_KEYS_STORAGE_KEY, JSON.stringify(keys.slice(-DISMISSED_KEYS_MAX)))
+  } catch {
+    // Storage unavailable/full — dismissal just won't survive reload, not fatal.
+  }
+}
 
 export default function StaffBeepAlert() {
   const { t } = useTranslation()
@@ -69,7 +98,7 @@ export default function StaffBeepAlert() {
   const [note, setNote] = useState('')
   // Dismissed by key, not a single "hidden" flag: the tech closing one call must not hide the next
   // one, and a nudge (which bumps nudgeCount, so a new key) has to bring that same call back.
-  const [dismissedKeys, setDismissedKeys] = useState<string[]>([])
+  const [dismissedKeys, setDismissedKeys] = useState<string[]>(() => readDismissedKeys())
   const seenBeepKeysRef = useRef<Set<string>>(new Set())
 
   const beeps = data?.beeps ?? []
@@ -111,6 +140,33 @@ export default function StaffBeepAlert() {
     }
   }, [currentKey])
 
+  // Read inside the event listener below, which is registered once — the poll gives `beeps` a new
+  // identity every 10s and re-subscribing on each one would be churn for nothing.
+  const beepsRef = useRef<ActiveStaffBeepApiDto[]>(beeps)
+  useEffect(() => {
+    beepsRef.current = beeps
+  }, [beeps])
+
+  // Tapping the beep notification asks for the sheet back. Every local dismissal is cleared, not
+  // just the tapped call's: the notification carries no reliable beepId, and the sheet shows one
+  // call at a time (oldest unanswered first) anyway, so restoring the queue lands on the same one.
+  useEffect(() => {
+    const handleOpenRequest = () => {
+      writeDismissedKeys([])
+      setDismissedKeys([])
+      setMinimized(false)
+      setBranch('none')
+      setNote('')
+
+      // Nothing left to restore — the front desk closed the call or it timed out, so it is gone
+      // from /staff/beeps/active and the sheet would silently stay hidden. Say so instead.
+      if (beepsRef.current.length === 0) showToast(t('staff_dashboard.beep.noneActive'))
+    }
+
+    window.addEventListener(OPEN_STAFF_BEEP_SHEET_EVENT, handleOpenRequest)
+    return () => window.removeEventListener(OPEN_STAFF_BEEP_SHEET_EVENT, handleOpenRequest)
+  }, [showToast, t])
+
   if (!current) return null
 
   const respondedAt = parseApiDateTime(current.respondedAt)
@@ -118,9 +174,15 @@ export default function StaffBeepAlert() {
   const othersCount = visibleBeeps.length - 1
 
   // Local only — nothing is sent, so the front desk still shows this tech as not having answered.
-  // That is the point: the sheet is in the way, not the call. Deliberately not persisted either;
-  // a reload should bring an unanswered call back rather than lose it.
-  const handleDismiss = () => setDismissedKeys((keys) => [...keys, beepKey(current)])
+  // That is the point: the sheet is in the way, not the call. Persisted to sessionStorage so a
+  // page reload does not resurrect the same call the tech just closed; a nudge still brings it
+  // back because that bumps nudgeCount into a new key.
+  const handleDismiss = () =>
+    setDismissedKeys((keys) => {
+      const next = [...keys, beepKey(current)]
+      writeDismissedKeys(next)
+      return next
+    })
 
   // The bell only swings while a call is genuinely unanswered. Once the tech has replied the sheet
   // can still be open (Busy/On my way), and a bell still ringing there would be a lie.
@@ -175,7 +237,7 @@ export default function StaffBeepAlert() {
         {/* One beep is already implied by the button existing; the count only earns pixels when
             there is a queue. */}
         {visibleBeeps.length > 1 ? (
-          <span className="absolute -right-1 -top-1 grid h-5 min-w-[1.25rem] place-items-center rounded-full bg-amber-600 px-1 text-[11px] font-extrabold text-white">
+          <span className="absolute -right-1 -top-1 grid h-5 min-w-[1.25rem] place-items-center rounded-full bg-amber-600 px-1 text-xs font-semibold text-white">
             {visibleBeeps.length}
           </span>
         ) : null}
@@ -195,14 +257,14 @@ export default function StaffBeepAlert() {
         <div className="min-w-0">
           <h2
             id="staff-beep-alert-title"
-            className="flex items-center gap-2 text-sm font-extrabold text-nexoraText"
+            className="flex items-center gap-2 text-nexoraText text-sm font-semibold leading-snug"
           >
             <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-amber-100 text-amber-700">
               <BellRing className={`h-4 w-4 ${bellSwing}`} />
             </span>
             {t('staff_dashboard.beep.title')}
           </h2>
-          <p className="mt-1 truncate text-[11px] font-bold text-nexoraMuted">
+          <p className="mt-1 truncate text-xs font-semibold text-nexoraMuted">
             {t('staff_dashboard.beep.titleFrom', { business: current.businessName })}
           </p>
         </div>
@@ -232,28 +294,30 @@ export default function StaffBeepAlert() {
       </div>
 
       <div className="mt-3 flex-1 space-y-2 overflow-y-auto">
-        <p className="text-sm font-bold text-nexoraText">
-          {current.message?.trim() || t('staff_dashboard.beep.noMessage')}
-        </p>
-        <p className="text-[11px] text-nexoraSubtle">
+        {current.message?.trim() ? (
+          <p className="text-[13px] font-normal leading-5 text-nexoraText">
+            {current.message.trim()}
+          </p>
+        ) : null}
+        <p className="text-xs text-nexoraSubtle">
           {t('staff_dashboard.beep.sentAgo', { ago: elapsedLabel(current.beepedAt) })}
         </p>
 
         {current.nudgeCount > 0 ? (
-          <p className="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-extrabold text-amber-700">
+          <p className="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
             {t('staff_dashboard.beep.nudged', { count: current.nudgeCount })}
           </p>
         ) : null}
 
         {delayLapsed ? (
-          <p className="text-[11px] font-bold text-rose-600">
+          <p className="text-xs font-semibold text-rose-600">
             {t('staff_dashboard.beep.overdue', { minutes: current.delayMinutes ?? 0 })}
           </p>
         ) : null}
 
         {branch === 'decline' ? (
           <div>
-            <label className="mb-1 block text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
+            <label className="mb-1 block text-xs font-semibold text-nexoraMuted">
               {t('staff_dashboard.beep.cantComeNoteLabel')}
             </label>
             <textarea
@@ -268,7 +332,7 @@ export default function StaffBeepAlert() {
         ) : null}
 
         {othersCount > 0 ? (
-          <p className="text-[11px] font-bold text-nexoraMuted">
+          <p className="text-xs font-semibold text-nexoraMuted">
             {t('staff_dashboard.beep.moreCount', { count: othersCount })}
           </p>
         ) : null}
@@ -311,7 +375,7 @@ export default function StaffBeepAlert() {
 
         {branch === 'busy' ? (
           <>
-            <p className="text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
+            <p className="text-xs font-semibold text-nexoraMuted">
               {t('staff_dashboard.beep.busyPick')}
             </p>
             {/* Chips sit at the bottom of the sheet, where the thumb already is: tapping one sends,
@@ -353,7 +417,7 @@ export default function StaffBeepAlert() {
               setNote('')
             }}
             disabled={respond.isPending}
-            className="h-11 w-full rounded-xl text-xs font-bold text-nexoraMuted transition hover:text-nexoraText disabled:opacity-60"
+            className="h-11 w-full rounded-xl text-xs font-semibold text-nexoraMuted transition hover:text-nexoraText disabled:opacity-60"
           >
             {t('staff_dashboard.beep.back')}
           </button>

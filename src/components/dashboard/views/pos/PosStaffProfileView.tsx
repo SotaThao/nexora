@@ -16,24 +16,34 @@ import {
   POS_TABLE_STICKY_ACTION_CELL_CLASS,
   POS_TABLE_STICKY_ACTION_HEADER_CLASS,
 } from './posTableStyles'
+import { formatPhoneDisplayPreservingDigits } from '../../../CountryCodeSelect'
 
 const SEARCH_DEBOUNCE_MS = 350
 const STAFF_TABLE_PAGE_SIZE = 10
 
 interface StaffTableItem {
   linkId: string | null
+  staffProfileId?: string | null
+  staffCode?: string | null
+  isLocalStaff?: boolean
+  bio?: string | null
   fullName: string
   displayName: string | null
   avatar: string | null
   position: string | null
+  staffLevelName: string | null
   phone: string | null
   email: string | null
 }
 
-export default function PosStaffProfileView({ embedded = false }: { embedded?: boolean }) {
+export const formatStaffPhoneDisplay = (phone: string | null | undefined): string =>
+  formatPhoneDisplayPreservingDigits(phone)
+
+export default function PosStaffProfileView({ embedded = false, businessId }: { embedded?: boolean; businessId?: string }) {
   const { t } = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
   const selectedLinkId = searchParams.get('staff') ?? undefined
+  const staffNameFromQuery = searchParams.get('name')?.trim() || ''
 
   const [searchInput, setSearchInput] = useState('')
   const [keyword, setKeyword] = useState('')
@@ -64,14 +74,19 @@ export default function PosStaffProfileView({ embedded = false }: { embedded?: b
 
   const handleCloseModal = () => {
     searchParams.delete('staff')
+    searchParams.delete('name')
     setSearchParams(searchParams)
   }
 
   const selectedStaff = staffItems.find((member) => member.linkId === selectedLinkId)
-  const selectedStaffLabel = selectedStaff ? selectedStaff.displayName || selectedStaff.fullName : ''
+  const selectedStaffLabel = selectedStaff
+    ? selectedStaff.displayName || selectedStaff.fullName
+    : staffNameFromQuery
   const selectedStaffAvatar = selectedStaff?.avatar ?? null
   const selectedStaffPosition = selectedStaff?.position ?? null
-  const selectedStaffContact = selectedStaff ? selectedStaff.phone || selectedStaff.email : null
+  const selectedStaffContact = selectedStaff
+    ? (selectedStaff.phone ? formatStaffPhoneDisplay(selectedStaff.phone) : selectedStaff.email)
+    : null
 
   return (
     <div className="space-y-6">
@@ -121,6 +136,9 @@ export default function PosStaffProfileView({ embedded = false }: { embedded?: b
                     {t('components.dashboard.views.pos.PosStaffProfileView.tableColumnPosition')}
                   </th>
                   <th className={POS_TABLE_HEADER_CELL_CLASS}>
+                    {t('components.dashboard.views.pos.PosStaffProfileView.tableColumnLevel')}
+                  </th>
+                  <th className={POS_TABLE_HEADER_CELL_CLASS}>
                     {t('components.dashboard.views.pos.PosStaffProfileView.tableColumnContact')}
                   </th>
                   <th className={`${POS_TABLE_HEADER_CELL_CLASS} ${POS_TABLE_STICKY_ACTION_HEADER_CLASS} text-center`}>
@@ -131,13 +149,13 @@ export default function PosStaffProfileView({ embedded = false }: { embedded?: b
               <tbody>
                 {staffListQuery.isFetching && staffItems.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-5 py-12 text-center">
+                    <td colSpan={5} className="px-5 py-12 text-center">
                       <Loader2 className="mx-auto h-6 w-6 animate-spin text-nexoraBrand" />
                     </td>
                   </tr>
                 ) : staffItems.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-5 py-12">
+                    <td colSpan={5} className="px-5 py-12">
                       <div className="flex flex-col items-center justify-center gap-2 text-center">
                         <Users className="h-8 w-8 text-nexoraSubtle" />
                         <p className="text-sm font-extrabold text-nexoraMuted">
@@ -150,6 +168,7 @@ export default function PosStaffProfileView({ embedded = false }: { embedded?: b
                   staffItems.map((member, index) => {
                     const linkId = member.linkId ?? ''
                     const label = member.displayName || member.fullName
+                    const phoneDisplay = formatStaffPhoneDisplay(member.phone)
                     return (
                       <tr
                         key={linkId || index}
@@ -174,8 +193,11 @@ export default function PosStaffProfileView({ embedded = false }: { embedded?: b
                         <td className="px-5 py-4 text-xs font-semibold text-nexoraMuted">
                           {member.position || '—'}
                         </td>
+                        <td className="px-5 py-4 text-xs font-semibold text-nexoraMuted">
+                          {member.staffLevelName || '—'}
+                        </td>
                         <td className={`px-5 py-4 text-xs font-semibold text-nexoraMuted ${member.phone ? 'whitespace-nowrap tabular-nums' : ''}`}>
-                          {member.phone || member.email || '—'}
+                          {phoneDisplay || member.email || '—'}
                         </td>
                         <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} px-5 py-4 text-center`}>
                           <div className="inline-flex w-max justify-center">
@@ -185,7 +207,7 @@ export default function PosStaffProfileView({ embedded = false }: { embedded?: b
                               disabled={!linkId}
                               className="rounded-lg border border-nexoraBorder px-2.5 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand disabled:opacity-60"
                             >
-                              {t('common.view')}
+                              {t('components.dashboard.views.pos.PosStaffProfileView.viewEditButton')}
                             </button>
                           </div>
                         </td>
@@ -216,11 +238,13 @@ export default function PosStaffProfileView({ embedded = false }: { embedded?: b
       {selectedLinkId && (
         <PosStaffProfileDetailModal
           key={selectedLinkId}
+          businessId={businessId}
           linkId={selectedLinkId}
           staffLabel={selectedStaffLabel}
           staffAvatar={selectedStaffAvatar}
           staffPosition={selectedStaffPosition}
           staffContact={selectedStaffContact}
+          staffInfo={selectedStaff}
           onClose={handleCloseModal}
         />
       )}

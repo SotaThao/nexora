@@ -61,6 +61,7 @@ export enum PackageManagementTab {
   Overview = 'overview',
   Subscriptions = 'subscriptions',
   AiVoice = 'ai-voice',
+  Credits = 'credits',
   History = 'history',
 }
 
@@ -68,6 +69,7 @@ export const PACKAGE_MANAGEMENT_TAB_ORDER: PackageManagementTab[] = [
   PackageManagementTab.Overview,
   PackageManagementTab.Subscriptions,
   PackageManagementTab.AiVoice,
+  PackageManagementTab.Credits,
   PackageManagementTab.History,
 ]
 
@@ -78,6 +80,7 @@ export const PACKAGE_MANAGEMENT_TAB_I18N_KEY: Record<
   [PackageManagementTab.Overview]: 'tabs.overview',
   [PackageManagementTab.Subscriptions]: 'tabs.subscriptions',
   [PackageManagementTab.AiVoice]: 'tabs.aiVoice',
+  [PackageManagementTab.Credits]: 'tabs.credits',
   [PackageManagementTab.History]: 'tabs.history',
 }
 

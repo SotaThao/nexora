@@ -16,6 +16,11 @@ export interface CheckInService {
   categories: { id: string; name: string; displayOrder?: number }[]
 }
 
+export interface CheckInSelectedService extends CheckInService {
+  // Identifies one occurrence, even when several lines use the same catalog service.
+  lineId: string
+}
+
 export interface CheckInTechnician {
   posStaffProfileId: string
   displayName: string
@@ -24,6 +29,7 @@ export interface CheckInTechnician {
   // service only when it appears here; anything else stays unassigned for the front desk.
   serviceIds: string[]
   isBusy: boolean
+  queueCount?: number
 }
 
 // Today's appointment for the number that was typed, if there is one.
@@ -56,6 +62,7 @@ export interface CheckInOrderSubmit {
   customerName: string
   customerPhone: string
   items: CheckInItemPayload[]
+  note: string | null
   // The guest answered "check in another guest" on the active-visit screen, so this phone
   // deliberately gets a second open order — a family sharing one number is the common case.
   // Sources whose API has no such flag ignore it.
@@ -66,6 +73,7 @@ export interface CheckInBookingSubmit {
   bookingId: string
   customerName: string
   items: CheckInItemPayload[]
+  note: string | null
 }
 
 // Everything the page needs, already resolved. A source hook takes the phone number currently on

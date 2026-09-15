@@ -23,12 +23,14 @@ export default function ServiceCatalogSection({
   services,
   isLoading,
   selectedServiceIds,
-  onToggle,
+  onAdd,
+  isSubmitting = false,
 }: {
   services: CheckInService[]
   isLoading: boolean
   selectedServiceIds: string[]
-  onToggle: (serviceId: string) => void
+  onAdd: (serviceId: string) => void
+  isSubmitting?: boolean
 }) {
   const { t } = useTranslation()
 
@@ -59,9 +61,11 @@ export default function ServiceCatalogSection({
       ) : (
         <CategoryGroupedCatalogPicker
           items={items}
-          onAdd={onToggle}
+          onAdd={onAdd}
+          isPending={isSubmitting}
           variant="grid"
           selectedItemIds={selectedServiceIds}
+          allowRepeatedItems
           addLabel={t(`${K}.add`)}
           emptyLabel={t(`${K}.empty`)}
           allCategoryLabel={t(`${K}.allCategories`)}

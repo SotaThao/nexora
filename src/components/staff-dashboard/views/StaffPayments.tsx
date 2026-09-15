@@ -141,12 +141,12 @@ export default function StaffPayments() {
     { value: 'custom', label: t('dashboard.activity_log.preset_custom') },
   ], [t])
 
-  const filterFieldClass = 'text-[9px] font-bold uppercase tracking-wide text-nexoraMuted sm:text-[10px] sm:tracking-wider'
+  const filterFieldClass = 'text-sm font-bold uppercase tracking-wide text-nexoraMuted sm:text-sm sm:tracking-wider'
   const filterControlClass =
-    'h-8 w-full rounded-lg border border-nexoraBorder bg-white px-3.5 text-[11px] font-semibold text-nexoraText sm:h-9 sm:px-4 sm:text-xs'
+    'h-8 w-full rounded-lg border border-nexoraBorder bg-white px-3.5 text-sm font-semibold text-nexoraText sm:h-9 sm:px-4 sm:text-sm'
   const filterSelectButtonClass =
-    'w-full justify-between px-3.5 text-[11px] sm:px-4 sm:text-xs'
-  const filterSelectOptionsClass = 'text-[11px] sm:text-xs'
+    'w-full justify-between px-3.5 text-xs sm:px-4 sm:text-xs font-semibold'
+  const filterSelectOptionsClass = 'text-xs sm:text-xs font-semibold'
   const filterSelectMenuMinWidth = 220
 
   const handleAcknowledge = (paymentId: string, event?: MouseEvent, options?: { isForce?: boolean; onSuccess?: () => void }) => {
@@ -189,8 +189,8 @@ export default function StaffPayments() {
             }}
             className={
               layout === 'buttons'
-                ? 'inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-emerald-100 bg-emerald-50 px-2.5 py-1.5 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400'
-                : 'inline-flex items-center gap-1.5 rounded-lg border border-emerald-100 bg-emerald-50 px-2.5 py-1.5 text-[11px] font-bold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400'
+                ? 'inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-emerald-100 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400'
+                : 'inline-flex items-center gap-1.5 rounded-lg border border-emerald-100 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400'
             }
           >
             <CheckCircle className="h-3.5 w-3.5 shrink-0" />
@@ -204,8 +204,8 @@ export default function StaffPayments() {
           onClick={() => openPayment(payment.id)}
           className={
             layout === 'buttons'
-              ? 'inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2.5 py-1.5 text-xs font-bold text-nexoraText transition-colors hover:bg-nexoraCanvas'
-              : 'inline-flex items-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2.5 py-1.5 text-[11px] font-bold text-nexoraText transition-colors hover:bg-nexoraCanvas'
+              ? 'inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2.5 py-1.5 text-xs font-semibold text-nexoraText transition-colors hover:bg-nexoraCanvas'
+              : 'inline-flex items-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2.5 py-1.5 text-xs font-semibold text-nexoraText transition-colors hover:bg-nexoraCanvas'
           }
         >
           <Eye className="h-3.5 w-3.5 shrink-0" />
@@ -255,7 +255,7 @@ export default function StaffPayments() {
               <p className="text-sm font-extrabold text-violet-900">
                 {t('staff_payments.pending_ack_banner_title', { count: pendingAckPayments.length })}
               </p>
-              <p className="mt-1 text-xs leading-relaxed text-violet-800/90">
+              <p className="mt-1 text-sm leading-relaxed text-violet-800/90">
                 {t('staff_payments.pending_ack_banner_desc')}
               </p>
             </div>
@@ -263,7 +263,7 @@ export default function StaffPayments() {
           <button
             type="button"
             onClick={handleReviewPendingAck}
-            className="inline-flex h-10 shrink-0 items-center justify-center rounded-lg bg-violet-700 px-4 text-xs font-bold text-white transition hover:bg-violet-800"
+            className="inline-flex h-10 shrink-0 items-center justify-center rounded-lg bg-violet-700 px-4 text-xs font-semibold text-white transition hover:bg-violet-800"
           >
             {t('staff_payments.pending_ack_banner_action')}
           </button>
@@ -343,11 +343,11 @@ export default function StaffPayments() {
                       <DirectPaymentStatusBadge status={paymentStatus} t={t} variant="staff" className="shrink-0" />
                     </div>
                     <div className="flex min-w-0 items-center gap-2 rounded-xl border border-nexoraBorder/70 bg-slate-50 p-3">
-                      <div className="flex min-w-0 flex-1 items-center gap-1.5 text-xs font-bold text-nexoraText">
+                      <div className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-bold text-nexoraText">
                         {getPaymentMethodLogo(payment.paymentMethodType)}
                         <span className="truncate">{payment.paymentMethodType || '—'}</span>
                       </div>
-                      <p className="shrink-0 text-right text-[11px] font-semibold text-nexoraMuted">
+                      <p className="shrink-0 text-right text-sm font-semibold text-nexoraMuted">
                         <DateTimeCell value={payment.createdAt} locale={currentLanguage} />
                       </p>
                     </div>
@@ -360,8 +360,8 @@ export default function StaffPayments() {
             </div>
 
             <div className="hidden overflow-x-auto md:block">
-              <table className="min-w-[780px] w-full text-left text-xs">
-                <thead className="border-b border-nexoraBorder bg-nexoraCanvas/60 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+              <table className="min-w-[780px] w-full text-left text-sm">
+                <thead className="border-b border-nexoraBorder bg-nexoraCanvas/60 text-sm font-black uppercase tracking-wider text-nexoraMuted">
                   <tr>
                     <th className="px-4 py-3">{t('dashboard.activity_log.col_time')}</th>
                     <th className="px-4 py-3">{t('dashboard.activity_log.col_amount')}</th>
