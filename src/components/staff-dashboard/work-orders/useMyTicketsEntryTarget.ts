@@ -45,8 +45,13 @@ export function useMyTicketsEntryTarget(salons: readonly WorkOrderSalon[]) {
     retry: false,
   })
 
+  // Wait through in-flight refetches (not only first load) so Entry redirect
+  // does not navigate on stale cache and unmount before fresh data lands.
+  const isEntryTargetLoading =
+    isStaff && salonIds.length > 0 && entryQuery.isFetching
+
   let target: MyTicketsEntryTarget | null = null
-  if (!entryQuery.isPending && salonIds.length) {
+  if (!isEntryTargetLoading && salonIds.length) {
     const apiTarget = entryQuery.data
     if (!entryQuery.isError && apiTarget?.businessId && apiTarget.date) {
       target = {
@@ -68,7 +73,7 @@ export function useMyTicketsEntryTarget(salons: readonly WorkOrderSalon[]) {
 
   return {
     target,
-    isPending: isStaff && salonIds.length > 0 && entryQuery.isPending,
+    isPending: isEntryTargetLoading,
     // Entry-target failure still falls back to nearest salon — never block the menu.
     isError: false,
     refetch: () => {
