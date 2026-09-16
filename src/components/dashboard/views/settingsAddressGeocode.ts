@@ -175,6 +175,7 @@ function mergeLocationWithFreeformHints(
 function parseGoogleLocationParts(
   components: GoogleAddressComponent[],
   fallbackStreet: string,
+  useAddressHints: boolean,
 ): { location: LocationParts; countryLabel: string } {
   const city =
     componentText(componentByType(components, "locality")) ||
@@ -193,17 +194,9 @@ function parseGoogleLocationParts(
       componentText(componentByType(components, "country")),
     ) || { code: "US", label: "United States" }
 
+  const location = { street: fallbackStreet.trim(), city, state, zip, country: countryMeta.code }
   return {
-    location: mergeLocationWithFreeformHints(
-      {
-        street: fallbackStreet.trim(),
-        city,
-        state,
-        zip,
-        country: countryMeta.code,
-      },
-      fallbackStreet,
-    ),
+    location: useAddressHints ? mergeLocationWithFreeformHints(location, fallbackStreet) : location,
     countryLabel: countryMeta.label,
   }
 }
@@ -211,6 +204,7 @@ function parseGoogleLocationParts(
 function parseNominatimLocationParts(
   address: NominatimAddress | undefined,
   fallbackStreet: string,
+  useAddressHints: boolean,
 ): { location: LocationParts; countryLabel: string } {
   const city =
     address?.city ||
@@ -231,17 +225,15 @@ function parseNominatimLocationParts(
       label: "United States",
     }
 
+  const location = {
+    street: fallbackStreet.trim(),
+    city: String(city).trim(),
+    state: String(state).trim(),
+    zip: String(zip).trim(),
+    country: countryMeta.code,
+  }
   return {
-    location: mergeLocationWithFreeformHints(
-      {
-        street: fallbackStreet.trim(),
-        city: String(city).trim(),
-        state: String(state).trim(),
-        zip: String(zip).trim(),
-        country: countryMeta.code,
-      },
-      fallbackStreet,
-    ),
+    location: useAddressHints ? mergeLocationWithFreeformHints(location, fallbackStreet) : location,
     countryLabel: countryMeta.label,
   }
 }
@@ -256,7 +248,8 @@ function resolveTimeZone(lat: number, lng: number): string | null {
 
 async function geocodeWithGoogle(
   query: string,
-  signal?: AbortSignal,
+  signal: AbortSignal | undefined,
+  useAddressHints: boolean,
 ): Promise<GeocodedSalonAddress | null> {
   const key = getGoogleMapsApiKey()
   if (!key) return null
@@ -282,6 +275,7 @@ async function geocodeWithGoogle(
     const parsed = parseGoogleLocationParts(
       top.address_components || [],
       query,
+      useAddressHints,
     )
     const timeZone = resolveTimeZone(lat, lng)
 
@@ -300,13 +294,14 @@ async function geocodeWithGoogle(
 
 async function geocodeWithNominatim(
   query: string,
-  signal?: AbortSignal,
+  signal: AbortSignal | undefined,
+  useAddressHints: boolean,
 ): Promise<GeocodedSalonAddress | null> {
   const candidates = buildGeocodeQueryCandidates(query)
   // Only bias countrycodes when freeform already resolved an ISO2 (e.g. US).
   // Otherwise search worldwide so KR/IT/TH/... work without hardcoding.
   const hints = parseFreeformAddressHints(query)
-  const countrycodes = hints.country?.toLowerCase() || ""
+  const countrycodes = useAddressHints ? hints.country?.toLowerCase() || "" : ""
 
   for (const candidate of candidates) {
     if (signal?.aborted) return null
@@ -335,7 +330,7 @@ async function geocodeWithNominatim(
     const lng = Number(top.lon)
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue
 
-    const parsed = parseNominatimLocationParts(top.address, query)
+    const parsed = parseNominatimLocationParts(top.address, query, useAddressHints)
     const timeZone = resolveTimeZone(lat, lng)
 
     return {
@@ -358,13 +353,15 @@ async function geocodeWithNominatim(
 export async function geocodeSalonAddress(
   query: string,
   signal?: AbortSignal,
+  options: { useAddressHints?: boolean } = {},
 ): Promise<GeocodedSalonAddress | null> {
   const address = query.trim()
   if (!isGeocodeAddressQueryReady(address)) return null
 
-  const fromGoogle = await geocodeWithGoogle(address, signal)
+  const useAddressHints = options.useAddressHints ?? true
+  const fromGoogle = await geocodeWithGoogle(address, signal, useAddressHints)
   if (fromGoogle) return fromGoogle
   if (signal?.aborted) return null
 
-  return geocodeWithNominatim(address, signal)
+  return geocodeWithNominatim(address, signal, useAddressHints)
 }

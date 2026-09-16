@@ -350,6 +350,8 @@ export const qk = {
   merchantPosBookingDetail: (businessId?: string, bookingId?: string) =>
     ['merchantSettings', 'posBookingDetail', businessId ?? '', bookingId ?? ''],
   // POS Front Desk — Customer tab (US-043), read-only list/detail/order-history.
+  merchantPosCustomerListRoot: () => ['merchantSettings', 'posCustomerList'],
+  merchantPosCustomerDetailRoot: () => ['merchantSettings', 'posCustomerDetail'],
   merchantPosCustomerList: (businessId?: string, filters?: object) => {
     const key: unknown[] = ['merchantSettings', 'posCustomerList', businessId ?? '']
     if (filters) key.push(filters)

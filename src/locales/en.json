@@ -4609,6 +4609,7 @@
             "unknownActor": "Unknown user"
           },
           "CustomerTab": {
+            "editCustomer": "Edit Customer",
             "searchLabel": "Search",
             "searchPlaceholder": "Search by name or phone…",
             "sortLabel": "Sort by created date",
@@ -4625,6 +4626,7 @@
             "columnCreatedAt": "Created",
             "columnActions": "Actions",
             "viewAction": "View",
+            "editAction": "Edit",
             "customerStatus": {
               "Active": "Active",
               "InActive": "Inactive"
@@ -6414,6 +6416,10 @@
             "fieldBirthday": "Birthday",
             "fieldAddress": "Address",
             "fieldAddressPlaceholder": "Street, city, state",
+            "fieldCountry": "Country",
+            "fieldCountryPlaceholder": "Select country",
+            "addressDetecting": "Finding address details…",
+            "addressDetectFailed": "Could not find address details. You can enter them manually.",
             "fieldType": "Type",
             "types": {
               "Individual": "Individual",
@@ -6436,6 +6442,7 @@
             "statusActive": "Active",
             "statusInactive": "Inactive",
             "close": "Close",
+            "back": "Back",
             "cancel": "Cancel",
             "save": "Save changes"
           },
