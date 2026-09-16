@@ -244,10 +244,15 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
       )
     },
 
-    async setOrderNote(businessId: string, orderId: string, note: string | null): Promise<boolean> {
+    async setOrderNote(
+      businessId: string,
+      orderId: string,
+      note: string | null,
+      notePhotoUrls?: string[] | null,
+    ): Promise<boolean> {
       return await client.put<boolean>(
         `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/note`,
-        { note },
+        { note, notePhotoUrls },
       )
     },
 
