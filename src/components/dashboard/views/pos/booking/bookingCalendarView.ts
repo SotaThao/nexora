@@ -40,12 +40,17 @@ function addLocalDays(date: Date, days: number): Date {
   return next
 }
 
-function startOfSundayWeek(date: Date): Date {
-  return addLocalDays(date, -date.getDay())
+/** Monday-first week: Mon=0 … Sun=6 offset from the week's Monday. */
+function startOfMondayWeek(date: Date): Date {
+  return addLocalDays(date, -((date.getDay() + 6) % 7))
 }
 
-function rangeFromSunday(date: Date, dayCount: number): BookingCalendarRange {
-  const dateFrom = startOfSundayWeek(date)
+function daysUntilSunday(date: Date): number {
+  return (7 - date.getDay()) % 7
+}
+
+function rangeFromMonday(date: Date, dayCount: number): BookingCalendarRange {
+  const dateFrom = startOfMondayWeek(date)
   return {
     dateFrom: formatLocalDateIso(dateFrom),
     dateTo: formatLocalDateIso(addLocalDays(dateFrom, dayCount - 1)),
@@ -62,17 +67,17 @@ export function getBookingCalendarRange(
     case PosBookingCalendarViewMode.Day:
       return { dateFrom: anchorDate, dateTo: anchorDate }
     case PosBookingCalendarViewMode.Week:
-      return rangeFromSunday(anchor, 7)
+      return rangeFromMonday(anchor, 7)
     case PosBookingCalendarViewMode.TwoWeeks:
-      return rangeFromSunday(anchor, 14)
+      return rangeFromMonday(anchor, 14)
     case PosBookingCalendarViewMode.ThreeWeeks:
-      return rangeFromSunday(anchor, 21)
+      return rangeFromMonday(anchor, 21)
     case PosBookingCalendarViewMode.Month: {
       const firstOfMonth = new Date(anchor.getFullYear(), anchor.getMonth(), 1, 12)
       const lastOfMonth = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0, 12)
       return {
-        dateFrom: formatLocalDateIso(startOfSundayWeek(firstOfMonth)),
-        dateTo: formatLocalDateIso(addLocalDays(lastOfMonth, 6 - lastOfMonth.getDay())),
+        dateFrom: formatLocalDateIso(startOfMondayWeek(firstOfMonth)),
+        dateTo: formatLocalDateIso(addLocalDays(lastOfMonth, daysUntilSunday(lastOfMonth))),
       }
     }
   }
@@ -221,9 +226,6 @@ export function buildBookingCalendarOverviewDays(
   const activeByDate = new Map<string, BookingListItemApiDto[]>()
 
   for (const booking of bookings) {
-    if (getBookingCalendarStatusGroup(booking.status) === BookingCalendarStatusGroup.Cancelled) {
-      continue
-    }
     const date = bookingDateKey(booking.scheduledAt, booking.source)
     if (date < range.dateFrom || date > range.dateTo) continue
     const current = activeByDate.get(date) ?? []
