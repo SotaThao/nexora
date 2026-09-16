@@ -15,7 +15,7 @@ export const GUEST_SOURCE_LABEL_KEYS: Record<CustomerSource, string> = {
   [CustomerSource.Qr]: 'sourceQr',
   [CustomerSource.Web]: 'sourceWeb',
   [CustomerSource.Receipt]: 'sourceReceipt',
-  [CustomerSource.Manual]: 'sourceWalkIn',
+  [CustomerSource.Manual]: 'sourceBooking',
   [CustomerSource.PosCheckIn]: 'sourceWalkIn',
   [CustomerSource.PosSelfCheckIn]: 'sourceWalkIn',
 }
