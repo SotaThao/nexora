@@ -4072,9 +4072,15 @@ body.booking-appointment-panel-modal-open {
   padding: 0;
 }
 
+.booking-hub-view .settings-service-pricing-card .settings-service-list.settings-service-body {
+  max-height: 560px;
+  max-height: min(560px, 60vh);
+  max-height: min(560px, 60dvh);
+}
+
 .booking-hub-view .settings-service-catalog-state {
   display: grid;
-  justify-items: start;
+  justify-items: center;
   gap: 10px;
   border: 1px dashed var(--nexora-border);
   border-radius: 10px;
@@ -5341,6 +5347,14 @@ body.booking-appointment-panel-modal-open {
 
 .booking-hub-view .settings-service-pricing-card {
   align-self: start;
+  height: auto;
+}
+
+/* Nested .booking-hub-view on the shared panel inherits the page min-height.
+   Scope the override to this panel only so Salon Settings / POS empty states
+   size to content without changing the Booking Hub shell. */
+.booking-hub-view.services-pricing-panel {
+  min-height: 0;
   height: auto;
 }
 
