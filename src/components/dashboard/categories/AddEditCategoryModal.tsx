@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { Loader2, X } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 
+/** Matches `CreateTransactionCategoryCommandValidator.Name` (`MaximumLength(200)`) on the backend. */
+const CATEGORY_NAME_MAX_LENGTH = 200
+
 /**
  * Income/Payout Categories (issue #584) — single reusable modal for creating a new category or
  * renaming an existing one, used both inline from a transaction detail's "+ Create new" flow and
@@ -70,6 +73,7 @@ export default function AddEditCategoryModal({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder={t('transaction_categories.modal_name_placeholder')}
+          maxLength={CATEGORY_NAME_MAX_LENGTH}
           disabled={isSaving}
           autoFocus
           className="mt-1.5 h-10 w-full rounded-lg border border-nexoraBorder bg-white px-3 text-sm font-semibold text-nexoraText disabled:cursor-not-allowed disabled:opacity-60"
