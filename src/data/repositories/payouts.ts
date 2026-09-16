@@ -104,6 +104,8 @@ function normalizeStaffPayoutDetail(
     evidenceUrls,
     status: normalizePayoutStatus(readField<unknown>(raw, 'status', 'Status')),
     staffConfirmedAt: readField<string | null>(raw, 'staffConfirmedAt', 'StaffConfirmedAt') ?? null,
+    categoryId: readField<string | null>(raw, 'categoryId', 'CategoryId') ?? null,
+    categoryName: readField<string | null>(raw, 'categoryName', 'CategoryName') ?? null,
   }
 }
 
@@ -154,6 +156,8 @@ function normalizePayoutRecord(raw: Record<string, unknown> | null | undefined):
     staffConfirmedAt: readField<string | null>(raw, 'staffConfirmedAt', 'StaffConfirmedAt') ?? null,
     createdAt: readField<string>(raw, 'createdAt', 'CreatedAt') ?? '',
     lastModified: readField<string | null>(raw, 'lastModified', 'LastModified') ?? null,
+    categoryId: readField<string | null>(raw, 'categoryId', 'CategoryId') ?? null,
+    categoryName: readField<string | null>(raw, 'categoryName', 'CategoryName') ?? null,
   }
 }
 
@@ -484,6 +488,15 @@ export function createStaffPayoutsRepository(client: HttpClient = httpClient) {
         `/api/v1/staff/payouts/${encodeURIComponent(payoutId)}/confirm`,
         {},
       )
+    },
+
+    /**
+     * Income/Payout Categories (issue #584) — Staff assigns a category to a Payout ("Payroll")
+     * they received. Merchant never sets this. Endpoint per the technical design doc; not yet on
+     * Swagger.
+     */
+    async setCategory(payoutId: string, categoryId: string | null): Promise<void> {
+      await client.put<void>(`/api/v1/staff/payouts/${encodeURIComponent(payoutId)}/category`, { categoryId })
     },
   }
 }

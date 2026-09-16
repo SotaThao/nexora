@@ -116,7 +116,7 @@ export default function PosSalonSettingsView({ verificationStatus, businessId }:
             businessId={businessId}
           />
         ) : null}
-        {settingsTab === PosSalonSettingsTab.Staff ? <PosStaffProfileView embedded /> : null}
+        {settingsTab === PosSalonSettingsTab.Staff ? <PosStaffProfileView embedded businessId={businessId} /> : null}
         {settingsTab === PosSalonSettingsTab.Services ? <PosServicesView embedded /> : null}
         {settingsTab === PosSalonSettingsTab.RolesPermissions ? <PosRolesView embedded /> : null}
         {settingsTab === PosSalonSettingsTab.StaffLevels ? <PosStaffLevelsView embedded /> : null}

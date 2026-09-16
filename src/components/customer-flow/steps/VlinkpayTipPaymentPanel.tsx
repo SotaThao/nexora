@@ -5,11 +5,13 @@ import {
   VLINKPAY_COINS,
   VLINKPAY_NETWORK,
   VLINKPAY_WALLET_LABEL,
+  emptyVlinkpayImages,
   firstAvailableVlinkpayCoin,
   hasAtLeastOneVlinkpayAddress,
   listAvailableVlinkpayCoins,
   type VlinkpayAddresses,
   type VlinkpayCoinKey,
+  type VlinkpayImages,
 } from '../../payout/vlinkpayWallet'
 
 const TK = 'components.customer_flow.steps.WalletDetails'
@@ -21,6 +23,8 @@ type Props = {
   logo: React.ReactNode
   amount: number
   addresses: VlinkpayAddresses
+  /** Per-coin QR image uploaded by the staff/merchant (US-1488). */
+  images?: VlinkpayImages
   showToast: (message: string, type: string) => void
   /** POST /touch/tip with cryptoSymbol when asset Confirm is pressed. */
   onConfirmAsset: (cryptoSymbol: string) => Promise<boolean>
@@ -58,6 +62,7 @@ export default function VlinkpayTipPaymentPanel({
   logo,
   amount,
   addresses,
+  images = emptyVlinkpayImages(),
   showToast,
   onConfirmAsset,
   onConfirmSent,
@@ -91,6 +96,7 @@ export default function VlinkpayTipPaymentPanel({
     ? (VLINKPAY_COINS.find((coin) => coin.key === selectedCoin) || null)
     : null
   const receiveAddress = selectedCoin ? addresses[selectedCoin].trim() : ''
+  const receiveQrImage = selectedCoin ? String(images[selectedCoin] || '').trim() : ''
   const amountLabel = amount.toFixed(2)
   const cryptoAmountLabel = selectedMeta
     ? `${amountLabel} ${selectedMeta.symbol}`
@@ -173,6 +179,20 @@ export default function VlinkpayTipPaymentPanel({
           {t('common.copy')}
         </button>
       </div>
+      {receiveQrImage ? (
+        <div className="flex flex-col items-center gap-1.5 rounded-2xl border border-nexoraBorder bg-white px-3.5 py-3 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-nexoraSubtle">
+            {t(`${TK}.vlinkpayScanQr`)}
+          </p>
+          <div className="flex h-32 w-32 items-center justify-center rounded-xl border border-nexoraBorder bg-white p-2">
+            <img
+              src={receiveQrImage}
+              alt={`${selectedMeta?.symbol || ''} QR code`}
+              className="h-full w-full object-contain"
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   ) : null
 

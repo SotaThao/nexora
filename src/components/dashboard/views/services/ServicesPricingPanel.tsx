@@ -68,6 +68,7 @@ export interface ServicesPricingServiceSectionLabels {
   price: string
   duration: string
   status?: string
+  approval?: string
   empty: string
 }
 
@@ -274,7 +275,7 @@ export function ServicesPricingServiceSection<TItem>({
 }) {
   return (
     <div
-      className={`settings-service-category-body${labels.status ? ' has-status-column' : ''}`}
+      className={`settings-service-category-body${labels.status ? ' has-status-column' : ''}${labels.approval ? ' has-approval-column' : ''}`}
     >
       <div className="settings-service-header" aria-hidden="true">
         <span />
@@ -283,6 +284,9 @@ export function ServicesPricingServiceSection<TItem>({
         <span>{labels.price}</span>
         <span>{labels.duration}</span>
         {labels.status ? <span>{labels.status}</span> : null}
+        {labels.approval ? (
+          <span className="settings-service-header-approval">{labels.approval}</span>
+        ) : null}
         <span />
       </div>
       {items.length === 0 && !extensionRows ? (

@@ -5,6 +5,7 @@
  * a second businesses request. This module only loads the order list and detail.
  */
 import httpClient from '../../lib/httpClient'
+import { readRequiredApproval } from '../../constants/posServiceApproval'
 import { PosOrderStatus } from '../../constants/posOrderStatus'
 import type {
   CompleteStaffWorkOrderServicePayload,
@@ -28,6 +29,7 @@ export type StaffWorkOrderCatalogItem = {
   name: string
   price: number
   durationMinutes: number
+  isRequiredApproval: boolean
   categories: { id: string; name: string }[]
 }
 
@@ -55,6 +57,7 @@ export type StaffWorkOrderItem = {
   technicianName: string | null
   /** See PosOrderItemStatus. */
   lineStatus: string
+  isRequiredApproval: boolean
   /** True when this line is the caller's own — the ticket shows every technician on it. */
   isMine: boolean
   startedAt: string | null
@@ -65,7 +68,10 @@ export type StaffWorkOrderListItem = {
   id: string
   orderNumber: string
   customerName: string
+  /** Shared ticket status (front desk). */
   status: PosOrderStatus
+  /** Caller-local badge/filter status from their own parent lines. */
+  myStatus: PosOrderStatus
   checkedInAt: string
   scheduledAt: string | null
   serviceNames: string[]
@@ -100,7 +106,10 @@ export type StaffWorkOrderDetail = {
   businessId: string
   orderNumber: string
   customerName: string
+  /** Shared ticket status (front desk). */
   status: PosOrderStatus
+  /** Caller-local progress from their own parent lines. */
+  myStatus: PosOrderStatus
   checkedInAt: string
   scheduledAt: string | null
   stationNumber: number | null
@@ -180,11 +189,14 @@ function toPosOrderStatus(raw: string): PosOrderStatus {
 function normalizeListItem(dto: StaffWorkOrderListItemApiDto): StaffWorkOrderListItem | null {
   const id = readText(dto, 'id', 'Id')
   if (!id) return null
+  const status = toPosOrderStatus(readText(dto, 'status', 'Status'))
+  const myStatusRaw = readText(dto, 'myStatus', 'MyStatus')
   return {
     id,
     orderNumber: readText(dto, 'orderNumber', 'OrderNumber'),
     customerName: readText(dto, 'customerName', 'CustomerName'),
-    status: toPosOrderStatus(readText(dto, 'status', 'Status')),
+    status,
+    myStatus: myStatusRaw ? toPosOrderStatus(myStatusRaw) : status,
     checkedInAt: readText(dto, 'checkedInAt', 'CheckedInAt'),
     scheduledAt: readOptionalText(dto, 'scheduledAt', 'ScheduledAt'),
     serviceNames: readTextList(dto, 'serviceNames', 'ServiceNames'),
@@ -206,6 +218,7 @@ function normalizeItem(dto: StaffWorkOrderItemApiDto): StaffWorkOrderItem {
     note: readOptionalText(dto, 'note', 'Note'),
     technicianName: readOptionalText(dto, 'technicianName', 'TechnicianName'),
     lineStatus: readText(dto, 'lineStatus', 'LineStatus'),
+    isRequiredApproval: readRequiredApproval(dto),
     isMine: readFlag(dto, 'isMine', 'IsMine'),
     startedAt: readOptionalText(dto, 'startedAt', 'StartedAt'),
     completedAt: readOptionalText(dto, 'completedAt', 'CompletedAt'),
@@ -217,12 +230,15 @@ function normalizeDetail(dto: StaffWorkOrderDetailApiDto | null): StaffWorkOrder
   const id = readText(dto, 'id', 'Id')
   if (!id) return null
   const items = readValue<StaffWorkOrderItemApiDto[]>(dto, 'items', 'Items') ?? []
+  const status = toPosOrderStatus(readText(dto, 'status', 'Status'))
+  const myStatusRaw = readText(dto, 'myStatus', 'MyStatus')
   return {
     id,
     businessId: readText(dto, 'businessId', 'BusinessId'),
     orderNumber: readText(dto, 'orderNumber', 'OrderNumber'),
     customerName: readText(dto, 'customerName', 'CustomerName'),
-    status: toPosOrderStatus(readText(dto, 'status', 'Status')),
+    status,
+    myStatus: myStatusRaw ? toPosOrderStatus(myStatusRaw) : status,
     checkedInAt: readText(dto, 'checkedInAt', 'CheckedInAt'),
     scheduledAt: readOptionalText(dto, 'scheduledAt', 'ScheduledAt'),
     stationNumber: readOptionalNumber(dto, 'stationNumber', 'StationNumber'),
@@ -247,6 +263,7 @@ function normalizeCatalogItem(dto: StaffWorkOrderCatalogItemApiDto): StaffWorkOr
     name: readText(dto, 'name', 'Name'),
     price: readNumber(dto, 'price', 'Price'),
     durationMinutes: readNumber(dto, 'durationMinutes', 'DurationMinutes'),
+    isRequiredApproval: readRequiredApproval(dto),
     categories: (Array.isArray(categories) ? categories : [])
       .map((category) => ({
         id: readText(category, 'id', 'Id'),

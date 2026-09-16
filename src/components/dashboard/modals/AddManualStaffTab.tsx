@@ -28,6 +28,7 @@ import type { PaymentMethodDto } from '../../../types/domain'
 import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
 import PayoutMethodDetailModal from '../../payout/PayoutMethodDetailModal'
 import PayoutSetupModal from './PayoutSetupModal'
+import type { VlinkpayImagePendingMap } from '../../payout/vlinkpayWallet'
 
 type PayoutConfig = {
   enabled: boolean
@@ -35,6 +36,8 @@ type PayoutConfig = {
   qrCode: string
   accountName: string
   qrFile?: File | null
+  /** VlinkPay only (US-1488) — pending per-coin QR image, applied after staff creation. */
+  vlinkpayImages?: VlinkpayImagePendingMap
 }
 
 type PayoutConfigMap = Record<string, PayoutConfig>
@@ -190,7 +193,13 @@ function AddManualStaffTab({
     })
   }
 
-  const handlePayoutSubmit = (value: string, qrCode: string, accountName: string, qrFile?: File | null) => {
+  const handlePayoutSubmit = (
+    value: string,
+    qrCode: string,
+    accountName: string,
+    qrFile?: File | null,
+    vlinkpayImages?: VlinkpayImagePendingMap,
+  ) => {
     if (!editingWalletKey) return
     setPayoutConfigs((prev) => ({
       ...prev,
@@ -200,6 +209,7 @@ function AddManualStaffTab({
         qrCode: qrCode || '',
         accountName: accountName || '',
         qrFile: qrFile || null,
+        vlinkpayImages,
       },
     }))
     setEditingWalletKey(null)

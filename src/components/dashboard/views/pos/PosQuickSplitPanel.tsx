@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Check, Loader2, RefreshCw, X } from 'lucide-react'
+import { Check, Loader2, RefreshCw, Trash2, X } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
+import { useNotification } from '../../../../contexts/NotificationContext'
 import {
   POS_CHECKOUT_PAYMENT_METHOD_LABEL_KEYS,
   PosCheckoutPaymentMethod,
@@ -15,6 +16,9 @@ import type { OrderPaymentAllocationApiDto, SetOrderPaymentAllocationsPayload } 
 import { allocationBillCents } from './posPaymentAllocations'
 
 const TK = 'components.dashboard.views.pos.PosQuickSplitPanel'
+
+// A split stops being a split below two payments, so the last pair cannot be removed.
+const MIN_SPLIT_ROWS = 2
 
 // Every amount is compared and divided in whole cents. Working in dollars and flooring is what
 // makes a 50/50 land a cent short of the amount due, which then blocks checkout with a message
@@ -126,6 +130,7 @@ export default function PosQuickSplitPanel({
   disabled?: boolean
 }) {
   const { t } = useTranslation()
+  const { showToast } = useNotification()
 
   const [rows, setRows] = useState<SplitRow[]>(() => {
     const restored = rowsFromAllocations(savedAllocations)
@@ -288,6 +293,14 @@ export default function PosQuickSplitPanel({
     setRows((current) => [...current.map((row) => ({ ...row, autoFilled: false })), createRow(true)])
   }
 
+  // The amount the removed payment held is freed rather than handed to a neighbour: a row still
+  // following the balance picks it back up on its own, and a fully typed split reports what is
+  // left to allocate instead of rewriting a figure the cashier entered. A removed tip bearer is
+  // covered too — the tip moves to the first remaining payment along with its money.
+  const removeMethod = (key: string) => {
+    setRows((current) => (current.length <= MIN_SPLIT_ROWS ? current : current.filter((row) => row.key !== key)))
+  }
+
   const clearSplit = () => {
     const fresh = [createRow(false), createRow(true)]
     tipHolderRef.current = { key: null, cents: 0 }
@@ -295,15 +308,58 @@ export default function PosQuickSplitPanel({
     setTipBearerKey(fresh[0].key)
   }
 
+  const hasStartedSplit = rows.some((row) => row.method !== null)
+
   const isBalanced = outstandingCents === 0 && allocatedCents > 0
   // "Saved" means what is on screen is what the server holds — not merely that a request once
   // succeeded, and never when there is nothing stored at all.
   const showSaved = savedAllocations.length > 0 && !isDirty && !isSaving
 
-  const canSave = !disabled && !isSaving && isDirty && !rows.some(carriesMoreTipThanAmount)
+  // Deliberately not gated on `isDirty`: a split reopened and left alone still answers Save by
+  // closing. Disabling the button there looks like a dead control — the cashier gets no action and
+  // no reason — when the honest answer is that the split on screen is already what the server holds.
+  const canSave = !disabled && !isSaving && !rows.some(carriesMoreTipThanAmount)
+
+  const findSaveBlockMessage = (): string | null => {
+    const tipRow = rows.find(carriesMoreTipThanAmount)
+    if (tipRow) return t(`${TK}.errorTipExceedsAmount`, { amount: formatUsdAmount(tipAmount) })
+
+    const cashShortRow = rows.find((row) => row.method === PosCheckoutPaymentMethod.Cash
+      && row.cashReceivedInput.trim() !== ''
+      && amountInputToCents(row.cashReceivedInput) < amountInputToCents(row.amountInput))
+    if (cashShortRow) return t(`${TK}.errorCashShort`)
+
+    const unattributedRow = rows.find((row) => row.method === null && amountInputToCents(row.amountInput) > 0)
+    if (unattributedRow) return t(`${TK}.errorChooseMethod`)
+
+    const amountlessRow = rows.find((row) => row.method !== null && amountInputToCents(row.amountInput) === 0)
+    if (amountlessRow) return t(`${TK}.errorAmountRequired`)
+
+    if (payload.allocations.length === 0) return t(`${TK}.errorChooseMethod`)
+
+    if (!isBalanced) {
+      return outstandingCents > 0
+        ? t(`${TK}.short`, { amount: formatUsdAmount(fromCents(outstandingCents)) })
+        : t(`${TK}.over`, { amount: formatUsdAmount(fromCents(-outstandingCents)) })
+    }
+
+    return null
+  }
 
   const handleSave = () => {
-    if (!canSave) return
+    if (disabled || isSaving) return
+
+    const blockMessage = findSaveBlockMessage()
+    if (blockMessage) {
+      showToast(blockMessage, 'error')
+      return
+    }
+
+    if (!isDirty) {
+      onBack()
+      return
+    }
+
     onSave(payload)
   }
 
@@ -369,7 +425,7 @@ export default function PosQuickSplitPanel({
             const methodMissing = row.method === null
             const amountMissing = !methodMissing && rowCents === 0
             const tipExceedsAmount = carriesMoreTipThanAmount(row)
-            const hasError = methodMissing || amountMissing || cashShort || tipExceedsAmount
+            const hasError = hasStartedSplit && (methodMissing || amountMissing || cashShort || tipExceedsAmount)
 
             return (
               <section
@@ -383,12 +439,24 @@ export default function PosQuickSplitPanel({
                   <h3 className="text-sm font-bold text-nexoraText">
                     {t(`${TK}.paymentLabel`, { number: index + 1 })}
                   </h3>
-                  {row.autoFilled ? (
-                    <span className="ml-auto flex items-center gap-1 rounded-full bg-nexoraCanvas px-2.5 py-1 text-[10px] font-bold text-nexoraMuted">
-                      <RefreshCw className="h-3 w-3" />
-                      {t(`${TK}.autoFilled`)}
-                    </span>
-                  ) : null}
+                  <div className="ml-auto flex items-center gap-1.5">
+                    {row.autoFilled ? (
+                      <span className="flex items-center gap-1 rounded-full bg-nexoraCanvas px-2.5 py-1 text-[10px] font-bold text-nexoraMuted">
+                        <RefreshCw className="h-3 w-3" />
+                        {t(`${TK}.autoFilled`)}
+                      </span>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => removeMethod(row.key)}
+                      disabled={disabled || rows.length <= MIN_SPLIT_ROWS}
+                      aria-label={t(`${TK}.removePayment`, { number: index + 1 })}
+                      title={rows.length <= MIN_SPLIT_ROWS ? t(`${TK}.removeDisabled`) : undefined}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder bg-nexoraSurface text-nexoraDanger hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-nexoraSurface"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
@@ -603,7 +671,7 @@ export default function PosQuickSplitPanel({
             <button
               type="button"
               onClick={handleSave}
-              disabled={!canSave}
+              disabled={disabled || isSaving}
               className="ml-auto flex h-11 items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-5 text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
             >
               {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}

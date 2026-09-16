@@ -196,6 +196,13 @@ export const qk = {
   merchantPosWaitlist: (businessId?: string) => ['merchantSettings', 'posWaitlist', businessId ?? ''],
   // POS Merchant Ops — Order List tab (US-17), Waiting + InService combined.
   merchantPosOrderList: (businessId?: string) => ['merchantSettings', 'posOrderList', businessId ?? ''],
+  merchantPosCheckInOverview: (businessId?: string, filters?: object) => {
+    const key: unknown[] = ['merchantSettings', 'posCheckInOverview', businessId ?? '']
+    if (filters) key.push(filters)
+    return key
+  },
+  merchantPosCheckInOverviewDetail: (businessId?: string, orderId?: string) =>
+    ['merchantSettings', 'posCheckInOverviewDetail', businessId ?? '', orderId ?? ''],
   // Order mutations invalidate the list prefix, so the next-turn balance refreshes with it.
   merchantPosNextTurnBalance: (businessId: string | undefined, day: string, timeZone: string) =>
     ['merchantSettings', 'posOrderList', businessId ?? '', 'nextTurnBalance', day, timeZone],
@@ -212,6 +219,7 @@ export const qk = {
   // POS Booking — per-business settings (Ticket 2)
   merchantPosBookingSettings: (businessId?: string) => ['merchantSettings', 'posBookingSettings', businessId ?? ''],
   merchantPosOrderSettings: (businessId?: string) => ['merchantSettings', 'posOrderSettings', businessId ?? ''],
+  merchantPosTurnSettings: (businessId?: string) => ['merchantSettings', 'posTurnSettings', businessId ?? ''],
   staffPosPendingAcceptanceCount: () => ['staff', 'posPendingAcceptanceCount'],
   // POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filtered.
   // `filters` is only appended when explicitly passed — omitting it (e.g. from an
@@ -442,6 +450,12 @@ export const qk = {
   staffPayoutDetail: (payoutId: string) => ['staffPayouts', 'detail', payoutId],
   staffPayoutStats: () => ['staffPayouts', 'stats'],
   staffUnpaidDebt: () => ['staffPayouts', 'unpaidDebt'],
+
+  // Income/Payout Categories (issue #584)
+  merchantTransactionCategories: () => ['merchantTransactionCategories'],
+  merchantIncomeByCategoryStats: (filters = EMPTY) => ['merchantTransactionCategories', 'stats', filters],
+  staffTransactionCategories: () => ['staffTransactionCategories'],
+  staffIncomeByCategoryStats: (filters = EMPTY) => ['staffTransactionCategories', 'stats', filters],
 
   // Staff Payment Methods
   staffPaymentMethods: ()      => ['staffPaymentMethods'],

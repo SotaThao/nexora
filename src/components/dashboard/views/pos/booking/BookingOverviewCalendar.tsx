@@ -39,7 +39,7 @@ function formatOverviewDate(dateIso: string, locale: string): string {
   const [year, month, day] = dateIso.split('-').map(Number)
   return new Intl.DateTimeFormat(
     locale.toLowerCase().startsWith('vi') ? 'vi-VN' : 'en-US',
-    { month: 'short', day: 'numeric' },
+    { month: locale.toLowerCase().startsWith('vi') ? 'long' : 'short', day: 'numeric' },
   ).format(new Date(year, month - 1, day, 12))
 }
 

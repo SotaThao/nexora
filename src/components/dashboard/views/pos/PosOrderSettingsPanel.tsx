@@ -9,6 +9,7 @@ import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { useOrderSettings, useUpdateOrderSettings } from '../../../../data/hooks/usePosOrderSettings'
 import type { PosOrderSettingsApiDto } from '../../../../types/repositories'
+import { TOAST_SNACK_DURATION_MS } from '../../../../constants/toast'
 
 const K = 'components.dashboard.views.pos.PosOrderSettingsPanel'
 
@@ -38,7 +39,7 @@ export default function PosOrderSettingsPanel({ businessId }: { businessId?: str
     e.preventDefault()
     updateSettings.mutate(form, {
       onSuccess: () => {
-        notify(t(`${K}.saveSuccess`))
+        notify(t(`${K}.saveSuccess`), 'success', TOAST_SNACK_DURATION_MS)
         setIsEditing(false)
       },
       onError: () => notify(t(`${K}.saveFailed`), 'error'),

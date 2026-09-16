@@ -317,6 +317,9 @@ interface StaffTipItemApiDto {
   confirmedAt?: string | null
   staffConfirmedAt?: string | null
   merchantConfirmedAt?: string | null
+  /** Income/Payout Categories (issue #584) — this staff member's own category for their share. */
+  categoryId?: string | null
+  categoryName?: string | null
 }
 
 interface StaffTipsPageApiDto {
@@ -358,6 +361,8 @@ function staffTipToTransactionRecord(
     isMultiStaff: tip.isMultiStaff,
     businessName: tip.businessName ?? '',
     tipItems: [],
+    categoryId: tip.categoryId ?? null,
+    categoryName: tip.categoryName ?? null,
   }
 }
 
@@ -389,6 +394,8 @@ function normalizeTipItem(dto: StaffTipItemApiDto): StaffTipItem {
     confirmedAt: dto.confirmedAt ?? null,
     staffConfirmedAt: dto.staffConfirmedAt ?? null,
     merchantConfirmedAt: dto.merchantConfirmedAt ?? null,
+    categoryId: dto.categoryId ?? null,
+    categoryName: dto.categoryName ?? null,
   }
 }
 
@@ -555,6 +562,15 @@ export function createStaffSelfRepository(client: HttpClient = httpClient) {
         confirmedCount: Number(res?.confirmedCount) || 0,
         failedIds: Array.isArray(res?.failedIds) ? res.failedIds : [],
       }
+    },
+
+    /**
+     * Income/Payout Categories (issue #584) — Staff assigns a category to a Tip they received.
+     * BE resolves whether this lands on the Tip itself or on the caller's TipItem row, based on
+     * `Tip.IsMultiStaff` (per the technical design doc; endpoint not yet on Swagger).
+     */
+    async setTipCategory(tipId: string, categoryId: string | null): Promise<void> {
+      await client.put<void>(`/api/v1/staff/tips/${encodeURIComponent(tipId)}/category`, { categoryId })
     },
 
     async getLinkRequest(linkId: string): Promise<StaffLinkRequestDetail> {

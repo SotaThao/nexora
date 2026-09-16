@@ -16,9 +16,12 @@ import { getApiErrorCode } from '../../../types/domain'
 import { PosOrderStatus } from '../../../constants/posOrderStatus'
 import { PosOrderItemStatus } from '../../../constants/posOrderItemStatus'
 import {
+  WORK_ORDER_STATUS_BADGE_VARIANT,
+  WORK_ORDER_STATUS_I18N,
   WORK_ORDER_TOAST_TYPE,
   WORK_ORDERS_I18N,
   WORK_ORDERS_LAYOUT_CLASS,
+  workOrderStatusClass,
   type WorkOrderDetail,
 } from './constants'
 import WorkOrderCompleteServiceModal from './WorkOrderCompleteServiceModal'
@@ -43,12 +46,16 @@ import {
   canEditWorkOrderServices,
   removeWorkOrderServiceLine,
   replaceWorkOrderCatalogService,
+  retainPendingLocalWorkOrderLines,
+  toDirectSaveWorkOrderServiceLinesPayload,
   toSaveWorkOrderServiceLinesPayload,
   toWorkOrderEditableLines,
   workOrderEditableServiceTotal,
+  workOrderServiceLinePayloadsEqual,
   WORK_ORDER_TICKET_FOOTER_ACTION,
   workOrderTicketFooterAction,
   workOrderCallerWorkDone,
+  deriveWorkOrderCallerDisplayStatus,
   workOrderPendingServiceLines,
   workOrderRemovedServiceLines,
   type WorkOrderCatalogService,
@@ -141,7 +148,7 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
   if (detailQuery.isPending) return <WorkOrderDetailSkeleton />
 
   const ticketStamp = ticket
-    ? `${ticket.status}:${ticket.items.map((item) => `${item.id}:${item.lineStatus}`).join(',')}`
+    ? `${ticket.status}:${ticket.myStatus}:${ticket.items.map((item) => `${item.id}:${item.lineStatus}:${item.isMine ? 1 : 0}`).join(',')}`
     : ''
   const hasPendingLineEdits = lines.some((line) => (
     Boolean(line.pendingRemoval) || line.approval === WORK_ORDER_SERVICE_APPROVAL.pending
@@ -153,12 +160,14 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
     setLines(toWorkOrderEditableLines(ticket.items))
     setApprovalError(null)
   } else if (ticket && seededStamp !== ticketStamp && !hasPendingLineEdits) {
-    // After ticket/line start-complete, refetch must redraw badges even when the order id is unchanged.
+    // Refetch after start/complete/reassign must redraw badges and isMine even when order id is unchanged.
     setSeededStamp(ticketStamp)
     setLines(toWorkOrderEditableLines(ticket.items))
   }
 
-  const displayStatus = ticket?.status
+  const displayStatus = ticket
+    ? deriveWorkOrderCallerDisplayStatus(ticket.status, lines)
+    : undefined
   const localCompletionNote = completedSession?.orderId === orderId
     ? completedSession.note
     : null
@@ -240,6 +249,33 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
     setLines(ticket ? toWorkOrderEditableLines(ticket.items) : [])
     setApprovalError(null)
   }
+
+  const applyServiceLineEdits = (next: WorkOrderEditableLine[]) => {
+    setApprovalError(null)
+    setLines(next)
+    if (!ticket) return
+
+    const payload = toDirectSaveWorkOrderServiceLinesPayload(next)
+    if (!payload) return
+
+    const currentPayload = toSaveWorkOrderServiceLinesPayload(toWorkOrderEditableLines(ticket.items))
+    if (workOrderServiceLinePayloadsEqual(payload, currentPayload)) return
+
+    saveServiceLines.mutate(
+      { customerPhoneLast4: null, lines: payload },
+      {
+        onSuccess: (saved) => {
+          if (saved) {
+            setLines((current) => retainPendingLocalWorkOrderLines(saved.items, current))
+          }
+        },
+        onError: (err) => {
+          showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), WORK_ORDER_TOAST_TYPE.error)
+          setLines((current) => retainPendingLocalWorkOrderLines(ticket.items, current))
+        },
+      },
+    )
+  }
   
   const handleStartTicket = async () => {
     const succeeded = await runAction(
@@ -272,6 +308,14 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
               canStartService: false,
               canCompleteService: false,
               completionNote: note ?? current.completionNote,
+              myStatus: deriveWorkOrderCallerDisplayStatus(
+                current.status,
+                current.items.map((item) => (
+                  item.isAddOn || item.isMine === false || item.lineStatus !== PosOrderItemStatus.Started
+                    ? item
+                    : { ...item, lineStatus: PosOrderItemStatus.Completed }
+                )),
+              ),
               items: current.items.map((item) => (
                 item.isAddOn || item.isMine === false || item.lineStatus !== PosOrderItemStatus.Started
                   ? item
@@ -293,6 +337,7 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
       <WorkOrderDetailHeader
         onBack={onBack}
         orderNumber={ticket?.orderNumber}
+        myStatus={displayStatus}
       />
       <WorkOrderDetailBody
         isError={detailQuery.isError}
@@ -310,10 +355,7 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
         onAddService={() => setPicker({ mode: WORK_ORDER_PICKER_MODE.add })}
         onAddCustomService={() => setIsCustomOpen(true)}
         onChangeService={(key) => setPicker({ mode: WORK_ORDER_PICKER_MODE.edit, lineKey: key })}
-        onRemoveService={(key) => {
-          setLines((current) => removeWorkOrderServiceLine(current, key))
-          setApprovalError(null)
-        }}
+        onRemoveService={(key) => applyServiceLineEdits(removeWorkOrderServiceLine(lines, key))}
         isSaving={saveServiceLines.isPending}
         approvalError={approvalError}
         onApprovePending={handleApproveChanges}
@@ -386,13 +428,10 @@ export default function StaffWorkOrderDetail({ orderId, timeZone, onBack }: Staf
               : ''
           }
           onConfirm={(services: WorkOrderCatalogService[]) => {
-            setApprovalError(null)
-            setLines((current) => {
-              if (picker.mode === WORK_ORDER_PICKER_MODE.edit && picker.lineKey) {
-                return replaceWorkOrderCatalogService(current, picker.lineKey, services[0])
-              }
-              return services.reduce(addWorkOrderCatalogService, current)
-            })
+            const next = picker.mode === WORK_ORDER_PICKER_MODE.edit && picker.lineKey
+              ? replaceWorkOrderCatalogService(lines, picker.lineKey, services[0])
+              : services.reduce(addWorkOrderCatalogService, lines)
+            applyServiceLineEdits(next)
             setPicker(null)
           }}
           onClose={() => setPicker(null)}
@@ -493,12 +532,14 @@ function WorkOrderDetailBody({
   }
 
   const todayIso = formatDateIsoInTimeZone(new Date(), timeZone)
-  const status = displayStatus ?? ticket.status
-  const isCompleted = isWorkOrderCompletedStatus(status)
-  // The ticket stays In Service until the front desk checks out, so the technician's wrap-up view
-  // follows their own service lines rather than the order status.
-  const isCallerWorkDone = isCompleted || workOrderCallerWorkDone(lines)
-  const canEdit = canEditWorkOrderServices(status)
+  // Order-level status drives edit/start-day rules; myStatus drives wrap-up "Done" for this tech.
+  const orderStatus = ticket.status
+  const myStatus = displayStatus ?? ticket.myStatus ?? orderStatus
+  const isCheckoutClosed = isWorkOrderCompletedStatus(orderStatus)
+  const isCallerWorkDone = isCheckoutClosed
+    || myStatus === PosOrderStatus.Completed
+    || workOrderCallerWorkDone(lines)
+  const canEdit = canEditWorkOrderServices(orderStatus)
   const pendingServices = workOrderPendingServiceLines(lines)
   const removedLines = workOrderRemovedServiceLines(lines)
   const customerNotes = ticket.customerNotes?.trim() ?? ''
@@ -581,7 +622,7 @@ function WorkOrderDetailBody({
         actions={lineActions}
       />
 
-      {!isCompleted && (pendingServices.length > 0 || removedLines.length > 0) ? (
+      {canEdit && (pendingServices.length > 0 || removedLines.length > 0) ? (
         <WorkOrderCustomerApproval
           services={pendingServices}
           removedServices={removedLines}
@@ -626,9 +667,12 @@ function WorkOrderPrimaryAction({
 function WorkOrderDetailHeader({
   onBack,
   orderNumber,
+  myStatus,
 }: {
   onBack: () => void
   orderNumber?: string
+  /** Caller-local progress only — not PosOrder.Status. */
+  myStatus?: PosOrderStatus
 }) {
   const { t } = useTranslation()
 
@@ -652,6 +696,11 @@ function WorkOrderDetailHeader({
           </p>
         </div>
       </div>
+      {myStatus ? (
+        <span className={workOrderStatusClass(myStatus, WORK_ORDER_STATUS_BADGE_VARIANT.detail)}>
+          {t(WORK_ORDER_STATUS_I18N[myStatus])}
+        </span>
+      ) : null}
     </div>
   )
 }

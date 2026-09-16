@@ -117,3 +117,17 @@ export function useAcknowledgeMerchantPayment() {
     },
   })
 }
+
+/** Income/Payout Categories (issue #584) — Merchant assigns a category to a Customer Payment. */
+export function useSetMerchantPaymentCategory() {
+  const queryClient = useQueryClient()
+
+  return useMutation<void, Error, { paymentId: string; categoryId: string | null }>({
+    mutationFn: ({ paymentId, categoryId }) => merchantPaymentsRepository.setCategory(paymentId, categoryId),
+    onSuccess: (_data, { paymentId }) => {
+      queryClient.invalidateQueries({ queryKey: ['merchantPayments'] })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPaymentDetail(paymentId) })
+      queryClient.invalidateQueries({ queryKey: ['merchantTransactionCategories', 'stats'] })
+    },
+  })
+}

@@ -22,6 +22,7 @@ export type WorkOrderCatalogService = {
   name: string
   price: number
   durationMin: number
+  isRequiredApproval?: boolean
 }
 
 export type WorkOrderCatalogCategory = {
@@ -45,6 +46,7 @@ export type WorkOrderEditableLine = {
   /** Saved line waiting for customer approval before it is actually deleted. */
   pendingRemoval?: boolean
   lineStatus?: string
+  isRequiredApproval?: boolean
   isMine?: boolean
 }
 
@@ -121,6 +123,7 @@ export function toWorkOrderEditableLines(items: WorkOrderItem[]): WorkOrderEdita
     technicianName: item.technicianName,
     approval: null,
     lineStatus: item.lineStatus,
+    isRequiredApproval: item.isRequiredApproval,
     isMine: item.isMine,
   }))
 }
@@ -243,6 +246,38 @@ export function workOrderCallerWorkDone(lines: WorkOrderEditableLine[]): boolean
     && callerLines.every((line) => line.lineStatus === PosOrderItemStatus.Completed)
 }
 
+/**
+ * Badge/filter status from this technician's own parent lines — not the shared ticket status.
+ * Cancelled / checkout-Completed stay order-level. Otherwise: all Done → Completed, any
+ * Started → InService, else Waiting (UI "Assigned").
+ */
+export function deriveWorkOrderCallerDisplayStatus(
+  orderStatus: PosOrderStatus,
+  lines: Array<Pick<WorkOrderEditableLine, 'isAddOn' | 'isMine' | 'lineStatus' | 'pendingRemoval'>>,
+): PosOrderStatus {
+  if (orderStatus === PosOrderStatus.Cancelled || orderStatus === PosOrderStatus.Completed) {
+    return orderStatus
+  }
+
+  const callerParents = lines.filter((line) => (
+    !line.isAddOn && Boolean(line.isMine) && !line.pendingRemoval
+  ))
+  if (callerParents.length === 0) {
+    if (orderStatus === PosOrderStatus.Pending || orderStatus === PosOrderStatus.Confirmed) {
+      return PosOrderStatus.Waiting
+    }
+    return orderStatus
+  }
+
+  if (callerParents.every((line) => line.lineStatus === PosOrderItemStatus.Completed)) {
+    return PosOrderStatus.Completed
+  }
+  if (callerParents.some((line) => line.lineStatus === PosOrderItemStatus.Started)) {
+    return PosOrderStatus.InService
+  }
+  return PosOrderStatus.Waiting
+}
+
 // A service can sit in more than one category — grouping is just a way to find it, not a
 // statement about where a service "really" belongs. Anything with no category still has to
 // be reachable, hence the trailing bucket.
@@ -272,6 +307,7 @@ export function buildWorkOrderCatalogCategories(
       name: item.name,
       price: item.price,
       durationMin: item.durationMinutes,
+      isRequiredApproval: item.isRequiredApproval,
     }
     const matched = item.categories.filter((category) => byCategory.has(category.id))
     const targets = matched.length > 0
@@ -385,8 +421,9 @@ export function filterWorkOrderCatalogCategories(
 
 function lineFromCatalog(
   service: WorkOrderCatalogService,
-  extras?: Pick<WorkOrderEditableLine, 'key' | 'id' | 'technicianName' | 'isAddOn' | 'lineStatus' | 'isMine'>,
+  extras?: Partial<Pick<WorkOrderEditableLine, 'key' | 'id' | 'technicianName' | 'isAddOn' | 'lineStatus' | 'isMine'>>,
 ): WorkOrderEditableLine {
+  const requiresCustomerApproval = Boolean(service.isRequiredApproval)
   return {
     key: extras?.key ?? nextLocalLineKey(),
     id: extras?.id,
@@ -396,7 +433,8 @@ function lineFromCatalog(
     durationMinutes: service.durationMin,
     isAddOn: extras?.isAddOn ?? false,
     technicianName: extras?.technicianName ?? null,
-    approval: WORK_ORDER_SERVICE_APPROVAL.pending,
+    approval: requiresCustomerApproval ? WORK_ORDER_SERVICE_APPROVAL.pending : null,
+    isRequiredApproval: requiresCustomerApproval,
     lineStatus: extras?.lineStatus,
     isMine: extras?.isMine,
   }
@@ -406,7 +444,7 @@ export function addWorkOrderCatalogService(
   lines: WorkOrderEditableLine[],
   service: WorkOrderCatalogService,
 ): WorkOrderEditableLine[] {
-  return [...lines, lineFromCatalog(service)]
+  return [...lines, lineFromCatalog(service, { isMine: true })]
 }
 
 // Keeps the line's identity (id/key) so the save swaps the existing service rather than deleting
@@ -456,7 +494,64 @@ export function addWorkOrderCustomService(
       isAddOn: false,
       technicianName: null,
       approval: WORK_ORDER_SERVICE_APPROVAL.pending,
+      isMine: true,
     },
+  ]
+}
+
+/** Custom lines and flagged catalog services wait for last-4; unflagged catalog edits persist immediately. */
+export function workOrderLineRequiresCustomerApproval(
+  line: Pick<WorkOrderEditableLine, 'posServiceId' | 'isRequiredApproval'>,
+): boolean {
+  return !line.posServiceId || Boolean(line.isRequiredApproval)
+}
+
+/**
+ * A saved line is mid-swap or mid-remove pending last-4. Persisting the rest of the basket
+ * would delete that row before the customer has approved the change.
+ */
+export function workOrderHasBlockingApprovalEdits(lines: WorkOrderEditableLine[]): boolean {
+  return lines.some((line) => (
+    Boolean(line.id)
+    && (line.pendingRemoval || line.approval === WORK_ORDER_SERVICE_APPROVAL.pending)
+  ))
+}
+
+export function toDirectSaveWorkOrderServiceLinesPayload(
+  lines: WorkOrderEditableLine[],
+): SaveStaffWorkOrderServiceLinePayload[] | null {
+  if (workOrderHasBlockingApprovalEdits(lines)) return null
+  return toSaveWorkOrderServiceLinesPayload(
+    lines.filter((line) => line.approval !== WORK_ORDER_SERVICE_APPROVAL.pending),
+  )
+}
+
+export function workOrderServiceLinePayloadsEqual(
+  left: SaveStaffWorkOrderServiceLinePayload[],
+  right: SaveStaffWorkOrderServiceLinePayload[],
+): boolean {
+  if (left.length !== right.length) return false
+  return left.every((line, index) => {
+    const other = right[index]
+    if (!other) return false
+    return line.id === other.id
+      && line.posServiceId === other.posServiceId
+      && line.customServiceName === other.customServiceName
+      && line.price === other.price
+      && line.durationMinutes === other.durationMinutes
+  })
+}
+
+/** After an auto-save, keep unsaved required adds that were never part of that request. */
+export function retainPendingLocalWorkOrderLines(
+  savedItems: WorkOrderItem[],
+  current: WorkOrderEditableLine[],
+): WorkOrderEditableLine[] {
+  return [
+    ...toWorkOrderEditableLines(savedItems),
+    ...current.filter(
+      (line) => !line.id && line.approval === WORK_ORDER_SERVICE_APPROVAL.pending,
+    ),
   ]
 }
 
@@ -469,7 +564,10 @@ export function removeWorkOrderServiceLine(
     // A line that was never saved is only a local add — dropping it undoes that add.
     if (!line.id) return []
     if (line.pendingRemoval) return [line]
-    return [{ ...line, pendingRemoval: true }]
+    if (workOrderLineRequiresCustomerApproval(line)) {
+      return [{ ...line, pendingRemoval: true }]
+    }
+    return []
   })
 }
 

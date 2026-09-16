@@ -97,6 +97,26 @@ export interface PosCategoryApiDto {
   displayOrder: number
 }
 
+/** Income/Payout Categories (issue #584) — GET/POST/PUT .../transaction-categories. */
+export interface TransactionCategoryApiDto {
+  id: string
+  name: string
+  displayOrder: number
+}
+
+export interface IncomeByCategoryStatApiDto {
+  categoryId?: string | null
+  categoryName?: string
+  amount?: number
+  transactionCount?: number
+}
+
+/** GET .../transaction-categories/stats */
+export interface IncomeByCategoryStatsApiDto {
+  items?: IncomeByCategoryStatApiDto[]
+  totalAmount?: number
+}
+
 // POS Owner Setup — Services (US-017); shape now shared with Booking Hub's catalog.
 export type PosServiceStatus = 'Active' | 'Inactive'
 
@@ -113,6 +133,7 @@ export interface PosServiceApiDto {
   displayOrder: number
   categoryIds: string[]
   tags: string[]
+  isRequiredApproval?: boolean
 }
 
 export interface PosTagApiDto {
@@ -174,6 +195,10 @@ export interface PosStaffProfileApiDto {
   status: string
   // Count of PosOrderItems completed today for this staff member — computed inline server-side.
   turnsToday: number
+  /** Today's turns weighted by what each service was worth — same figure the Turn Board shows. */
+  weightedTurnsToday?: number
+  /** The service dollars behind those turns. */
+  serviceTotalToday?: number
 }
 
 // POS Staff Level — business-scoped lookup list (Basic/Advanced/Senior by default), optionally
@@ -228,6 +253,14 @@ export interface CheckInOrderItemPayload {
   // Service items only. Omitted means "Next Available" (skill-filtered auto-pick).
   posStaffProfileId?: string
   // Service items only.
+  note?: string
+}
+
+// One line of the front desk's Assign Services confirmation. `posStaffProfileId` omitted is
+// "First available" — the line goes back to the floor.
+export interface SaveOrderServiceLineAssignmentPayload {
+  serviceLineId: string
+  posStaffProfileId?: string
   note?: string
 }
 
@@ -329,6 +362,8 @@ export interface StaffWorkOrderListItemApiDto {
   orderNumber?: string
   customerName?: string
   status?: string
+  /** Caller-local progress — see PosOrderStatus. Falls back to `status` when absent. */
+  myStatus?: string
   checkedInAt?: string
   scheduledAt?: string | null
   serviceNames?: string[]
@@ -351,6 +386,7 @@ export interface StaffWorkOrderItemApiDto {
   posStaffProfileId?: string | null
   /** See PosOrderItemStatus — drives the Accept/Decline/Start/Complete buttons. */
   lineStatus?: string | null
+  isRequiredApproval?: boolean
   isMine?: boolean
   acceptedAt?: string | null
   startedAt?: string | null
@@ -363,6 +399,8 @@ export interface StaffWorkOrderDetailApiDto {
   orderNumber?: string
   customerName?: string
   status?: string
+  /** Caller-local progress — see PosOrderStatus. Falls back to `status` when absent. */
+  myStatus?: string
   checkedInAt?: string
   scheduledAt?: string | null
   stationNumber?: number | null
@@ -432,6 +470,7 @@ export interface StaffWorkOrderCatalogItemApiDto {
   durationMinutes?: number
   description?: string | null
   photoUrl?: string | null
+  isRequiredApproval?: boolean
   categories?: { id?: string; name?: string }[]
 }
 
@@ -540,6 +579,57 @@ export interface PosCustomerOrderHistoryPage {
   hasPreviousPage: boolean
 }
 
+export interface CheckInOverviewSummaryApiDto {
+  totalCheckIns: number
+  newGuests: number
+  returningGuests: number
+  averageWaitMinutes: number
+}
+
+export interface GuestSourceCountApiDto {
+  source: string
+  count: number
+}
+
+export interface CheckInOverviewItemApiDto {
+  id: string
+  orderNumber: string
+  checkedInAt: string
+  customerName: string
+  customerPhone?: string | null
+  isNewGuest: boolean
+  source?: string | null
+  serviceNames: string[]
+  technicianNames: string[]
+  status: string
+}
+
+// Separate endpoint from the list above (GET .../checkin-overview/{orderId}) — same shape today,
+// kept as its own type since the two APIs are independent and may diverge later.
+export type CheckInOverviewDetailApiDto = CheckInOverviewItemApiDto
+
+export interface CheckInOverviewQuery {
+  pageNumber?: number
+  pageSize?: number
+  status?: string
+  searchTerm?: string
+}
+
+export interface CheckInOverviewItemsPage {
+  items: CheckInOverviewItemApiDto[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+}
+
+export interface CheckInOverviewApiDto {
+  summary: CheckInOverviewSummaryApiDto
+  guestSources: GuestSourceCountApiDto[]
+  items: CheckInOverviewItemsPage
+}
+
 // POS Merchant Ops — Turn Board Assign & Break (US-13, refactored in US-026)
 export interface TurnBoardStationApiDto {
   posStaffProfileId: string
@@ -560,6 +650,29 @@ export interface TurnBoardStationApiDto {
   // present) reads as "not local staff", not as a false positive block on every station's Beep.
   isLocalStaff?: boolean
   email?: string | null
+  /** Whether this technician is on shift right now — the board also lists ones who have not clocked in. */
+  isClockedIn?: boolean
+  /** Services this technician is assigned to perform — the board's search matches these too. */
+  serviceSkillNames?: string[]
+  /** Today's turns weighted by what each service was worth. */
+  weightedTurnsToday?: number
+  /** The service dollars behind those turns. */
+  serviceTotalToday?: number
+  /** Today's turns one by one, oldest first — one Turn Grid cell per entry. */
+  turnEntries?: TurnBoardEntryApiDto[]
+}
+
+export interface TurnBoardEntryApiDto {
+  posOrderItemId: string
+  posOrderId: string
+  orderNumber: string
+  serviceName: string
+  turnCreditAmount: number
+  turnCredit: number
+  /** False while the visit is open: the credit is provisional and can still change. */
+  isRecorded: boolean
+  assignedAt?: string | null
+  completedAt?: string | null
 }
 
 // POS Front Desk — Time Clock tab
@@ -712,7 +825,12 @@ export interface TimeClockRosterRowApiDto {
   hoursToday: number
   // Null for anyone who has not clocked in today; fixed for the rest of the day once set.
   turnRank?: number | null
+  /** Customers served today. Kept next to the weighted figure — they answer different questions. */
   turnsToday: number
+  /** Today's turns weighted by what each service was worth. */
+  weightedTurnsToday?: number
+  /** The service dollars behind those turns. */
+  serviceTotalToday?: number
   currentOrderId?: string | null
   currentOrderNumber?: string | null
   currentCustomerName?: string | null
@@ -1098,6 +1216,7 @@ export interface CheckoutServiceCatalogItemApiDto {
   durationMinutes: number
   description?: string | null
   photoUrl?: string | null
+  isRequiredApproval?: boolean
   categories: CatalogCategoryApiDto[]
 }
 
@@ -1155,6 +1274,22 @@ export interface PosOrderSettingsApiDto {
   warnOnServiceLineStatusMismatch: boolean
   allowStaffManageOwnServiceLines: boolean
 }
+
+/** One service-value band: `thresholdAmount` is the band's lower bound, in dollars. */
+export interface PosTurnTierApiDto {
+  thresholdAmount: number
+  turnCredit: number
+}
+
+export interface PosTurnSettingsApiDto {
+  bookingTurnCredit: number
+  serviceTurnTiers: PosTurnTierApiDto[]
+  /** Reading is open to the whole front desk; saving needs the Manage Turn Rules permission. */
+  canManage: boolean
+}
+
+/** PUT payload — `canManage` is server-decided and never sent back. */
+export type PosTurnSettingsUpdateApiDto = Omit<PosTurnSettingsApiDto, 'canManage'>
 
 export interface PosBookingSettingsApiDto {
   autoConfirmEnabled: boolean
@@ -2250,6 +2385,9 @@ export interface TipApiDto {
   isMultiStaff?: boolean
   isLocalStaff?: boolean
   tipItems?: unknown[]
+  /** Income/Payout Categories (issue #584) — Staff-assigned category on this Tip. */
+  categoryId?: string | null
+  categoryName?: string | null
 }
 
 export interface TipsPaginatedApiDto {

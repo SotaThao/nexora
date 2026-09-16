@@ -95,7 +95,7 @@ export function shiftLocalMonth(year: number, month: number, delta: number): { y
 }
 
 export function formatWorkOrderMonthLabel(year: number, month: number, language: string): string {
-  return new Intl.DateTimeFormat(workOrderDateLocale(language), { month: 'short', year: 'numeric' })
+  return new Intl.DateTimeFormat(workOrderDateLocale(language), { month: workOrderDateLocale(language) === 'vi-VN' ? 'long' : 'short', year: 'numeric' })
     .format(new Date(year, month - 1, 1))
 }
 
@@ -256,7 +256,7 @@ export function newestAssignedWorkOrder(
   tickets: WorkOrderListItem[],
 ): WorkOrderListItem | null {
   return tickets.reduce<WorkOrderListItem | null>((newest, ticket) => {
-    if (!isWorkOrderAssignedStatus(ticket.status)) return newest
+    if (!isWorkOrderAssignedStatus(ticket.myStatus)) return newest
     if (!newest) return ticket
     const newestTime = Date.parse(newest.checkedInAt)
     const ticketTime = Date.parse(ticket.checkedInAt)
@@ -270,7 +270,7 @@ export function countWorkOrdersByFilter(
   tickets: WorkOrderListItem[],
   filter: WorkOrderTicketFilter,
 ): number {
-  return tickets.filter((ticket) => workOrderTicketMatchesFilter(ticket.status, filter)).length
+  return tickets.filter((ticket) => workOrderTicketMatchesFilter(ticket.myStatus, filter)).length
 }
 
 export function formatWorkOrderStationNumber(stationNumber: number): string {

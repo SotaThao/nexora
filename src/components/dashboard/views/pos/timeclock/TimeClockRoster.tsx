@@ -12,6 +12,7 @@ import { getApiErrorCode } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import { useBeepStaff, useClockInStaff, useClockOutStaff } from '../../../../../data/hooks/usePosTimeClock'
 import { cannotReceiveBeep } from '../../../../../constants/posStaffBeep'
+import { formatTurnCredit } from '../TurnGridView'
 import type { PosBeepApiDto, TimeClockRosterRowApiDto } from '../../../../../types/repositories'
 import { formatPosDateTime, formatPosTime } from '../posDateTime'
 import { EMPTY_VALUE, getInitials } from '../posDisplay'
@@ -26,6 +27,7 @@ import {
   POS_TABLE_STICKY_ACTION_CELL_CLASS,
   POS_TABLE_STICKY_ACTION_HEADER_CLASS,
 } from '../posTableStyles'
+import { TOAST_SNACK_DURATION_MS } from '../../../../../constants/toast'
 
 // Table/Card is a separate preference from the Order List's List/Card toggle — the two tabs are
 // remembered independently, so they keep their own storage keys.
@@ -120,6 +122,7 @@ export default function TimeClockRoster({
           ? t(tk('beepSent'), { name: row.displayName })
           : t(tk('beepNotDelivered'), { name: row.displayName }),
         result.delivered ? 'success' : 'error',
+        result.delivered ? TOAST_SNACK_DURATION_MS : undefined,
       )
     } catch (err: unknown) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
@@ -156,9 +159,11 @@ export default function TimeClockRoster({
     </div>
   )
 
+  // Weighted, matching the Turn Board badge — the same technician showing two different numbers
+  // on two tabs is the failure this shares a formatter to avoid.
   const renderTurnsCell = (row: TimeClockRosterRowApiDto) => (
     <span className="text-xs text-nexoraMuted">
-      {t(tk('turnsValue'), { count: row.turnsToday })}
+      {`${formatTurnCredit(row.weightedTurnsToday)}T`}
       {row.turnRank ? ` · ${t(tk('turnRank'), { rank: row.turnRank })}` : ''}
     </span>
   )

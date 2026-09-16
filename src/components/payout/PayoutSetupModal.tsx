@@ -11,7 +11,7 @@ import PayoutAccountNameField from './PayoutAccountNameField'
 import VlinkpayWalletFields from './VlinkpayWalletFields'
 import { formatPayoutPhoneDisplay } from './payoutPhone'
 import CameraCapture from '../ui/CameraCapture'
-import { readImageFileAsDataUrl } from '../../utils/imageFile'
+import { readImageFileAsDataUrl, dataUrlToFile } from '../../utils/imageFile'
 import {
   getBankWireBeneficiaryName,
   isBankWireAccountComplete,
@@ -21,8 +21,12 @@ import {
   serializeVlinkpayAddresses,
   getVlinkpayAddressValidationError,
   stripVlinkpayWalletAddressInput,
+  emptyVlinkpayImages,
+  parseVlinkpayImagesFromMethod,
   type VlinkpayAddresses,
   type VlinkpayCoinKey,
+  type VlinkpayImages,
+  type VlinkpayImagePendingMap,
 } from './vlinkpayWallet'
 import { validatePayoutAccount } from './validatePayoutAccount'
 import { supportsPayoutAccountName } from '../../data/paymentMethodTypes'
@@ -34,10 +38,18 @@ interface PayoutSetupModalProps {
   staffName?: string
   initialValue?: string
   initialQrCode?: string
+  /** VlinkPay only — source of the per-coin (USDV/USDT) QR image preview. */
+  initialCryptoAddresses?: Array<{ symbol?: string; imageUrl?: string | null }> | null
   /** Persisted account-holder name; takes precedence over the staffName fallback. */
   initialAccountName?: string
   onClose: () => void
-  onSubmit: (value: string, qrCode: string, accountName: string, qrFile?: File | null) => void
+  onSubmit: (
+    value: string,
+    qrCode: string,
+    accountName: string,
+    qrFile?: File | null,
+    vlinkpayImages?: VlinkpayImagePendingMap,
+  ) => void
   readOnly?: boolean
   isSaving?: boolean
   allowQrOnly?: boolean
@@ -52,6 +64,7 @@ function PayoutSetupModal({
   staffName,
   initialValue,
   initialQrCode,
+  initialCryptoAddresses,
   initialAccountName,
   onClose,
   onSubmit,
@@ -67,11 +80,17 @@ function PayoutSetupModal({
   )
   const [qrCode, setQrCode] = useState(initialQrCode || '')
   const [qrFile, setQrFile] = useState(null)
+  const [vlinkpayImages, setVlinkpayImages] = useState<VlinkpayImages>(() =>
+    parseVlinkpayImagesFromMethod({ cryptoAddresses: initialCryptoAddresses }),
+  )
+  const [vlinkpayImageFiles, setVlinkpayImageFiles] = useState<Partial<Record<VlinkpayCoinKey, File | null>>>({})
+  const [vlinkpayCameraCoin, setVlinkpayCameraCoin] = useState<VlinkpayCoinKey | null>(null)
   const [accountName, setAccountName] = useState(initialAccountName || staffName || '')
   const [isCameraOpen, setIsCameraOpen] = useState(false)
   const [error, setError] = useState('')
   const [accountNameError, setAccountNameError] = useState('')
   const [uploadError, setUploadError] = useState('')
+  const [vlinkpayUploadError, setVlinkpayUploadError] = useState('')
   const [isGuideOpen, setIsGuideOpen] = useState(true)
 
   useEffect(() => {
@@ -79,13 +98,17 @@ function PayoutSetupModal({
     setVlinkpayAddresses(parseVlinkpayAddresses(initialValue))
     setQrCode(initialQrCode || '')
     setQrFile(null)
+    setVlinkpayImages(parseVlinkpayImagesFromMethod({ cryptoAddresses: initialCryptoAddresses }))
+    setVlinkpayImageFiles({})
+    setVlinkpayCameraCoin(null)
     setAccountName(initialAccountName || staffName || '')
     setError('')
     setAccountNameError('')
     setUploadError('')
+    setVlinkpayUploadError('')
     setIsCameraOpen(false)
     setIsGuideOpen(true)
-  }, [open, walletKey, initialValue, initialQrCode, initialAccountName, staffName])
+  }, [open, walletKey, initialValue, initialQrCode, initialCryptoAddresses, initialAccountName, staffName])
 
   useEffect(() => {
     if (!open || typeof document === 'undefined') return undefined
@@ -153,6 +176,7 @@ function PayoutSetupModal({
   const handleTakePhoto = () => {
     if (readOnly) return
     setUploadError('')
+    setVlinkpayCameraCoin(null)
     setIsCameraOpen(true)
   }
 
@@ -164,6 +188,39 @@ function PayoutSetupModal({
     setUploadError('')
     setQrFile(null)
     setQrCode('')
+  }
+
+  const handleVlinkpayImagePickFile = async (coin: VlinkpayCoinKey, file: File) => {
+    if (readOnly || !file) return
+
+    const isImage = typeof file.type === 'string' && file.type.startsWith('image/')
+    if (!isImage) {
+      setVlinkpayUploadError(t('setup.errors.image_only'))
+      return
+    }
+
+    try {
+      const dataUrl = await readImageFileAsDataUrl(file)
+      setVlinkpayUploadError('')
+      setVlinkpayImageFiles((prev) => ({ ...prev, [coin]: file }))
+      setVlinkpayImages((prev) => ({ ...prev, [coin]: String(dataUrl || '') }))
+    } catch {
+      setVlinkpayUploadError(t('setup.errors.image_only'))
+    }
+  }
+
+  const handleVlinkpayImageClear = (coin: VlinkpayCoinKey) => {
+    if (readOnly) return
+    setVlinkpayUploadError('')
+    setVlinkpayImageFiles((prev) => ({ ...prev, [coin]: null }))
+    setVlinkpayImages((prev) => ({ ...prev, [coin]: '' }))
+  }
+
+  const handleVlinkpayTakePhoto = (coin: VlinkpayCoinKey) => {
+    if (readOnly) return
+    setVlinkpayUploadError('')
+    setVlinkpayCameraCoin(coin)
+    setIsCameraOpen(true)
   }
 
   const handleSubmit = () => {
@@ -183,7 +240,11 @@ function PayoutSetupModal({
         setError(t(`components.settings.tabs.ProfileTab.validation.${vlinkpayError}`))
         return
       }
-      onSubmit(serializeVlinkpayAddresses(vlinkpayAddresses), qrCode, trimmedAccountName, qrFile)
+      const vlinkpayImagePayload: VlinkpayImagePendingMap = {
+        usdv: { file: vlinkpayImageFiles.usdv ?? null, url: vlinkpayImageFiles.usdv ? null : vlinkpayImages.usdv },
+        usdt: { file: vlinkpayImageFiles.usdt ?? null, url: vlinkpayImageFiles.usdt ? null : vlinkpayImages.usdt },
+      }
+      onSubmit(serializeVlinkpayAddresses(vlinkpayAddresses), qrCode, trimmedAccountName, qrFile, vlinkpayImagePayload)
       return
     }
     if (requiresAccountName && !trimmedAccountName) {
@@ -306,6 +367,11 @@ function PayoutSetupModal({
               disabled={readOnly}
               error={error}
               placeholder={walletPlaceholders.vlinkpay}
+              images={vlinkpayImages}
+              onImagePickFile={handleVlinkpayImagePickFile}
+              onImageClear={handleVlinkpayImageClear}
+              onTakePhoto={handleVlinkpayTakePhoto}
+              uploadError={vlinkpayUploadError}
             />
           ) : (
             <>
@@ -492,10 +558,20 @@ function PayoutSetupModal({
         {isCameraOpen && (
           <CameraCapture
             onCapture={(dataUrl) => {
-              setQrCode(dataUrl)
+              if (vlinkpayCameraCoin) {
+                const coin = vlinkpayCameraCoin
+                setVlinkpayImageFiles((prev) => ({ ...prev, [coin]: dataUrlToFile(dataUrl, `${coin}-qr.jpg`) }))
+                setVlinkpayImages((prev) => ({ ...prev, [coin]: dataUrl }))
+                setVlinkpayCameraCoin(null)
+              } else {
+                setQrCode(dataUrl)
+              }
               setIsCameraOpen(false)
             }}
-            onCancel={() => setIsCameraOpen(false)}
+            onCancel={() => {
+              setVlinkpayCameraCoin(null)
+              setIsCameraOpen(false)
+            }}
           />
         )}
       </div>

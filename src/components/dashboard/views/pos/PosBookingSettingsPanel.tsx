@@ -12,11 +12,12 @@ import { useBookingSettings, useUpdateBookingSettings } from '../../../../data/h
 import ToggleSwitch from '../../../ui/ToggleSwitch'
 import type { PosBookingSettingsApiDto } from '../../../../types/repositories'
 import BookingLinkShare from './booking/BookingLinkShare'
+import { TOAST_SNACK_DURATION_MS } from '../../../../constants/toast'
 
 const DEFAULT_SETTINGS: PosBookingSettingsApiDto = {
   autoConfirmEnabled: true,
   minLeadTimeMinutes: 15,
-  maxAdvanceDays: 7,
+  maxAdvanceDays: 365,
   reminderHoursBefore: 12,
   notifyCustomerSmsEnabled: true,
   notifyBusinessSmsEnabled: true,
@@ -50,7 +51,7 @@ export default function PosBookingSettingsPanel({
     e.preventDefault()
     updateSettingsMutation.mutate(form, {
       onSuccess: () => {
-        notify(t('components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully'))
+        notify(t('components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully'), 'success', TOAST_SNACK_DURATION_MS)
         setIsEditing(false)
       },
     })

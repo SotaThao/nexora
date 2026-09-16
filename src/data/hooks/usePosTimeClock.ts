@@ -84,6 +84,10 @@ function useTimeClockInvalidation(businessId?: string) {
     queryClient.invalidateQueries({ queryKey: qk.merchantPosTimeClockLog(businessId) })
     queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
     queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
+    // Check-in stays mounted (CSS-hidden) with its own cache — without this, clock-in/out only
+    // updates the Time Clock board and the desk must reload before newly on-shift techs appear.
+    queryClient.invalidateQueries({ queryKey: qk.merchantPosCheckInTechnicians(businessId) })
+    queryClient.invalidateQueries({ queryKey: qk.posSelfCheckInTechnicians() })
   }
 }
 
@@ -131,7 +135,16 @@ export function useClockScanPreview(businessId?: string, token?: string) {
 }
 
 export function useScanClockQr() {
+  const queryClient = useQueryClient()
   return useMutation<ScanClockQrResultApiDto, unknown, { businessId: string; token: string }>({
     mutationFn: ({ businessId, token }) => posTimeClockRepository.scan(businessId, token),
+    onSuccess: (_data, variables) => {
+      // Same session may also hold the front-desk POS; keep check-in / roster in sync.
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosTimeClockRoster(variables.businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosTimeClockLog(variables.businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(variables.businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosCheckInTechnicians(variables.businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.posSelfCheckInTechnicians() })
+    },
   })
 }

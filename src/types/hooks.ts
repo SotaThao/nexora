@@ -19,6 +19,11 @@ export interface UpdatePaymentMethodVars {
   imageUrl?: string | null
   /** When set, file is uploaded via POST /api/v1/images/upload before PUT payment-methods. */
   imageFile?: File | null
+  /**
+   * VlinkPay only (US-1488) — pending per-coin QR image, keyed by uppercase symbol (USDV/USDT).
+   * Resolved (uploaded if a file, kept if a url) and merged onto the matching cryptoAddresses entry.
+   */
+  cryptoAddressImages?: Record<string, { file?: File | null; url?: string | null }> | null
 }
 
 export interface SaveStaffAccountVars {

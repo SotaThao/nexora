@@ -76,9 +76,10 @@ export function formatCustomerPhoneDisplay(value) {
 export function formatBookingDateDisplay(isoDate, locale) {
   const [year, month, day] = String(isoDate || '').split('-').map(Number)
   if (!year || !month || !day) return isoDate || ''
+  const isVietnamese = new Intl.DateTimeFormat(locale).resolvedOptions().locale.startsWith('vi')
   return new Intl.DateTimeFormat(locale, {
     year: 'numeric',
-    month: 'short',
+    month: isVietnamese ? 'long' : 'short',
     day: 'numeric',
   }).format(new Date(year, month - 1, day))
 }

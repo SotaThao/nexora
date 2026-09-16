@@ -11,7 +11,6 @@ export interface TechnicianOption {
   displayName: string
   photoUrl?: string | null
   isBusy?: boolean
-  turnsToday?: number
   completedTurns?: number
   assignedTurns?: number
   isNextTurn?: boolean
@@ -48,7 +47,6 @@ export default function TechnicianPickerGrid({
   busyLabel,
   availableLabel,
   offShiftLabel,
-  turnsLabel,
   completedTurnsLabel,
   assignedTurnsLabel,
   nextTurnLabel,
@@ -72,8 +70,7 @@ export default function TechnicianPickerGrid({
   availableLabel?: string
   // Only passed where an off-shift technician can appear at all; without it they read as available.
   offShiftLabel?: string
-  turnsLabel?: (count: number) => string
-  completedTurnsLabel?: (count: number) => string
+  completedTurnsLabel?: (count?: number) => string
   assignedTurnsLabel?: (count: number) => string
   nextTurnLabel?: string
   queueLabel?: (count: number) => string
@@ -91,11 +88,13 @@ export default function TechnicianPickerGrid({
       : technicians.filter((s) => s.displayName.toLowerCase().includes(query))
   }, [technicians, searchQuery])
 
-  const cardClass = (isSelected: boolean) =>
+  const cardClass = (isSelected: boolean, isNextTurn = false) =>
     `${autoWrap ? 'min-w-0 w-auto max-w-full flex-none ' : ''}${compact
       ? 'flex min-h-11 flex-col items-start gap-0.5 rounded-lg border px-3 py-2 text-left'
       : 'flex flex-col items-center justify-center gap-1 rounded-xl border p-3 text-center'} ${
-      isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder hover:border-nexoraBrand'
+      isNextTurn
+        ? 'border-violet-500 bg-violet-50 shadow-md shadow-violet-200/60 ring-2 ring-inset ring-violet-500'
+        : isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder hover:border-nexoraBrand'
     }`
 
   const optionLabelClass = `${autoWrap ? 'max-w-full' : 'w-full'} truncate text-xs font-bold text-nexoraText`
@@ -164,7 +163,7 @@ export default function TechnicianPickerGrid({
                 key={staff.posStaffProfileId}
                 type="button"
                 onClick={() => onSelect(staff.posStaffProfileId)}
-                className={cardClass(selectedStaffId === staff.posStaffProfileId)}
+                className={cardClass(selectedStaffId === staff.posStaffProfileId, Boolean(staff.isNextTurn && nextTurnLabel))}
               >
                 {!compact ? (
                   <span className="flex h-11 w-11 items-center justify-center rounded-full bg-nexoraCanvas text-xs font-bold text-nexoraText">
@@ -181,23 +180,18 @@ export default function TechnicianPickerGrid({
                     {staff.staffLevelName}
                   </span>
                 ) : null}
-                {staff.turnsToday !== undefined && turnsLabel ? (
-                  <span className="text-[10px] font-semibold tabular-nums text-nexoraMuted">
-                    {turnsLabel(staff.turnsToday)}
-                  </span>
-                ) : null}
                 {staff.assignedTurns !== undefined && assignedTurnsLabel ? (
                   <span className="text-[10px] font-semibold tabular-nums text-nexoraMuted">
                     {assignedTurnsLabel(staff.assignedTurns)}
                   </span>
                 ) : null}
-                {staff.completedTurns !== undefined && completedTurnsLabel ? (
+                {completedTurnsLabel ? (
                   <span className="text-[10px] font-semibold tabular-nums text-nexoraMuted">
                     {completedTurnsLabel(staff.completedTurns)}
                   </span>
                 ) : null}
                 {staff.isNextTurn && nextTurnLabel ? (
-                  <span className="rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-extrabold text-violet-700">
+                  <span className="rounded-full bg-violet-700 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-white">
                     {nextTurnLabel}
                   </span>
                 ) : null}
