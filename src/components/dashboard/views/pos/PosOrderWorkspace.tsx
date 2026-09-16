@@ -11,7 +11,7 @@
 // page (PosCheckInTab / CheckInSurface), the same one the customer kiosk runs.
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowLeft, Loader2, Package, UserRound, Plus, X, Printer, ClipboardCheck } from 'lucide-react'
+import { ArrowLeft, Loader2, Package, Plus, X, Printer, ClipboardCheck, Phone } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import type { TechnicianOption } from '../../../checkin/parts/TechnicianPickerGrid'
 import { useNotification } from '../../../../contexts/NotificationContext'
@@ -79,8 +79,10 @@ import type {
   CompleteOrderResultApiDto,
 } from '../../../../types/repositories'
 import { Skeleton, SkeletonList, SkeletonListItem } from '../../../ui/skeleton'
-import { formatCustomerPhone } from './customer/customerFormatters'
-import CategoryGroupedCatalogPicker from './CategoryGroupedCatalogPicker'
+import { maskCustomerPhone } from './customer/customerFormatters'
+import CustomerVisitTag from './CustomerVisitTag'
+import OrderCustomerDetailButton from './customer/OrderCustomerDetailButton'
+import PosServiceCatalogPanel from './PosServiceCatalogPanel'
 import TicketActionSkeletonOverlay, { TICKET_SKELETON_ROW_COUNT } from './TicketActionSkeletonOverlay'
 import ChangeServiceModal from './modals/ChangeServiceModal'
 import CustomServiceModal from './modals/CustomServiceModal'
@@ -303,6 +305,7 @@ const POS_FRONT_DESK_ROUTE_PATH = `/dashboard/${DASHBOARD_MENU_ID.pos}`
 export default function PosOrderWorkspace({
   businessId,
   orderId,
+  isNewCustomer,
   mode = 'edit',
   successReceiptMode,
   onClose,
@@ -322,6 +325,7 @@ export default function PosOrderWorkspace({
 }: {
   businessId: string
   orderId: string
+  isNewCustomer?: boolean
   // Edit is operational order maintenance. Checkout is the only entry mode that reveals
   // tip, payment method, receipt and payment summary immediately.
   mode?: PosOrderWorkspaceMode
@@ -629,18 +633,20 @@ export default function PosOrderWorkspace({
   // and the name each row shows, pending assignment included, is the one that decides it.
   const technicianHeadingByLineKey = useMemo(() => {
     const headings = new Map<string, string>()
-    let previousLabel: string | null = null
+    let group: { key: string; label: string; count: number } | null = null
 
     for (const line of visibleLines) {
       if (line.itemType !== 'Service') {
-        previousLabel = null
+        group = null
         continue
       }
       const { technicianName } = lineTechnicianDisplay(line, pendingTechnician)
       const label = technicianName
-        ?? t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel')
-      if (label !== previousLabel) headings.set(line.key, label)
-      previousLabel = label
+        ? `${t('components.dashboard.views.pos.PosOrderWorkspace.technicianPrefix')} ${technicianName}`
+        : t('components.dashboard.views.pos.PosOrderWorkspace.needsTechnician')
+      if (!group || group.label !== label) group = { key: line.key, label, count: 0 }
+      group.count += 1
+      headings.set(group.key, `${label} (${group.count})`)
     }
 
     return headings
@@ -1565,39 +1571,62 @@ export default function PosOrderWorkspace({
   // JSX block away from coming back. Nothing sells products anywhere while it is hidden: check-in
   // dropped them with the one-page redesign, and this was the last surface.
   const catalogPanel = (
-          <div className="nexora-card space-y-3 p-4">
-            <div className="border-b border-nexoraBorder pb-2">
-              <h3 className="text-xs font-black uppercase tracking-wider text-nexoraMuted">
-                {t('components.dashboard.views.pos.PosOrderWorkspace.tabServices')}
-              </h3>
-            </div>
-
-            <CategoryGroupedCatalogPicker
-              variant="grid"
-              showDuration
-              items={serviceCatalog}
-              isPending={isServiceCatalogPending}
-              onAdd={(itemId) => {
-                const service = serviceCatalog.find((s) => s.id === itemId)
-                if (service) handleCatalogServiceClick(service)
-              }}
-              addLabel={t('components.dashboard.views.pos.PosOrderWorkspace.addButton')}
-              emptyLabel={t('components.dashboard.views.pos.PosOrderWorkspace.noServicesInCategory')}
-              allCategoryLabel={t('components.dashboard.views.pos.PosOrderWorkspace.allCategories')}
-              uncategorizedLabel={t('components.dashboard.views.pos.PosOrderWorkspace.uncategorized')}
-              searchPlaceholder={t('components.dashboard.views.pos.PosOrderWorkspace.searchServicesPlaceholder')}
-            />
-          </div>
+    <PosServiceCatalogPanel
+      items={serviceCatalog}
+      isPending={isServiceCatalogPending}
+      onAdd={(itemId) => {
+        const service = serviceCatalog.find((s) => s.id === itemId)
+        if (service) handleCatalogServiceClick(service)
+      }}
+    />
   )
 
   const orderPanel = (
           <div className="space-y-4">
+            {order ? (
+              <section
+                aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.ticketCustomerTitle')}
+                className="space-y-1 rounded-xl border border-nexoraBrand/20 bg-gradient-to-br from-nexoraBrandSoft/60 via-nexoraSurface to-nexoraSurface px-3 py-2"
+              >
+                <h2 className="text-[11px] font-black uppercase tracking-wider text-nexoraBrandDark">
+                  {t('components.dashboard.views.pos.PosOrderWorkspace.ticketCustomerTitle')}
+                </h2>
+                <div className="min-w-0 space-y-0.5">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <p className="min-w-0 break-words text-sm font-bold uppercase leading-snug text-nexoraText">
+                      {order.customerName}
+                    </p>
+                    {typeof isNewCustomer === 'boolean' ? (
+                      <CustomerVisitTag isNewCustomer={isNewCustomer} />
+                    ) : null}
+                    <OrderCustomerDetailButton
+                      key={order.id}
+                      businessId={businessId}
+                      orderId={order.id}
+                      phoneE164={order.customerPhoneE164 || (
+                        order.customerPhoneCountryCode && order.customerPhone
+                          ? `${order.customerPhoneCountryCode}${order.customerPhone}`
+                          : undefined
+                      )}
+                    />
+                  </div>
+                  {order.customerPhone || order.customerPhoneE164 ? (
+                    <p className="flex items-center gap-1.5 text-xs font-normal text-nexoraText">
+                      <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      <span className="min-w-0 whitespace-nowrap font-sans text-xs font-normal [font-variant-ligatures:none]">
+                        {maskCustomerPhone(order.customerPhoneE164 || order.customerPhone)}
+                      </span>
+                    </p>
+                  ) : null}
+                </div>
+              </section>
+            ) : null}
             <div
               role="region"
               aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.orderDetailTitle')}
               className="space-y-3 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4"
             >
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-[10px] font-black tracking-wider text-nexoraMuted">
                   <span className="uppercase">
                     {t('components.dashboard.views.pos.PosOrderWorkspace.orderDetailTitle')}
@@ -1654,8 +1683,7 @@ export default function PosOrderWorkspace({
                             index > 0 ? 'mt-2' : ''
                           }`}
                         >
-                          <UserRound className="h-3.5 w-3.5 shrink-0 text-nexoraBrandDark" />
-                          <span className="min-w-0 truncate text-[11px] font-black uppercase tracking-wider text-nexoraBrandDark">
+                          <span className="min-w-0 truncate text-[11px] font-black tracking-wider text-nexoraBrandDark">
                             {technicianHeadingByLineKey.get(line.key)}
                           </span>
                         </div>
@@ -2757,7 +2785,6 @@ export default function PosOrderWorkspace({
         <h1 className="text-2xl font-bold leading-tight text-nexoraText">
           {t('components.dashboard.views.pos.PosOrderWorkspace.titleUpdate', {
             orderNumber: order?.orderNumber ?? '',
-            customerName: order?.customerName ?? '',
           })}
         </h1>
       </div>
@@ -2768,7 +2795,7 @@ export default function PosOrderWorkspace({
         </div>
       ) : (
         <div
-          className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
+          className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
           aria-busy={isBusy}
         >
           {catalogPanel}

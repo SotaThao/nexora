@@ -1,5 +1,5 @@
 // Read-only operational customer profile for the POS front desk.
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import {
   CalendarClock,
   CalendarDays,
@@ -95,6 +95,8 @@ export default function CustomerDetailModal({
   onClose: () => void
 }) {
   const { t, currentLanguage } = useTranslation()
+  const dialogRef = useRef<HTMLElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
   const p = 'components.dashboard.views.pos.CustomerTab.'
   const formatDateTime = (iso: string | null | undefined) => formatPosDateTime(iso, currentLanguage)
   const { data: customer, isLoading: isDetailLoading } = usePosCustomerDetail(businessId, customerId)
@@ -104,6 +106,14 @@ export default function CustomerDetailModal({
     isLoading: isHistoryLoading,
     isFetching: isHistoryFetching,
   } = usePosCustomerOrderHistory(businessId, customerId, { pageNumber, pageSize })
+
+  useEffect(() => {
+    const previous = document.activeElement
+    closeButtonRef.current?.focus()
+    return () => {
+      if (previous instanceof HTMLElement && previous.isConnected) previous.focus()
+    }
+  }, [])
 
   const historyItems = historyPage?.items ?? []
   const notProvided = t(p + 'viewDetailNotProvided')
@@ -124,9 +134,33 @@ export default function CustomerDetailModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 backdrop-blur-[2px] sm:p-4">
       <section
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="customer-detail-dialog-title"
+        tabIndex={-1}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') {
+            event.preventDefault()
+            event.stopPropagation()
+            onClose()
+            return
+          }
+          if (event.key !== 'Tab') return
+          const controls = dialogRef.current?.querySelectorAll<HTMLElement>(
+            ':is(button, input, select, textarea, a[href], [tabindex]):not(:disabled):not([tabindex="-1"])',
+          )
+          if (!controls?.length) return
+          const first = controls[0]
+          const last = controls[controls.length - 1]
+          if (event.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.current)) {
+            event.preventDefault()
+            last.focus()
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault()
+            first.focus()
+          }
+        }}
         className="flex max-h-[calc(100dvh-1rem)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-nexoraBorder bg-white shadow-2xl sm:max-h-[calc(100dvh-2rem)]"
       >
         <header className="shrink-0 border-b border-nexoraBorder bg-gradient-to-br from-nexoraCanvas via-white to-nexoraLavender/20 p-4 sm:p-5">
@@ -167,6 +201,7 @@ export default function CustomerDetailModal({
             </div>
 
             <button
+              ref={closeButtonRef}
               type="button"
               onClick={onClose}
               aria-label={t(p + 'viewDetailCloseAria')}

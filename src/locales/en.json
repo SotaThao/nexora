@@ -4046,6 +4046,9 @@
         },
         "PosFrontDeskView": {
             "description": "Check in guests, manage open tickets, and run the turn board.",
+            "enterFullscreen": "Enter POS fullscreen",
+            "exitFullscreen": "Exit POS fullscreen",
+            "moveFullscreenButton": "Drag to move this button, or use the arrow keys when focused.",
             "noAccess": "You don't have permission to manage Front Desk operations for this business.",
             "tabs": {
             "estimate": "Estimate",
@@ -4311,7 +4314,10 @@
             "editSplit": "Edit split"
           },
           "PosOrderWorkspace": {
-            "titleUpdate": "Ticket #{{orderNumber}} · {{customerName}}",
+            "titleUpdate": "Ticket #{{orderNumber}}",
+            "ticketCustomerTitle": "Customer",
+            "customerDetailsUnavailable": "Customer details are unavailable for this ticket.",
+            "customerDetailsLoadFailed": "Couldn't load customer details. Try again.",
             "backButton": "Back",
             "tabServices": "Services",
             "tabProducts": "Products",
@@ -4348,6 +4354,7 @@
             "technicianNameUnavailable": "Name unavailable",
             "technicianPrefix": "Tech.",
             "firstAvailableLabel": "First available",
+            "needsTechnician": "Needs Technician",
             "technicianSearchPlaceholder": "Search technicians…",
             "noTechnicians": "No technician trained for this service yet.",
             "technicianBusyWarning": "{{name}} is currently working on a service. Assign this service to them anyway?",

@@ -4046,6 +4046,9 @@
         },
         "PosFrontDeskView": {
             "description": "Check-in khách, quản lý phiếu đang mở, và điều phối turn board.",
+            "enterFullscreen": "Mở POS toàn màn hình",
+            "exitFullscreen": "Thoát POS toàn màn hình",
+            "moveFullscreenButton": "Kéo để di chuyển nút, hoặc dùng phím mũi tên khi nút được chọn.",
             "noAccess": "Bạn không có quyền quản lý vận hành Lễ tân cho salon này.",
             "tabs": {
             "estimate": "Báo giá",
@@ -4311,7 +4314,10 @@
             "editSplit": "Sửa chia"
           },
           "PosOrderWorkspace": {
-            "titleUpdate": "Phiếu #{{orderNumber}} · {{customerName}}",
+            "titleUpdate": "Phiếu #{{orderNumber}}",
+            "ticketCustomerTitle": "Khách hàng",
+            "customerDetailsUnavailable": "Không có thông tin chi tiết khách hàng cho phiếu này.",
+            "customerDetailsLoadFailed": "Không thể tải thông tin khách hàng. Vui lòng thử lại.",
             "backButton": "Quay lại",
             "tabServices": "Dịch vụ",
             "tabProducts": "Sản phẩm",
@@ -4348,6 +4354,7 @@
             "technicianNameUnavailable": "Chưa có tên thợ",
             "technicianPrefix": "Thợ",
             "firstAvailableLabel": "Thợ trống trước",
+            "needsTechnician": "Cần gán thợ",
             "technicianSearchPlaceholder": "Tìm thợ…",
             "noTechnicians": "Chưa có thợ nào được đào tạo dịch vụ này.",
             "technicianBusyWarning": "{{name}} đang làm dịch vụ. Bạn vẫn muốn giao dịch vụ này cho thợ?",

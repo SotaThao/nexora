@@ -4,7 +4,7 @@
 // not-yet-built customer self-checkin kiosk screen unchanged (PO requirement: staff and
 // customer check-in must use the identical component). Auto-advances the instant the 10th
 // digit is entered — no separate "Continue" button, matching the reference kiosk mockup.
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ShieldCheck, X } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { formatNationalNumber, PhoneDialCode } from '../../../CountryCodeSelect'
@@ -41,6 +41,7 @@ export default function PhoneCheckInStep({
   appearance?: 'default' | 'public'
 }) {
   const { t } = useTranslation()
+  const rootRef = useRef<HTMLDivElement>(null)
   const [digits, setDigits] = useState(initialDigits.replace(/\D/g, '').slice(0, PHONE_NATIONAL_DIGITS))
   const isPublic = appearance === 'public'
 
@@ -60,12 +61,25 @@ export default function PhoneCheckInStep({
   // digit slots below are a display, not a focusable field), so a global listener is the
   // only way to accept typed digits. Skips keys typed into an actual input/textarea
   // elsewhere on the page (e.g. the dashboard's top search bar) so this doesn't hijack
-  // unrelated typing while this step happens to be mounted.
+  // unrelated typing while this step happens to be mounted. A persisted check-in
+  // draft can be hidden when another POS tab is active; it must not consume keys.
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+      if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return
+      if (!/^[0-9]$/.test(event.key) && event.key !== 'Backspace' && event.key !== 'Escape') return
+      const root = rootRef.current
+      if (!root || root.closest('[hidden], [aria-hidden="true"], [inert]')) return
+      const target = event.target instanceof HTMLElement ? event.target : document.activeElement
+      if (target instanceof HTMLElement && (
+        target.matches('input, textarea, select') || target.isContentEditable
+        || (!root.contains(target) && target.closest('[role="dialog"], [role="alertdialog"], .nexora-modal-card'))
+        || (event.key === 'Escape' && target !== document.body && target !== document.documentElement && !root.contains(target))
+      )) {
         return
+      }
+      for (let ancestor: HTMLElement | null = root; ancestor; ancestor = ancestor.parentElement) {
+        const style = getComputedStyle(ancestor)
+        if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse') return
       }
       if (event.key >= '0' && event.key <= '9') {
         event.preventDefault()
@@ -143,7 +157,7 @@ export default function PhoneCheckInStep({
 
   if (isPublic) {
     return (
-      <div className="public-checkin-card">
+      <div ref={rootRef} className="public-checkin-card">
         <div className="mb-4 flex flex-col items-center">
           <img
             src="/homepage/assets/images/icon-nexora.png"
@@ -190,7 +204,7 @@ export default function PhoneCheckInStep({
   }
 
   return (
-    <div className="mx-auto w-full max-w-sm space-y-6 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-6 text-center">
+    <div ref={rootRef} className="mx-auto w-full max-w-sm space-y-6 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-6 text-center">
       <div>
         <h1 className="text-xl font-black text-nexoraText">
           {businessName
