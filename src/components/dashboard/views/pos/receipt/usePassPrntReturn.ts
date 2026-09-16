@@ -45,6 +45,7 @@ import {
 import { buildPosReceiptHtml } from './posReceiptHtml'
 import { usePosPrinterProfile } from '../../../../../data/hooks/usePosPrinterSettings'
 import { readPosWorkspaceFromParams, writePosWorkspaceToParams, type PosReceiptMode } from '../posWorkspaceUrl'
+import { TOAST_SNACK_DURATION_MS } from '../../../../../constants/toast'
 
 export interface UsePassPrntReturnOptions {
   surface: 'frontDesk' | 'printerSetup'
@@ -233,6 +234,7 @@ export function usePassPrntReturn({ surface, backPath, onRestore, onPrintFailed 
         total: String(job.copiesTotal),
       }),
       'info',
+      TOAST_SNACK_DURATION_MS,
     )
     restore(job.restore)
     firePassPrnt(built.url)

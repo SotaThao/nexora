@@ -163,7 +163,7 @@ export function formatPayoutPeriodRange(
 ): string {
   if (!periodStart || !periodEnd) return '—'
   const fmt = new Intl.DateTimeFormat(locale === 'vi' ? 'vi-VN' : 'en-US', {
-    month: 'short',
+    month: locale === 'vi' ? 'long' : 'short',
     day: 'numeric',
     year: 'numeric',
   })

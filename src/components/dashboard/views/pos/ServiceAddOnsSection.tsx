@@ -22,6 +22,7 @@ import {
   useUpdateServiceAddOn,
 } from '../../../../data/hooks/usePosServices'
 import type { ServiceAddOnApiDto } from '../../../../types/repositories'
+import { TOAST_SNACK_DURATION_MS } from '../../../../constants/toast'
 
 const K = 'components.dashboard.views.pos.PosServicesView'
 
@@ -138,10 +139,10 @@ export default function ServiceAddOnsSection({ serviceId }: { serviceId: string 
           // The picker only offers services that own add-ons, so nothing copied means every name
           // was already here. "0 copied" reads like a failure the owner has to go diagnose.
           if (copiedCount === 0) {
-            showToast(t(`${K}.addOnCopyAllDuplicates`, { name: sourceName }), 'info')
+            showToast(t(`${K}.addOnCopyAllDuplicates`, { name: sourceName }), 'info', TOAST_SNACK_DURATION_MS)
             return
           }
-          showToast(t(`${K}.addOnCopyResult`, { count: copiedCount }))
+          showToast(t(`${K}.addOnCopyResult`, { count: copiedCount }), 'success', TOAST_SNACK_DURATION_MS)
         },
         onError: reportError,
       },

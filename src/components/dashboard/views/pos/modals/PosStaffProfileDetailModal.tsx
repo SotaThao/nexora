@@ -13,6 +13,7 @@ import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import { getApiErrorCode } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
+import { TOAST_SNACK_DURATION_MS } from '../../../../../constants/toast'
 import { formatTurnCredit } from '../TurnGridView'
 import { usePosRoles } from '../../../../../data/hooks/usePosRoles'
 import { usePosStaffLevels } from '../../../../../data/hooks/usePosStaffLevels'
@@ -315,7 +316,7 @@ export default function PosStaffProfileDetailModal({
       if (hasSavedProfile && status !== profile?.status) {
         await setStaffStatus.mutateAsync({ businessStaffLinkId: linkId, status })
       }
-      showToast(t('components.dashboard.views.pos.PosStaffProfileView.profileSavedSuccess'), 'success')
+      showToast(t('components.dashboard.views.pos.PosStaffProfileView.profileSavedSuccess'), 'success', TOAST_SNACK_DURATION_MS)
       onClose()
     } catch (err) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')

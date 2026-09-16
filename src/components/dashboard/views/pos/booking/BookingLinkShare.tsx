@@ -23,7 +23,6 @@ export default function BookingLinkShare({ businessSlug }: { businessSlug?: stri
     try {
       await copyTextToClipboard(url)
       setIsCopied(true)
-      showToast(t(p + 'copied'))
       window.setTimeout(() => setIsCopied(false), 2000)
     } catch {
       showToast(t('common.error'), 'error')

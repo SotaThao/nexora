@@ -61,7 +61,7 @@ export function parseApiUtcDateTime(isoString: string | null | undefined): Date 
   return Number.isNaN(date.getTime()) ? null : date
 }
 
-/** Format ISO datetime as locale-aware "Apr 2024" / "thg 4 2024" for member-since labels. */
+/** Format ISO datetime as locale-aware "Apr 2024" / "tháng 4 2024" for member-since labels. */
 export function formatMemberSinceDate(
   isoString: string | null | undefined,
   language: string = 'en',
@@ -70,7 +70,7 @@ export function formatMemberSinceDate(
   const date = new Date(isoString)
   if (Number.isNaN(date.getTime())) return ''
   const locale = language === 'vi' ? 'vi-VN' : 'en-US'
-  return date.toLocaleDateString(locale, { month: 'short', year: 'numeric' })
+  return date.toLocaleDateString(locale, { month: language === 'vi' ? 'long' : 'short', year: 'numeric' })
 }
 
 /** Sáng/Chiều (VI) or am/pm (EN) for the given date's local hour. Shared by every date+time formatter below so the Sáng/Chiều cutoff (hour < 12) never drifts between them. */

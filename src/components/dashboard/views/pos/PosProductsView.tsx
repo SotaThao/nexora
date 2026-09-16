@@ -37,6 +37,7 @@ import type { PosProductInput } from '../../../../data/repositories/posProducts'
 import type { PosProductApiDto } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
 import CreateEditPosProductModal from './modals/CreateEditPosProductModal'
+import { TOAST_SNACK_DURATION_MS } from '../../../../constants/toast'
 
 function toProductInput(product: PosProductApiDto): PosProductInput {
   return {
@@ -80,10 +81,9 @@ export default function PosProductsView() {
     try {
       if (modalState.product) {
         await updateProduct.mutateAsync({ productId: modalState.product.id, input })
-        showToast(t('components.dashboard.views.pos.PosProductsView.updatedSuccess'), 'success')
       } else {
         await createProduct.mutateAsync(input)
-        showToast(t('components.dashboard.views.pos.PosProductsView.createdSuccess'), 'success')
+        showToast(t('components.dashboard.views.pos.PosProductsView.createdSuccess'), 'success', TOAST_SNACK_DURATION_MS)
       }
       setModalState({ open: false, product: null })
     } catch (err) {
@@ -97,7 +97,6 @@ export default function PosProductsView() {
         productId: product.id,
         input: { ...toProductInput(product), status: product.status === 'Active' ? 'Inactive' : 'Active' },
       })
-      showToast(t('components.dashboard.views.pos.PosProductsView.updatedSuccess'), 'success')
     } catch (err) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
     }

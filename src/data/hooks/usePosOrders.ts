@@ -11,6 +11,9 @@ import { isPersistedLineId, unlessOptimisticId } from '../../utils/uuid'
 import type {
   AssignableStaffApiDto,
   CheckInOrderPayload,
+  CheckInOverviewApiDto,
+  CheckInOverviewDetailApiDto,
+  CheckInOverviewQuery,
   CompletedOrdersListQuery,
   CompletedOrdersPage,
   CustomerLookupResultApiDto,
@@ -20,6 +23,7 @@ import type {
   PosWaitlistOrderApiDto,
   ReassignableStaffApiDto,
   ReassignPayrollWarningApiDto,
+  SaveOrderServiceLineAssignmentPayload,
   ServiceLineReassignmentApiDto,
 } from '../../types/repositories'
 
@@ -46,6 +50,7 @@ export function useCheckInOrder(businessId?: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosCheckInOverview(businessId) })
     },
   })
 }
@@ -84,6 +89,31 @@ export function useOrderList(
   })
 }
 
+export function useCheckInOverview(
+  businessId: string | undefined,
+  filters: CheckInOverviewQuery,
+  options?: { enabled?: boolean },
+) {
+  const { isAuthenticated } = useSessionRole()
+  return useQuery<CheckInOverviewApiDto>({
+    queryKey: qk.merchantPosCheckInOverview(businessId, filters),
+    queryFn: () => posOrdersRepository.getCheckInOverview(businessId as string, filters),
+    enabled: isAuthenticated && Boolean(businessId) && (options?.enabled ?? true),
+    placeholderData: keepPreviousData,
+    retry: false,
+  })
+}
+
+export function useCheckInOverviewDetail(businessId: string | undefined, orderId: string | undefined) {
+  const { isAuthenticated } = useSessionRole()
+  return useQuery<CheckInOverviewDetailApiDto>({
+    queryKey: qk.merchantPosCheckInOverviewDetail(businessId, orderId),
+    queryFn: () => posOrdersRepository.getCheckInOverviewDetail(businessId as string, orderId as string),
+    enabled: isAuthenticated && Boolean(businessId) && Boolean(orderId),
+    retry: false,
+  })
+}
+
 // Completed Orders panel (US-17 follow-up) — paginated + filterable by date range/
 // customer name/phone. keepPreviousData avoids a flicker back to an empty list while the
 // user is paging or adjusting filters.
@@ -110,6 +140,7 @@ export function useCancelOrder(businessId?: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosCheckInOverview(businessId) })
     },
   })
 }
@@ -178,6 +209,33 @@ export function useAssignStaffToServiceLine(businessId?: string) {
         queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) }),
         queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) }),
         queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) }),
+        queryClient.invalidateQueries({ queryKey: qk.merchantPosCheckInOverview(businessId) }),
+      ])
+    },
+  })
+}
+
+// The front desk's Assign Services button (#1569) — the technician picks staged on the ticket,
+// confirmed in one call so the technicians are paged once, after the desk is done deciding.
+//
+// No optimistic patch on purpose: until this succeeds the ticket still belongs to whoever it
+// belonged to before, and the screen shows the staged picks from its own draft state.
+export function useSaveOrderServiceLineAssignments(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<
+    boolean,
+    Error,
+    { orderId: string; assignments: SaveOrderServiceLineAssignmentPayload[] }
+  >({
+    mutationFn: ({ orderId, assignments }) =>
+      posOrdersRepository.saveOrderServiceLineAssignments(businessId as string, orderId, assignments),
+    onSuccess: async (_result, { orderId }) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) }),
+        queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) }),
+        queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) }),
+        queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) }),
+        queryClient.invalidateQueries({ queryKey: qk.merchantPosCheckInOverview(businessId) }),
       ])
     },
   })
@@ -195,6 +253,7 @@ export function useStartOrderService(businessId?: string) {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosInServiceOrders(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosCheckInOverview(businessId) })
     },
   })
 }
@@ -238,6 +297,7 @@ function useServiceLineAction(
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosCheckInOverview(businessId) })
     },
   })
 }
@@ -270,6 +330,7 @@ export function useMarkServiceLineDone(businessId?: string) {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosCheckInOverview(businessId) })
     },
   })
 }

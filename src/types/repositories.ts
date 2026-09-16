@@ -256,6 +256,14 @@ export interface CheckInOrderItemPayload {
   note?: string
 }
 
+// One line of the front desk's Assign Services confirmation. `posStaffProfileId` omitted is
+// "First available" — the line goes back to the floor.
+export interface SaveOrderServiceLineAssignmentPayload {
+  serviceLineId: string
+  posStaffProfileId?: string
+  note?: string
+}
+
 export interface CheckInOrderPayload {
   customerName: string
   customerEmail?: string
@@ -569,6 +577,57 @@ export interface PosCustomerOrderHistoryPage {
   totalCount: number
   hasNextPage: boolean
   hasPreviousPage: boolean
+}
+
+export interface CheckInOverviewSummaryApiDto {
+  totalCheckIns: number
+  newGuests: number
+  returningGuests: number
+  averageWaitMinutes: number
+}
+
+export interface GuestSourceCountApiDto {
+  source: string
+  count: number
+}
+
+export interface CheckInOverviewItemApiDto {
+  id: string
+  orderNumber: string
+  checkedInAt: string
+  customerName: string
+  customerPhone?: string | null
+  isNewGuest: boolean
+  source?: string | null
+  serviceNames: string[]
+  technicianNames: string[]
+  status: string
+}
+
+// Separate endpoint from the list above (GET .../checkin-overview/{orderId}) — same shape today,
+// kept as its own type since the two APIs are independent and may diverge later.
+export type CheckInOverviewDetailApiDto = CheckInOverviewItemApiDto
+
+export interface CheckInOverviewQuery {
+  pageNumber?: number
+  pageSize?: number
+  status?: string
+  searchTerm?: string
+}
+
+export interface CheckInOverviewItemsPage {
+  items: CheckInOverviewItemApiDto[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+}
+
+export interface CheckInOverviewApiDto {
+  summary: CheckInOverviewSummaryApiDto
+  guestSources: GuestSourceCountApiDto[]
+  items: CheckInOverviewItemsPage
 }
 
 // POS Merchant Ops — Turn Board Assign & Break (US-13, refactored in US-026)
