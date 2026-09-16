@@ -555,7 +555,8 @@ export default function PosOrderWorkspace({
   const [isUploadingNotePhoto, setIsUploadingNotePhoto] = useState(false)
   const [isNoteCameraOpen, setIsNoteCameraOpen] = useState(false)
   const [previewNotePhoto, setPreviewNotePhoto] = useState<string | null>(null)
-  const notePhotoControlsDisabled = isBusy || isUploadingNotePhoto || notePhotos.length >= MAX_NOTE_PHOTOS
+  const notePhotoActionPending = isBusy || isUploadingNotePhoto || setNote.isPending
+  const notePhotoControlsDisabled = notePhotoActionPending || notePhotos.length >= MAX_NOTE_PHOTOS
   const [paymentMethod, setPaymentMethod] = useState<PosCheckoutPaymentMethodType>('Cash')
   // Quick Split is a sub-screen of checkout, not a mode of it: the split is built there and the
   // payment is still confirmed once by the Pay button here. Unmounting it on close is deliberate —
@@ -1538,15 +1539,16 @@ export default function PosOrderWorkspace({
   }
 
   const saveNotePhotos = (nextPhotos: string[]) => {
+    if (setNote.isPending) return
     const trimmed = noteInput.trim()
     setNote.mutate(
-      { orderId, note: trimmed.length > 0 ? trimmed : null, notePhotoUrls: nextPhotos.length > 0 ? nextPhotos : null },
+      { orderId, note: trimmed.length > 0 ? trimmed : null, notePhotoUrls: nextPhotos },
       { onError: reportError },
     )
   }
 
   const handleAddNotePhoto = async (file: File) => {
-    if (notePhotos.length >= MAX_NOTE_PHOTOS || isUploadingNotePhoto) return
+    if (notePhotoControlsDisabled) return
     setIsUploadingNotePhoto(true)
     try {
       const url = await imagesRepository.uploadAndGetUrl(file)
@@ -2237,7 +2239,7 @@ export default function PosOrderWorkspace({
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); handleRemoveNotePhoto(url) }}
-                        disabled={isBusy || isUploadingNotePhoto}
+                        disabled={notePhotoActionPending}
                         aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteRemovePhoto')}
                         className="absolute right-0.5 top-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-black/60 text-white disabled:cursor-not-allowed disabled:opacity-50"
                       >

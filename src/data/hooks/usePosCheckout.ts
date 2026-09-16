@@ -778,7 +778,7 @@ export function useSetOrderNote(businessId?: string) {
       if (context.previousOrder) {
         queryClient.setQueryData<OrderDetailApiDto>(
           context.queryKey,
-          { ...context.previousOrder, note, notePhotoUrls },
+          { ...context.previousOrder, note, ...(notePhotoUrls !== undefined ? { notePhotoUrls } : {}) },
         )
       }
       return context
