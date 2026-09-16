@@ -221,9 +221,6 @@ export function buildBookingCalendarOverviewDays(
   const activeByDate = new Map<string, BookingListItemApiDto[]>()
 
   for (const booking of bookings) {
-    if (getBookingCalendarStatusGroup(booking.status) === BookingCalendarStatusGroup.Cancelled) {
-      continue
-    }
     const date = bookingDateKey(booking.scheduledAt, booking.source)
     if (date < range.dateFrom || date > range.dateTo) continue
     const current = activeByDate.get(date) ?? []
