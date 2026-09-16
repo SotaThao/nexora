@@ -122,6 +122,13 @@ export type StaffWorkOrderDetail = {
   items: StaffWorkOrderItem[]
 }
 
+/** Salon + day My Tickets should open — aligned with the shell badge pool. */
+export type StaffMyTicketsEntryTarget = {
+  businessId: string
+  date: string
+  orderId: string | null
+}
+
 const STAFF_WORK_ORDERS_API_PATH = '/api/v1/staff/pos/work-orders'
 const STAFF_WORK_ORDER_ACTION = {
   startService: 'start-service',
@@ -132,6 +139,7 @@ const STAFF_WORK_ORDER_SERVICE_CATALOG = 'service-catalog'
 const STAFF_WORK_ORDER_MY_SERVICE_LINES = 'my-service-lines'
 
 const PENDING_ACCEPTANCE_COUNT_PATH = `${STAFF_WORK_ORDERS_API_PATH}/pending-acceptance-count`
+const ENTRY_TARGET_PATH = `${STAFF_WORK_ORDERS_API_PATH}/entry-target`
 const BOOKING_CALENDAR_PATH = `${STAFF_WORK_ORDERS_API_PATH}/calendar`
 
 const LIST_QUERY_PARAM = {
@@ -392,6 +400,24 @@ function createStaffWorkOrdersRepository(client: HttpClient = httpClient) {
     async getPendingAcceptanceCount(): Promise<number> {
       const res = await client.get<number>(PENDING_ACCEPTANCE_COUNT_PATH)
       return typeof res === 'number' && Number.isFinite(res) ? res : 0
+    },
+
+    // Landing salon for My Tickets — same on-floor pool as the badge (PendingAcceptance first).
+    async getMyTicketsEntryTarget(): Promise<StaffMyTicketsEntryTarget | null> {
+      const res = await client.get<{
+        businessId?: string
+        BusinessId?: string
+        date?: string
+        Date?: string
+        orderId?: string | null
+        OrderId?: string | null
+      } | null>(ENTRY_TARGET_PATH)
+      if (!res || typeof res !== 'object') return null
+      const businessId = (res.businessId ?? res.BusinessId)?.trim() ?? ''
+      const date = (res.date ?? res.Date)?.trim() ?? ''
+      if (!businessId || !date) return null
+      const orderId = (res.orderId ?? res.OrderId)?.trim() || null
+      return { businessId, date, orderId }
     },
 
     async getWorkOrderDetail(orderId: string): Promise<StaffWorkOrderDetail | null> {

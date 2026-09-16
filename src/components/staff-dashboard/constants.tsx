@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Calculator,
   CalendarDays,
+  ListChecks,
   QrCode,
   CircleDollarSign,
   Star,
@@ -20,9 +21,12 @@ import { openStaffBeepSheetFromNotification } from './openStaffBeepSheet'
 // 'taxiq' carries `children` (Tax IQ sub-nav) — StaffSidebar renders it as an
 // expandable group, mirroring the Owner Dashboard's MENU_ITEMS.taxiq pattern.
 export const STAFF_CALENDAR_SCREEN = 'calendar' as const
+export const STAFF_WORK_ORDERS_SCREEN = 'work-orders' as const
 
 const STAFF_ALL_MENU_ITEMS = [
   { id: 'home', icon: LayoutDashboard, labelKey: 'staff_dashboard.nav.home' },
+  // My Tickets sits directly above My Calendar (HTML shell + issue #1571).
+  { id: STAFF_WORK_ORDERS_SCREEN, icon: ListChecks, labelKey: 'staff_dashboard.nav.my_tickets' },
   { id: STAFF_CALENDAR_SCREEN, icon: CalendarDays, labelKey: 'staff_dashboard.nav.my_calendar' },
   { id: 'tips', icon: CircleDollarSign, labelKey: 'staff_dashboard.nav.tips' },
   { id: 'payments', icon: ReceiptText, labelKey: 'staff_dashboard.nav.payments' },
@@ -55,8 +59,6 @@ export const STAFF_WORKSPACE_MENU_ITEM = {
   icon: Briefcase,
   labelKey: 'staff_dashboard.nav.my_workspace',
 }
-
-export const STAFF_WORK_ORDERS_SCREEN = 'work-orders' as const
 
 export const STAFF_WORKSPACE_SUBMENU = [
   {
@@ -100,8 +102,7 @@ export function isStaffWorkspaceSubActive(
 
   if (item.id === 'report') return isSalonReportRoute
   if (item.id === 'my_salons') {
-    return (activeScreen === 'salons' && !isSalonReportRoute)
-      || activeScreen === STAFF_WORK_ORDERS_SCREEN
+    return activeScreen === 'salons' && !isSalonReportRoute
   }
 
   if (activeScreen !== item.screen) return false
@@ -128,7 +129,7 @@ export function isStaffWorkspaceRouteActive(
   activeScreen: string,
   tabParam: string | null,
 ): boolean {
-  if (activeScreen === 'earnings' || activeScreen === 'salons' || activeScreen === STAFF_WORK_ORDERS_SCREEN) return true
+  if (activeScreen === 'earnings' || activeScreen === 'salons') return true
   return STAFF_WORKSPACE_SUBMENU.some((item) =>
     isStaffWorkspaceSubActive(activeScreen, tabParam, item),
   )
