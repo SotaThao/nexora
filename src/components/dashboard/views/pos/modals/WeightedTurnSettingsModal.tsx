@@ -15,11 +15,15 @@
 // Booking turn credit is intentionally NOT editable here — it belongs to a separate ticket. Its
 // current value is still round-tripped unchanged on every save (the API requires it), it is just
 // not rendered or exposed to the Manager on this screen.
+// TODO: no screen anywhere lets a Manager edit BookingTurnCredit right now — PosTurnSettingsPanel
+// only displays it, and BookingTab opens this same modal. When the other ticket ships its own
+// editor, either remove this TODO (if that screen writes to the same PosTurnSettings endpoint) or
+// bring the input back here (if it doesn't).
 //
-// Layout otherwise matches the PO prototype (pos-front-desk-turn-board.html), EXCEPT two lines of
-// prototype copy that were deliberately not carried over: "Technician overrides still apply" and
-// the "Booking Incentive Policy" link. Neither describes anything this codebase implements — no
-// per-technician override or policy page exists (see decision #5 in POS-Weighted-Turn-Technical.md).
+// Layout otherwise matches the PO prototype; two lines of prototype copy were deliberately not
+// carried over: "Technician overrides still apply" and the "Booking Incentive Policy" link.
+// Neither describes anything this codebase implements — no per-technician override or policy page
+// exists.
 import { useEffect, useState } from 'react'
 import { Check, FileText, Infinity as InfinityIcon, Layers, Loader2, Plus, ShieldCheck, SlidersHorizontal, X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
@@ -283,7 +287,7 @@ export default function WeightedTurnSettingsModal({
                                   value={row.upTo}
                                   onChange={(event) => updateRow(index, { upTo: event.target.value })}
                                   placeholder={t(K + 'upToPlaceholder')}
-                                  aria-label={t(K + 'upToLabel')}
+                                  aria-label={`${t(K + 'upToLabel')} ${index + 1}`}
                                   className={`${fieldInputClass(showFieldErrors && rowUpToInvalid(index))} pl-6 pr-3 text-right [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
                                 />
                               </div>
