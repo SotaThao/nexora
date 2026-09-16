@@ -2436,6 +2436,25 @@
       "loading": "Đang tải thu nhập...",
       "error": "Chưa tải được thu nhập. Vui lòng thử lại",
       "retry": "Thử lại"
+    },
+    "detail": {
+      "action": "Xem chi tiết",
+      "weeklyTitle": "Tổng hợp tuần",
+      "day": "Ngày",
+      "amount": "Số tiền",
+      "tips": "Tiền tip",
+      "totalAmount": "Tổng số tiền",
+      "totalTips": "Tổng tiền tip",
+      "totalDiscount": "Tổng giảm giá",
+      "totalCommission": "Tổng hoa hồng",
+      "cashCollected": "Tiền mặt thu được",
+      "close": "Đóng",
+      "dailyTitle": "Chi tiết theo ngày",
+      "ticket": "Ticket",
+      "ownerDiscount": "Salon chịu giảm giá",
+      "noTickets": "Không có ticket nào hoàn thành trong ngày này.",
+      "loadError": "Không tải được chi tiết ticket.",
+      "retry": "Thử lại"
     }
   },
   "staff_payouts": {
