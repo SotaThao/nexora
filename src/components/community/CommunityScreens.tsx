@@ -1,6 +1,5 @@
 import {
   BadgeCheck,
-  Briefcase,
   Calendar,
   ChevronLeft,
   AlertCircle,
@@ -58,7 +57,8 @@ import { CommunityNotificationsProvider } from './CommunityNotifications'
 import { CommunityPostComposer, CommunityPostMedia } from './CommunityPostMedia'
 import { CommunityRightRail } from './CommunityRightRail'
 import { createCommunitySlug } from './communitySlug'
-import { demoEvents, demoLearning, demoJobs } from './communityDemoContent'
+import { demoEvents, demoLearning } from './communityDemoContent'
+import { CommunityJobsPanel } from './CommunityJobDetail'
 import IconButton from '../ui/IconButton'
 import StaffQuickChatModal from '../ui/StaffQuickChatModal'
 import ToggleSwitch from '../ui/ToggleSwitch'
@@ -350,29 +350,6 @@ function DemoLearningList() {
   )
 }
 
-function DemoJobsList() {
-  return (
-    <section className="space-y-3">
-      {demoJobs.map((job) => (
-        <article key={job.id} className={`${cardClass} flex p-4 gap-4 items-center`}>
-           <div className="h-20 w-20 rounded-lg bg-nexoraSurfaceMuted flex items-center justify-center shrink-0">
-              <Briefcase className="h-8 w-8 text-nexoraMuted" />
-           </div>
-           <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                 <DemoBadge />
-                 <span className="text-xs font-bold text-nexoraElectric">{job.type}</span>
-              </div>
-              <h3 className="font-extrabold text-sm truncate text-nexoraText">{job.title}</h3>
-              <p className="text-xs text-nexoraMuted mt-1">{job.salon} • {job.location}</p>
-              <p className="text-xs font-semibold text-nexoraText mt-1">{job.salary}</p>
-           </div>
-        </article>
-      ))}
-    </section>
-  )
-}
-
 function GroupList({ groups }: { groups: CommunityDto[] }) {
   if (groups.length === 0) return <EmptyState title="Chưa có nhóm">Tham gia nhóm để xem danh sách tại đây.</EmptyState>
   return (
@@ -434,7 +411,7 @@ export function CommunityHome() {
             ) : currentTab === 'learning' ? (
               <DemoLearningList />
             ) : currentTab === 'jobs' ? (
-              <DemoJobsList />
+              <CommunityJobsPanel />
             ) : null}
           </div>
         </div>
