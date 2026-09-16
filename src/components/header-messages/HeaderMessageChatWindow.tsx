@@ -335,10 +335,9 @@ function HeaderMessageChatWindow({
   const isFloating = layout === HeaderMessageChatLayout.Floating
   const isMobileFullscreen = layout === HeaderMessageChatLayout.Fullscreen
 
-  // Voice/video call (US-06/US-07) — desktop floating layout only (Technical Notes #1:
-  // mobile/immersive start-call wiring is Backlog; incoming/answer still works everywhere via the
-  // global banner).
-  const canStartCall = isFloating && !isGroupChat && !isPendingSession
+  // Voice/video call (US-06/US-07) — available on desktop and mobile alike;
+  // incoming/answer works everywhere via the global banner regardless.
+  const canStartCall = !isGroupChat && !isPendingSession
   const { phase: callPhase, startOutgoingCall } = useCall()
   // Prefetched as soon as this 1:1 chat window opens (Technical Notes #2), not at click time —
   // `getUserMedia` below must be the very first call in the click handler with no prior `await`.
@@ -369,6 +368,31 @@ function HeaderMessageChatWindow({
         showToast(t(`${chatTk}.${deviceMissing ? 'callNoDeviceFound' : 'callMicPermissionDenied'}`), 'error')
       })
   }
+
+  const callActionButtons = (
+    <>
+      <button
+        type="button"
+        className="header-message-chat-icon-btn"
+        aria-label={t(`${chatTk}.call`)}
+        title={t(`${chatTk}.call`)}
+        disabled={!canStartCall || callPhase !== 'idle'}
+        onClick={() => startCall(CommunityCallType.Voice)}
+      >
+        <Phone className="h-4 w-4" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        className="header-message-chat-icon-btn"
+        aria-label={t(`${chatTk}.videoCall`)}
+        title={t(`${chatTk}.videoCall`)}
+        disabled={!canStartCall || callPhase !== 'idle'}
+        onClick={() => startCall(CommunityCallType.Video)}
+      >
+        <Video className="h-4 w-4" aria-hidden="true" />
+      </button>
+    </>
+  )
 
   const isThreadLoading = isConversationLoading || isLoading
 
@@ -778,26 +802,7 @@ function HeaderMessageChatWindow({
 
         {isFloating ? (
           <div className="header-message-chat-head-actions">
-            <button
-              type="button"
-              className="header-message-chat-icon-btn"
-              aria-label={t(`${chatTk}.call`)}
-              title={t(`${chatTk}.call`)}
-              disabled={!canStartCall || callPhase !== 'idle'}
-              onClick={() => startCall(CommunityCallType.Voice)}
-            >
-              <Phone className="h-4 w-4" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              className="header-message-chat-icon-btn"
-              aria-label={t(`${chatTk}.videoCall`)}
-              title={t(`${chatTk}.videoCall`)}
-              disabled={!canStartCall || callPhase !== 'idle'}
-              onClick={() => startCall(CommunityCallType.Video)}
-            >
-              <Video className="h-4 w-4" aria-hidden="true" />
-            </button>
+            {callActionButtons}
             <button
               type="button"
               className="header-message-chat-icon-btn"
@@ -817,6 +822,7 @@ function HeaderMessageChatWindow({
           </div>
         ) : immersive ? (
           <div className="header-message-chat-head-actions">
+            {callActionButtons}
             <button
               type="button"
               className="header-message-chat-icon-btn header-message-chat-icon-btn--close"
@@ -826,7 +832,11 @@ function HeaderMessageChatWindow({
               <X className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
-        ) : null}
+        ) : (
+          <div className="header-message-chat-head-actions">
+            {callActionButtons}
+          </div>
+        )}
       </div>
 
       <div
