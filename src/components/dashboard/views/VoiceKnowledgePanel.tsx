@@ -18,6 +18,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { useNotification } from "@/contexts/NotificationContext";
 import {
   useVoiceKnowledge,
   useVoiceUnanswered,
@@ -87,6 +88,7 @@ function KnowledgeFileIcon({ extension }: { extension: string }) {
 
 export function VoiceKnowledgePanel() {
   const { t } = useTranslation();
+  const { showConfirm } = useNotification();
   const text = (key: string) => t(`voiceKnowledge.${key}`);
   const interpolate = (key: string, values: Record<string, string | number>) =>
     Object.entries(values).reduce(
@@ -236,7 +238,7 @@ export function VoiceKnowledgePanel() {
   };
 
   const menuActionClass =
-    "flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-nexoraText hover:bg-nexoraSurfaceMuted disabled:cursor-not-allowed disabled:opacity-50";
+    "flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-nexoraText hover:bg-nexoraSurfaceMuted disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0";
 
   return (
     <section className="voice-knowledge-container settings-span-full" aria-label={text("title")}>
@@ -252,29 +254,15 @@ export function VoiceKnowledgePanel() {
                   {text("filesSubtitle")}
                 </p>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  className={buttonClass}
-                  onClick={() => void query.refetch()}
-                  disabled={query.isFetching}
-                >
-                  <RefreshCw
-                    className={`mr-1.5 inline h-4 w-4 ${query.isFetching ? "animate-spin" : ""}`}
-                    aria-hidden="true"
-                  />
-                  {text("retry")}
-                </button>
-                <button
-                  type="button"
-                  className="rounded-lg bg-nexoraBrand px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-50"
-                  onClick={() => inputRef.current?.click()}
-                  disabled={uploadDisabled}
-                >
-                  <Upload className="mr-1.5 inline h-4 w-4" aria-hidden="true" />
-                  {mutation.isPending ? text("uploading") : text("uploadFiles")}
-                </button>
-              </div>
+              <button
+                type="button"
+                className="rounded-lg bg-nexoraBrand px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={() => inputRef.current?.click()}
+                disabled={uploadDisabled}
+              >
+                <Upload className="mr-1.5 inline h-4 w-4" aria-hidden="true" />
+                {mutation.isPending ? text("uploading") : text("uploadFiles")}
+              </button>
             </div>
 
             <div className="flex gap-3 rounded-lg border border-indigo-100 bg-nexoraBrandSoft p-4">
@@ -408,10 +396,18 @@ export function VoiceKnowledgePanel() {
 
           <div className="flex items-center justify-between border-t border-nexoraRule px-4 py-3 sm:px-6">
             <h4 className="text-sm font-semibold text-nexoraText">{text("uploadedFiles")}</h4>
-            <span className="flex items-center gap-1.5 text-xs text-nexoraMuted">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              {text("storedInTab")}
-            </span>
+            <button
+              type="button"
+              className={buttonClass}
+              onClick={() => void query.refetch()}
+              disabled={query.isFetching}
+            >
+              <RefreshCw
+                className={`mr-1.5 inline h-4 w-4 ${query.isFetching ? "animate-spin" : ""}`}
+                aria-hidden="true"
+              />
+              {text("retry")}
+            </button>
           </div>
 
           {query.isPending ? (
@@ -458,31 +454,39 @@ export function VoiceKnowledgePanel() {
                       onToggleMenu={() => setOpenMenuId((current) => current === document.id ? null : document.id)}
                       onEdit={() => openEditor(document)}
                       onRegenerate={() => {
-                        setOpenMenuId(null);
-                        if (!document.isManuallyEdited || window.confirm(text("regenerateConfirm"))) {
-                          void run(() => actions.regenerate(document.id, document.isManuallyEdited));
-                        }
+                        void (async () => {
+                          setOpenMenuId(null);
+                          if (!(await showConfirm(text("regenerateConfirm"), text("regenerateConfirmTitle")))) return;
+                          await run(() => actions.regenerate(document.id, document.isManuallyEdited));
+                        })();
                       }}
                       onActivate={() => {
-                        setOpenMenuId(null);
-                        if (window.confirm(text("activateConfirm"))) {
-                          void run(() => actions.status(document.id, Status.Active));
-                        }
+                        void (async () => {
+                          setOpenMenuId(null);
+                          if (!(await showConfirm(text("activateConfirm"), text("activateConfirmTitle")))) return;
+                          await run(() => actions.status(document.id, Status.Active));
+                        })();
                       }}
                       onToggleStatus={() => {
-                        setOpenMenuId(null);
-                        const nextStatus = document.status === Status.Disabled ? Status.Active : Status.Disabled;
-                        const reactivatesFlaggedContent =
-                          nextStatus === Status.Active && document.injectionFlags.length > 0;
-                        if (!reactivatesFlaggedContent || window.confirm(text("activateConfirm"))) {
-                          void run(() => actions.status(document.id, nextStatus));
-                        }
+                        void (async () => {
+                          setOpenMenuId(null);
+                          const nextStatus = document.status === Status.Disabled ? Status.Active : Status.Disabled;
+                          const reactivatesFlaggedContent =
+                            nextStatus === Status.Active && document.injectionFlags.length > 0;
+                          if (nextStatus === Status.Disabled) {
+                            if (!(await showConfirm(text("disableConfirm"), text("disableConfirmTitle")))) return;
+                          } else if (reactivatesFlaggedContent) {
+                            if (!(await showConfirm(text("activateConfirm"), text("activateConfirmTitle")))) return;
+                          }
+                          await run(() => actions.status(document.id, nextStatus));
+                        })();
                       }}
                       onDelete={() => {
-                        setOpenMenuId(null);
-                        if (window.confirm(text("deleteConfirm"))) {
-                          void run(() => actions.delete(document.id));
-                        }
+                        void (async () => {
+                          setOpenMenuId(null);
+                          if (!(await showConfirm(text("deleteConfirm"), text("deleteConfirmTitle")))) return;
+                          await run(() => actions.delete(document.id));
+                        })();
                       }}
                       onSave={() => void save()}
                       onCancel={() => setEditing(null)}
@@ -592,34 +596,36 @@ function DocumentRows({
 
   return (
     <>
-      <tr className="block border-b border-nexoraRule p-4 last:border-b-0 md:table-row md:p-0">
-        <td className="block md:table-cell md:px-6 md:py-4">
+      <tr className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 border-b border-nexoraRule p-3 last:border-b-0 md:table-row md:p-0">
+        <td className="col-span-2 min-w-0 md:col-auto md:table-cell md:px-6 md:py-4">
           <div className="flex min-w-0 items-center gap-3">
             <KnowledgeFileIcon extension={document.fileExtension} />
             <div className="min-w-0">
               <strong className="block truncate text-sm text-nexoraText" title={document.fileName}>{document.fileName}</strong>
-              <span className="mt-1 block text-xs text-nexoraMuted">{formatFileSize(document.fileSizeBytes)}</span>
+              <span className="mt-0.5 block text-xs text-nexoraMuted">{formatFileSize(document.fileSizeBytes)}</span>
             </div>
           </div>
         </td>
-        <td className="mt-3 block text-xs text-nexoraMuted md:mt-0 md:table-cell md:px-4 md:py-4">
-          <span className="mr-2 font-medium text-nexoraText md:hidden">{text("columnUploaded")}:</span>
+        <td className="min-w-0 text-xs text-nexoraMuted md:table-cell md:px-4 md:py-4">
+          <span className="mr-1 font-medium text-nexoraText md:hidden">{text("columnUploaded")}:</span>
           {formatUploadedDate(document.createdAt)}
         </td>
-        <td className="mt-3 block md:mt-0 md:table-cell md:px-4 md:py-4 md:align-top">
-          <span className={`inline-flex items-center gap-1 rounded border px-2 py-1 text-xs font-medium ${statusClass[document.status]}`}>
+        <td className="contents md:table-cell md:px-4 md:py-4 md:align-top">
+          <span className={`inline-flex items-center gap-1 justify-self-end rounded border px-2 py-1 text-xs font-medium md:justify-self-auto ${statusClass[document.status]}`}>
             {document.status === Status.Processing ? <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" /> : document.status === Status.Failed || document.status === Status.HeldForReview ? <AlertTriangle className="h-3 w-3" aria-hidden="true" /> : <CheckCircle2 className="h-3 w-3" aria-hidden="true" />}
             {text(Status[document.status])}
           </span>
-          <div className="mt-2 space-y-1 text-xs leading-4">
-            {document.isManuallyEdited && <p className="text-nexoraMuted">{text("manual")}</p>}
-            {document.isEditedAfterApproval && <p role="alert" className="font-medium text-amber-700">{text("editedAfterApproval")}</p>}
-            {document.isOverBudget && <p role="status" className="text-amber-700">{text("overBudget")}</p>}
-            {document.injectionFlags.length > 0 && <p role="alert" className="text-amber-700">{text("flags")}: {document.injectionFlags.join(", ")}</p>}
-            {document.failureReasonCode && <p role="alert" className="text-red-700">{text(VOICE_KNOWLEDGE_ERROR_KEYS[document.failureReasonCode] ?? "error")}</p>}
-          </div>
+          {(document.isManuallyEdited || document.isEditedAfterApproval || document.isOverBudget || document.injectionFlags.length > 0 || document.failureReasonCode) ? (
+            <div className="col-span-2 space-y-1 text-xs leading-4 md:mt-2">
+              {document.isManuallyEdited && <p className="text-nexoraMuted">{text("manual")}</p>}
+              {document.isEditedAfterApproval && <p role="alert" className="font-medium text-amber-700">{text("editedAfterApproval")}</p>}
+              {document.isOverBudget && <p role="status" className="text-amber-700">{text("overBudget")}</p>}
+              {document.injectionFlags.length > 0 && <p role="alert" className="text-amber-700">{text("flags")}: {document.injectionFlags.join(", ")}</p>}
+              {document.failureReasonCode && <p role="alert" className="text-red-700">{text(VOICE_KNOWLEDGE_ERROR_KEYS[document.failureReasonCode] ?? "error")}</p>}
+            </div>
+          ) : null}
         </td>
-        <td className="mt-4 block md:mt-0 md:table-cell md:px-4 md:py-4 md:text-right md:align-top">
+        <td className="col-span-2 md:col-auto md:table-cell md:px-4 md:py-4 md:text-right md:align-top">
           <div className="flex items-center gap-1 md:justify-end">
             <button type="button" className="inline-flex items-center gap-1.5 rounded-md px-2 py-2 text-xs font-medium text-nexoraMuted hover:bg-nexoraSurfaceMuted hover:text-nexoraText disabled:opacity-50" aria-label={interpolate("downloadFileAria", { name: document.fileName })} disabled={downloading} onClick={onDownload}>
               {downloading ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : <Download className="h-3.5 w-3.5" aria-hidden="true" />}
@@ -630,12 +636,12 @@ function DocumentRows({
                 <MoreVertical className="h-4 w-4" aria-hidden="true" />
               </button>
               {openMenu && (
-                <div ref={menuRef} role="menu" className="absolute right-0 z-30 mt-1 w-48 overflow-hidden rounded-lg border border-nexoraBorder bg-white py-1 text-left shadow-lg" onKeyDown={handleMenuKeyDown}>
-                  {isEditable && <button type="button" role="menuitem" className={menuActionClass} disabled={mutationPending} onClick={onEdit}><Pencil className="h-4 w-4" aria-hidden="true" />{text("edit")}</button>}
-                  {document.status !== Status.Processing && <button type="button" role="menuitem" className={menuActionClass} disabled={mutationPending || !canRegenerate} title={!canRegenerate ? text("regenerateCap") : undefined} onClick={onRegenerate}><RefreshCw className="h-4 w-4" aria-hidden="true" />{text("regenerate")}</button>}
-                  {document.status === Status.HeldForReview && <button type="button" role="menuitem" className={menuActionClass} disabled={mutationPending} onClick={onActivate}><Power className="h-4 w-4" aria-hidden="true" />{text("activate")}</button>}
-                  {isEditable && <button type="button" role="menuitem" className={menuActionClass} disabled={mutationPending} onClick={onToggleStatus}><Power className="h-4 w-4" aria-hidden="true" />{text(document.status === Status.Disabled ? "enable" : "disable")}</button>}
-                  <button type="button" role="menuitem" className={`${menuActionClass} text-red-600 hover:bg-red-50`} disabled={mutationPending} onClick={onDelete}><Trash2 className="h-4 w-4" aria-hidden="true" />{text("delete")}</button>
+                <div ref={menuRef} role="menu" className="absolute left-0 z-30 mt-1 w-52 overflow-hidden rounded-lg border border-nexoraBorder bg-white py-1 text-left shadow-lg md:left-auto md:right-0" onKeyDown={handleMenuKeyDown}>
+                  {isEditable && <button type="button" role="menuitem" className={menuActionClass} disabled={mutationPending} onClick={onEdit}><Pencil aria-hidden="true" />{text("edit")}</button>}
+                  {document.status !== Status.Processing && <button type="button" role="menuitem" className={menuActionClass} disabled={mutationPending || !canRegenerate} title={!canRegenerate ? text("regenerateCap") : undefined} onClick={onRegenerate}><RefreshCw aria-hidden="true" />{text("regenerate")}</button>}
+                  {document.status === Status.HeldForReview && <button type="button" role="menuitem" className={menuActionClass} disabled={mutationPending} onClick={onActivate}><Power aria-hidden="true" />{text("activate")}</button>}
+                  {isEditable && <button type="button" role="menuitem" className={menuActionClass} disabled={mutationPending} onClick={onToggleStatus}><Power aria-hidden="true" />{text(document.status === Status.Disabled ? "enable" : "disable")}</button>}
+                  <button type="button" role="menuitem" className={`${menuActionClass} text-red-600 hover:bg-red-50`} disabled={mutationPending} onClick={onDelete}><Trash2 aria-hidden="true" />{text("delete")}</button>
                 </div>
               )}
             </div>
