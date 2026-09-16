@@ -11279,6 +11279,7 @@
     "modal_name_label": "Category name",
     "modal_name_placeholder": "e.g. Rent",
     "modal_save": "Save category",
+    "modal_saving": "Saving...",
     "modal_cancel": "Cancel",
     "panel_title": "Income by category",
     "panel_subtitle": "All received money",

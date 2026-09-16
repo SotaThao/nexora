@@ -49,7 +49,7 @@ export default function AddEditCategoryModal({
     <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-900/60 p-0 backdrop-blur-sm sm:items-center sm:p-4">
       <form
         onSubmit={handleSubmit}
-        className="flex max-h-[92dvh] w-full max-w-sm flex-col overflow-y-auto rounded-t-2xl border border-nexoraBorder bg-white p-4 shadow-2xl sm:rounded-2xl sm:p-6"
+        className="flex max-h-[92dvh] w-full flex-col overflow-y-auto rounded-t-2xl border border-nexoraBorder bg-white p-4 shadow-2xl sm:max-w-sm sm:rounded-2xl sm:p-6"
       >
         <div className="mb-4 flex items-center justify-between border-b border-nexoraBorder pb-4">
           <span className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
@@ -94,8 +94,10 @@ export default function AddEditCategoryModal({
             disabled={!canSave}
             className="flex h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand text-xs font-black uppercase tracking-wider text-white transition hover:bg-nexoraBrand/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            {t('transaction_categories.modal_save')}
+            {isSaving ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" /> : null}
+            <span className="truncate">
+              {isSaving ? t('transaction_categories.modal_saving') : t('transaction_categories.modal_save')}
+            </span>
           </button>
         </div>
       </form>
