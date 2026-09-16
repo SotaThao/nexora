@@ -113,7 +113,7 @@ export default function StaffSalonReport() {
     () => Array.from({ length: 12 }, (_, index) => ({
       value: String(index + 1),
       label: new Intl.DateTimeFormat(currentLanguage === 'vi' ? 'vi-VN' : 'en-US', {
-        month: 'short',
+        month: currentLanguage === 'vi' ? 'long' : 'short',
       }).format(new Date(2024, index, 1)),
     })),
     [currentLanguage],
@@ -392,7 +392,7 @@ export default function StaffSalonReport() {
               </button>
               <div className="relative min-w-0 flex-1">
                 <CalendarDays
-                  className={`pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-nexoraBrand ${activeTab === 'weekly' || activeTab === 'monthly' ? 'hidden sm:block' : ''}`}
+                  className={`pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-nexoraBrand ${activeTab === 'monthly' ? 'hidden' : activeTab === 'weekly' ? 'hidden sm:block' : ''}`}
                   aria-hidden="true"
                 />
                 <div className="flex w-full min-w-0 flex-nowrap gap-2">
@@ -442,7 +442,7 @@ export default function StaffSalonReport() {
                           aria-label={t('staff_salon_report.month')}
                           value={selectedMonth}
                           onChange={(event) => setSelectedMonth(event.target.value)}
-                          className={`${controlClass} w-full appearance-none pl-2 pr-6 sm:pl-10 sm:pr-9`}
+                          className={`${controlClass} w-full appearance-none pl-2 pr-9`}
                         >
                           {months.map((month) => (
                             <option key={month.value} value={month.value}>{month.label}</option>

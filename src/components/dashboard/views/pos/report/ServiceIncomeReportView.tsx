@@ -118,7 +118,7 @@ export default function ServiceIncomeReportView({ businessId, businessTimeZone }
   const fullDate = useMemo(
     () =>
       new Intl.DateTimeFormat(locale, {
-        month: 'short',
+        month: locale === 'vi-VN' ? 'long' : 'short',
         day: 'numeric',
         year: 'numeric',
         timeZone: 'UTC',
