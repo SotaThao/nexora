@@ -90,6 +90,8 @@ export function useSaveMyWorkOrderServiceLines(orderId: string | undefined) {
       staffWorkOrdersRepository.saveMyServiceLines(orderId ?? '', payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: qk.staffWorkOrdersRoot() })
+      void queryClient.invalidateQueries({ queryKey: qk.staffMyTicketsEntryTarget() })
+      void queryClient.invalidateQueries({ queryKey: qk.staffPosPendingAcceptanceCount() })
     },
   })
 }
@@ -104,6 +106,8 @@ function useStaffWorkOrderStatusMutation(
     mutationFn: () => mutate(orderId ?? ''),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: qk.staffWorkOrdersRoot() })
+      void queryClient.invalidateQueries({ queryKey: qk.staffMyTicketsEntryTarget() })
+      void queryClient.invalidateQueries({ queryKey: qk.staffPosPendingAcceptanceCount() })
     },
   })
 }
@@ -122,6 +126,8 @@ export function useCompleteStaffWorkOrderService(orderId: string | undefined) {
       staffWorkOrdersRepository.completeWorkOrderService(orderId ?? '', note),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: qk.staffWorkOrdersRoot() })
+      void queryClient.invalidateQueries({ queryKey: qk.staffMyTicketsEntryTarget() })
+      void queryClient.invalidateQueries({ queryKey: qk.staffPosPendingAcceptanceCount() })
     },
   })
 }

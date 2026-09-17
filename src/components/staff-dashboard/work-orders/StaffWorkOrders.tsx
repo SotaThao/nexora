@@ -5,13 +5,29 @@ import { StaffWorkOrdersViewKind } from './constants'
 import StaffWorkOrderTickets from './StaffWorkOrderTickets'
 import { WorkOrderErrorCard } from './WorkOrderQueryFeedback'
 import { WorkOrderTicketsSkeleton } from './WorkOrderSkeletons'
+import { useMyTicketsEntryTarget } from './useMyTicketsEntryTarget'
 import { resolveStaffWorkOrdersView, toWorkOrderSalons } from './workOrderTickets'
+
+function StaffMyTicketsEntryRedirect({
+  salons,
+}: {
+  salons: ReturnType<typeof toWorkOrderSalons>
+}) {
+  const { target, isPending } = useMyTicketsEntryTarget(salons)
+
+  if (!salons.length) {
+    return <Navigate to={STAFF_SALONS_PATH} replace />
+  }
+  if (isPending) return <WorkOrderTicketsSkeleton />
+  if (!target) {
+    return <Navigate to={STAFF_SALONS_PATH} replace />
+  }
+  return <Navigate to={target.href} replace />
+}
 
 export default function StaffWorkOrders() {
   const { salonId, ticketId } = useParams<{ salonId: string; ticketId: string }>()
   const businessesQuery = useStaffBusinesses()
-
-  if (!salonId) return <Navigate to={STAFF_SALONS_PATH} replace />
 
   if (businessesQuery.isPending) {
     return <WorkOrderTicketsSkeleton />
@@ -26,6 +42,8 @@ export default function StaffWorkOrders() {
   switch (view.kind) {
     case StaffWorkOrdersViewKind.Redirect:
       return <Navigate to={view.to} replace />
+    case StaffWorkOrdersViewKind.Entry:
+      return <StaffMyTicketsEntryRedirect salons={view.salons} />
     case StaffWorkOrdersViewKind.Tickets:
       return <StaffWorkOrderTickets salon={view.salon} />
     case StaffWorkOrdersViewKind.Detail:
