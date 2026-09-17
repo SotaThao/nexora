@@ -395,6 +395,7 @@
       "picker_confirm_add_count_one": "Thêm dịch vụ ({{count}})",
       "picker_confirm_edit": "Cập nhật dịch vụ",
       "picker_close": "Đóng chọn dịch vụ",
+      "picker_already_on_ticket": "Đã có",
       "custom_title": "Thêm dịch vụ tùy chỉnh",
       "custom_subtitle": "Nhập dịch vụ không có trong menu salon.",
       "custom_name_label": "Tên dịch vụ",
@@ -420,6 +421,8 @@
       "approval_submit": "Duyệt",
       "approval_error": "Đó không phải 4 số cuối của số điện thoại khách này.",
       "remove_service": "Bỏ",
+      "remove_service_confirm_title": "Xóa dịch vụ này?",
+      "remove_service_confirm_body": "\"{{name}}\" sẽ bị xóa khỏi phiếu này.",
       "remove_addon_warning": "Đổi dịch vụ này sẽ bỏ luôn các add-on đang gắn kèm.",
       "completed_notes_title": "Ghi chú hoàn thành dịch vụ",
       "completed_notes_fallback": "Đã hoàn thành dịch vụ."

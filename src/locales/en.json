@@ -385,6 +385,7 @@
       "picker_confirm_add_count_one": "Add service ({{count}})",
       "picker_confirm_edit": "Update service",
       "picker_close": "Close service picker",
+      "picker_already_on_ticket": "On ticket",
       "custom_title": "Add custom service",
       "custom_subtitle": "Enter a service that is not available in the salon menu.",
       "custom_name_label": "Service name",
@@ -410,6 +411,8 @@
       "approval_submit": "Approve",
       "approval_error": "Those are not the last 4 digits of this customer's phone number.",
       "remove_service": "Remove",
+      "remove_service_confirm_title": "Remove this service?",
+      "remove_service_confirm_body": "\"{{name}}\" will be removed from this work order.",
       "remove_addon_warning": "Changing this service also removes the add-ons on it.",
       "completed_notes_title": "Completed service notes",
       "completed_notes_fallback": "Service completed."
