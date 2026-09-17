@@ -36,12 +36,33 @@ export function useUpdateStaffPaymentMethod() {
   const { t } = useTranslation()
 
   return useMutation<PaymentMethodDto, Error, UpdatePaymentMethodVars>({
-    mutationFn: async ({ id, accountInfo, accountName, cryptoAddresses, imageUrl, imageFile }) => {
+    mutationFn: async ({
+      id,
+      accountInfo,
+      accountName,
+      cryptoAddresses,
+      imageUrl,
+      imageFile,
+      cryptoAddressImages,
+    }) => {
       const resolvedImageUrl = await resolvePaymentMethodImageUrl({ imageFile, imageUrl })
+      const resolvedCryptoAddresses = cryptoAddresses?.length && cryptoAddressImages
+        ? await Promise.all(
+          cryptoAddresses.map(async (address) => {
+            const pending = cryptoAddressImages[address.symbol?.toUpperCase()]
+            if (!pending) return address
+            const resolvedAddressImageUrl = await resolvePaymentMethodImageUrl({
+              imageFile: pending.file,
+              imageUrl: pending.url,
+            })
+            return { ...address, imageUrl: resolvedAddressImageUrl }
+          }),
+        )
+        : cryptoAddresses
       return staffPaymentMethodsRepository.update(id, {
         accountInfo,
         accountName,
-        cryptoAddresses,
+        cryptoAddresses: resolvedCryptoAddresses,
         imageUrl: resolvedImageUrl,
       })
     },

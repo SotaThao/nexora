@@ -17,13 +17,16 @@ import {
 } from './bankWireAccount'
 import {
   emptyVlinkpayAddresses,
+  emptyVlinkpayImages,
   parseVlinkpayAddressesFromMethod,
+  parseVlinkpayImagesFromMethod,
   stripVlinkpayWalletAddressInput,
   VLINKPAY_COINS,
   VLINKPAY_NETWORK,
   VLINKPAY_WALLET_LABEL,
   type VlinkpayAddresses,
   type VlinkpayCoinKey,
+  type VlinkpayImages,
 } from './vlinkpayWallet'
 
 const SETUP_TK = 'components.dashboard.modals.PayoutSetupModal'
@@ -109,7 +112,13 @@ function VlinkpayAddressCopyRow({
   )
 }
 
-function VlinkpayAddressCards({ addresses }: { addresses: VlinkpayAddresses }) {
+function VlinkpayAddressCards({
+  addresses,
+  images,
+}: {
+  addresses: VlinkpayAddresses
+  images: VlinkpayImages
+}) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const [copiedKey, setCopiedKey] = useState<VlinkpayCoinKey | null>(null)
@@ -176,6 +185,17 @@ function VlinkpayAddressCards({ addresses }: { addresses: VlinkpayAddresses }) {
               onCopy={() => copyAddress(coin.key, address)}
               copyLabel={t(copied ? 'common.copied' : 'common.copy')}
             />
+            {images[coin.key] ? (
+              <div className="mt-3 flex justify-center">
+                <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-nexoraBorder bg-white p-1.5">
+                  <img
+                    src={images[coin.key]}
+                    alt={`${coin.symbol} QR code`}
+                    className="h-full w-full object-contain"
+                  />
+                </div>
+              </div>
+            ) : null}
           </div>
         )
       })}
@@ -242,6 +262,7 @@ export default function PayoutMethodDetailModal({
   const isBankWire = uiKey === PayoutUiKey.BankWire
   const isVlinkpay = uiKey === PayoutUiKey.VlinkPay
   const vlinkpayAddresses = isVlinkpay ? parseVlinkpayAddressesFromMethod(method) : null
+  const vlinkpayImages = isVlinkpay ? parseVlinkpayImagesFromMethod(method) : null
   const accountDisplayLabel = getPayoutAccountDisplayLabel(uiKey, t)
   const accountHolderDisplayLabel = getPayoutAccountHolderDisplayLabel(uiKey, t)
   const bankWireDetails = isBankWire ? parseBankWireAccount(method.accountInfo) : null
@@ -386,7 +407,10 @@ export default function PayoutMethodDetailModal({
                 <div className="mb-2.5 text-xs font-extrabold uppercase tracking-wide text-nexoraMuted sm:text-sm">
                   {t(`${SETUP_TK}.vlinkpayAddressSectionTitle`)}
                 </div>
-                <VlinkpayAddressCards addresses={vlinkpayAddresses || emptyVlinkpayAddresses()} />
+                <VlinkpayAddressCards
+                  addresses={vlinkpayAddresses || emptyVlinkpayAddresses()}
+                  images={vlinkpayImages || emptyVlinkpayImages()}
+                />
               </div>
             ) : (
               <div className="py-2">

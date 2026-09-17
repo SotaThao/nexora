@@ -27,9 +27,10 @@ function weekdayLabels(locale: string): string[] {
     locale.toLowerCase().startsWith('vi') ? 'vi-VN' : 'en-US',
     { weekday: 'short' },
   )
-  const sunday = new Date(2026, 0, 4, 12)
+  // 2026-01-05 is Monday — labels match Monday-first calendar ranges.
+  const monday = new Date(2026, 0, 5, 12)
   return Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(sunday)
+    const date = new Date(monday)
     date.setDate(date.getDate() + index)
     return formatter.format(date)
   })

@@ -2,6 +2,11 @@
  * posServicesRepository — POS Owner Setup: Services (US-017).
  */
 import httpClient from '../../lib/httpClient'
+import {
+  POS_SERVICE_APPROVAL_FIELD,
+  readRequiredApproval,
+  toFormBool,
+} from '../../constants/posServiceApproval'
 import type {
   PosServiceApiDto,
   PosServiceStatus,
@@ -27,7 +32,15 @@ export interface PosServiceInput {
   categoryIds: string[]
   tags: string[]
   status: PosServiceStatus
+  isRequiredApproval?: boolean
   photo?: File | null
+}
+
+function normalizePosService(service: PosServiceApiDto): PosServiceApiDto {
+  return {
+    ...service,
+    isRequiredApproval: readRequiredApproval(service),
+  }
 }
 
 function buildFormData(input: PosServiceInput): FormData {
@@ -40,6 +53,9 @@ function buildFormData(input: PosServiceInput): FormData {
   input.categoryIds.forEach((categoryId) => formData.append('categoryIds', categoryId))
   input.tags.forEach((tag) => formData.append('tags', tag))
   formData.append('status', input.status)
+  if (input.isRequiredApproval !== undefined) {
+    formData.append(POS_SERVICE_APPROVAL_FIELD.camel, toFormBool(input.isRequiredApproval))
+  }
   if (input.photo) formData.append('photo', input.photo)
   return formData
 }
@@ -48,7 +64,7 @@ export function createPosServicesRepository(client: HttpClient = httpClient) {
   return {
     async getPosServices(): Promise<PosServiceApiDto[]> {
       const res = await client.get<PosServiceApiDto[]>('/api/v1/merchant/services')
-      return res ?? []
+      return (res ?? []).map(normalizePosService)
     },
 
     async createPosService(input: PosServiceInput): Promise<string> {

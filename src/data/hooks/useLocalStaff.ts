@@ -11,6 +11,7 @@ import {
   isVlinkpayPayoutValueConfigured,
   parseVlinkpayAddresses,
   toVlinkpayCryptoAddressesPayload,
+  toVlinkpayCryptoAddressImagesPayload,
 } from '../../components/payout/vlinkpayWallet'
 import type { ManualStaffFormPayload } from '../../components/dashboard/modals/AddManualStaffTab'
 import type {
@@ -66,12 +67,28 @@ async function configureLocalStaffPaymentMethods(
       imageUrl: config.qrCode,
     })
 
+    let cryptoAddresses = isVlinkpay
+      ? toVlinkpayCryptoAddressesPayload(parseVlinkpayAddresses(accountInfo))
+      : undefined
+
+    if (isVlinkpay && cryptoAddresses?.length && config.vlinkpayImages) {
+      const cryptoAddressImages = toVlinkpayCryptoAddressImagesPayload(config.vlinkpayImages)
+      cryptoAddresses = await Promise.all(
+        cryptoAddresses.map(async (address) => {
+          const pending = cryptoAddressImages[address.symbol?.toUpperCase()]
+          if (!pending) return address
+          const resolvedAddressImageUrl = await resolvePaymentMethodImageUrl({
+            imageFile: pending.file,
+            imageUrl: pending.url,
+          })
+          return { ...address, imageUrl: resolvedAddressImageUrl }
+        }),
+      )
+    }
+
     await localStaffRepository.updatePaymentMethod(staffProfileId, method.id, {
       ...(isVlinkpay
-        ? {
-            accountInfo: null,
-            cryptoAddresses: toVlinkpayCryptoAddressesPayload(parseVlinkpayAddresses(accountInfo)),
-          }
+        ? { accountInfo: null, cryptoAddresses }
         : { accountInfo }),
       accountName: toPayoutAccountNameDto(uiKey, config.accountName),
       imageUrl,
@@ -221,22 +238,38 @@ export function useUpdateLocalStaffPaymentMethod() {
       cryptoAddresses,
       imageUrl,
       imageFile,
+      cryptoAddressImages,
     }: {
       staffProfileId: string
       paymentMethodId?: string
       uiKey?: string
       accountInfo?: string | null
       accountName?: string | null
-      cryptoAddresses?: Array<{ network: string; symbol: string; address: string }> | null
+      cryptoAddresses?: Array<{ network: string; symbol: string; address: string; imageUrl?: string | null }> | null
       imageUrl?: string | null
       imageFile?: File | null
+      /** VlinkPay only (US-1488) — pending per-coin QR image, keyed by uppercase symbol (USDV/USDT). */
+      cryptoAddressImages?: Record<string, { file?: File | null; url?: string | null }> | null
     }) => {
       const methodId = await resolveLocalStaffPaymentMethodId(staffProfileId, paymentMethodId, uiKey)
       const resolvedImageUrl = await resolvePaymentMethodImageUrl({ imageFile, imageUrl })
+      const resolvedCryptoAddresses = cryptoAddresses?.length && cryptoAddressImages
+        ? await Promise.all(
+          cryptoAddresses.map(async (address) => {
+            const pending = cryptoAddressImages[address.symbol?.toUpperCase()]
+            if (!pending) return address
+            const resolvedAddressImageUrl = await resolvePaymentMethodImageUrl({
+              imageFile: pending.file,
+              imageUrl: pending.url,
+            })
+            return { ...address, imageUrl: resolvedAddressImageUrl }
+          }),
+        )
+        : cryptoAddresses
       return localStaffRepository.updatePaymentMethod(staffProfileId, methodId, {
         accountInfo,
         accountName,
-        cryptoAddresses,
+        cryptoAddresses: resolvedCryptoAddresses,
         imageUrl: resolvedImageUrl,
       })
     },
