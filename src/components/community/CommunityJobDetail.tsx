@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { Check, MapPin, Search, Send, X } from 'lucide-react'
+import { Check, ImagePlus, MapPin, Search, Send, Trash2, X } from 'lucide-react'
 
 import { DEFAULT_JOB_IMAGE, demoJobs, JOB_LOCATIONS } from './communityDemoContent'
 import { COMMUNITY_DEMO_PERSONAS, useCommunityAuth } from './CommunityAuth'
@@ -27,9 +27,6 @@ const JOB_IMAGE_OPTIONS = [
   { src: '/assets/images/marketing/nail/nail_summer_pop.jpg', label: 'Nail summer pop' },
 ] as const
 
-const NAIL_SKILL_OPTIONS = ['Tay chân nước', 'Bột/Acrylic', 'Gel', 'Dip', 'Nail art'] as const
-const OWNER_PAY_OPTIONS = ['Bao lương', 'Ăn chia', 'Bao lương + ăn chia', 'Thương lượng'] as const
-const TECHNICIAN_PAY_OPTIONS = ['Lương theo giờ', 'Ăn chia', 'Lương + ăn chia', 'Thương lượng'] as const
 const OWNER_SUPPORT_OPTIONS = ['Lịch linh hoạt', 'Đào tạo thêm', 'Hỗ trợ chỗ ở'] as const
 
 function initials(name?: string | null) {
@@ -202,6 +199,11 @@ interface DraftJob extends Pick<DemoJob, 'title' | 'location' | 'salary' | 'empl
 type DraftField = keyof DraftJob
 type DraftErrors = Partial<Record<DraftField, string>>
 
+// Fixed for the demo's only 'hiring' persona (Kayla) — her business name is
+// already hardcoded in DemoMerchantShell.tsx's sidebar/header, so prefill it
+// here instead of asking her to retype it.
+const KNOWN_HIRING_SALON_NAME = 'Bitcoin Nail Bar'
+
 const emptyDraft: DraftJob = {
   title: '',
   location: JOB_LOCATIONS[1] ?? '',
@@ -221,11 +223,6 @@ const emptyDraft: DraftJob = {
 function validateDraft(draft: DraftJob, postKind: PostKind): DraftErrors {
   const errors: DraftErrors = {}
   if (postKind === 'hiring' && !draft.salon.trim()) errors.salon = 'Nhập tên salon để người tìm việc nhận ra tiệm của bạn.'
-  if (draft.skills.length === 0) errors.skills = postKind === 'hiring' ? 'Chọn ít nhất một dịch vụ bạn đang cần thợ.' : 'Chọn ít nhất một tay nghề của bạn.'
-  if (!draft.availability) errors.availability = postKind === 'hiring' ? 'Chọn thời điểm tiệm cần thợ.' : 'Chọn thời điểm bạn có thể bắt đầu.'
-  if (!draft.payModel) errors.payModel = postKind === 'hiring' ? 'Chọn cách trả lương.' : 'Chọn hình thức thu nhập bạn mong muốn.'
-  if (!draft.salary.trim()) errors.salary = postKind === 'hiring' ? 'Nhập mức lương hoặc tỷ lệ ăn chia.' : 'Nhập mức lương mong muốn.'
-  if (postKind === 'seeking' && !draft.experience.trim()) errors.experience = 'Chia sẻ ngắn về kinh nghiệm để salon dễ cân nhắc.'
   return errors
 }
 
@@ -251,9 +248,23 @@ function PostJobModal({
   onClose: () => void
   onSubmit: (draft: DraftJob) => void
 }) {
-  const [draft, setDraft] = useState<DraftJob>(initial ?? emptyDraft)
+  const [draft, setDraft] = useState<DraftJob>(
+    initial ?? (postKind === 'hiring' ? { ...emptyDraft, salon: KNOWN_HIRING_SALON_NAME } : emptyDraft)
+  )
   const [errors, setErrors] = useState<DraftErrors>({})
   const errorSummaryRef = useRef<HTMLDivElement>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+  const [showSupportOptions, setShowSupportOptions] = useState(false)
+  const [showImagePicker, setShowImagePicker] = useState(false)
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    return () => {
+      if (uploadedImageUrl) URL.revokeObjectURL(uploadedImageUrl)
+    }
+  }, [uploadedImageUrl])
 
   const updateDraft = <Field extends DraftField>(field: Field, value: DraftJob[Field]) => {
     setDraft((current) => ({ ...current, [field]: value }))
@@ -296,8 +307,61 @@ function PostJobModal({
     })
   }
 
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    if (uploadedImageUrl) URL.revokeObjectURL(uploadedImageUrl)
+    const objectUrl = URL.createObjectURL(file)
+    setUploadedImageUrl(objectUrl)
+    updateDraft('image', objectUrl)
+  }
+
+  const clearUploadedImage = () => {
+    if (uploadedImageUrl) URL.revokeObjectURL(uploadedImageUrl)
+    setUploadedImageUrl(null)
+    updateDraft('image', DEFAULT_JOB_IMAGE)
+  }
+
+  const generateDescriptionWithAI = async () => {
+    setAiError(null)
+    const missingRequired = postKind === 'hiring' && !draft.salon.trim()
+    if (missingRequired) {
+      setAiError('Điền tên salon trước khi dùng AI.')
+      return
+    }
+    setAiLoading(true)
+    try {
+      const response = await fetch('/api/generate-job-description', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          postKind,
+          salon: postKind === 'hiring' ? draft.salon : undefined,
+          skills: draft.skills,
+          salary: draft.salary,
+          employmentType: draft.employmentType,
+          availability: draft.availability,
+          payModel: draft.payModel,
+          support: draft.support,
+          experience: draft.experience,
+          location: draft.location,
+        }),
+      })
+      const data = await response.json().catch(() => null)
+      if (!response.ok || !data?.description) {
+        setAiError(data?.error || 'Không kết nối được AI — tính năng này chỉ chạy khi deploy trên Vercel (hoặc `vercel dev`), không khả dụng trên `pnpm dev` thường.')
+        return
+      }
+      updateDraft('description', String(data.description).slice(0, 500))
+    } catch {
+      setAiError('Không kết nối được AI — tính năng này chỉ chạy khi deploy trên Vercel (hoặc `vercel dev`), không khả dụng trên `pnpm dev` thường.')
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
   const generatedHeadline = buildJobHeadline(draft, postKind)
-  const payOptions = postKind === 'hiring' ? OWNER_PAY_OPTIONS : TECHNICIAN_PAY_OPTIONS
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
@@ -335,26 +399,87 @@ function PostJobModal({
         ) : null}
 
         <div className="mt-5 space-y-5">
-          <section aria-labelledby="job-match-heading">
-            <div className="mb-3"><h3 id="job-match-heading" className="text-sm font-extrabold text-nexoraText">{postKind === 'hiring' ? 'Bạn cần thợ nào?' : 'Bạn làm tốt gì?'}</h3><p className="mt-0.5 text-xs text-nexoraMuted">{postKind === 'hiring' ? 'Nói rõ dịch vụ tiệm đang cần để thợ phù hợp nhận ra cơ hội.' : 'Chọn các dịch vụ bạn tự tin nhất để salon phù hợp nhận ra bạn.'}</p></div>
-            <div className="grid gap-3">
+          <section>
+            <div className={postKind === 'hiring' ? 'grid grid-cols-1 gap-3 sm:grid-cols-2' : 'grid gap-3'}>
               {postKind === 'hiring' ? <div><label htmlFor="job-salon" className="block text-xs font-bold text-nexoraText">Tên salon <span className="text-nexoraDanger">*</span></label><input id="job-salon" value={draft.salon} onBlur={() => validateField('salon')} onChange={(event) => updateDraft('salon', event.target.value)} aria-invalid={Boolean(errors.salon)} aria-describedby={errors.salon ? 'job-salon-error' : undefined} className={fieldClassName('salon')} placeholder="VD: Luxury Nails & Spa" />{errors.salon ? <p id="job-salon-error" className="mt-1 text-xs text-nexoraDanger">{errors.salon}</p> : null}</div> : null}
-              <div role="group" aria-labelledby="job-skills-label"><p id="job-skills-label" className="text-xs font-bold text-nexoraText">{postKind === 'hiring' ? 'Dịch vụ cần thợ' : 'Tay nghề của bạn'} <span className="text-nexoraDanger">*</span></p><div className="mt-2 flex flex-wrap gap-2">{NAIL_SKILL_OPTIONS.map((skill) => { const selected = draft.skills.includes(skill); return <button key={skill} type="button" aria-pressed={selected} onClick={() => toggleListValue('skills', skill)} className={`min-h-11 rounded-full border px-3 text-xs font-bold focus-visible:ring-2 focus-visible:ring-nexoraBrand ${selected ? 'border-nexoraBrand bg-nexoraBrandSoft text-nexoraBrand' : 'border-nexoraBorder text-nexoraMuted hover:bg-nexoraSurfaceMuted'}`}>{skill}{selected ? <Check className="ml-1 inline h-3.5 w-3.5" aria-hidden="true" /> : null}</button> })}</div>{errors.skills ? <p className="mt-1 text-xs text-nexoraDanger">{errors.skills}</p> : null}</div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><div><label htmlFor="job-location" className="block text-xs font-bold text-nexoraText">Khu vực</label><select id="job-location" value={draft.location} onChange={(event) => updateDraft('location', event.target.value)} className={fieldClassName('location')}>{JOB_LOCATIONS.filter((loc) => loc !== JOB_LOCATIONS[0]).map((loc) => <option key={loc} value={loc}>{loc}</option>)}</select></div><div><label htmlFor="job-experience" className="block text-xs font-bold text-nexoraText">{postKind === 'hiring' ? 'Kinh nghiệm tối thiểu' : 'Kinh nghiệm của bạn'}{postKind === 'seeking' ? <span className="text-nexoraDanger"> *</span> : null}</label><input id="job-experience" value={draft.experience} onBlur={() => validateField('experience')} onChange={(event) => updateDraft('experience', event.target.value)} aria-invalid={Boolean(errors.experience)} aria-describedby={errors.experience ? 'job-experience-error' : undefined} className={fieldClassName('experience')} placeholder={postKind === 'hiring' ? 'VD: 2+ năm hoặc không yêu cầu' : 'VD: 4 năm bột & gel'} />{errors.experience ? <p id="job-experience-error" className="mt-1 text-xs text-nexoraDanger">{errors.experience}</p> : null}</div></div>
+              <div><label htmlFor="job-location" className="block text-xs font-bold text-nexoraText">Khu vực</label><select id="job-location" value={draft.location} onChange={(event) => updateDraft('location', event.target.value)} className={fieldClassName('location')}>{JOB_LOCATIONS.filter((loc) => loc !== JOB_LOCATIONS[0]).map((loc) => <option key={loc} value={loc}>{loc}</option>)}</select></div>
             </div>
           </section>
 
           <section aria-labelledby="job-fit-heading">
-            <div className="mb-3"><h3 id="job-fit-heading" className="text-sm font-extrabold text-nexoraText">Lịch làm & thu nhập</h3><p className="mt-0.5 text-xs text-nexoraMuted">Các điều kiện quan trọng để hai bên biết có phù hợp trước khi nhắn tin.</p></div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><div><label htmlFor="job-employment-type" className="block text-xs font-bold text-nexoraText">Hình thức</label><select id="job-employment-type" value={draft.employmentType} onChange={(event) => updateDraft('employmentType', event.target.value === 'Part-time' ? 'Part-time' : 'Full-time')} className={fieldClassName('employmentType')}><option value="Full-time">Full-time</option><option value="Part-time">Part-time</option></select></div><div><label htmlFor="job-availability" className="block text-xs font-bold text-nexoraText">{postKind === 'hiring' ? 'Thời điểm cần thợ' : 'Khi nào bạn có thể bắt đầu'} <span className="text-nexoraDanger">*</span></label><select id="job-availability" value={draft.availability} onBlur={() => validateField('availability')} onChange={(event) => updateDraft('availability', event.target.value)} aria-invalid={Boolean(errors.availability)} aria-describedby={errors.availability ? 'job-availability-error' : undefined} className={fieldClassName('availability')}><option value="">Chọn thời điểm</option><option value="Có thể bắt đầu ngay">Có thể bắt đầu ngay</option><option value="Trong 1–2 tuần tới">Trong 1–2 tuần tới</option><option value="Có thể trao đổi thêm">Có thể trao đổi thêm</option></select>{errors.availability ? <p id="job-availability-error" className="mt-1 text-xs text-nexoraDanger">{errors.availability}</p> : null}</div></div>
-            <div role="group" aria-labelledby="job-pay-label" className="mt-3"><p id="job-pay-label" className="text-xs font-bold text-nexoraText">{postKind === 'hiring' ? 'Cách trả lương' : 'Thu nhập bạn mong muốn'} <span className="text-nexoraDanger">*</span></p><div className="mt-2 flex flex-wrap gap-2">{payOptions.map((option) => { const selected = draft.payModel === option; return <button key={option} type="button" aria-pressed={selected} onClick={() => updateDraft('payModel', option)} className={`min-h-11 rounded-full border px-3 text-xs font-bold focus-visible:ring-2 focus-visible:ring-nexoraBrand ${selected ? 'border-nexoraBrand bg-nexoraBrandSoft text-nexoraBrand' : 'border-nexoraBorder text-nexoraMuted hover:bg-nexoraSurfaceMuted'}`}>{option}</button> })}</div>{errors.payModel ? <p className="mt-1 text-xs text-nexoraDanger">{errors.payModel}</p> : null}</div>
-            <div className="mt-3"><label htmlFor="job-salary" className="block text-xs font-bold text-nexoraText">{postKind === 'hiring' ? 'Mức trả cụ thể' : 'Mức mong muốn'} <span className="text-nexoraDanger">*</span></label><input id="job-salary" value={draft.salary} onBlur={() => validateField('salary')} onChange={(event) => updateDraft('salary', event.target.value)} aria-invalid={Boolean(errors.salary)} aria-describedby={errors.salary ? 'job-salary-error' : undefined} className={fieldClassName('salary')} placeholder={draft.payModel === 'Ăn chia' ? 'VD: 6/4 hoặc 55/45' : 'VD: $1,000 - $1,300/tuần'} />{errors.salary ? <p id="job-salary-error" className="mt-1 text-xs text-nexoraDanger">{errors.salary}</p> : null}</div>
-            {postKind === 'hiring' ? <div role="group" aria-labelledby="job-support-label" className="mt-3"><p id="job-support-label" className="text-xs font-bold text-nexoraText">Điều tiệm hỗ trợ <span className="font-normal text-nexoraSubtle">(không bắt buộc)</span></p><div className="mt-2 flex flex-wrap gap-2">{OWNER_SUPPORT_OPTIONS.map((option) => { const selected = draft.support.includes(option); return <button key={option} type="button" aria-pressed={selected} onClick={() => toggleListValue('support', option)} className={`min-h-11 rounded-full border px-3 text-xs font-bold focus-visible:ring-2 focus-visible:ring-nexoraBrand ${selected ? 'border-nexoraBrand bg-nexoraBrandSoft text-nexoraBrand' : 'border-nexoraBorder text-nexoraMuted hover:bg-nexoraSurfaceMuted'}`}>{option}</button> })}</div></div> : null}
+            <div className="mb-3"><h3 id="job-fit-heading" className="text-sm font-extrabold text-nexoraText">Lịch làm & thu nhập</h3></div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div><label htmlFor="job-employment-type" className="block text-xs font-bold text-nexoraText">Hình thức</label><select id="job-employment-type" value={draft.employmentType} onChange={(event) => updateDraft('employmentType', event.target.value === 'Part-time' ? 'Part-time' : 'Full-time')} className={fieldClassName('employmentType')}><option value="Full-time">Full-time</option><option value="Part-time">Part-time</option></select></div>
+              <div><label htmlFor="job-salary" className="block text-xs font-bold text-nexoraText">{postKind === 'hiring' ? 'Mức trả cụ thể' : 'Mức mong muốn'} <span className="font-normal text-nexoraSubtle">(không bắt buộc)</span></label><input id="job-salary" value={draft.salary} onBlur={() => validateField('salary')} onChange={(event) => updateDraft('salary', event.target.value)} aria-invalid={Boolean(errors.salary)} aria-describedby={errors.salary ? 'job-salary-error' : undefined} className={fieldClassName('salary')} placeholder="VD: $1,000 - $1,300/tuần" />{errors.salary ? <p id="job-salary-error" className="mt-1 text-xs text-nexoraDanger">{errors.salary}</p> : null}</div>
+            </div>
+            {postKind === 'hiring' ? (
+              (showSupportOptions || draft.support.length > 0) ? (
+                <div role="group" aria-labelledby="job-support-label" className="mt-3"><p id="job-support-label" className="text-xs font-bold text-nexoraText">Điều tiệm hỗ trợ <span className="font-normal text-nexoraSubtle">(không bắt buộc)</span></p><div className="mt-2 flex flex-wrap gap-2">{OWNER_SUPPORT_OPTIONS.map((option) => { const selected = draft.support.includes(option); return <button key={option} type="button" aria-pressed={selected} onClick={() => toggleListValue('support', option)} className={`min-h-11 rounded-full border px-3 text-xs font-bold focus-visible:ring-2 focus-visible:ring-nexoraBrand ${selected ? 'border-nexoraBrand bg-nexoraBrandSoft text-nexoraBrand' : 'border-nexoraBorder text-nexoraMuted hover:bg-nexoraSurfaceMuted'}`}>{option}</button> })}</div></div>
+              ) : (
+                <button type="button" onClick={() => setShowSupportOptions(true)} className="mt-3 text-xs font-bold text-nexoraBrand hover:underline">+ Thêm điều tiệm hỗ trợ (tuỳ chọn)</button>
+              )
+            ) : null}
           </section>
 
           <section aria-labelledby="job-intro-heading">
-            <div className="mb-3"><h3 id="job-intro-heading" className="text-sm font-extrabold text-nexoraText">{postKind === 'hiring' ? 'Điều thợ cần biết về tiệm' : 'Điều salon nên biết về bạn'}</h3><p className="mt-0.5 text-xs text-nexoraMuted">Một lời giới thiệu ngắn là đủ — có thể bỏ qua nếu các thông tin trên đã rõ.</p></div>
-            <div className="grid gap-4 sm:grid-cols-[1fr_1.15fr]"><div><p className="text-xs font-bold text-nexoraText">{postKind === 'hiring' ? 'Ảnh salon' : 'Ảnh mẫu tay nghề'}</p><div className="mt-2 grid grid-cols-3 gap-2">{JOB_IMAGE_OPTIONS.map((option) => { const selected = draft.image === option.src; return <button key={option.src} type="button" onClick={() => updateDraft('image', option.src)} aria-label={`Chọn ảnh ${option.label}`} aria-pressed={selected} className={`relative min-h-16 overflow-hidden rounded-lg border-2 focus-visible:ring-2 focus-visible:ring-nexoraBrand ${selected ? 'border-nexoraBrand' : 'border-transparent hover:border-nexoraBorder'}`}><img src={option.src} alt="" className="h-16 w-full object-cover" />{selected ? <span className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-nexoraBrand text-white"><Check className="h-3.5 w-3.5" aria-hidden="true" /></span> : null}</button> })}</div></div><div><div className="flex items-end justify-between gap-3"><label htmlFor="job-description" className="text-xs font-bold text-nexoraText">Lời nhắn thêm <span className="font-normal text-nexoraSubtle">(không bắt buộc)</span></label><span className={`text-xs font-semibold ${draft.description.length >= 450 ? 'text-nexoraDanger' : 'text-nexoraSubtle'}`} aria-live="polite">{draft.description.length}/500</span></div><textarea id="job-description" value={draft.description} maxLength={500} onChange={(event) => updateDraft('description', event.target.value)} rows={5} className={fieldClassName('description', true)} placeholder={postKind === 'hiring' ? 'VD: Tiệm đông khách, có khách quen và môi trường làm việc thoải mái…' : 'VD: Có khách quen, giao tiếp tiếng Anh cơ bản, muốn tìm nơi làm lâu dài…'} /></div></div>
+            <div className="mb-3"><h3 id="job-intro-heading" className="text-sm font-extrabold text-nexoraText">{postKind === 'hiring' ? 'Điều thợ cần biết về tiệm' : 'Điều salon nên biết về bạn'}</h3></div>
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-bold text-nexoraText">{postKind === 'hiring' ? 'Ảnh salon' : 'Ảnh mẫu tay nghề'}</p>
+                {(showImagePicker || draft.image !== DEFAULT_JOB_IMAGE) ? (
+                  <div className="mt-2 grid grid-cols-4 gap-2">
+                    <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-nexoraBorder text-nexoraSubtle hover:border-nexoraBrand hover:text-nexoraBrand focus-visible:ring-2 focus-visible:ring-nexoraBrand"
+                    >
+                      <ImagePlus className="h-4 w-4" aria-hidden="true" />
+                      <span className="text-[9px] font-bold leading-none">Tải ảnh lên</span>
+                    </button>
+                    {uploadedImageUrl ? (
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => updateDraft('image', uploadedImageUrl)}
+                          aria-label="Chọn ảnh đã tải lên"
+                          aria-pressed={draft.image === uploadedImageUrl}
+                          className={`relative block min-h-16 w-full overflow-hidden rounded-lg border-2 focus-visible:ring-2 focus-visible:ring-nexoraBrand ${draft.image === uploadedImageUrl ? 'border-nexoraBrand' : 'border-transparent hover:border-nexoraBorder'}`}
+                        >
+                          <img src={uploadedImageUrl} alt="Ảnh bạn đã tải lên" className="h-16 w-full object-cover" />
+                          {draft.image === uploadedImageUrl ? <span className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-nexoraBrand text-white"><Check className="h-3.5 w-3.5" aria-hidden="true" /></span> : null}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={clearUploadedImage}
+                          aria-label="Xoá ảnh đã tải lên"
+                          className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-nexoraText/80 text-white hover:bg-nexoraDanger focus-visible:ring-2 focus-visible:ring-nexoraBrand"
+                        >
+                          <Trash2 className="h-3 w-3" aria-hidden="true" />
+                        </button>
+                      </div>
+                    ) : null}
+                    {JOB_IMAGE_OPTIONS.map((option) => { const selected = draft.image === option.src; return <button key={option.src} type="button" onClick={() => updateDraft('image', option.src)} aria-label={`Chọn ảnh ${option.label}`} aria-pressed={selected} className={`relative min-h-16 overflow-hidden rounded-lg border-2 focus-visible:ring-2 focus-visible:ring-nexoraBrand ${selected ? 'border-nexoraBrand' : 'border-transparent hover:border-nexoraBorder'}`}><img src={option.src} alt="" className="h-16 w-full object-cover" />{selected ? <span className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-nexoraBrand text-white"><Check className="h-3.5 w-3.5" aria-hidden="true" /></span> : null}</button> })}
+                  </div>
+                ) : (
+                  <div className="mt-2 flex items-center gap-2">
+                    <img src={draft.image} alt="Ảnh đã chọn" className="h-10 w-10 rounded-md object-cover" />
+                    <button type="button" onClick={() => setShowImagePicker(true)} className="text-xs font-bold text-nexoraBrand hover:underline">Đổi ảnh</button>
+                  </div>
+                )}
+              </div>
+              <div>
+                <div className="flex items-end justify-between gap-3">
+                  <div className="flex items-end gap-3">
+                    <label htmlFor="job-description" className="text-xs font-bold text-nexoraText">Lời nhắn thêm <span className="font-normal text-nexoraSubtle">(không bắt buộc)</span></label>
+                    <button type="button" onClick={generateDescriptionWithAI} disabled={aiLoading} className="text-xs font-bold text-nexoraBrand hover:underline disabled:cursor-not-allowed disabled:text-nexoraSubtle disabled:no-underline">{aiLoading ? 'Đang tạo…' : '✨ Viết bằng AI'}</button>
+                  </div>
+                  <span className={`text-xs font-semibold ${draft.description.length >= 450 ? 'text-nexoraDanger' : 'text-nexoraSubtle'}`} aria-live="polite">{draft.description.length}/500</span>
+                </div>
+                <textarea id="job-description" value={draft.description} maxLength={500} onChange={(event) => updateDraft('description', event.target.value)} rows={5} className={fieldClassName('description', true)} placeholder={postKind === 'hiring' ? 'VD: Tiệm đông khách, có khách quen và môi trường làm việc thoải mái…' : 'VD: Có khách quen, giao tiếp tiếng Anh cơ bản, muốn tìm nơi làm lâu dài…'} />
+                {aiError ? <p className="mt-1 text-xs text-nexoraDanger">{aiError}</p> : null}
+              </div>
+            </div>
           </section>
 
           <section aria-labelledby="job-preview-heading" className="rounded-xl border border-nexoraBorder bg-nexoraCanvas p-3"><div className="mb-2 flex items-center justify-between"><h3 id="job-preview-heading" className="text-sm font-extrabold text-nexoraText">Xem trước tin đăng</h3><span className="flex items-center gap-1.5">{draft.urgent ? <span className="shrink-0 rounded bg-nexoraWarning px-1.5 py-1 text-[10px] font-extrabold text-white">Cần gấp</span> : null}<span className="rounded-full bg-nexoraBrandSoft px-2 py-0.5 text-[11px] font-bold text-nexoraBrand">{postKindLabel(postKind)}</span></span></div><div className="flex gap-3 rounded-lg bg-nexoraSurface p-2.5"><img src={draft.image} alt="Ảnh minh hoạ đã chọn" className="h-16 w-16 shrink-0 rounded-md object-cover" /><div className="min-w-0"><b className="block truncate text-sm text-nexoraText">{generatedHeadline}</b><p className="mt-0.5 truncate text-xs text-nexoraMuted">{postKind === 'hiring' ? draft.salon.trim() || 'Tên salon' : personaLabel} · {draft.location}</p><p className="mt-1 truncate text-xs font-bold text-nexoraText">{draft.skills.length ? draft.skills.join(' · ') : 'Chọn tay nghề'} · {draft.salary.trim() || 'Mức thu nhập'}</p><p className="mt-0.5 text-xs text-nexoraMuted">{draft.employmentType} · {draft.availability || 'Chọn thời điểm'}</p></div></div></section>
@@ -534,12 +659,14 @@ export function CommunityJobsPanel() {
                       {job.urgent ? <span className="shrink-0 rounded bg-nexoraWarning px-1.5 py-1 text-[10px] font-extrabold text-white">Cần gấp</span> : null}
                       <span className="shrink-0 rounded-full bg-nexoraBrandSoft px-2 py-1 text-[10px] font-extrabold text-nexoraBrand">{postKindLabel(job.postKind)}</span>
                     </div>
-                    <span
-                      className="shrink-0 max-w-[144px] truncate rounded-full border border-nexoraDanger/30 bg-nexoraDanger/10 px-2.5 py-1 text-[11px] font-black leading-tight text-nexoraDanger"
-                      title={job.salary}
-                    >
-                      {job.salary}
-                    </span>
+                    {job.salary ? (
+                      <span
+                        className="shrink-0 max-w-[144px] truncate rounded-full border border-nexoraDanger/30 bg-nexoraDanger/10 px-2.5 py-1 text-[11px] font-black leading-tight text-nexoraDanger"
+                        title={job.salary}
+                      >
+                        {job.salary}
+                      </span>
+                    ) : null}
                   </div>
                   <h3 className="mt-1 line-clamp-2 text-sm font-extrabold leading-snug text-nexoraText">{job.title}</h3>
                 </div>
