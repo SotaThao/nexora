@@ -2462,6 +2462,25 @@
       "loading": "Loading your income...",
       "error": "We couldn't load your income",
       "retry": "Try Again"
+    },
+    "detail": {
+      "action": "View Details",
+      "weeklyTitle": "Weekly summary",
+      "day": "Day",
+      "amount": "Amount",
+      "tips": "Tips",
+      "totalAmount": "Total amount",
+      "totalTips": "Total tips",
+      "totalDiscount": "Total discount",
+      "totalCommission": "Total commission",
+      "cashCollected": "Cash collected",
+      "close": "Close",
+      "dailyTitle": "Daily details",
+      "ticket": "Ticket",
+      "ownerDiscount": "Owner discount",
+      "noTickets": "No completed tickets for this date.",
+      "loadError": "Could not load ticket details.",
+      "retry": "Try Again"
     }
   },
   "staff_payouts": {

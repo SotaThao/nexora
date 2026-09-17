@@ -478,6 +478,11 @@ export const qk = {
     sessionId,
     params,
   ],
+  staffIncomeReportTickets: (sessionId: string, params: unknown) => [
+    'staffIncomeReportTickets',
+    sessionId,
+    params,
+  ],
   staffDashboardStatistics: () => ['staffDashboardStatistics'],
   staffReviews:          (filters = EMPTY) => ['staffReviews', filters],
   staffTips:             (filters = EMPTY) => ['staffTips', filters],
