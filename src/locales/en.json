@@ -25,7 +25,8 @@
       "audience": {
         "customer": "Customer",
         "staff": "Staff",
-        "owner": "Owner"
+        "owner": "Owner",
+        "aivoice": "AI Voice"
       },
       "identity": {
         "public_first": "Public first, verify when needed",
@@ -115,6 +116,7 @@
           "Disabled": "Hidden — switched off by the platform admin",
           "MissingDefinition": "Hidden — no longer in the system catalog",
           "MissingCustomUrl": "Hidden — no link address saved yet",
+          "MissingVoiceTenant": "Hidden — this business has not subscribed to Voice",
           "InvalidTemplate": "Hidden — its destination could not be resolved"
         },
         "disabled_modules_warning": "These modules were switched off by the platform admin and will be dropped when you save: {{modules}}.",

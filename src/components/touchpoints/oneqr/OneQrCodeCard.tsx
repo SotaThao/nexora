@@ -21,6 +21,7 @@ const AUDIENCE_LABEL_KEY: Record<OneQrAudience, string> = {
   [OneQrAudience.Customer]: 'oneqr.audience.customer',
   [OneQrAudience.Staff]: 'oneqr.audience.staff',
   [OneQrAudience.Owner]: 'oneqr.audience.owner',
+  [OneQrAudience.AIVoice]: 'oneqr.audience.aivoice',
 }
 
 export default function OneQrCodeCard({

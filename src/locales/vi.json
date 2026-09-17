@@ -25,7 +25,8 @@
       "audience": {
         "customer": "Khách hàng",
         "staff": "Nhân viên",
-        "owner": "Chủ cửa hàng"
+        "owner": "Chủ cửa hàng",
+        "aivoice": "AI Voice"
       },
       "identity": {
         "public_first": "Cho xem trước, xác minh khi cần",
@@ -115,6 +116,7 @@
           "Disabled": "Đang ẩn — quản trị hệ thống đã tắt mô-đun này",
           "MissingDefinition": "Đang ẩn — không còn trong danh mục hệ thống",
           "MissingCustomUrl": "Đang ẩn — chưa nhập địa chỉ liên kết",
+          "MissingVoiceTenant": "Đang ẩn — cửa hàng chưa đăng ký gói Voice",
           "InvalidTemplate": "Đang ẩn — không xác định được trang đích"
         },
         "disabled_modules_warning": "Các mô-đun sau đã bị quản trị hệ thống tắt và sẽ bị loại khi bạn lưu: {{modules}}.",
