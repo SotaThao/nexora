@@ -95,7 +95,7 @@ export default function OneQrCodeCard({
   }
 
   return (
-    <section className="nexora-card flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:p-6">
+    <section className="nexora-card flex min-w-0 flex-col gap-4 overflow-hidden p-4 sm:flex-row sm:items-start sm:p-6">
       <div className="mx-auto shrink-0 sm:mx-0">
         <QrImage
           // Keyed by role so the swap is a fresh load with its own spinner
@@ -106,9 +106,9 @@ export default function OneQrCodeCard({
             name: oneQr.name,
             audience: t(AUDIENCE_LABEL_KEY[previewAudience]),
           })}
-          className="h-[168px] w-[168px] rounded-2xl border border-nexoraBorder bg-white p-2"
+          className="h-[148px] w-[148px] rounded-2xl border border-nexoraBorder bg-white p-2 sm:h-[168px] sm:w-[168px]"
         />
-        <p className="mt-2 max-w-[168px] text-center text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
+        <p className="mt-2 max-w-[148px] text-center text-[10px] font-bold uppercase tracking-wide text-nexoraMuted sm:max-w-[168px]">
           {t('oneqr.card.code_for_role', {
             audience: t(AUDIENCE_LABEL_KEY[previewAudience]),
           })}
@@ -120,7 +120,7 @@ export default function OneQrCodeCard({
           <h3 className="min-w-0 truncate text-base font-black text-nexoraText">
             {oneQr.name || t('oneqr.card.untitled')}
           </h3>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <span
               className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wide ${
                 oneQr.isActive
@@ -145,31 +145,33 @@ export default function OneQrCodeCard({
           {t('oneqr.card.permanence_note')}
         </p>
 
-        <div className="space-y-2 rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-black uppercase tracking-wide text-nexoraMuted">
+        <div className="min-w-0 space-y-2 rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-3">
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+            <span className="shrink-0 text-[11px] font-black uppercase tracking-wide text-nexoraMuted">
               {t('oneqr.card.preview_as')}
             </span>
             <div
               role="group"
               aria-label={t('oneqr.card.preview_as')}
-              className="flex flex-wrap gap-1"
+              className="grid min-w-0 grid-cols-2 gap-1 sm:flex sm:flex-wrap"
             >
               {ONEQR_AUDIENCE_ORDER.map((audience) => {
                 const isActive = audience === previewAudience
+                const label = t(AUDIENCE_LABEL_KEY[audience])
                 return (
                   <button
                     key={audience}
                     type="button"
                     aria-pressed={isActive}
+                    title={label}
                     onClick={() => setPreviewAudience(audience)}
-                    className={`inline-flex min-h-9 items-center rounded-full px-3 text-xs font-bold transition ${
+                    className={`inline-flex min-h-9 min-w-0 items-center justify-center rounded-full px-2.5 text-[11px] font-bold transition sm:px-3 sm:text-xs ${
                       isActive
                         ? 'bg-nexoraBrand text-white shadow-nexora-soft'
                         : 'border border-nexoraBorder bg-nexoraSurface text-nexoraMuted hover:text-nexoraText'
                     }`}
                   >
-                    {t(AUDIENCE_LABEL_KEY[audience])}
+                    <span className="truncate">{label}</span>
                   </button>
                 )
               })}
@@ -182,7 +184,7 @@ export default function OneQrCodeCard({
             rel="noopener noreferrer"
             className="inline-flex max-w-full items-center gap-1.5 text-xs font-medium text-nexoraBrand hover:underline"
           >
-            <span className="truncate">{previewUrl}</span>
+            <span className="min-w-0 break-all sm:truncate">{previewUrl}</span>
             <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
           </a>
 
@@ -198,10 +200,10 @@ export default function OneQrCodeCard({
           ) : null}
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           {previewAudience === OneQrAudience.Customer && <Link
             to={`/dashboard/touchpoints/oneqr/artwork?as=${toOneQrViewAs(previewAudience)}`}
-            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-nexoraBrand bg-nexoraSurface px-4 text-xs font-bold text-nexoraBrand transition hover:bg-nexoraSurfaceMuted"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-nexoraBrand bg-nexoraSurface px-4 text-xs font-bold text-nexoraBrand transition hover:bg-nexoraSurfaceMuted sm:w-auto"
           >
             <Eye className="h-4 w-4" aria-hidden />
             {t('oneqr.artwork.title')}
@@ -210,7 +212,7 @@ export default function OneQrCodeCard({
             href={previewUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white transition hover:bg-nexoraBrandDark"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white transition hover:bg-nexoraBrandDark sm:w-auto"
           >
             <ExternalLink className="h-4 w-4" aria-hidden />
             {t('oneqr.card.open_landing')}
@@ -218,7 +220,7 @@ export default function OneQrCodeCard({
           <button
             type="button"
             onClick={handleCopy}
-            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-nexoraBorder bg-nexoraSurface px-4 text-xs font-bold text-nexoraText transition hover:bg-nexoraSurfaceMuted"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-nexoraSurface px-4 text-xs font-bold text-nexoraText transition hover:bg-nexoraSurfaceMuted sm:w-auto"
           >
             {copied ? (
               <Check className="h-4 w-4 text-emerald-500" aria-hidden />
@@ -231,7 +233,7 @@ export default function OneQrCodeCard({
             type="button"
             onClick={handleDownload}
             disabled={isDownloading}
-            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-nexoraBorder bg-nexoraSurface px-4 text-xs font-bold text-nexoraText transition hover:bg-nexoraSurfaceMuted disabled:opacity-50"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-nexoraSurface px-4 text-xs font-bold text-nexoraText transition hover:bg-nexoraSurfaceMuted disabled:opacity-50 sm:w-auto"
           >
             {isDownloading ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden />

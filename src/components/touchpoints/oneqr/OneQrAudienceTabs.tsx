@@ -43,10 +43,11 @@ export default function OneQrAudienceTabs({
     <div
       role="tablist"
       aria-label={ariaLabel}
-      className="flex w-full gap-1 rounded-full border border-nexoraBorder bg-nexoraSurfaceMuted p-1"
+      className="grid w-full grid-cols-2 gap-1 rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-1 sm:flex sm:flex-wrap sm:rounded-full"
     >
       {ONEQR_AUDIENCE_ORDER.map((audience, index) => {
         const isActive = audience === activeAudience
+        const label = t(AUDIENCE_LABEL_KEY[audience])
         return (
           <button
             key={audience}
@@ -54,17 +55,18 @@ export default function OneQrAudienceTabs({
             role="tab"
             id={`${idPrefix}-${audience}`}
             aria-selected={isActive}
+            title={label}
             tabIndex={isActive ? 0 : -1}
             onClick={() => onAudienceChange(audience)}
             onKeyDown={(event) => handleKeyDown(event, index)}
             className={[
-              'inline-flex min-h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full px-2 text-[11px] font-bold transition sm:px-3 sm:text-xs',
+              'inline-flex min-h-9 min-w-0 items-center justify-center gap-1.5 rounded-lg px-2 text-[11px] font-bold transition sm:min-w-[calc(50%-0.125rem)] sm:flex-1 sm:rounded-full sm:px-3 sm:text-xs xl:min-w-0',
               isActive
                 ? 'bg-nexoraBrand text-white shadow-nexora-soft'
                 : 'text-nexoraMuted hover:text-nexoraText',
             ].join(' ')}
           >
-            <span className="truncate">{t(AUDIENCE_LABEL_KEY[audience])}</span>
+            <span className="truncate">{label}</span>
             {dirtyAudiences.includes(audience) ? (
               <span
                 aria-hidden
