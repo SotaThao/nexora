@@ -16,7 +16,7 @@ import { useTranslation } from '../../../../contexts/LanguageContext'
 import type { TechnicianOption } from '../../../checkin/parts/TechnicianPickerGrid'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getErrorMessage } from '../../../../data/errorCodes'
-import { imagesRepository } from '../../../../data/repositories/images'
+import { posCheckoutRepository } from '../../../../data/repositories/posCheckout'
 import CameraCaptureModal from '../../../ui/CameraCaptureModal'
 import ImageFileInput from '../../../ui/ImageFileInput'
 import IconButton from '../../../ui/IconButton'
@@ -1557,7 +1557,7 @@ export default function PosOrderWorkspace({
     if (notePhotoControlsDisabled) return
     setIsUploadingNotePhoto(true)
     try {
-      const url = await imagesRepository.uploadAndGetUrl(file)
+      const url = await posCheckoutRepository.uploadOrderNotePhoto(businessId, orderId, file)
       saveNotePhotos([...notePhotos, url])
     } catch (err) {
       reportError(err)

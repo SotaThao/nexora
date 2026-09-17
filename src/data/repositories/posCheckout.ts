@@ -256,6 +256,17 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
       )
     },
 
+    async uploadOrderNotePhoto(businessId: string, orderId: string, file: File): Promise<string> {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await client.upload<{ imageUrl: string }>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/note/photo`,
+        formData,
+        'POST',
+      )
+      return res.imageUrl
+    },
+
     async setOrderStaffTipSplit(
       businessId: string,
       orderId: string,
