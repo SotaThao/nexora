@@ -1,51 +1,77 @@
 ---
 type: doc
-title: "Community Jobs — Tổng hợp Spec: từ ý tưởng đến prototype (bàn giao cho dev)"
+title: "Community Jobs — Spec bàn giao: từ ý tưởng đến prototype"
 status: handoff
 area: community
 created: 2026-09-17
 owner: dev@vlinkpay.com
 ---
 
-# Community Jobs — Tổng hợp Spec: từ ý tưởng đến prototype
+# Community Jobs — Spec bàn giao: từ ý tưởng đến prototype
 
-> Tài liệu này gộp toàn bộ hành trình của Community Jobs từ lúc lên kế hoạch đến khi có prototype chạy được, thành 1 bảng tra cứu duy nhất cho dev tiếp nhận việc. Đây là nội dung thay thế cho phạm vi cũ của issue [#1633](https://github.com/vlink-group/vlink-nexora/issues/1633) (trước đây là "Tạo OpenSpec change cho Community Jobs" — đã đổi thành tổng hợp tài liệu giai đoạn plan → prototype, theo quyết định 2026-09-17).
+Tài liệu này là bản đặc tả (spec) bàn giao cho team, tổng hợp toàn bộ hành trình của tính năng Community Jobs — từ lúc lên kế hoạch đến khi có một prototype (bản minh hoạ) chạy được. Cấu trúc theo khung OpenSpec đang dùng trong repo (`openspec/changes/`), viết lại thành một tài liệu tổng hợp duy nhất thay vì bộ 3 file proposal/design/tasks riêng lẻ, vì phạm vi hiện tại chỉ dừng ở mức prototype.
 
-**Demo prototype (production hiện tại):** https://nexora-ten-lime.vercel.app — route `/community?tab=jobs`, đăng nhập bằng 1 trong 3 persona demo (Kayla · chủ salon, Jessica · thợ nail, Linh · khách).
+## Why
 
-**Repo code thật:** `SotaThao/nexora` (KHÔNG phải `vlink-nexora-fe`). **Repo tracking issue:** `vlink-group/vlink-nexora`.
+Salon cần một nơi để đăng tin tuyển thợ nail, và thợ nail cần một nơi để đăng tin tìm việc — cả hai bên đều cần xem chi tiết tin đăng và nhắn tin trực tiếp với nhau, ngay trong khu vực Cộng đồng (Community) hiện có của Nexora Touch, thay vì phải dùng nền tảng khác.
 
-## Bảng tổng hợp: ý tưởng → quyết định → triển khai prototype
+Trước khi xây dựng phiên bản thật (có nối đăng nhập thật và cơ sở dữ liệu thật), quy tắc của dự án yêu cầu: nếu tính năng chạm vào từ 3 tập tin trở lên hoặc các phần dùng chung của hệ thống (đăng nhập, gọi dữ liệu, lưu trữ), phải có một bản đặc tả trước khi code. Trong lúc chuẩn bị đặc tả đó, nhóm phát hiện một vấn đề kiến trúc lớn hơn dự kiến (xem mục Risks & Blockers) khiến việc code phiên bản thật chưa thể bắt đầu ngay. Vì vậy nhóm quyết định: trước mắt chỉ cần một **prototype** (giao diện minh hoạ, dữ liệu giả lập) để trình bày ý tưởng và thu thập phản hồi, còn phiên bản thật sẽ làm ở giai đoạn sau.
 
-| Giai đoạn | Nội dung / Quyết định | Triển khai trong prototype | Tài liệu / PR liên quan | Trạng thái |
-|---|---|---|---|---|
-| 1. Lên kế hoạch | US-113 + Master Doc phác thảo yêu cầu: đăng tin tuyển/tìm việc, xem chi tiết, nhắn tin với người đăng | — (giai đoạn tài liệu) | Master Doc `community-jobs-341_master_260915_v1.0.0.md`, US-113 (vault Obsidian), issue [#1624](https://github.com/vlink-group/vlink-nexora/issues/1624) | Draft, chưa approve chính thức |
-| 2. Phản biện kiến trúc | Codex (đọc code thật) phát hiện điểm chặn: app có 2 hệ đăng nhập không liên quan nhau (REST/JWT thật vs Supabase Community riêng) → RLS thật cho job post chưa khả thi nếu chưa có cầu nối identity | Không code Phase 2 thật; quyết định 2026-09-17: lùi các việc kiến trúc/migration/repository thật ra khỏi phạm vi prototype | `docs/community-jobs-handoff_260915.md` (v1), `docs/community-jobs-handoff-v2_260915.md` (v2) | Đã chốt hoãn — issue [#1632](https://github.com/vlink-group/vlink-nexora/issues/1632), [#1634](https://github.com/vlink-group/vlink-nexora/issues/1634), [#1635](https://github.com/vlink-group/vlink-nexora/issues/1635) đã đóng, chuyển sang phạm vi "bản thật" (chưa lên lịch) |
-| 3. Prototype v1 — Jobs board demo | List + filter (search / khu vực / loại tin), đăng tin 2 loại theo persona đang đăng nhập (cố định, không đổi được), xem chi tiết, "Bài của tôi" (sửa / xoá / đổi trạng thái open→filled→closed), chat giả (local state) | 100% local React state (`useState`), KHÔNG gọi API/Supabase | `src/components/community/CommunityJobDetail.tsx`, `communityDemoContent.ts` · [PR #40](https://github.com/SotaThao/nexora/pull/40) | Hoàn thành, merged 2026-09-16 |
-| 4. Cải thiện form đăng tin — vòng 1 | Section hoá form theo nhóm, image picker 6 ảnh có sẵn, validation inline (border đỏ + message), character counter cho mô tả, preview trực tiếp trong modal | UI-only, vẫn local state | `PostJobModal` trong `CommunityJobDetail.tsx` | Hoàn thành 2026-09-16 |
-| 5. Tích hợp AI viết mô tả | Thay mô tả mẫu tĩnh bằng gọi LLM thật (DeepSeek qua endpoint tương thích Anthropic), giữ API key phía server, xử lý đúng response dạng reasoning-model (block "thinking" đứng trước block "text"), tách góc nhìn viết theo `postKind` (chủ tiệm tuyển thợ vs người thợ tự giới thiệu) | Vercel serverless function `api/generate-job-description.ts` làm proxy; nút "✨ Viết bằng AI" trong form | [PR #41](https://github.com/SotaThao/nexora/pull/41), [#42](https://github.com/SotaThao/nexora/pull/42), [#43](https://github.com/SotaThao/nexora/pull/43) | Hoàn thành, merged 2026-09-17 |
-| 6. Rút gọn form theo phản hồi cognitive-load | Auto-fill tên salon theo persona hiring, upload ảnh thật (local preview qua `URL.createObjectURL`), gộp field cùng hàng (Khu vực + Tên salon, Hình thức + Mức lương), bỏ hẳn các field gây rối (kỹ năng, kinh nghiệm tối thiểu, thời điểm cần thợ, cách trả lương), bỏ subtitle/title thừa | UI-only, vẫn local state; các field dữ liệu cũ (`skills`/`experience`/`availability`/`payModel`) vẫn giữ trong kiểu `DemoJob` để tương thích dữ liệu seed cũ — chỉ bỏ ô nhập trên form, không đổi schema | [PR #41](https://github.com/SotaThao/nexora/pull/41) | Hoàn thành 2026-09-17 |
-| 7. Chuẩn hoá màu badge + hiển thị lương | "Cần gấp" → đỏ, "Tuyển thợ" → vàng, "Tìm việc" → xanh dương; badge lương chỉ hiện khi giá trị là lương theo tuần hoặc "Thương lượng" — các định dạng khác (giờ, ăn chia %) ẩn hẳn thay vì hiện sai ngữ cảnh | Helper `postKindBadgeClassName()` và `displayableSalary()` trong `CommunityJobDetail.tsx` | [PR #44](https://github.com/SotaThao/nexora/pull/44) | Hoàn thành, merged 2026-09-17 |
-| 8. Quyết định phạm vi prototype | Chốt: issue [#1636](https://github.com/vlink-group/vlink-nexora/issues/1636)–[#1639](https://github.com/vlink-group/vlink-nexora/issues/1639) chỉ cần đạt mức prototype (không cần kiến trúc/dữ liệu thật) — prototype hiện tại đã đáp ứng đủ; [#1632](https://github.com/vlink-group/vlink-nexora/issues/1632)/[#1634](https://github.com/vlink-group/vlink-nexora/issues/1634)/[#1635](https://github.com/vlink-group/vlink-nexora/issues/1635) hoãn hẳn sang giai đoạn bản thật | — | Issue [#1679](https://github.com/vlink-group/vlink-nexora/issues/1679) (parent tracking) | Đã chốt 2026-09-17, các issue liên quan đã đóng kèm lý do |
+## What Changes (đã triển khai ở mức prototype)
 
-## Việc còn lại khi bắt đầu làm bản thật (Phase 2, chưa lên lịch)
+- Danh sách tin đăng có thể lọc theo từ khoá, khu vực, và loại tin (tìm việc / tuyển thợ).
+- Đăng tin theo đúng loại tin của vai trò đang đăng nhập (chủ salon chỉ đăng tuyển thợ, thợ nail chỉ đăng tìm việc) — không cho đổi loại tin.
+- Xem chi tiết một tin đăng, và mở khung nhắn tin (giả lập, chưa nối hệ chat thật) để liên hệ người đăng.
+- Mục "Bài của tôi": sửa, xoá, hoặc đổi trạng thái (đang mở → đã tuyển/đã nhận việc → đã đóng) cho tin của chính mình.
+- Form đăng tin được tối ưu qua nhiều vòng góp ý: tự động điền tên salon theo vai trò đang đăng nhập, cho phép tải ảnh minh hoạ thật lên (chỉ xem trước tại chỗ, không lưu trữ thật), gộp các trường thông tin liên quan vào cùng một hàng, bỏ các trường gây rối không cần thiết (kỹ năng, kinh nghiệm tối thiểu, thời điểm cần thợ, cách trả lương).
+- Tích hợp AI viết mô tả tin đăng: một hàm phía server (không lộ khoá API ra trình duyệt) gọi một mô hình ngôn ngữ để viết mô tả ngắn bằng tiếng Việt, viết đúng góc nhìn (chủ salon khi tuyển thợ, chính người thợ khi tìm việc).
+- Chuẩn hoá cách hiển thị nhãn: nhãn "Cần gấp" màu đỏ, nhãn loại tin màu vàng (tuyển thợ) / xanh dương (tìm việc); nhãn mức lương chỉ hiện khi là lương theo tuần hoặc "thương lượng", các định dạng khác (theo giờ, ăn chia phần trăm) sẽ ẩn thay vì hiển thị sai ngữ cảnh.
 
-Các mục dưới đây đã bị hoãn khỏi phạm vi prototype (không phải đã xong) — cần làm lại từ đầu khi Phase 2 được lên lịch:
+## Scope
 
-1. **Chốt kiến trúc identity bridge** (việc đầu tiên, không code gì trước khi có câu trả lời) — làm sao Supabase RLS biết user đã đăng nhập JWT thật là chủ tiệm hay thợ, thuộc business nào. Xem 2-3 phương án đã phác thảo ở `docs/community-jobs-handoff-v2_260915.md` §3.1.
-2. Tạo OpenSpec change thật cho Community Jobs (`openspec/changes/community-jobs/`) trước khi code Phase 2, theo rule CLAUDE.md của repo (feature đụng ≥3 file + shared layer auth).
-3. Migration Supabase (bảng job post + RLS) theo hướng identity bridge đã chọn.
-4. Repository/hooks mới trong `src/data/repositories/community/` + `src/data/hooks/` — viết mới, KHÔNG tái dùng `communityDemoContent.ts`/`CommunityJobDetail.tsx` của prototype.
-5. UI thật: màn đăng bài 2 loại, màn "Bài của tôi", wire nút "Nhắn tin" vào `findOrCreateChannel` thật (pattern đã có ở `CommunityChatMemberActionsSheet.tsx:77-81`) — KHÔNG mang pattern chat giả local-state của prototype vào bản thật.
-6. QA 3 lớp cho bản thật + gỡ code demo cũ (`communityDemoContent.ts` phần jobs, và `CommunityJobDetail.tsx` nếu không còn cần giữ làm tài liệu tham khảo UX).
-7. Xử lý lỗ hổng moderation đã phát hiện: bảng `report` hiện không nhận report cho Jobs (enum chỉ có `post`/`comment`/`member`, bắt buộc `community_id`).
+**Trong phạm vi (prototype):**
+- Toàn bộ giao diện và luồng thao tác liệt kê ở mục "What Changes" trên.
+- Dữ liệu lưu tạm thời trong bộ nhớ trình duyệt (không lưu trữ lâu dài, mất khi tải lại trang).
 
-## Ràng buộc cứng (giữ nguyên cho cả prototype lẫn bản thật)
+**Ngoài phạm vi (để lại cho giai đoạn xây bản thật, chưa lên lịch):**
+- Nối đăng nhập thật của người dùng với hệ thống Cộng đồng (xem Risks & Blockers).
+- Lưu trữ tin đăng vào cơ sở dữ liệu thật, có phân quyền truy cập đúng người đúng vai trò.
+- Kết nối màn hình với dữ liệu thật qua lớp gọi dữ liệu chuẩn của ứng dụng (thay vì lưu tạm trong bộ nhớ trình duyệt).
+- Nối nút nhắn tin vào hệ thống chat thật đã có sẵn trong Cộng đồng (hiện tại chỉ là khung chat giả lập riêng cho tính năng này).
+- Kiểm thử đầy đủ 3 lớp (đơn vị, tích hợp, giao diện) cho phiên bản thật, và gỡ bỏ toàn bộ code minh hoạ sau khi phiên bản thật hoàn thành.
+- Xử lý việc tiếp nhận báo cáo/khiếu nại (report) cho tin đăng — hệ thống báo cáo hiện tại của Cộng đồng chưa hỗ trợ loại nội dung này.
 
-- KHÔNG xây hệ chat mới ở bản thật — tái dùng nguyên `findOrCreateChannel`.
-- KHÔNG làm AI-matching/ẩn danh (spec cũ đã bị PO bỏ, issue #1014/#589 không còn áp dụng).
-- Jobs vẫn là 1 tab trong `CommunityHome` hiện có (`/community?tab=jobs`), không tách route riêng.
-- API key của bên thứ 3 (DeepSeek) không bao giờ lộ ra frontend — luôn qua Vercel serverless function proxy như `api/generate-job-description.ts`.
+## Design — trạng thái từng hạng mục
 
-## Liên quan
-[[community-jobs-341_master_260915_v1.0.0]] (vault) · [[US-113-community-jobs-board]] (vault) · `docs/community-jobs-handoff_260915.md` (v1) · `docs/community-jobs-handoff-v2_260915.md` (v2) · issue [#1624](https://github.com/vlink-group/vlink-nexora/issues/1624) · [#1633](https://github.com/vlink-group/vlink-nexora/issues/1633) · [#1679](https://github.com/vlink-group/vlink-nexora/issues/1679)
+| Hạng mục | Quyết định / Thiết kế | Trạng thái ở mức prototype |
+|---|---|---|
+| Kiến trúc đăng nhập thật cho tính năng | Cần một quyết định nối đăng nhập thật của người dùng với vai trò (chủ salon / thợ nail) trước khi phân quyền dữ liệu thật | Chưa quyết định — hoãn sang giai đoạn xây bản thật |
+| Lưu trữ dữ liệu tin đăng | Cần bảng dữ liệu thật + quy tắc phân quyền truy cập | Chưa có — prototype dùng dữ liệu giả lập trong bộ nhớ trình duyệt |
+| Lớp gọi dữ liệu chuẩn (kết nối màn hình với dữ liệu thật) | Cần viết theo đúng lớp gọi dữ liệu chuẩn của ứng dụng | Chưa có — prototype gọi thẳng state cục bộ |
+| Màn đăng tin (2 loại) | Giao diện đăng tin, rút gọn trường thông tin, auto-fill, upload ảnh, AI viết mô tả | Đã hoàn thành ở mức prototype |
+| Màn quản lý tin của tôi | Sửa / xoá / đổi trạng thái tin đăng | Đã hoàn thành ở mức prototype |
+| Nhắn tin với người đăng tin | Nối vào hệ thống chat thật đã có sẵn của Cộng đồng | Chưa nối — prototype dùng khung chat giả lập riêng |
+| Chuẩn hoá nhãn/hiển thị trên tin đăng | Màu nhãn theo loại tin/mức độ khẩn cấp, lọc hiển thị mức lương hợp lệ | Đã hoàn thành ở mức prototype |
+| Kiểm thử 3 lớp + gỡ code minh hoạ | Áp dụng cho phiên bản thật, sau khi có dữ liệu/màn hình thật | Chưa thực hiện — chỉ mới kiểm thử build/giao diện thủ công cho prototype |
+
+## Risks & Blockers
+
+**Vấn đề kiến trúc lớn nhất:** ứng dụng hiện có hai hệ đăng nhập tách biệt, không liên quan đến nhau — (1) đăng nhập thật của chủ salon/thợ nail dùng cho các chức năng chính của ứng dụng, và (2) đăng nhập riêng của khu vực Cộng đồng (hiện chỉ dùng vài tài khoản minh hoạ cố định). Muốn cho phép "chỉ chủ salon mới đăng được tin tuyển, chỉ người đăng mới sửa/xoá được tin của mình" ở mức dữ liệu thật, hệ thống cần biết chính xác ai đang đăng nhập là chủ hay thợ theo đúng nghĩa của ứng dụng chính — hiện chưa có cầu nối nào giữa hai hệ đăng nhập này. Đây là quyết định phải chốt trước khi bắt đầu xây bất kỳ phần lưu trữ dữ liệu thật nào cho tính năng, không thể vừa làm vừa quyết định.
+
+**Rủi ro phụ:** hệ thống tiếp nhận báo cáo/khiếu nại nội dung hiện tại của Cộng đồng chưa có loại nội dung dành cho tin tuyển dụng — nếu tính năng này công khai với tên thật của salon, cần xử lý trước khi phát hành bản thật, không chỉ để "làm sau cho vui".
+
+## Tasks — tình trạng hiện tại
+
+- [x] Xây dựng đầy đủ luồng prototype (đăng tin, xem danh sách/chi tiết, quản lý tin của tôi, nhắn tin giả lập).
+- [x] Cải thiện form đăng tin qua nhiều vòng góp ý (rút gọn trường, auto-fill, upload ảnh, AI viết mô tả).
+- [x] Chuẩn hoá màu nhãn và cách hiển thị mức lương trên tin đăng.
+- [x] Kiểm thử build và giao diện thủ công cho prototype (không phát hiện lỗi chặn).
+- [ ] Quyết định kiến trúc nối đăng nhập thật (chưa bắt đầu).
+- [ ] Thiết kế + triển khai lưu trữ dữ liệu thật và lớp gọi dữ liệu chuẩn (chưa bắt đầu, phụ thuộc mục trên).
+- [ ] Nối màn hình với dữ liệu thật, nối nhắn tin vào hệ chat thật (chưa bắt đầu, phụ thuộc mục trên).
+- [ ] Kiểm thử 3 lớp cho phiên bản thật + gỡ bỏ code minh hoạ (chưa bắt đầu).
+- [ ] Xử lý khoảng trống trong hệ thống báo cáo/khiếu nại cho loại nội dung tin tuyển dụng (chưa bắt đầu).
+
+## Xem trực tiếp
+
+Demo prototype: https://nexora-ten-lime.vercel.app — route `/community?tab=jobs`, đăng nhập bằng 1 trong 3 vai trò minh hoạ có sẵn (chủ salon, thợ nail, khách) để thử toàn bộ luồng thao tác mô tả ở trên.
