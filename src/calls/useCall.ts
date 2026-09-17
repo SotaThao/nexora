@@ -3,17 +3,19 @@
  *
  * Bridges the external module store into React via `useSyncExternalStore` (already used
  * elsewhere in this repo, e.g. usePosNextTurnBalance.ts) rather than useState+useEffect
- * boilerplate. Mounting this hook also registers call-signaling handlers on the shared hub
- * connection, so any component that renders it (e.g. the future global call banner/overlay,
- * US-06) is enough to start receiving `IncomingCall` events.
+ * boilerplate. While authenticated, mounting this hook also keeps the shared hub connection alive
+ * and its call-signaling handlers attached (`registerCallSignaling`) independent of whether any
+ * chat-UI surface is mounted — so the always-mounted `CallOverlayHost` keeps receiving
+ * `IncomingCall` events app-wide, not just while the chat screen happens to be open.
  */
 
 import { useCallback, useEffect, useSyncExternalStore } from 'react'
+import { useSessionRole } from '../auth/useSessionRole'
 import {
   answerCall,
   endCall,
   getCallStateSnapshot,
-  initCallSignaling,
+  registerCallSignaling,
   rejectCall,
   startOutgoingCall,
   subscribeCallState,
@@ -24,10 +26,12 @@ import type { AnswerCallParams, StartOutgoingCallParams } from './callState'
 
 export function useCall() {
   const state = useSyncExternalStore(subscribeCallState, getCallStateSnapshot, getCallStateSnapshot)
+  const { isAuthenticated } = useSessionRole()
 
   useEffect(() => {
-    initCallSignaling()
-  }, [])
+    if (!isAuthenticated) return undefined
+    return registerCallSignaling()
+  }, [isAuthenticated])
 
   const start = useCallback((params: StartOutgoingCallParams) => startOutgoingCall(params), [])
   const answer = useCallback((params: AnswerCallParams) => answerCall(params), [])

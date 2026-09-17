@@ -17,7 +17,10 @@
  */
 
 import type { HubConnection } from '@microsoft/signalr'
-import { getCommunityChatHubConnection } from '../components/header-messages/communityChatRealtime'
+import {
+  getCommunityChatHubConnection,
+  subscribeCommunityChatHub,
+} from '../components/header-messages/communityChatRealtime'
 import {
   COMMUNITY_CALL_DISCONNECT_GRACE_MS,
   COMMUNITY_CALL_ENDED_RESET_DELAY_MS,
@@ -133,6 +136,9 @@ function extractErrorMessage(error: unknown): string {
 let attachedConnection: HubConnection | null = null
 let activeConnection: HubConnection | null = null
 let registerPromise: Promise<HubConnection | null> | null = null
+/** Keeps the shared hub alive independent of chat-UI mounts — see `registerCallSignaling`. */
+let keepAliveRefCount = 0
+let keepAliveUnsubscribe: (() => void) | null = null
 /** ICE servers passed into the in-flight startOutgoingCall/answerCall — consumed once answered. */
 let pendingIceServers: RTCIceServer[] = []
 
@@ -170,13 +176,29 @@ async function ensureCallSignalingRegistered(): Promise<HubConnection | null> {
 }
 
 /**
- * Registers call-signaling handlers on the shared community-chat hub connection. Idempotent —
- * safe to call repeatedly. `useCall()` calls this on mount so incoming calls can be received
- * before the user has done anything; also exported for manual/console verification (US-05 has no
- * UI yet to trigger this via a mounted component — see ticket's "How to Verify").
+ * Keeps the shared community-chat hub connection alive and call-signaling handlers attached for
+ * as long as at least one caller holds a registration — independent of whether any chat-UI
+ * surface (HeaderMessages, etc.) is mounted. Without this, the hub tears down whenever the chat
+ * ref count hits 0 (it's only ref-counted against chat surfaces) and incoming calls silently stop
+ * ringing outside the chat screen, with nothing left to reconnect it. `useCall()` calls this while
+ * the user is authenticated. Returns an unsubscribe function.
  */
-export function initCallSignaling(): void {
+export function registerCallSignaling(): () => void {
+  keepAliveRefCount += 1
+  if (keepAliveRefCount === 1) {
+    keepAliveUnsubscribe = subscribeCommunityChatHub()
+  }
+  // Always re-run: attaches handlers to whichever connection instance is current (idempotent —
+  // ensureCallSignalingRegistered only reattaches when the instance actually changed).
   void ensureCallSignalingRegistered()
+
+  return () => {
+    keepAliveRefCount = Math.max(0, keepAliveRefCount - 1)
+    if (keepAliveRefCount === 0 && keepAliveUnsubscribe) {
+      keepAliveUnsubscribe()
+      keepAliveUnsubscribe = null
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
