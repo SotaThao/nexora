@@ -120,7 +120,7 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
 
   return (
     <StaffAccountProvider staffId={staffId}>
-      <div className="min-h-dvh bg-nexoraCanvas text-nexoraText">
+      <div data-dashboard-shell className="min-h-dvh bg-nexoraCanvas text-nexoraText">
         <StaffSidebar 
           activeScreen={activeScreen} 
           onNavigate={handleNavigate} 

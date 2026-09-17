@@ -364,6 +364,8 @@ export const qk = {
   },
   merchantPosCustomerDetail: (businessId?: string, customerId?: string) =>
     ['merchantSettings', 'posCustomerDetail', businessId ?? '', customerId ?? ''],
+  merchantPosOrderCustomerId: (businessId?: string, orderId?: string, phoneE164?: string) =>
+    ['merchantSettings', 'posOrderCustomerId', businessId ?? '', orderId ?? '', phoneE164 ?? ''],
   merchantPosCustomerOrders: (businessId?: string, customerId?: string, filters?: object) => {
     const key: unknown[] = ['merchantSettings', 'posCustomerOrders', businessId ?? '', customerId ?? '']
     if (filters) key.push(filters)
