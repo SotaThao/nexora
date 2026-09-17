@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { ChevronDown, Inbox, Search } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Check, ChevronDown, Inbox, Search } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
   WORK_ORDERS_I18N,
@@ -23,6 +23,8 @@ import { formatWorkOrderDurationMinutes, formatWorkOrderMoney } from './workOrde
 interface WorkOrderServicePickerModalProps {
   mode: WorkOrderPickerMode
   initialServiceId?: string
+  /** Catalog service ids already on this work order — shown with a check in their category. */
+  existingServiceIds?: string[]
   categories: WorkOrderCatalogCategory[]
   isLoading?: boolean
   onConfirm: (services: WorkOrderCatalogService[]) => void
@@ -32,6 +34,7 @@ interface WorkOrderServicePickerModalProps {
 export default function WorkOrderServicePickerModal({
   mode,
   initialServiceId = '',
+  existingServiceIds = [],
   categories: catalog,
   isLoading = false,
   onConfirm,
@@ -41,7 +44,21 @@ export default function WorkOrderServicePickerModal({
   const isEdit = mode === WORK_ORDER_PICKER_MODE.edit
   const [query, setQuery] = useState('')
   const [selectedKeys, setSelectedKeys] = useState<string[]>([])
+  const existingIds = useMemo(() => new Set(existingServiceIds.filter(Boolean)), [existingServiceIds])
   const [openCategoryIds, setOpenCategoryIds] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    setOpenCategoryIds((current) => {
+      const next = new Set(current)
+      let changed = false
+      for (const category of catalog) {
+        if (category.services.some((service) => existingIds.has(service.id)) && !next.has(category.id)) {
+          next.add(category.id)
+          changed = true
+        }
+      }
+      return changed ? next : current
+    })
+  }, [catalog, existingIds])
   const categories = useMemo(() => filterWorkOrderCatalogCategories(query, catalog), [query, catalog])
   const initialKey = firstWorkOrderCatalogOptionKey(catalog, initialServiceId)
   const activeKey = selectedKeys[0] || initialKey
@@ -159,6 +176,7 @@ export default function WorkOrderServicePickerModal({
                 {category.services.map((service) => {
                   const optionKey = workOrderCatalogOptionKey(category.id, service.id)
                   const isSelected = isEdit ? optionKey === activeKey : selectedKeys.includes(service.id)
+                  const isAlreadyOnTicket = existingIds.has(service.id)
                   return (
                     <button
                       key={optionKey}
@@ -183,8 +201,19 @@ export default function WorkOrderServicePickerModal({
                           : `${WORK_ORDERS_LAYOUT_CLASS.pickerCheckbox} ${isSelected ? WORK_ORDERS_LAYOUT_CLASS.pickerCheckboxSelected : ''}`}
                         aria-hidden="true"
                       />
-                      <span>
-                        <span className={WORK_ORDERS_LAYOUT_CLASS.pickerOptionName}>{service.name}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className={WORK_ORDERS_LAYOUT_CLASS.pickerOptionNameRow}>
+                          <span className={WORK_ORDERS_LAYOUT_CLASS.pickerOptionName}>{service.name}</span>
+                          {isAlreadyOnTicket ? (
+                            <span
+                              className={WORK_ORDERS_LAYOUT_CLASS.pickerAlreadyOnTicket}
+                              title={t(WORK_ORDERS_I18N.pickerAlreadyOnTicket)}
+                            >
+                              <Check className="h-3 w-3" aria-hidden="true" />
+                              {t(WORK_ORDERS_I18N.pickerAlreadyOnTicket)}
+                            </span>
+                          ) : null}
+                        </span>
                         <span className={WORK_ORDERS_LAYOUT_CLASS.pickerOptionMeta}>
                           {formatWorkOrderDurationMinutes(service.durationMin, t)}
                           {` · ${category.name}`}
