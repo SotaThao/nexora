@@ -88,14 +88,23 @@ function buildPrompt(fields: JobDescriptionFields): string {
   }
   lines.push(`- Khu vực: ${location}`)
 
+  const example =
+    postKind === 'hiring'
+      ? '"Luxury Nails & Spa cần thợ bột và thợ tay chân nước có tay nghề ổn định, phục vụ khách quen là chính. ' +
+        'Tiệm đông khách quanh năm, bao lương tuần đầu để thợ mới quen khách trước khi tính ăn chia."'
+      : '"Mình là thợ nail có tay nghề bột và tay chân nước, đang tìm chỗ làm ổn định lâu dài khu Houston. ' +
+        'Có thể đi làm ngay, ưu tiên tiệm đông khách quen, môi trường làm việc thoải mái."'
+
   lines.push('')
   lines.push(
-    'Hãy viết một đoạn mô tả ngắn (khoảng 60-120 từ) bằng tiếng Việt, giọng văn tự nhiên, thân thiện, ' +
-      'đúng phong cách của cộng đồng ngành nail/salon người Việt tại Mỹ (ví dụ: "Luxury Nails & Spa cần thợ bột ' +
-      'và thợ tay chân nước có tay nghề ổn định, phục vụ khách quen là chính. Tiệm đông khách quanh năm, bao ' +
-      'lương tuần đầu để thợ mới quen khách trước khi tính ăn chia."). Dựa vào các thông tin đã cho ở trên (có ' +
-      'thể chỉ là một vài dòng), viết tự nhiên như một tin đăng thật, không cần liệt kê lại toàn bộ. Đoạn văn sẽ ' +
-      'được dùng trực tiếp làm nội dung phần "Lời nhắn thêm" trong form đăng tin.',
+    (postKind === 'hiring'
+      ? 'Hãy viết một đoạn mô tả ngắn (khoảng 60-120 từ) bằng tiếng Việt, dưới góc nhìn của CHỦ TIỆM đang cần tuyển thợ, ' +
+        `giọng văn tự nhiên, thân thiện, đúng phong cách của cộng đồng ngành nail/salon người Việt tại Mỹ (ví dụ: ${example}).`
+      : 'Hãy viết một đoạn mô tả ngắn (khoảng 60-120 từ) bằng tiếng Việt, dưới góc nhìn CỦA CHÍNH NGƯỜI THỢ đang tìm việc ' +
+        `(xưng "mình"/"em"/"anh/chị", KHÔNG viết như một tiệm đang tuyển người), giọng văn tự nhiên, thân thiện, đúng ` +
+        `phong cách của cộng đồng ngành nail/salon người Việt tại Mỹ (ví dụ: ${example}).`) +
+      ' Dựa vào các thông tin đã cho ở trên (có thể chỉ là một vài dòng), viết tự nhiên như một tin đăng thật, không ' +
+      'cần liệt kê lại toàn bộ. Đoạn văn sẽ được dùng trực tiếp làm nội dung phần "Lời nhắn thêm" trong form đăng tin.',
   )
   lines.push(
     'CHỈ trả về đúng đoạn mô tả đó, không thêm lời dẫn, không thêm markdown, không bọc trong dấu ngoặc kép.',
