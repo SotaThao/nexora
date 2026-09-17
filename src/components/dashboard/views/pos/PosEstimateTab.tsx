@@ -7,7 +7,7 @@ import { calculateEstimate, type EstimateDiscountType, type EstimateLine } from 
 import { formatUsdAmount } from '../../../../utils/currencyInput'
 import { randomUuid } from '../../../../utils/uuid'
 import CountryCodeSelect, { formatNationalNumber, getNationalPhonePlaceholder, isValidPhoneE164, normalizePhoneE164, PhoneDialCode } from '../../../CountryCodeSelect'
-import CategoryGroupedCatalogPicker from './CategoryGroupedCatalogPicker'
+import PosServiceCatalogPanel from './PosServiceCatalogPanel'
 import CustomServiceModal, { type CustomServiceTarget } from './modals/CustomServiceModal'
 import ThankYouScreen from '../../../checkin/parts/ThankYouScreen'
 import EstimateDiscountModal from './modals/EstimateDiscountModal'
@@ -100,34 +100,29 @@ export default function PosEstimateTab({ businessId, onCheckedIn, onFinished, on
         <button type="button" className={buttonClass} disabled={locked || lines.length === 0} onClick={clear}>{t(`${K}.clear`)}</button>
       </div>
       <div className="grid min-w-0 items-start gap-5 lg:grid-cols-2">
-        <div className="nexora-card pos-estimate-card min-w-0 space-y-3 px-4 pb-4 pt-2 sm:px-5 sm:pb-5">
-          <h3 className="flex min-h-11 items-center text-lg font-extrabold text-nexoraText">{t(`${W}.tabServices`)}</h3>
-          {catalog.isError ? <div role="alert" className="space-y-2 text-sm text-nexoraDanger"><p>{t(`${K}.catalogError`)}</p><button type="button" className={buttonClass} onClick={() => catalog.refetch()}>{t(`${K}.retry`)}</button></div> : catalog.isPending ? <p className="text-sm text-nexoraMuted">{t('common.loading')}</p> : (
-            <CategoryGroupedCatalogPicker
-              variant="grid"
-              showDuration
-              scrollInParentOnTablet
-              items={catalog.data ?? []}
-              isPending={locked}
-              missingPriceLabel={t(`${K}.enterPrice`)}
-              onAdd={id => {
-                const service = catalog.data?.find(item => item.id === id)
-                if (!service || locked) return
-                const existing = lines.find(line => line.serviceId === id)
-                if (existing) {
-                  setLines(current => current.map(line => line.key === existing.key ? { ...line, quantity: Math.min(99, line.quantity + 1) } : line))
-                } else {
-                  setLines(current => [...current, { key: randomUuid(), serviceId: service.price == null ? null : id, name: service.name, price: service.price ?? null, quantity: 1 }])
-                }
-              }}
-              addLabel={t(`${W}.addButton`)}
-              emptyLabel={t(`${W}.noServicesInCategory`)}
-              allCategoryLabel={t(`${W}.allCategories`)}
-              uncategorizedLabel={t(`${W}.uncategorized`)}
-              searchPlaceholder={t(`${W}.searchServicesPlaceholder`)}
-            />
-          )}
-        </div>
+        <PosServiceCatalogPanel
+          className="pos-estimate-card"
+          scrollInParentOnTablet
+          items={catalog.data ?? []}
+          isPending={locked}
+          missingPriceLabel={t(`${K}.enterPrice`)}
+          statusContent={catalog.isError ? (
+            <div role="alert" className="space-y-2 text-sm text-nexoraDanger">
+              <p>{t(`${K}.catalogError`)}</p>
+              <button type="button" className={buttonClass} onClick={() => catalog.refetch()}>{t(`${K}.retry`)}</button>
+            </div>
+          ) : catalog.isPending ? <p className="text-sm text-nexoraMuted">{t('common.loading')}</p> : undefined}
+          onAdd={id => {
+            const service = catalog.data?.find(item => item.id === id)
+            if (!service || locked) return
+            const existing = lines.find(line => line.serviceId === id)
+            if (existing) {
+              setLines(current => current.map(line => line.key === existing.key ? { ...line, quantity: Math.min(99, line.quantity + 1) } : line))
+            } else {
+              setLines(current => [...current, { key: randomUuid(), serviceId: service.price == null ? null : id, name: service.name, price: service.price ?? null, quantity: 1 }])
+            }
+          }}
+        />
         <div className="nexora-card pos-estimate-card min-w-0 space-y-3 px-4 pb-4 pt-2 sm:px-5 sm:pb-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="shrink-0 text-lg font-extrabold text-nexoraText">{t(`${K}.yourEstimate`)}</h3>
@@ -143,18 +138,18 @@ export default function PosEstimateTab({ businessId, onCheckedIn, onFinished, on
             </div>
           </div>
           {lines.length === 0 ? <p className="py-8 text-center text-sm text-nexoraMuted">{t(`${K}.empty`)}</p> : (
-            <div className="divide-y divide-dashed divide-nexoraBorder">
-              <div className="hidden grid-cols-[minmax(0,1fr)_6rem_5.5rem_2.75rem] gap-2 pb-3 text-[11px] font-bold text-nexoraMuted sm:grid">
+            <div className="pos-estimate-lines divide-y divide-dashed divide-nexoraBorder">
+              <div className="pos-estimate-line-header hidden gap-2 pb-3 text-[11px] font-bold text-nexoraMuted">
                 <span>{t(`${K}.service`)}</span><span>{t(`${K}.unitPrice`)}</span><span>{t(`${K}.quantity`)}</span><span />
               </div>
               {lines.map(line => (
-                <div key={line.key} className="grid grid-cols-[minmax(0,1fr)_5.5rem_2.75rem] items-center gap-2 py-3 sm:grid-cols-[minmax(0,1fr)_6rem_5.5rem_2.75rem]">
-                  <div className="col-span-3 min-w-0 sm:col-span-1">
+                <div key={line.key} className="pos-estimate-line grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 py-2">
+                  <div className="min-w-0">
                     <span className="break-words text-sm font-bold text-nexoraText">{line.name}</span>
                     {line.serviceId == null ? <span className="ml-2 text-[11px] text-nexoraMuted">{t(`${W}.customServiceBadge`)}</span> : null}
                   </div>
-                  {line.serviceId == null ? <button type="button" className={`${buttonClass} text-left`} disabled={locked} onClick={() => setCustomTarget({ serviceLineId: line.key, customServiceName: line.name, unitPrice: line.price ?? undefined, note: line.note })} aria-label={t(`${K}.editPrice`, { name: line.name })}>{line.price == null ? t(`${K}.enterPrice`) : formatUsdAmount(line.price)}</button> : <span className="text-sm font-semibold text-nexoraMuted">{formatUsdAmount(line.price as number)}</span>}
-                  <div role="group" aria-label={t(`${K}.lineQuantity`, { name: line.name })} className="flex h-8 min-w-0 items-center overflow-hidden rounded-lg border border-nexoraBorder bg-nexoraSurface focus-within:border-nexoraBrand">
+                  {line.serviceId == null ? <button type="button" className={`${buttonClass} pos-estimate-line-price justify-self-end text-left`} disabled={locked} onClick={() => setCustomTarget({ serviceLineId: line.key, customServiceName: line.name, unitPrice: line.price ?? undefined, note: line.note })} aria-label={t(`${K}.editPrice`, { name: line.name })}>{line.price == null ? t(`${K}.enterPrice`) : formatUsdAmount(line.price)}</button> : <span className="pos-estimate-line-price justify-self-end whitespace-nowrap text-sm font-semibold text-nexoraMuted">{formatUsdAmount(line.price as number)}</span>}
+                  <div role="group" aria-label={t(`${K}.lineQuantity`, { name: line.name })} className="flex h-8 w-[5.5rem] min-w-0 items-center justify-self-end overflow-hidden rounded-lg border border-nexoraBorder bg-nexoraSurface focus-within:border-nexoraBrand">
                     <button type="button" aria-label={`${t(`${W}.decreaseQty`)}: ${line.name}`} className="flex h-full w-7 shrink-0 items-center justify-center text-nexoraMuted transition-colors hover:bg-nexoraBrand/5 hover:text-nexoraBrandDark focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-nexoraBrand disabled:opacity-30" disabled={locked || !Number.isSafeInteger(line.quantity) || line.quantity <= 1} onClick={() => stepQuantity(line.key, -1)}><Minus aria-hidden="true" className="h-3.5 w-3.5" /></button>
                     <input type="number" min={1} max={99} step={1} inputMode="numeric" aria-label={t(`${K}.lineQuantity`, { name: line.name })} className="h-full min-w-0 flex-1 appearance-none border-0 bg-transparent p-0 text-center text-xs font-semibold text-nexoraText outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none disabled:opacity-60" value={Number.isNaN(line.quantity) ? '' : line.quantity} disabled={locked} onChange={event => {
                       const quantity = event.target.value === '' ? NaN : Number(event.target.value)
@@ -162,7 +157,7 @@ export default function PosEstimateTab({ businessId, onCheckedIn, onFinished, on
                     }} />
                     <button type="button" aria-label={`${t(`${W}.increaseQty`)}: ${line.name}`} className="flex h-full w-7 shrink-0 items-center justify-center text-nexoraMuted transition-colors hover:bg-nexoraBrand/5 hover:text-nexoraBrandDark focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-nexoraBrand disabled:opacity-30" disabled={locked || !Number.isSafeInteger(line.quantity) || line.quantity >= 99} onClick={() => stepQuantity(line.key, 1)}><Plus aria-hidden="true" className="h-3.5 w-3.5" /></button>
                   </div>
-                  <button type="button" className="flex h-11 w-11 items-center justify-center rounded-lg text-nexoraMuted hover:bg-nexoraCanvas disabled:opacity-50" disabled={locked} aria-label={t(`${K}.removeService`, { name: line.name })} onClick={() => setLines(current => current.filter(item => item.key !== line.key))}><Trash2 className="h-4 w-4" /></button>
+                  <button type="button" className="flex h-11 w-11 items-center justify-center justify-self-end rounded-lg text-nexoraMuted hover:bg-nexoraCanvas disabled:opacity-50" disabled={locked} aria-label={t(`${K}.removeService`, { name: line.name })} onClick={() => setLines(current => current.filter(item => item.key !== line.key))}><Trash2 className="h-4 w-4" /></button>
                 </div>
               ))}
             </div>

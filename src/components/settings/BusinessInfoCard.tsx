@@ -3,13 +3,16 @@
 // general Settings > Profile tab and from the POS > General Settings screen
 // without duplicating the form/view markup.
 import type { ChangeEvent, Dispatch, FormEvent, SetStateAction } from 'react'
-import { Building2, Camera, Edit2, ExternalLink, HelpCircle } from 'lucide-react'
+import { Building2, Camera, Edit2, ExternalLink, HelpCircle, Lock, ShieldCheck } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import PhoneInput from '../ui/PhoneInput'
 import { formatAddressForMap, type MapAddressParts } from '../../utils/mapUrl'
 import { formatPhoneDisplay } from '../../utils/phoneDisplay'
 
 type SettingsFormErrors = Record<string, string>
+
+const KYB_VERIFIED_STATUSES = new Set(['kyb_approved', 'verified_pro', 'verified_lite'])
+const KYB_PENDING_STATUSES = new Set(['kyb_pending', 'kyb_required'])
 
 type BusinessInfoCardProps = {
   businessAddress?: MapAddressParts
@@ -35,6 +38,8 @@ type BusinessInfoCardProps = {
   businessErrors: SettingsFormErrors
   setBusinessErrors: Dispatch<SetStateAction<SettingsFormErrors>>
   canEdit: boolean
+  /** Effective KYB status — used to label why edit is locked when canEdit is false. */
+  verificationStatus?: string
   startEditBusiness: () => void
   saveBusiness: (e: FormEvent) => void
 }
@@ -63,6 +68,7 @@ export default function BusinessInfoCard({
   businessErrors,
   setBusinessErrors,
   canEdit,
+  verificationStatus,
   startEditBusiness,
   saveBusiness,
 }: BusinessInfoCardProps) {
@@ -91,24 +97,54 @@ export default function BusinessInfoCard({
       </p>
     ) : null
 
+  const lockKind = KYB_VERIFIED_STATUSES.has(verificationStatus || '')
+    ? 'verified'
+    : KYB_PENDING_STATUSES.has(verificationStatus || '')
+      ? 'pending'
+      : 'locked'
+  const lockBadgeLabel = t(`components.settings.tabs.ProfileTab.businessInfoLock.${lockKind}.badge`)
+  const lockHint = t(`components.settings.tabs.ProfileTab.businessInfoLock.${lockKind}.hint`)
+
   return (
     <div className={`rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 relative ${className}`}>
-      <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
-        <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
-          <Building2 className="h-4 w-4 text-purple-500" />
-          {t('components.settings.tabs.ProfileTab.businessInformation')}
+      <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4 gap-3">
+        <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2 min-w-0">
+          <Building2 className="h-4 w-4 text-purple-500 shrink-0" />
+          <span className="truncate">{t('components.settings.tabs.ProfileTab.businessInformation')}</span>
         </h4>
         {!isEditingBusiness && canEdit && (
           <button
             type="button"
             onClick={startEditBusiness}
             aria-label="Edit Business Information"
-            className="text-slate-400 hover:text-nexoraBrand transition p-1 hover:bg-slate-100 rounded"
+            className="text-slate-400 hover:text-nexoraBrand transition p-1 hover:bg-slate-100 rounded shrink-0"
           >
             <Edit2 className="h-3.5 w-3.5" />
           </button>
         )}
+        {!isEditingBusiness && !canEdit && (
+          <span
+            className={`inline-flex items-center gap-1 shrink-0 rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${
+              lockKind === 'verified'
+                ? 'bg-emerald-50 text-emerald-700'
+                : lockKind === 'pending'
+                  ? 'bg-amber-50 text-amber-700'
+                  : 'bg-slate-100 text-slate-600'
+            }`}
+            title={lockHint}
+          >
+            {lockKind === 'verified' ? (
+              <ShieldCheck className="h-3 w-3" aria-hidden />
+            ) : (
+              <Lock className="h-3 w-3" aria-hidden />
+            )}
+            {lockBadgeLabel}
+          </span>
+        )}
       </div>
+      {!isEditingBusiness && !canEdit && (
+        <p className="mb-4 -mt-2 text-[11px] leading-4 text-nexoraMuted">{lockHint}</p>
+      )}
 
       {onLogoChange && (
         <div className="flex items-center gap-3 pb-4 mb-4 border-b border-nexoraRule">

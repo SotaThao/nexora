@@ -207,7 +207,7 @@ export function resolveDashboardPosMobileSpacer(pathname) {
   const isPosRoute =
     normalizedPathname === '/dashboard/pos' || normalizedPathname.startsWith('/dashboard/pos/')
 
-  return isPosRoute ? 'mb-20 md:hidden' : 'hidden'
+  return isPosRoute ? 'mb-20 lg:hidden' : 'hidden'
 }
 
 export function parseMetricValue(value) {

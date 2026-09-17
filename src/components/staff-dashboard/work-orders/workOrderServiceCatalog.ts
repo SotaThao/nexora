@@ -449,6 +449,7 @@ export function addWorkOrderCatalogService(
 
 // Keeps the line's identity (id/key) so the save swaps the existing service rather than deleting
 // the line and adding another one, which would throw away its place on the ticket.
+// Rule 9: every change/swap waits for last-4, even when the new service is unflagged.
 export function replaceWorkOrderCatalogService(
   lines: WorkOrderEditableLine[],
   key: string,
@@ -456,14 +457,17 @@ export function replaceWorkOrderCatalogService(
 ): WorkOrderEditableLine[] {
   return lines.map((line) => {
     if (line.key !== key) return line
-    return lineFromCatalog(service, {
-      key: line.key,
-      id: line.id,
-      technicianName: line.technicianName,
-      isAddOn: line.isAddOn,
-      lineStatus: line.lineStatus,
-      isMine: line.isMine,
-    })
+    return {
+      ...lineFromCatalog(service, {
+        key: line.key,
+        id: line.id,
+        technicianName: line.technicianName,
+        isAddOn: line.isAddOn,
+        lineStatus: line.lineStatus,
+        isMine: line.isMine,
+      }),
+      approval: WORK_ORDER_SERVICE_APPROVAL.pending,
+    }
   })
 }
 
@@ -555,20 +559,42 @@ export function retainPendingLocalWorkOrderLines(
   ]
 }
 
+/** Drop a parent line immediately. Rule 8: delete uses a confirm dialog only — never last-4. */
 export function removeWorkOrderServiceLine(
   lines: WorkOrderEditableLine[],
   key: string,
 ): WorkOrderEditableLine[] {
   return lines.flatMap((line) => {
     if (line.key !== key || line.isAddOn) return [line]
-    // A line that was never saved is only a local add — dropping it undoes that add.
-    if (!line.id) return []
-    if (line.pendingRemoval) return [line]
-    if (workOrderLineRequiresCustomerApproval(line)) {
-      return [{ ...line, pendingRemoval: true }]
-    }
     return []
   })
+}
+
+/**
+ * Persist a remove against the server basket only. Built from ticket items (not local edit state)
+ * so pending adds/swaps are not bundled into the same request — Rule 8 must never ask for last-4.
+ */
+export function toRemoveWorkOrderServiceLinesPayload(
+  items: WorkOrderItem[],
+  removeLineId: string,
+): SaveStaffWorkOrderServiceLinePayload[] {
+  return items
+    .filter((item) => (
+      Boolean(item.id)
+      && item.id !== removeLineId
+      && !item.isAddOn
+      && item.isMine !== false
+    ))
+    .map((item) => (
+      item.posServiceId
+        ? { id: item.id ?? null, posServiceId: item.posServiceId }
+        : {
+            id: item.id ?? null,
+            customServiceName: item.serviceName,
+            price: item.unitPrice,
+            ...(item.durationMinutes > 0 ? { durationMinutes: item.durationMinutes } : {}),
+          }
+    ))
 }
 
 export function markWorkOrderLinePending(
