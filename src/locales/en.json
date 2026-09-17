@@ -4479,6 +4479,8 @@
             "totalPaid": "Total paid",
             "assignTechnicianFirst": "Assign a technician to every service first.",
             "addLineFirst": "Add at least one service or product before checking out.",
+            "vlinkPayNotConfirmed": "VlinkPay has not confirmed this payment yet. The ticket was not closed.",
+            "vlinkPayUnresolved": "The payment window closed before confirming. Check VlinkPay before collecting again — the customer may already have paid.",
             "addDiscount": "Discount",
             "editDiscount": "Discount ✓",
             "discountModalTitle": "Discount — {{serviceName}}",

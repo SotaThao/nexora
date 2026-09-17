@@ -16,6 +16,9 @@ import type {
   CheckoutServiceCatalogItemApiDto,
   CompleteOrderPayload,
   CompleteOrderResultApiDto,
+  VlinkPayPaymentStatusApiDto,
+  VlinkPayPaymentUrlApiDto,
+  VlinkPayPaymentUrlPayload,
   EligiblePromotionApiDto,
   InServiceOrderApiDto,
   OrderDetailApiDto,
@@ -812,6 +815,32 @@ export function useSetOrderPaymentAllocations(businessId?: string) {
 // Complete is the terminal action for an order — it releases every serving staff and
 // removes the order from both In-Service Orders and Turn Board, so all three caches
 // (plus Waitlist, since a busy front desk may be checking it) must refresh together.
+/**
+ * Opens a VlinkPay payment page for an order. Returns the URL to put in an iframe; the cashier
+ * is signed in by the URL itself, so nothing is typed on the POS device.
+ */
+export function useVlinkPayPaymentUrl(businessId?: string) {
+  return useMutation<
+    VlinkPayPaymentUrlApiDto,
+    Error,
+    { orderId: string; payload: VlinkPayPaymentUrlPayload }
+  >({
+    mutationFn: ({ orderId, payload }) =>
+      posCheckoutRepository.getVlinkPayPaymentUrl(businessId as string, orderId, payload),
+  })
+}
+
+/**
+ * Asks VlinkPay whether an order was paid. Called before completing, so a cashier cannot close
+ * the payment window and settle the ticket on a payment that never happened.
+ */
+export function useVlinkPayPaymentStatus(businessId?: string) {
+  return useMutation<VlinkPayPaymentStatusApiDto, Error, { orderId: string }>({
+    mutationFn: ({ orderId }) =>
+      posCheckoutRepository.getVlinkPayPaymentStatus(businessId as string, orderId),
+  })
+}
+
 export function useCompleteOrder(businessId?: string) {
   const queryClient = useQueryClient()
   return useMutation<CompleteOrderResultApiDto, Error, { orderId: string; payload: CompleteOrderPayload }>({
