@@ -45,6 +45,17 @@ function postKindLabel(kind: PostKind) {
   return kind === 'hiring' ? 'Tuyển thợ' : 'Tìm việc'
 }
 
+function postKindBadgeClassName(kind: PostKind) {
+  return kind === 'hiring' ? 'bg-yellow-50 text-yellow-800' : 'bg-blue-50 text-blue-700'
+}
+
+function displayableSalary(salary: string): string | null {
+  const normalized = salary.trim().toLowerCase()
+  if (!normalized) return null
+  if (normalized.includes('/tuần') || normalized.includes('thương lượng')) return salary
+  return null
+}
+
 function statusLabel(status: DemoJob['status'], postKind: PostKind) {
   if (status === 'filled') return postKind === 'hiring' ? 'Đã tuyển xong' : 'Đã tìm được việc'
   if (status === 'closed') return 'Đã đóng'
@@ -656,12 +667,12 @@ export function CommunityJobsPanel() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5">
-                      {job.urgent ? <span className="shrink-0 rounded bg-nexoraWarning px-1.5 py-1 text-[10px] font-extrabold text-white">Cần gấp</span> : null}
-                      <span className="shrink-0 rounded-full bg-nexoraBrandSoft px-2 py-1 text-[10px] font-extrabold text-nexoraBrand">{postKindLabel(job.postKind)}</span>
+                      {job.urgent ? <span className="shrink-0 rounded bg-nexoraDanger px-1.5 py-1 text-[10px] font-extrabold text-white">Cần gấp</span> : null}
+                      <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-extrabold ${postKindBadgeClassName(job.postKind)}`}>{postKindLabel(job.postKind)}</span>
                     </div>
-                    {job.salary ? (
+                    {displayableSalary(job.salary) ? (
                       <span
-                        className="shrink-0 max-w-[144px] truncate rounded-full border border-nexoraDanger/30 bg-nexoraDanger/10 px-2.5 py-1 text-[11px] font-black leading-tight text-nexoraDanger"
+                        className="shrink-0 max-w-[144px] truncate rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-black leading-tight text-blue-700"
                         title={job.salary}
                       >
                         {job.salary}
