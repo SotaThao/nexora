@@ -1163,6 +1163,7 @@ export interface OrderDetailApiDto {
   receiptPhone?: string | null
   completedAt?: string | null
   note?: string | null
+  notePhotoUrls?: string[] | null
 }
 
 /** One option in the "+ Add-On" picker, scoped to the service line it was opened from. */

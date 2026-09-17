@@ -58,6 +58,11 @@ export const errorCodeToI18nKey = {
   PAYOUT_CONFIRM_NOT_ALLOWED: 'errors.payout_confirm_not_allowed',
   PAYOUT_AMOUNT_EXCEEDS_DEBT: 'errors.payout_amount_exceeds_debt',
 
+  // Income/Payout Categories (issue #584 / #1645) — shared TransactionCategory entity
+  TRANSACTION_CATEGORY_NAME_REQUIRED: 'errors.transaction_category_name_required',
+  TRANSACTION_CATEGORY_NAME_TOO_LONG: 'errors.transaction_category_name_too_long',
+  TRANSACTION_CATEGORY_NAME_DUPLICATE: 'errors.transaction_category_name_duplicate',
+
   // Image
   IMAGE_FILE_SIZE_EXCEEDED: 'errors.image_file_size_exceeded',
   IMAGE_UNSUPPORTED_FILE_TYPE: 'errors.image_unsupported_file_type',

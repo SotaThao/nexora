@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { usePagination } from '../../../../../hooks/usePagination'
@@ -62,7 +62,19 @@ export default function CheckInOverviewPanel({
   const summary = data?.summary
   const guestSources = data?.guestSources ?? []
   const items = data?.items?.items ?? []
-  const maxGuestSourceCount = Math.max(1, ...guestSources.map((g) => g.count))
+
+  // Multiple CustomerSource values (e.g. PosCheckIn + PosSelfCheckIn) share the same
+  // display label — merge their counts so the panel shows one row per label, not per enum value.
+  const guestSourceRows = useMemo(() => {
+    const countsByLabelKey = new Map<string, number>()
+    for (const g of guestSources) {
+      const labelKey = GUEST_SOURCE_LABEL_KEYS[g.source as CustomerSource] ?? 'sourceWalkIn'
+      countsByLabelKey.set(labelKey, (countsByLabelKey.get(labelKey) ?? 0) + g.count)
+    }
+    return Array.from(countsByLabelKey, ([labelKey, count]) => ({ labelKey, count }))
+  }, [guestSources])
+
+  const maxGuestSourceCount = Math.max(1, ...guestSourceRows.map((g) => g.count))
 
   const handleStatusChange = (next: (typeof STATUS_FILTERS)[number]) => {
     if (next === statusFilter) return
@@ -114,15 +126,13 @@ export default function CheckInOverviewPanel({
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             <div className="rounded-xl border border-nexoraBorder bg-white p-3">
               <p className="text-lg font-bold text-nexoraText sm:text-xl">{t(p + 'guestSourcesTitle')}</p>
-              {guestSources.length === 0 ? (
+              {guestSourceRows.length === 0 ? (
                 <p className="mt-2 text-xs text-nexoraMuted">{t(p + 'guestSourcesEmpty')}</p>
               ) : (
                 <div className="mt-2 space-y-1.5">
-                  {guestSources.map((g) => (
-                    <div key={g.source} className="flex items-center gap-2 text-xs">
-                      <span className="w-20 shrink-0 truncate text-nexoraMuted">
-                        {t(p + (GUEST_SOURCE_LABEL_KEYS[g.source as CustomerSource] ?? 'sourceWalkIn'))}
-                      </span>
+                  {guestSourceRows.map((g) => (
+                    <div key={g.labelKey} className="flex items-center gap-2 text-xs">
+                      <span className="w-20 shrink-0 truncate text-nexoraMuted">{t(p + g.labelKey)}</span>
                       <div className="h-2 flex-1 rounded-full bg-nexoraCanvas">
                         <div
                           className="h-2 rounded-full bg-emerald-800"
@@ -144,7 +154,7 @@ export default function CheckInOverviewPanel({
           <div className="rounded-xl border border-nexoraBorder bg-white p-4">
             <div className="-mx-4 -mt-4 flex items-center gap-2 rounded-t-xl bg-gray-50 px-4 py-3">
               <h3 className="text-lg font-bold text-nexoraText sm:text-xl">{t(p + 'allCheckInsTitle')}</h3>
-              <span className="text-xs font-bold text-nexoraMuted">{summary?.totalCheckIns ?? 0}</span>
+              <span className="text-xs font-bold text-nexoraMuted">{data?.items?.totalCount ?? 0}</span>
             </div>
 
             <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">

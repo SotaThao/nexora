@@ -5,7 +5,6 @@ import {
   STAFF_BUSINESS_LINK_STATUS,
   resolveStaffBusinessLinkStatusLabel,
 } from '../../../utils/staffBusinessLinkStatus'
-import { STAFF_SALONS_PATH } from '../staffSalonPaths'
 import {
   StaffWorkOrdersViewKind,
   WORK_ORDERS_I18N,
@@ -503,6 +502,7 @@ export function workOrderAssignedTechnicianLabel(
 
 export type StaffWorkOrdersView =
   | { kind: StaffWorkOrdersViewKind.Redirect; to: string }
+  | { kind: StaffWorkOrdersViewKind.Entry; salons: WorkOrderSalon[] }
   | { kind: StaffWorkOrdersViewKind.Tickets; salon: WorkOrderSalon }
   | { kind: StaffWorkOrdersViewKind.Detail; salon: WorkOrderSalon; orderId: string }
 
@@ -511,7 +511,7 @@ export function resolveStaffWorkOrdersView(
   ticketId: string | undefined,
   salons: WorkOrderSalon[],
 ): StaffWorkOrdersView {
-  if (!salonId) return { kind: StaffWorkOrdersViewKind.Redirect, to: STAFF_SALONS_PATH }
+  if (!salonId) return { kind: StaffWorkOrdersViewKind.Entry, salons }
 
   const salon = getWorkOrderSalonById(salons, salonId) ?? {
     id: salonId,

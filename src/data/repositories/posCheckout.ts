@@ -244,11 +244,27 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
       )
     },
 
-    async setOrderNote(businessId: string, orderId: string, note: string | null): Promise<boolean> {
+    async setOrderNote(
+      businessId: string,
+      orderId: string,
+      note: string | null,
+      notePhotoUrls?: string[] | null,
+    ): Promise<boolean> {
       return await client.put<boolean>(
         `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/note`,
-        { note },
+        { note, notePhotoUrls },
       )
+    },
+
+    async uploadOrderNotePhoto(businessId: string, orderId: string, file: File): Promise<string> {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await client.upload<{ imageUrl: string }>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/note/photo`,
+        formData,
+        'POST',
+      )
+      return res.imageUrl
     },
 
     async setOrderStaffTipSplit(

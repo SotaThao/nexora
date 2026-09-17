@@ -11,11 +11,15 @@
 // page (PosCheckInTab / CheckInSurface), the same one the customer kiosk runs.
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowLeft, Loader2, Package, UserRound, Plus, X, Printer, ClipboardCheck } from 'lucide-react'
+import { ArrowLeft, Loader2, Package, UserRound, Plus, X, Printer, ClipboardCheck, Camera, FolderOpen, Phone } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import type { TechnicianOption } from '../../../checkin/parts/TechnicianPickerGrid'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getErrorMessage } from '../../../../data/errorCodes'
+import { posCheckoutRepository } from '../../../../data/repositories/posCheckout'
+import CameraCaptureModal from '../../../ui/CameraCaptureModal'
+import ImageFileInput from '../../../ui/ImageFileInput'
+import IconButton from '../../../ui/IconButton'
 import {
   useAddOrderCustomServiceLine,
   useAddOrderServiceLine,
@@ -80,8 +84,10 @@ import type {
   CompleteOrderResultApiDto,
 } from '../../../../types/repositories'
 import { Skeleton, SkeletonList, SkeletonListItem } from '../../../ui/skeleton'
-import { formatCustomerPhone } from './customer/customerFormatters'
-import CategoryGroupedCatalogPicker from './CategoryGroupedCatalogPicker'
+import { maskCustomerPhone } from './customer/customerFormatters'
+import CustomerVisitTag from './CustomerVisitTag'
+import OrderCustomerDetailButton from './customer/OrderCustomerDetailButton'
+import PosServiceCatalogPanel from './PosServiceCatalogPanel'
 import TicketActionSkeletonOverlay, { TICKET_SKELETON_ROW_COUNT } from './TicketActionSkeletonOverlay'
 import ChangeServiceModal from './modals/ChangeServiceModal'
 import CustomServiceModal from './modals/CustomServiceModal'
@@ -156,6 +162,8 @@ const SHOW_CHANGE_SERVICE_ACTION = true
 // Long enough to swallow a run through the chip row, short enough that stepping away right after
 // the last tap still writes before the cashier can reach anything that reads the order back.
 const PAYMENT_METHOD_SAVE_DELAY_MS = 500
+
+const MAX_NOTE_PHOTOS = 5
 
 // Split amounts are compared in whole cents: a split that is one cent out has to read as one cent
 // out, and float dollars cannot be trusted to say so.
@@ -309,6 +317,7 @@ const POS_FRONT_DESK_ROUTE_PATH = `/dashboard/${DASHBOARD_MENU_ID.pos}`
 export default function PosOrderWorkspace({
   businessId,
   orderId,
+  isNewCustomer,
   mode = 'edit',
   successReceiptMode,
   onClose,
@@ -328,6 +337,7 @@ export default function PosOrderWorkspace({
 }: {
   businessId: string
   orderId: string
+  isNewCustomer?: boolean
   // Edit is operational order maintenance. Checkout is the only entry mode that reveals
   // tip, payment method, receipt and payment summary immediately.
   mode?: PosOrderWorkspaceMode
@@ -372,6 +382,7 @@ export default function PosOrderWorkspace({
   // AssignStaffToServiceLine only accepts a Waiting or InService order.
   const canEditLines =
     order?.status === PosOrderStatus.Waiting || order?.status === PosOrderStatus.InService
+  const notePhotos = order?.notePhotoUrls ?? []
   const { data: serviceCatalog = [] } = useCheckoutServiceCatalog(businessId)
   const {
     data: receivePaymentMethods = [],
@@ -545,6 +556,11 @@ export default function PosOrderWorkspace({
   const [tipMode, setTipMode] = useState<TipMode>('noTip')
   const [customTipInput, setCustomTipInput] = useState('')
   const [noteInput, setNoteInput] = useState('')
+  const [isUploadingNotePhoto, setIsUploadingNotePhoto] = useState(false)
+  const [isNoteCameraOpen, setIsNoteCameraOpen] = useState(false)
+  const [previewNotePhoto, setPreviewNotePhoto] = useState<string | null>(null)
+  const notePhotoActionPending = isBusy || isUploadingNotePhoto || setNote.isPending
+  const notePhotoControlsDisabled = notePhotoActionPending || notePhotos.length >= MAX_NOTE_PHOTOS
   const [paymentMethod, setPaymentMethod] = useState<PosCheckoutPaymentMethodType>('Cash')
   // Quick Split is a sub-screen of checkout, not a mode of it: the split is built there and the
   // payment is still confirmed once by the Pay button here. Unmounting it on close is deliberate —
@@ -634,18 +650,20 @@ export default function PosOrderWorkspace({
   // and the name each row shows, pending assignment included, is the one that decides it.
   const technicianHeadingByLineKey = useMemo(() => {
     const headings = new Map<string, string>()
-    let previousLabel: string | null = null
+    let group: { key: string; label: string; count: number } | null = null
 
     for (const line of visibleLines) {
       if (line.itemType !== 'Service') {
-        previousLabel = null
+        group = null
         continue
       }
       const { technicianName } = lineTechnicianDisplay(line)
       const label = technicianName
-        ?? t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel')
-      if (label !== previousLabel) headings.set(line.key, label)
-      previousLabel = label
+        ? `${t('components.dashboard.views.pos.PosOrderWorkspace.technicianPrefix')} ${technicianName}`
+        : t('components.dashboard.views.pos.PosOrderWorkspace.needsTechnician')
+      if (!group || group.label !== label) group = { key: line.key, label, count: 0 }
+      group.count += 1
+      headings.set(group.key, `${label} (${group.count})`)
     }
 
     return headings
@@ -1526,6 +1544,32 @@ export default function PosOrderWorkspace({
     )
   }
 
+  const saveNotePhotos = (nextPhotos: string[]) => {
+    if (setNote.isPending) return
+    const trimmed = noteInput.trim()
+    setNote.mutate(
+      { orderId, note: trimmed.length > 0 ? trimmed : null, notePhotoUrls: nextPhotos },
+      { onError: reportError },
+    )
+  }
+
+  const handleAddNotePhoto = async (file: File) => {
+    if (notePhotoControlsDisabled) return
+    setIsUploadingNotePhoto(true)
+    try {
+      const url = await posCheckoutRepository.uploadOrderNotePhoto(businessId, orderId, file)
+      saveNotePhotos([...notePhotos, url])
+    } catch (err) {
+      reportError(err)
+    } finally {
+      setIsUploadingNotePhoto(false)
+    }
+  }
+
+  const handleRemoveNotePhoto = (url: string) => {
+    saveNotePhotos(notePhotos.filter((photoUrl) => photoUrl !== url))
+  }
+
   // A percentage tip mode (pct10/pct20) is a live % of servicesSubtotal, not a one-time
   // dollar snapshot — without this, adding/removing a service after picking e.g. 10%
   // leaves the old dollar amount on the order, so Payment Summary's Tip/Total silently
@@ -1672,39 +1716,62 @@ export default function PosOrderWorkspace({
   // JSX block away from coming back. Nothing sells products anywhere while it is hidden: check-in
   // dropped them with the one-page redesign, and this was the last surface.
   const catalogPanel = (
-          <div className="nexora-card space-y-3 p-4">
-            <div className="border-b border-nexoraBorder pb-2">
-              <h3 className="text-xs font-black uppercase tracking-wider text-nexoraMuted">
-                {t('components.dashboard.views.pos.PosOrderWorkspace.tabServices')}
-              </h3>
-            </div>
-
-            <CategoryGroupedCatalogPicker
-              variant="grid"
-              showDuration
-              items={serviceCatalog}
-              isPending={isServiceCatalogPending}
-              onAdd={(itemId) => {
-                const service = serviceCatalog.find((s) => s.id === itemId)
-                if (service) handleCatalogServiceClick(service)
-              }}
-              addLabel={t('components.dashboard.views.pos.PosOrderWorkspace.addButton')}
-              emptyLabel={t('components.dashboard.views.pos.PosOrderWorkspace.noServicesInCategory')}
-              allCategoryLabel={t('components.dashboard.views.pos.PosOrderWorkspace.allCategories')}
-              uncategorizedLabel={t('components.dashboard.views.pos.PosOrderWorkspace.uncategorized')}
-              searchPlaceholder={t('components.dashboard.views.pos.PosOrderWorkspace.searchServicesPlaceholder')}
-            />
-          </div>
+    <PosServiceCatalogPanel
+      items={serviceCatalog}
+      isPending={isServiceCatalogPending}
+      onAdd={(itemId) => {
+        const service = serviceCatalog.find((s) => s.id === itemId)
+        if (service) handleCatalogServiceClick(service)
+      }}
+    />
   )
 
   const orderPanel = (
           <div className="space-y-4">
+            {order ? (
+              <section
+                aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.ticketCustomerTitle')}
+                className="space-y-1 rounded-xl border border-nexoraBrand/20 bg-gradient-to-br from-nexoraBrandSoft/60 via-nexoraSurface to-nexoraSurface px-3 py-2"
+              >
+                <h2 className="text-[11px] font-black uppercase tracking-wider text-nexoraBrandDark">
+                  {t('components.dashboard.views.pos.PosOrderWorkspace.ticketCustomerTitle')}
+                </h2>
+                <div className="min-w-0 space-y-0.5">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <p className="min-w-0 break-words text-sm font-bold uppercase leading-snug text-nexoraText">
+                      {order.customerName}
+                    </p>
+                    {typeof isNewCustomer === 'boolean' ? (
+                      <CustomerVisitTag isNewCustomer={isNewCustomer} />
+                    ) : null}
+                    <OrderCustomerDetailButton
+                      key={order.id}
+                      businessId={businessId}
+                      orderId={order.id}
+                      phoneE164={order.customerPhoneE164 || (
+                        order.customerPhoneCountryCode && order.customerPhone
+                          ? `${order.customerPhoneCountryCode}${order.customerPhone}`
+                          : undefined
+                      )}
+                    />
+                  </div>
+                  {order.customerPhone || order.customerPhoneE164 ? (
+                    <p className="flex items-center gap-1.5 text-xs font-normal text-nexoraText">
+                      <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      <span className="min-w-0 whitespace-nowrap font-sans text-xs font-normal [font-variant-ligatures:none]">
+                        {maskCustomerPhone(order.customerPhoneE164 || order.customerPhone)}
+                      </span>
+                    </p>
+                  ) : null}
+                </div>
+              </section>
+            ) : null}
             <div
               role="region"
               aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.orderDetailTitle')}
               className="space-y-3 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4"
             >
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-[10px] font-black tracking-wider text-nexoraMuted">
                   <span className="uppercase">
                     {t('components.dashboard.views.pos.PosOrderWorkspace.orderDetailTitle')}
@@ -1761,8 +1828,7 @@ export default function PosOrderWorkspace({
                             index > 0 ? 'mt-2' : ''
                           }`}
                         >
-                          <UserRound className="h-3.5 w-3.5 shrink-0 text-nexoraBrandDark" />
-                          <span className="min-w-0 truncate text-[11px] font-black uppercase tracking-wider text-nexoraBrandDark">
+                          <span className="min-w-0 truncate text-[11px] font-black tracking-wider text-nexoraBrandDark">
                             {technicianHeadingByLineKey.get(line.key)}
                           </span>
                         </div>
@@ -2156,6 +2222,87 @@ export default function PosOrderWorkspace({
                 placeholder={t('components.dashboard.views.pos.PosOrderWorkspace.ticketNotePlaceholder')}
                 aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteLabel')}
                 className="w-full rounded-lg border border-nexoraBorder bg-white px-2.5 py-2 text-xs text-nexoraText outline-none focus:border-nexoraBrand disabled:cursor-not-allowed disabled:opacity-60"
+              />
+
+              <div className="flex items-center justify-between">
+                <div className="flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setIsNoteCameraOpen(true)}
+                    disabled={notePhotoControlsDisabled}
+                    aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteTakePhoto')}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-nexoraBorder bg-white text-nexoraMuted transition-colors hover:border-nexoraBrand/30 hover:text-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Camera className="h-4 w-4" />
+                  </button>
+                  <ImageFileInput
+                    as="label"
+                    onPickFile={handleAddNotePhoto}
+                    disabled={notePhotoControlsDisabled}
+                    accept="image/jpeg,image/png,image/webp"
+                    inputAriaLabel={t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteChooseFile')}
+                    className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border border-nexoraBorder bg-white text-nexoraMuted transition-colors ${notePhotoControlsDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:border-nexoraBrand/30 hover:text-nexoraBrandDark'}`}
+                  >
+                    <FolderOpen className="h-4 w-4" />
+                  </ImageFileInput>
+                  {isUploadingNotePhoto ? <Loader2 className="h-4 w-4 animate-spin text-nexoraMuted" /> : null}
+                </div>
+                <span className="text-[10px] font-semibold text-nexoraMuted">
+                  {t('components.dashboard.views.pos.PosOrderWorkspace.ticketNotePhotoCount', { count: notePhotos.length, max: MAX_NOTE_PHOTOS })}
+                </span>
+              </div>
+
+              {notePhotos.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {notePhotos.map((url) => (
+                    <div key={url} className="group relative h-14 w-14 overflow-hidden rounded-lg border border-nexoraBorder">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewNotePhoto(url)}
+                        aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.ticketNotePhotoAlt')}
+                        className="h-full w-full"
+                      >
+                        <img src={url} alt={t('components.dashboard.views.pos.PosOrderWorkspace.ticketNotePhotoAlt')} className="h-full w-full object-cover" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleRemoveNotePhoto(url) }}
+                        disabled={notePhotoActionPending}
+                        aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteRemovePhoto')}
+                        className="absolute right-0.5 top-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-black/60 text-white disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              {previewNotePhoto ? (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm" onClick={() => setPreviewNotePhoto(null)}>
+                  <div className="nexora-modal-card max-w-lg" onClick={(e) => e.stopPropagation()}>
+                    <div className="mb-3 flex items-center justify-between">
+                      <h2 className="text-sm font-extrabold text-nexoraText">
+                        {t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteTitle')}
+                      </h2>
+                      <IconButton label={t('common.cancel')} onClick={() => setPreviewNotePhoto(null)}>
+                        <X className="h-4 w-4" />
+                      </IconButton>
+                    </div>
+                    <img
+                      src={previewNotePhoto}
+                      alt={t('components.dashboard.views.pos.PosOrderWorkspace.ticketNotePhotoAlt')}
+                      className="mx-auto max-h-[70vh] w-auto rounded-xl border border-nexoraBorder object-contain"
+                    />
+                  </div>
+                </div>
+              ) : null}
+
+              <CameraCaptureModal
+                open={isNoteCameraOpen}
+                onClose={() => setIsNoteCameraOpen(false)}
+                onCapture={(file) => handleAddNotePhoto(file)}
+                accept="image/jpeg,image/png,image/webp"
               />
             </div>
 
@@ -2923,7 +3070,6 @@ export default function PosOrderWorkspace({
         <h1 className="text-2xl font-bold leading-tight text-nexoraText">
           {t('components.dashboard.views.pos.PosOrderWorkspace.titleUpdate', {
             orderNumber: order?.orderNumber ?? '',
-            customerName: order?.customerName ?? '',
           })}
         </h1>
       </div>
@@ -2934,7 +3080,7 @@ export default function PosOrderWorkspace({
         </div>
       ) : (
         <div
-          className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
+          className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
           aria-busy={isBusy}
         >
           {catalogPanel}

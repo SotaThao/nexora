@@ -223,5 +223,6 @@ export default function useBusinessInfoForm({
     startEditBusiness,
     saveBusiness,
     canEditProfile,
+    effectiveVerificationStatus,
   }
 }

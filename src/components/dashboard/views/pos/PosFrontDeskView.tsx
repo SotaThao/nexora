@@ -94,6 +94,8 @@ import {
 } from './report/posReportPeriod'
 import PosCheckInTab from './PosCheckInTab'
 import PosEstimateTab from './PosEstimateTab'
+import PosFullscreenButton from './PosFullscreenButton'
+import usePosFullscreen from './usePosFullscreen'
 import PosCompletedOrdersPanel from './PosCompletedOrdersPanel'
 import NewBookingForm from './booking/NewBookingForm'
 import BookingTab from './booking/BookingTab'
@@ -309,18 +311,22 @@ function readReportSelectionFromParams(
 // The Front Desk tabs are wider than a phone viewport, so the strip scrolls horizontally
 // (see index.css `.nexora-no-scrollbar` — the app's styled scrollbar would otherwise sit on
 // top of the active-tab underline). A silent scroll area reads as a cut-off list, so each
-// edge gets an arrow. The arrow slots only exist while the strip actually overflows; within
-// that, an arrow at its edge goes `invisible` rather than unmounting, so scrolling never
-// shifts the tabs sideways.
+// edge gets an arrow only when the tabs exceed the full available width. Both arrow slots
+// remain mounted while scrolling, with the unavailable direction disabled, to avoid shifts.
 function ScrollableTabStrip({ children }: { children: ReactNode }) {
   const { t } = useTranslation()
+  const containerRef = useRef<HTMLDivElement>(null)
   const stripRef = useRef<HTMLDivElement>(null)
+  const [hasOverflow, setHasOverflow] = useState(false)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
 
   const syncArrows = useCallback(() => {
     const strip = stripRef.current
-    if (!strip) return
+    const container = containerRef.current
+    if (!strip || !container) return
+    // Measure against the full row so the arrows cannot create their own overflow.
+    setHasOverflow(strip.scrollWidth > container.clientWidth + TAB_SCROLL_EDGE_TOLERANCE_PX)
     const maxScrollLeft = strip.scrollWidth - strip.clientWidth
     setCanScrollLeft(strip.scrollLeft > TAB_SCROLL_EDGE_TOLERANCE_PX)
     setCanScrollRight(strip.scrollLeft < maxScrollLeft - TAB_SCROLL_EDGE_TOLERANCE_PX)
@@ -335,6 +341,7 @@ function ScrollableTabStrip({ children }: { children: ReactNode }) {
     // strip overflows without the strip itself ever being resized.
     const resizeObserver = new ResizeObserver(syncArrows)
     resizeObserver.observe(strip)
+    if (containerRef.current) resizeObserver.observe(containerRef.current)
     for (const tab of Array.from(strip.children)) resizeObserver.observe(tab)
     return () => resizeObserver.disconnect()
   }, [syncArrows, children])
@@ -349,8 +356,8 @@ function ScrollableTabStrip({ children }: { children: ReactNode }) {
     'flex h-9 w-8 shrink-0 self-center items-center justify-center rounded-lg text-nexoraMuted transition-colors hover:bg-nexoraCanvas hover:text-nexoraText disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-nexoraMuted'
 
   return (
-    <div className="flex items-center gap-1">
-      <button
+    <div ref={containerRef} className="flex min-w-0 items-center gap-1">
+      {hasOverflow ? <button
         type="button"
         aria-label={t(tk('scrollTabsLeft'))}
         onClick={() => scrollByStep(-1)}
@@ -358,11 +365,11 @@ function ScrollableTabStrip({ children }: { children: ReactNode }) {
         className={arrowClass}
       >
         <ChevronLeft className="h-4 w-4" />
-      </button>
-      <div ref={stripRef} onScroll={syncArrows} className="nexora-no-scrollbar flex flex-1 gap-1 overflow-x-auto py-2">
+      </button> : null}
+      <div ref={stripRef} onScroll={syncArrows} className="nexora-no-scrollbar flex min-w-0 flex-1 gap-1 overflow-x-auto py-2">
         {children}
       </div>
-      <button
+      {hasOverflow ? <button
         type="button"
         aria-label={t(tk('scrollTabsRight'))}
         onClick={() => scrollByStep(1)}
@@ -370,7 +377,7 @@ function ScrollableTabStrip({ children }: { children: ReactNode }) {
         className={arrowClass}
       >
         <ChevronRight className="h-4 w-4" />
-      </button>
+      </button> : null}
     </div>
   )
 }
@@ -397,6 +404,7 @@ export default function PosFrontDeskView({
   includeTechnicianReportTab?: boolean
 }) {
   const { t, currentLanguage } = useTranslation()
+  const { isFullscreen, toggleFullscreen } = usePosFullscreen()
   const { showToast, showConfirm } = useNotification()
   const queryClient = useQueryClient()
   const { data: access, isLoading: isAccessLoading } = usePosAccess(businessId)
@@ -1366,13 +1374,13 @@ export default function PosFrontDeskView({
   }
 
   return (
-    <div className="pos-front-desk-action-surface flex flex-col gap-4">
+    <div className={`pos-front-desk-action-surface flex flex-col gap-4${isFullscreen ? ' pos-front-desk-expanded' : ''}`}>
       {/* Hidden while an Order Workspace is open (Check-in draft or editing an existing
           order) — iPad space optimization: this title/description block is
           "where am I" chrome that's redundant once the staff is heads-down on one
           customer's ticket, and the tab bar right below already stays visible/tappable
           for switching away. */}
-      {!updateWorkspace && activeTab !== PosFrontDeskTab.CheckIn ? (
+      {!isFullscreen && !updateWorkspace && activeTab !== PosFrontDeskTab.CheckIn ? (
         <section className="px-0.5">
           <div className="space-y-1">
             <h1 className="text-xl font-extrabold leading-tight tracking-tight text-nexoraText">
@@ -1447,6 +1455,7 @@ export default function PosFrontDeskView({
         <PosOrderWorkspace
           businessId={businessId}
           orderId={updateWorkspace.orderId}
+          isNewCustomer={orderList.find((order) => order.id === updateWorkspace.orderId)?.isNewCustomer}
           mode={updateWorkspace.mode}
           successReceiptMode={updateWorkspace.receiptMode}
           businessName={receiptBusinessName}
@@ -1989,6 +1998,7 @@ export default function PosFrontDeskView({
           setActiveTab(PosFrontDeskTab.Booking)
         }}
       />
+      <PosFullscreenButton isFullscreen={isFullscreen} onToggle={toggleFullscreen} />
     </div>
   )
 }

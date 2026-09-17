@@ -6,6 +6,7 @@ const AUDIENCE_LABEL_KEY: Record<OneQrAudience, string> = {
   [OneQrAudience.Customer]: 'oneqr.audience.customer',
   [OneQrAudience.Staff]: 'oneqr.audience.staff',
   [OneQrAudience.Owner]: 'oneqr.audience.owner',
+  [OneQrAudience.AIVoice]: 'oneqr.audience.aivoice',
 }
 
 export default function OneQrAudienceTabs({
@@ -57,7 +58,7 @@ export default function OneQrAudienceTabs({
             onClick={() => onAudienceChange(audience)}
             onKeyDown={(event) => handleKeyDown(event, index)}
             className={[
-              'inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-bold transition',
+              'inline-flex min-h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full px-2 text-[11px] font-bold transition sm:px-3 sm:text-xs',
               isActive
                 ? 'bg-nexoraBrand text-white shadow-nexora-soft'
                 : 'text-nexoraMuted hover:text-nexoraText',

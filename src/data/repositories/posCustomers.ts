@@ -4,6 +4,7 @@
  * on every call, same convention as posOrdersRepository/posBookingRepository, since a Staff
  * caller may be linked to more than one business.
  */
+import { parsePhoneNumberFromString } from 'libphonenumber-js'
 import httpClient from '../../lib/httpClient'
 import type {
   PosCustomerDetailApiDto,
@@ -14,6 +15,8 @@ import type {
 } from '../../types/repositories'
 
 type HttpClient = typeof httpClient
+
+const CUSTOMER_LOOKUP_PAGE_SIZE = 100
 
 const EMPTY_CUSTOMER_LIST_PAGE: PosCustomerListPage = {
   items: [],
@@ -53,8 +56,15 @@ function withVisitFlag<T extends { isNewCustomer?: boolean }>(item: T): T & { is
   return { ...item, isNewCustomer: item.isNewCustomer === true }
 }
 
+function normalizeInternationalPhone(value?: string | null): string | null {
+  const phone = value?.trim() ?? ''
+  if (!phone.startsWith('+')) return null
+  const parsed = parsePhoneNumberFromString(phone, { extract: false })
+  return parsed?.isPossible() && !parsed.ext ? parsed.number : null
+}
+
 export function createPosCustomersRepository(client: HttpClient = httpClient) {
-  return {
+  const repository = {
     async getCustomerList(businessId: string, query: PosCustomerListQuery = {}): Promise<PosCustomerListPage> {
       const res = await client.get<PosCustomerListPage>(
         `/api/v1/merchant/pos/${businessId}/customers`,
@@ -82,7 +92,41 @@ export function createPosCustomersRepository(client: HttpClient = httpClient) {
       )
       return res ?? EMPTY_CUSTOMER_ORDER_HISTORY_PAGE
     },
+
+    async getCustomerIdForOrder(businessId: string, orderId: string, phoneE164: string): Promise<string | null> {
+      const phone = normalizeInternationalPhone(phoneE164)
+      if (!businessId || !orderId || !phone) return null
+
+      for (let pageNumber = 1; ; pageNumber += 1) {
+        const customers = await repository.getCustomerList(businessId, {
+          searchTerm: phone,
+          pageNumber,
+          pageSize: CUSTOMER_LOOKUP_PAGE_SIZE,
+        })
+
+        for (const customer of customers.items) {
+          const customerPhone = normalizeInternationalPhone(
+            customer.phoneE164 || `${customer.phoneCountryCode ?? ''}${customer.phone}`,
+          )
+          if (customerPhone !== phone) continue
+
+          // Search returns phone substrings; history confirms the persisted order/customer link.
+          for (let historyPageNumber = 1; ; historyPageNumber += 1) {
+            const history = await repository.getCustomerOrderHistory(businessId, customer.id, {
+              pageNumber: historyPageNumber,
+              pageSize: CUSTOMER_LOOKUP_PAGE_SIZE,
+            })
+            if (history.items.some((order) => order.id === orderId)) return customer.id
+            if (!history.hasNextPage) break
+          }
+        }
+
+        if (!customers.hasNextPage) return null
+      }
+    },
   }
+
+  return repository
 }
 
 export const posCustomersRepository = createPosCustomersRepository()
