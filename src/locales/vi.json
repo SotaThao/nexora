@@ -4674,6 +4674,7 @@
             "unknownActor": "Ngưỡi dùng không xác định"
           },
           "CustomerTab": {
+            "editCustomer": "Chỉnh sửa khách hàng",
             "searchLabel": "Tìm kiếm",
             "searchPlaceholder": "Tìm theo tên hoặc số điện thoại…",
             "sortLabel": "Sắp xếp theo ngày tạo",
@@ -4690,6 +4691,7 @@
             "columnCreatedAt": "Ngày tạo",
             "columnActions": "Thao tác",
             "viewAction": "Xem",
+            "editAction": "Sửa",
             "customerStatus": {
               "Active": "Đang hoạt động",
               "InActive": "Ngừng hoạt động"
@@ -6565,6 +6567,10 @@
             "fieldBirthday": "Ngày sinh",
             "fieldAddress": "Địa chỉ",
             "fieldAddressPlaceholder": "Số nhà, đường, thành phố",
+            "fieldCountry": "Quốc gia",
+            "fieldCountryPlaceholder": "Chọn quốc gia",
+            "addressDetecting": "Đang tìm thông tin địa chỉ…",
+            "addressDetectFailed": "Chưa tìm được thông tin địa chỉ. Bạn có thể nhập thủ công.",
             "fieldType": "Loại khách hàng",
             "types": {
               "Individual": "Cá nhân",
@@ -6587,6 +6593,7 @@
             "statusActive": "Hoạt động",
             "statusInactive": "Ngừng hoạt động",
             "close": "Đóng",
+            "back": "Quay lại",
             "cancel": "Hủy",
             "save": "Lưu thay đổi"
           },

@@ -4,7 +4,7 @@
 // iPad portrait hides the Status/Created At columns and folds them into a line under the name
 // instead — same "responsive collapse, don't remove data" principle as elsewhere in POS.
 import { useTranslation } from '../../../../../contexts/LanguageContext'
-import { Eye } from 'lucide-react'
+import { Eye, Pencil } from 'lucide-react'
 import type { PosCustomerListItemApiDto } from '../../../../../types/repositories'
 import { formatBookingHubDateTimeParts } from '../../bookingHubFormatters'
 import {
@@ -43,9 +43,11 @@ function statusLabelKey(status: string): string {
 export default function CustomerTable({
   customers,
   onView,
+  onEdit,
 }: {
   customers: PosCustomerListItemApiDto[]
   onView: (customerId: string) => void
+  onEdit?: (customerId: string) => void
 }) {
   const { t, currentLanguage } = useTranslation()
   const p = 'components.dashboard.views.pos.CustomerTab.'
@@ -106,14 +108,26 @@ export default function CustomerTable({
                   </div>
                 </td>
                 <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} px-4 py-3 text-right`}>
-                  <button
-                    type="button"
-                    onClick={() => onView(customer.id)}
-                    className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-2.5 text-[10px] font-extrabold text-violet-700 transition-colors hover:border-violet-300 hover:bg-violet-100"
-                  >
-                    <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-                    {t(p + 'viewAction')}
-                  </button>
+                  <div className="inline-flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => onView(customer.id)}
+                      className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-2.5 text-[10px] font-extrabold text-violet-700 transition-colors hover:border-violet-300 hover:bg-violet-100"
+                    >
+                      <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                      {t(p + 'viewAction')}
+                    </button>
+                    {onEdit ? (
+                      <button
+                        type="button"
+                        onClick={() => onEdit(customer.id)}
+                        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-nexoraBrand/30 bg-white px-2.5 text-[10px] font-extrabold text-nexoraBrand transition-colors hover:border-nexoraBrand hover:bg-nexoraBrand/5"
+                      >
+                        <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                        {t(p + 'editAction')}
+                      </button>
+                    ) : null}
+                  </div>
                 </td>
               </tr>
             )

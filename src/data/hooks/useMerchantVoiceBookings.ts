@@ -500,6 +500,8 @@ export function useUpdateMerchantVoiceCustomer() {
     mutationFn: ({ id, body }) => merchantVoiceRepository.updateCustomer(id, body),
     onSuccess: () => {
       invalidateMerchantVoiceCustomers(queryClient)
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosCustomerListRoot() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosCustomerDetailRoot() })
     },
   })
 }
