@@ -7323,6 +7323,20 @@
           "state": "Bang hoặc Tỉnh",
           "country": "Quốc gia",
           "businessInformation": "Thông tin doanh nghiệp",
+          "businessInfoLock": {
+            "verified": {
+              "badge": "Đã KYB",
+              "hint": "Thông tin doanh nghiệp bị khóa vì tài khoản này đã xác minh KYB."
+            },
+            "pending": {
+              "badge": "Đang xét duyệt",
+              "hint": "Không thể chỉnh thông tin doanh nghiệp trong lúc KYB đang được xét duyệt."
+            },
+            "locked": {
+              "badge": "Chỉ xem",
+              "hint": "Thông tin doanh nghiệp đã bị khóa và không thể chỉnh sửa."
+            }
+          },
           "enterTheLegalOr": "Nhập tên hợp pháp hoặc tên công khai của cửa hàng hoặc salon của bạn sẽ hiển thị trên màn hình thanh toán của khách hàng.",
           "businessName": "Tên doanh nghiệp",
           "businessEmailPlaceholder": "vd. lienhe@salon.com",
