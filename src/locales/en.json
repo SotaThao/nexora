@@ -7177,6 +7177,20 @@
           "state": "State",
           "country": "Country",
           "businessInformation": "Business Information",
+          "businessInfoLock": {
+            "verified": {
+              "badge": "KYB Verified",
+              "hint": "Business information is locked because this account is KYB verified."
+            },
+            "pending": {
+              "badge": "Under Review",
+              "hint": "Business information can't be edited while KYB verification is under review."
+            },
+            "locked": {
+              "badge": "Read only",
+              "hint": "Business information is locked and can't be edited."
+            }
+          },
           "enterTheLegalOr": "Enter the legal or public name of your store or salon as it will appear on customer payment screens.",
           "businessName": "Business Name",
           "businessEmailPlaceholder": "e.g. contact@yoursalon.com",
