@@ -54,6 +54,9 @@ export default function CallOverlay() {
   const [, forceTick] = useState(0)
   const localVideoRef = useRef<HTMLVideoElement>(null)
   const remoteVideoRef = useRef<HTMLVideoElement>(null)
+  // Voice calls render no <video> tile, so the remote audio-only stream needs its own
+  // always-mounted sink — otherwise remoteVideoRef.current stays null and no audio ever plays.
+  const remoteAudioRef = useRef<HTMLAudioElement>(null)
 
   useEffect(() => {
     if (phase !== 'active') return
@@ -61,18 +64,24 @@ export default function CallOverlay() {
     return () => clearInterval(interval)
   }, [phase])
 
-  // Bind MediaStreams to the <video> elements imperatively (srcObject isn't a declarative prop).
+  const isVideoCall = callType === CommunityCallType.Video
+
+  // Bind MediaStreams to the <video>/<audio> elements imperatively (srcObject isn't a declarative prop).
   useEffect(() => {
     if (localVideoRef.current) localVideoRef.current.srcObject = localStream
   }, [localStream])
   useEffect(() => {
-    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = remoteStream
-  }, [remoteStream])
+    const target = isVideoCall ? remoteVideoRef.current : remoteAudioRef.current
+    if (!target) return
+    target.srcObject = remoteStream ?? null
+    if (remoteStream) {
+      // autoPlay can be silently blocked by browser autoplay policy; retry explicitly.
+      void target.play().catch(() => undefined)
+    }
+  }, [remoteStream, isVideoCall])
 
   const isVisible = phase === 'outgoing-ringing' || phase === 'connecting' || phase === 'active' || phase === 'ended'
   if (!isVisible) return null
-
-  const isVideoCall = callType === CommunityCallType.Video
   const displayName = peerName?.trim() || '—'
   const initials = getHeaderMessageContactInitials(displayName)
   const endedKey = endedReason ? ENDED_REASON_KEY[endedReason] : undefined
@@ -191,6 +200,8 @@ export default function CallOverlay() {
         </div>
       ) : (
         <div className="flex w-full max-w-xs flex-col items-center gap-5 rounded-3xl bg-nexoraSurface p-8 text-center shadow-2xl">
+          {/* No visual surface needed — this is the sink that makes the peer's voice audible. */}
+          <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
           {avatarNode}
           <div>
             <p className="text-lg font-bold text-nexoraText">{displayName}</p>
