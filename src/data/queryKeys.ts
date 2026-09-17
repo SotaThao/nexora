@@ -697,6 +697,9 @@ export const qk = {
   communityChatMessagesInfinite: (sessionId?: string | null, pageSize?: number) =>
     ['communityChat', 'messages', sessionId ?? '', 'infinite', pageSize ?? 20] as const,
 
+  // Community Call (US-02/US-05) — voice/video call TURN credentials.
+  communityCallIceServers: () => ['communityCall', 'iceServers'] as const,
+
   // Nexora Voice trial (merchant)
   voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],
 
