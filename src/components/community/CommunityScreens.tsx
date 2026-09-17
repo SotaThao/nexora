@@ -375,6 +375,7 @@ export function CommunityHome() {
   const [composerCommunityId, setComposerCommunityId] = useState<string | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
   const currentTab = searchParams.get('tab') || 'feed'
+  const needsCommunityList = currentTab === 'feed' || currentTab === 'groups' || currentTab === 'announcements'
 
   const ringCommunities = myCommunities.data?.items.length ? myCommunities.data.items : (communities.data?.items ?? [])
   const feedCommunities = (myCommunities.data?.items.length ? myCommunities.data.items : communities.data?.items ?? []).slice(0, 3)
@@ -389,9 +390,13 @@ export function CommunityHome() {
         <div className="mx-auto w-full max-w-[680px] flex-1 2xl:mx-0">
           <CommunityTabs activeTab={currentTab} onChange={(tab) => setSearchParams({ tab }, { replace: true })} />
           <div className="space-y-4">
-            {isLoading || myCommunities.isLoading || communities.isLoading ? <LoadingState rows={4} /> : null}
-            {myCommunities.error ? <ErrorState error={myCommunities.error} onRetry={() => void myCommunities.refetch()} /> : null}
-            {communities.error ? <ErrorState error={communities.error} onRetry={() => void communities.refetch()} /> : null}
+            {needsCommunityList ? (
+              <>
+                {isLoading || myCommunities.isLoading || communities.isLoading ? <LoadingState rows={4} /> : null}
+                {myCommunities.error ? <ErrorState error={myCommunities.error} onRetry={() => void myCommunities.refetch()} /> : null}
+                {communities.error ? <ErrorState error={communities.error} onRetry={() => void communities.refetch()} /> : null}
+              </>
+            ) : null}
             
             {currentTab === 'feed' ? (
               <>
