@@ -136,7 +136,7 @@ export default async function handler(req: any, res: any) {
         },
         body: JSON.stringify({
           model: AI_MODEL,
-          max_tokens: 300,
+          max_tokens: 1024,
           messages: [{ role: 'user', content: prompt }],
         }),
       })
@@ -154,7 +154,8 @@ export default async function handler(req: any, res: any) {
     }
 
     const data = await anthropicResponse.json()
-    const description = data?.content?.[0]?.text?.trim()
+    const textBlock = Array.isArray(data?.content) ? data.content.find((block: any) => block?.type === 'text') : null
+    const description = textBlock?.text?.trim()
 
     if (!isNonEmptyString(description)) {
       console.error('[generate-job-description] unexpected DeepSeek payload:', JSON.stringify(data))
