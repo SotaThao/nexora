@@ -18,6 +18,8 @@ export enum CommunityChatMessageType {
   Image = 'Image',
   File = 'File',
   System = 'System',
+  /** Voice/video call system message (US-04 backend) — content/metadata describe the call outcome. */
+  Call = 'Call',
 }
 
 /** REST base route segment (appended to VITE_API_BASE_URL). */

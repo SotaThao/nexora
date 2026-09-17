@@ -40,12 +40,17 @@ function addLocalDays(date: Date, days: number): Date {
   return next
 }
 
-function startOfSundayWeek(date: Date): Date {
-  return addLocalDays(date, -date.getDay())
+/** Monday-first week: Mon=0 … Sun=6 offset from the week's Monday. */
+function startOfMondayWeek(date: Date): Date {
+  return addLocalDays(date, -((date.getDay() + 6) % 7))
 }
 
-function rangeFromSunday(date: Date, dayCount: number): BookingCalendarRange {
-  const dateFrom = startOfSundayWeek(date)
+function daysUntilSunday(date: Date): number {
+  return (7 - date.getDay()) % 7
+}
+
+function rangeFromMonday(date: Date, dayCount: number): BookingCalendarRange {
+  const dateFrom = startOfMondayWeek(date)
   return {
     dateFrom: formatLocalDateIso(dateFrom),
     dateTo: formatLocalDateIso(addLocalDays(dateFrom, dayCount - 1)),
@@ -62,19 +67,37 @@ export function getBookingCalendarRange(
     case PosBookingCalendarViewMode.Day:
       return { dateFrom: anchorDate, dateTo: anchorDate }
     case PosBookingCalendarViewMode.Week:
-      return rangeFromSunday(anchor, 7)
+      return rangeFromMonday(anchor, 7)
     case PosBookingCalendarViewMode.TwoWeeks:
-      return rangeFromSunday(anchor, 14)
+      return rangeFromMonday(anchor, 14)
     case PosBookingCalendarViewMode.ThreeWeeks:
-      return rangeFromSunday(anchor, 21)
+      return rangeFromMonday(anchor, 21)
     case PosBookingCalendarViewMode.Month: {
       const firstOfMonth = new Date(anchor.getFullYear(), anchor.getMonth(), 1, 12)
       const lastOfMonth = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0, 12)
       return {
-        dateFrom: formatLocalDateIso(startOfSundayWeek(firstOfMonth)),
-        dateTo: formatLocalDateIso(addLocalDays(lastOfMonth, 6 - lastOfMonth.getDay())),
+        dateFrom: formatLocalDateIso(startOfMondayWeek(firstOfMonth)),
+        dateTo: formatLocalDateIso(addLocalDays(lastOfMonth, daysUntilSunday(lastOfMonth))),
       }
     }
+  }
+}
+
+/**
+ * Date bounds for appointment-status metrics. Month mode stays inside the selected
+ * calendar month; the visual grid may still include adjacent spillover days.
+ */
+export function getBookingCalendarStatsRange(
+  anchorDate: string,
+  mode: PosBookingCalendarViewMode,
+): BookingCalendarRange {
+  if (mode !== PosBookingCalendarViewMode.Month) {
+    return getBookingCalendarRange(anchorDate, mode)
+  }
+  const anchor = parseLocalDateIso(anchorDate)
+  return {
+    dateFrom: formatLocalDateIso(new Date(anchor.getFullYear(), anchor.getMonth(), 1, 12)),
+    dateTo: formatLocalDateIso(new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0, 12)),
   }
 }
 
@@ -128,6 +151,62 @@ export function getBookingCalendarStatusGroup(status: string): BookingCalendarSt
   }
 }
 
+export type BookingCalendarStatusSummary = {
+  total: number
+  completed: number
+  upcoming: number
+  pending: number
+  cancelled: number
+}
+
+/** Appointment Status Summary (#1303) — same buckets as the calendar color legend. */
+export function summarizeBookingCalendarStatuses(
+  bookings: ReadonlyArray<Pick<BookingListItemApiDto, 'status'>>,
+): BookingCalendarStatusSummary {
+  const summary: BookingCalendarStatusSummary = {
+    total: bookings.length,
+    completed: 0,
+    upcoming: 0,
+    pending: 0,
+    cancelled: 0,
+  }
+  for (const booking of bookings) {
+    switch (getBookingCalendarStatusGroup(booking.status)) {
+      case BookingCalendarStatusGroup.Completed:
+        summary.completed += 1
+        break
+      case BookingCalendarStatusGroup.Upcoming:
+        summary.upcoming += 1
+        break
+      case BookingCalendarStatusGroup.Pending:
+        summary.pending += 1
+        break
+      case BookingCalendarStatusGroup.Cancelled:
+        summary.cancelled += 1
+        break
+    }
+  }
+  return summary
+}
+
+/**
+ * Prior period of equal shape for the "X% busier than …" comparison on the status summary.
+ * Day compares to the same weekday last week (e.g. this Saturday vs last Saturday).
+ * Month compares the prior calendar month only (not the spillover grid used for rendering).
+ */
+export function getBookingCalendarCompareRange(
+  anchorDate: string,
+  mode: PosBookingCalendarViewMode,
+): BookingCalendarRange {
+  if (mode === PosBookingCalendarViewMode.Day) {
+    return getBookingCalendarStatsRange(
+      formatLocalDateIso(addLocalDays(parseLocalDateIso(anchorDate), -7)),
+      mode,
+    )
+  }
+  return getBookingCalendarStatsRange(shiftBookingCalendarAnchor(anchorDate, mode, -1), mode)
+}
+
 function compareBookingWallClock(
   left: BookingListItemApiDto,
   right: BookingListItemApiDto,
@@ -147,9 +226,6 @@ export function buildBookingCalendarOverviewDays(
   const activeByDate = new Map<string, BookingListItemApiDto[]>()
 
   for (const booking of bookings) {
-    if (getBookingCalendarStatusGroup(booking.status) === BookingCalendarStatusGroup.Cancelled) {
-      continue
-    }
     const date = bookingDateKey(booking.scheduledAt, booking.source)
     if (date < range.dateFrom || date > range.dateTo) continue
     const current = activeByDate.get(date) ?? []

@@ -5,6 +5,7 @@
  * a second businesses request. This module only loads the order list and detail.
  */
 import httpClient from '../../lib/httpClient'
+import { readRequiredApproval } from '../../constants/posServiceApproval'
 import { PosOrderStatus } from '../../constants/posOrderStatus'
 import type {
   CompleteStaffWorkOrderServicePayload,
@@ -28,6 +29,7 @@ export type StaffWorkOrderCatalogItem = {
   name: string
   price: number
   durationMinutes: number
+  isRequiredApproval: boolean
   categories: { id: string; name: string }[]
 }
 
@@ -55,6 +57,7 @@ export type StaffWorkOrderItem = {
   technicianName: string | null
   /** See PosOrderItemStatus. */
   lineStatus: string
+  isRequiredApproval: boolean
   /** True when this line is the caller's own — the ticket shows every technician on it. */
   isMine: boolean
   startedAt: string | null
@@ -215,6 +218,7 @@ function normalizeItem(dto: StaffWorkOrderItemApiDto): StaffWorkOrderItem {
     note: readOptionalText(dto, 'note', 'Note'),
     technicianName: readOptionalText(dto, 'technicianName', 'TechnicianName'),
     lineStatus: readText(dto, 'lineStatus', 'LineStatus'),
+    isRequiredApproval: readRequiredApproval(dto),
     isMine: readFlag(dto, 'isMine', 'IsMine'),
     startedAt: readOptionalText(dto, 'startedAt', 'StartedAt'),
     completedAt: readOptionalText(dto, 'completedAt', 'CompletedAt'),
@@ -259,6 +263,7 @@ function normalizeCatalogItem(dto: StaffWorkOrderCatalogItemApiDto): StaffWorkOr
     name: readText(dto, 'name', 'Name'),
     price: readNumber(dto, 'price', 'Price'),
     durationMinutes: readNumber(dto, 'durationMinutes', 'DurationMinutes'),
+    isRequiredApproval: readRequiredApproval(dto),
     categories: (Array.isArray(categories) ? categories : [])
       .map((category) => ({
         id: readText(category, 'id', 'Id'),

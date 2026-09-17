@@ -1,6 +1,7 @@
 // POS Front Desk's booking calendar deliberately reuses AI Hub's resource calendar so the
 // receptionist sees the same time grid and technician columns as the booking team.
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
+import { ArrowRight, ArrowUpRight, Check, MoreHorizontal, X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import type { BookingListItemApiDto, TimeClockRosterRowApiDto } from '../../../../../types/repositories'
 import BookingTeamCalendar from '../../BookingTeamCalendar'
@@ -25,6 +26,7 @@ import {
   PosBookingCalendarStaffScope,
   PosBookingCalendarViewMode,
   shiftBookingCalendarAnchor,
+  summarizeBookingCalendarStatuses,
   type BookingCalendarOverviewDay,
   type BookingCalendarRange,
 } from './bookingCalendarView'
@@ -84,12 +86,21 @@ function calendarRangeLabel(
   return `${formatBookingCalendarNavLabel(range.dateFrom, locale)} – ${formatBookingCalendarNavLabel(range.dateTo, locale)}`
 }
 
+function weekdayLabel(dateIso: string, locale: string): string {
+  const [year, month, day] = dateIso.split('-').map(Number)
+  return new Intl.DateTimeFormat(locale.toLowerCase().startsWith('vi') ? 'vi-VN' : 'en-US', {
+    weekday: 'long',
+  }).format(new Date(year, month - 1, day, 12))
+}
+
 export default function BookingCalendar({
   bookings,
   mode,
   anchorDate,
   range,
   overviewDays,
+  comparePeriodTotal,
+  compareReady,
   loading,
   error,
   onRetry,
@@ -104,6 +115,9 @@ export default function BookingCalendar({
   anchorDate: string
   range: BookingCalendarRange
   overviewDays: BookingCalendarOverviewDay[]
+  comparePeriodTotal: number
+  /** False while the prior-period query is loading or failed — hides misleading trend copy. */
+  compareReady: boolean
   loading: boolean
   error: boolean
   onRetry: () => void
@@ -188,9 +202,132 @@ export default function BookingCalendar({
   ] as const
 
   const rangeLabel = calendarRangeLabel(mode, anchorDate, range, currentLanguage)
+  const statusSummary = useMemo(() => summarizeBookingCalendarStatuses(bookings), [bookings])
+  const compareTrend = useMemo(() => {
+    if (!compareReady) return null
+
+    const current = statusSummary.total
+    const previous = comparePeriodTotal
+    if (previous === 0 && current === 0) return null
+
+    const reference = mode === PosBookingCalendarViewMode.Day
+      ? t(p + 'metricCompareLastWeekday', { weekday: weekdayLabel(anchorDate, currentLanguage) })
+      : mode === PosBookingCalendarViewMode.Week
+        ? t(p + 'metricCompareLastWeek')
+        : mode === PosBookingCalendarViewMode.Month
+          ? t(p + 'metricCompareLastMonth')
+          : t(p + 'metricComparePreviousPeriod')
+
+    if (previous === 0) {
+      return current > 0
+        ? { tone: 'up' as const, text: t(p + 'metricCompareNew', { reference }) }
+        : null
+    }
+    if (current === previous) {
+      return { tone: 'same' as const, text: t(p + 'metricCompareSame', { reference }) }
+    }
+    const percent = Math.round((Math.abs(current - previous) / previous) * 100)
+    const busier = current > previous
+    return {
+      tone: busier ? 'up' as const : 'down' as const,
+      text: t(p + (busier ? 'metricCompareBusier' : 'metricCompareQuieter'), { percent, reference }),
+    }
+  }, [anchorDate, comparePeriodTotal, compareReady, currentLanguage, mode, p, statusSummary.total, t])
+
+  const summaryTiles: ReadonlyArray<{
+    key: string
+    label: string
+    value: number
+    trend: { tone: 'up' | 'down' | 'same'; text: string } | null
+    highlighted?: boolean
+    icon: ReactNode
+    iconWrapClass: string
+  }> = [
+    {
+      key: 'total',
+      // Neutral label — toolbar already shows the selected period; "today/this week" is wrong when navigating history.
+      label: t(p + 'metricTotal'),
+      value: statusSummary.total,
+      trend: compareTrend,
+      highlighted: true,
+      icon: <ArrowUpRight className="h-4 w-4" strokeWidth={2.5} aria-hidden />,
+      iconWrapClass: 'bg-sky-100 text-sky-600',
+    },
+    {
+      key: 'completed',
+      label: t(p + 'metricCompleted'),
+      value: statusSummary.completed,
+      trend: null,
+      icon: <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden />,
+      iconWrapClass: 'bg-emerald-100 text-emerald-600',
+    },
+    {
+      key: 'upcoming',
+      label: t(p + 'metricUpcoming'),
+      value: statusSummary.upcoming,
+      trend: null,
+      icon: <ArrowRight className="h-4 w-4" strokeWidth={2.5} aria-hidden />,
+      iconWrapClass: 'bg-sky-100 text-sky-600',
+    },
+    {
+      key: 'pending',
+      label: t(p + 'metricPending'),
+      value: statusSummary.pending,
+      trend: null,
+      icon: <MoreHorizontal className="h-4 w-4" strokeWidth={2.5} aria-hidden />,
+      iconWrapClass: 'bg-amber-100 text-amber-600',
+    },
+    {
+      key: 'cancelled',
+      label: t(p + 'metricCancelled'),
+      value: statusSummary.cancelled,
+      trend: null,
+      icon: <X className="h-4 w-4" strokeWidth={2.5} aria-hidden />,
+      iconWrapClass: 'bg-rose-100 text-rose-600',
+    },
+  ]
 
   return (
     <div className="booking-hub-view pos-booking-calendar">
+      <div
+        className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
+        role="region"
+        aria-label={t(p + 'metricSummaryLabel')}
+      >
+        {summaryTiles.map((tile) => (
+          <div
+            key={tile.key}
+            className={`relative rounded-2xl border bg-white px-4 py-3.5 shadow-sm ${
+              tile.highlighted
+                ? 'border-sky-400 ring-1 ring-sky-400/30'
+                : 'border-slate-200/80'
+            }`}
+          >
+            <span
+              className={`absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full ${tile.iconWrapClass}`}
+            >
+              {tile.icon}
+            </span>
+            <p className="pr-10 text-3xl font-bold tabular-nums leading-none tracking-tight text-slate-900">
+              {tile.value}
+            </p>
+            <p className="mt-2 text-sm font-medium text-slate-500">{tile.label}</p>
+            {tile.trend ? (
+              <p
+                className={`mt-1.5 text-xs font-semibold leading-snug ${
+                  tile.trend.tone === 'up'
+                    ? 'text-emerald-600'
+                    : tile.trend.tone === 'down'
+                      ? 'text-rose-500'
+                      : 'text-slate-400'
+                }`}
+              >
+                {tile.trend.text}
+              </p>
+            ) : null}
+          </div>
+        ))}
+      </div>
       <div className="pos-booking-calendar-toolbar">
         <div className="pos-booking-calendar-navigation">
           <button
@@ -249,6 +386,7 @@ export default function BookingCalendar({
             [BookingCalendarStatusGroup.Completed, 'calendarLegendCompleted'],
             [BookingCalendarStatusGroup.Upcoming, 'calendarLegendUpcoming'],
             [BookingCalendarStatusGroup.Pending, 'calendarLegendPending'],
+            [BookingCalendarStatusGroup.Cancelled, 'calendarLegendCancelled'],
           ] as const).map(([statusGroup, labelKey]) => (
             <span key={statusGroup} className="pos-booking-calendar-legend-item">
               <span

@@ -9,6 +9,9 @@ import { unlessOptimisticId } from '../../utils/uuid'
 import type {
   AssignableStaffApiDto,
   CheckInOrderPayload,
+  CheckInOverviewApiDto,
+  CheckInOverviewDetailApiDto,
+  CheckInOverviewQuery,
   CompletedOrdersListQuery,
   CompletedOrdersPage,
   CustomerLookupResultApiDto,
@@ -17,6 +20,7 @@ import type {
   PosWaitlistOrderApiDto,
   ReassignableStaffApiDto,
   ReassignPayrollWarningApiDto,
+  SaveOrderServiceLineAssignmentPayload,
   ServiceLineReassignmentApiDto,
 } from '../../types/repositories'
 import { mapOrderList } from './mapPosOrderList'
@@ -43,6 +47,15 @@ function buildCompletedOrdersParams(query: CompletedOrdersListQuery = {}) {
   return params
 }
 
+function buildCheckInOverviewParams(query: CheckInOverviewQuery = {}) {
+  const params: Record<string, string | number> = {}
+  if (query.pageNumber != null) params.Page = query.pageNumber
+  if (query.pageSize != null) params.PageSize = query.pageSize
+  if (query.status) params.Status = query.status
+  if (query.searchTerm) params.SearchTerm = query.searchTerm
+  return params
+}
+
 export function createPosOrdersRepository(client: HttpClient = httpClient) {
   return {
     async getWaitlist(businessId: string): Promise<PosWaitlistOrderApiDto[]> {
@@ -58,6 +71,19 @@ export function createPosOrdersRepository(client: HttpClient = httpClient) {
         `/api/v1/merchant/pos/${businessId}/orders`,
       )
       return mapOrderList(res)
+    },
+
+    async getCheckInOverview(businessId: string, query: CheckInOverviewQuery = {}): Promise<CheckInOverviewApiDto> {
+      return await client.get<CheckInOverviewApiDto>(
+        `/api/v1/merchant/pos/${businessId}/orders/checkin-overview`,
+        { params: buildCheckInOverviewParams(query) },
+      )
+    },
+
+    async getCheckInOverviewDetail(businessId: string, orderId: string): Promise<CheckInOverviewDetailApiDto> {
+      return await client.get<CheckInOverviewDetailApiDto>(
+        `/api/v1/merchant/pos/${businessId}/orders/checkin-overview/${orderId}`,
+      )
     },
 
     // Completed Orders panel (US-17 follow-up) — paginated, filterable by CompletedAt
@@ -109,6 +135,20 @@ export function createPosOrdersRepository(client: HttpClient = httpClient) {
             { posStaffProfileId, note },
           ),
         false,
+      )
+    },
+
+    // The front desk's Assign Services button — every technician picked on the ticket, confirmed
+    // in one call. One transaction server-side, so a rejected technician leaves every line on the
+    // person it already had, and the technicians hear about it only once the desk confirms.
+    async saveOrderServiceLineAssignments(
+      businessId: string,
+      orderId: string,
+      assignments: SaveOrderServiceLineAssignmentPayload[],
+    ): Promise<boolean> {
+      return await client.post<boolean>(
+        `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/assign-batch`,
+        { assignments },
       )
     },
 

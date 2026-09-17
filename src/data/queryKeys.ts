@@ -196,6 +196,13 @@ export const qk = {
   merchantPosWaitlist: (businessId?: string) => ['merchantSettings', 'posWaitlist', businessId ?? ''],
   // POS Merchant Ops — Order List tab (US-17), Waiting + InService combined.
   merchantPosOrderList: (businessId?: string) => ['merchantSettings', 'posOrderList', businessId ?? ''],
+  merchantPosCheckInOverview: (businessId?: string, filters?: object) => {
+    const key: unknown[] = ['merchantSettings', 'posCheckInOverview', businessId ?? '']
+    if (filters) key.push(filters)
+    return key
+  },
+  merchantPosCheckInOverviewDetail: (businessId?: string, orderId?: string) =>
+    ['merchantSettings', 'posCheckInOverviewDetail', businessId ?? '', orderId ?? ''],
   // Order mutations invalidate the list prefix, so the next-turn balance refreshes with it.
   merchantPosNextTurnBalance: (businessId: string | undefined, day: string, timeZone: string) =>
     ['merchantSettings', 'posOrderList', businessId ?? '', 'nextTurnBalance', day, timeZone],
@@ -359,6 +366,8 @@ export const qk = {
   },
   merchantPosCustomerDetail: (businessId?: string, customerId?: string) =>
     ['merchantSettings', 'posCustomerDetail', businessId ?? '', customerId ?? ''],
+  merchantPosOrderCustomerId: (businessId?: string, orderId?: string, phoneE164?: string) =>
+    ['merchantSettings', 'posOrderCustomerId', businessId ?? '', orderId ?? '', phoneE164 ?? ''],
   merchantPosCustomerOrders: (businessId?: string, customerId?: string, filters?: object) => {
     const key: unknown[] = ['merchantSettings', 'posCustomerOrders', businessId ?? '', customerId ?? '']
     if (filters) key.push(filters)
@@ -691,6 +700,9 @@ export const qk = {
     ['communityChat', 'messages', sessionId ?? '', filters] as const,
   communityChatMessagesInfinite: (sessionId?: string | null, pageSize?: number) =>
     ['communityChat', 'messages', sessionId ?? '', 'infinite', pageSize ?? 20] as const,
+
+  // Community Call (US-02/US-05) — voice/video call TURN credentials.
+  communityCallIceServers: () => ['communityCall', 'iceServers'] as const,
 
   // Nexora Voice trial (merchant)
   voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],

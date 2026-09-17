@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import { AlertTriangle, ChevronDown, Info } from 'lucide-react'
+import { AlertTriangle, Camera, ChevronDown, FolderOpen, Info, X } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
+import ImageFileInput from '../ui/ImageFileInput'
 import {
   VLINKPAY_ADDRESS_MAX_LENGTH,
   VLINKPAY_COINS,
@@ -9,6 +10,7 @@ import {
   stripVlinkpayWalletAddressInput,
   type VlinkpayAddresses,
   type VlinkpayCoinKey,
+  type VlinkpayImages,
 } from './vlinkpayWallet'
 
 const TK = 'components.dashboard.modals.PayoutSetupModal'
@@ -28,6 +30,12 @@ type VlinkpayWalletFieldsProps = {
   disabled?: boolean
   error?: string
   placeholder?: string
+  /** Per-coin QR image preview (data/blob/remote URL, or '' when none). */
+  images?: VlinkpayImages
+  onImagePickFile?: (coin: VlinkpayCoinKey, file: File) => void
+  onImageClear?: (coin: VlinkpayCoinKey) => void
+  onTakePhoto?: (coin: VlinkpayCoinKey) => void
+  uploadError?: string
 }
 
 export default function VlinkpayWalletFields({
@@ -38,6 +46,11 @@ export default function VlinkpayWalletFields({
   disabled = false,
   error = '',
   placeholder = '',
+  images,
+  onImagePickFile,
+  onImageClear,
+  onTakePhoto,
+  uploadError = '',
 }: VlinkpayWalletFieldsProps) {
   const { t } = useTranslation()
   const guideBodyRef = useRef<HTMLDivElement>(null)
@@ -133,9 +146,57 @@ export default function VlinkpayWalletFields({
                 error ? 'border-rose-400' : 'border-slate-200'
               } ${disabled ? 'cursor-not-allowed bg-slate-100 text-slate-400' : ''}`}
             />
+
+            {images && onImagePickFile && onImageClear ? (
+              <div className="pt-1">
+                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                  {t(`${TK}.qrCodeOptional`)}
+                </label>
+                {images[coin.key] ? (
+                  <div className="relative flex items-center gap-2.5 rounded-lg border border-slate-200 bg-white p-2">
+                    {!disabled && (
+                      <button
+                        type="button"
+                        onClick={() => onImageClear(coin.key)}
+                        className="absolute right-1 top-1 rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                        aria-label={t('common.delete')}
+                        title={t('common.delete')}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md border border-slate-100 bg-white p-1">
+                      <img src={images[coin.key]} alt={`${coin.symbol} QR code`} className="h-full w-full object-contain" />
+                    </div>
+                    <span className="text-[10px] font-semibold text-slate-500">{coin.symbol}</span>
+                  </div>
+                ) : disabled ? null : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onTakePhoto?.(coin.key)}
+                      className="flex flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-slate-200 bg-slate-50 py-3 transition hover:border-nexoraBrand hover:bg-slate-50/50"
+                    >
+                      <Camera className="h-4 w-4 text-nexoraBrand" />
+                      <span className="text-[10px] font-bold text-slate-600">{t('setup.take_photo')}</span>
+                    </button>
+                    <ImageFileInput
+                      as="label"
+                      className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-slate-200 bg-slate-50 py-3 transition hover:border-nexoraBrand hover:bg-slate-50/50"
+                      onPickFile={(file) => onImagePickFile(coin.key, file)}
+                      disabled={disabled}
+                    >
+                      <FolderOpen className="h-4 w-4 text-nexoraBrand" />
+                      <span className="text-[10px] font-bold text-slate-600">{t('setup.choose_file')}</span>
+                    </ImageFileInput>
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
         ))}
         {error ? <p className="text-[10px] font-bold text-rose-500">{error}</p> : null}
+        {uploadError ? <p className="text-[10px] font-bold text-rose-500">{uploadError}</p> : null}
       </div>
 
       <div className="overflow-hidden rounded-[8px] border border-slate-200 bg-white">

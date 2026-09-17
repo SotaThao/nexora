@@ -12,7 +12,10 @@ import {
   removeCommunityChatMessageFromCache,
 } from '../../data/communityChatCache'
 import { normalizeCommunityChatMessage } from '../../data/repositories/communityChat'
-import type { CommunityChatMessage, CommunityChatMessageDeletedEvent } from '../../types/communityChat'
+import type {
+  CommunityChatMessageDeletedEvent,
+  CommunityChatReceiveMessageEvent,
+} from '../../types/communityChat'
 import { logger } from '../../utils/logger'
 
 export const COMMUNITY_CHAT_HUB_MESSAGE_ERROR_EVENT = 'nexora:community-chat-message-error' as const
@@ -29,7 +32,7 @@ const joinedSessionRefCounts = new Map<string, number>()
 /** Track sessions that have been joined (including temp joins from ensureJoined). */
 const actuallyJoinedSessions = new Set<string>()
 
-function handleIncomingMessage(rawMessage: CommunityChatMessage) {
+function handleIncomingMessage(rawMessage: CommunityChatReceiveMessageEvent) {
   const message = normalizeCommunityChatMessage(rawMessage)
   const sessionId = message.chatSessionId
   if (!sessionId || !queryClientRef) return

@@ -133,6 +133,7 @@ export interface PosServiceApiDto {
   displayOrder: number
   categoryIds: string[]
   tags: string[]
+  isRequiredApproval?: boolean
 }
 
 export interface PosTagApiDto {
@@ -252,6 +253,14 @@ export interface CheckInOrderItemPayload {
   // Service items only. Omitted means "Next Available" (skill-filtered auto-pick).
   posStaffProfileId?: string
   // Service items only.
+  note?: string
+}
+
+// One line of the front desk's Assign Services confirmation. `posStaffProfileId` omitted is
+// "First available" — the line goes back to the floor.
+export interface SaveOrderServiceLineAssignmentPayload {
+  serviceLineId: string
+  posStaffProfileId?: string
   note?: string
 }
 
@@ -377,6 +386,7 @@ export interface StaffWorkOrderItemApiDto {
   posStaffProfileId?: string | null
   /** See PosOrderItemStatus — drives the Accept/Decline/Start/Complete buttons. */
   lineStatus?: string | null
+  isRequiredApproval?: boolean
   isMine?: boolean
   acceptedAt?: string | null
   startedAt?: string | null
@@ -460,6 +470,7 @@ export interface StaffWorkOrderCatalogItemApiDto {
   durationMinutes?: number
   description?: string | null
   photoUrl?: string | null
+  isRequiredApproval?: boolean
   categories?: { id?: string; name?: string }[]
 }
 
@@ -566,6 +577,57 @@ export interface PosCustomerOrderHistoryPage {
   totalCount: number
   hasNextPage: boolean
   hasPreviousPage: boolean
+}
+
+export interface CheckInOverviewSummaryApiDto {
+  totalCheckIns: number
+  newGuests: number
+  returningGuests: number
+  averageWaitMinutes: number
+}
+
+export interface GuestSourceCountApiDto {
+  source: string
+  count: number
+}
+
+export interface CheckInOverviewItemApiDto {
+  id: string
+  orderNumber: string
+  checkedInAt: string
+  customerName: string
+  customerPhone?: string | null
+  isNewGuest: boolean
+  source?: string | null
+  serviceNames: string[]
+  technicianNames: string[]
+  status: string
+}
+
+// Separate endpoint from the list above (GET .../checkin-overview/{orderId}) — same shape today,
+// kept as its own type since the two APIs are independent and may diverge later.
+export type CheckInOverviewDetailApiDto = CheckInOverviewItemApiDto
+
+export interface CheckInOverviewQuery {
+  pageNumber?: number
+  pageSize?: number
+  status?: string
+  searchTerm?: string
+}
+
+export interface CheckInOverviewItemsPage {
+  items: CheckInOverviewItemApiDto[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+}
+
+export interface CheckInOverviewApiDto {
+  summary: CheckInOverviewSummaryApiDto
+  guestSources: GuestSourceCountApiDto[]
+  items: CheckInOverviewItemsPage
 }
 
 // POS Merchant Ops — Turn Board Assign & Break (US-13, refactored in US-026)
@@ -1154,6 +1216,7 @@ export interface CheckoutServiceCatalogItemApiDto {
   durationMinutes: number
   description?: string | null
   photoUrl?: string | null
+  isRequiredApproval?: boolean
   categories: CatalogCategoryApiDto[]
 }
 

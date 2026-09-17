@@ -4,7 +4,11 @@ import { WALLET_KEYS } from '../constants'
 import VlinkpayTipPaymentPanel from './VlinkpayTipPaymentPanel'
 import {
   emptyVlinkpayAddresses,
+  emptyVlinkpayImages,
+  hasAtLeastOneVlinkpayAddress,
   mergeVlinkpayAddresses,
+  mergeVlinkpayImages,
+  parseVlinkpayCryptoAddressImages,
   resolvePreferredVlinkpayAddresses,
   resolveVlinkpayAddresses,
   type VlinkpayAddresses,
@@ -275,6 +279,45 @@ export default function WalletDetails({
     paymentLinkData,
   ])
 
+  // Per-coin QR image (US-1488) — mirrors vlinkpayAddresses' source priority above so the
+  // image shown always matches the source that won the address for that coin.
+  const vlinkpayImages = useMemo(() => {
+    if (!isVlinkpay) return null
+
+    const empty = emptyVlinkpayImages()
+
+    const fromStaffAddresses = !isMultiStaff
+      ? resolveVlinkpayAddresses({ cryptoAddresses: selectedStaffMembers[0]?.vlinkPayCryptoAddresses })
+      : null
+    const fromStaffImages = !isMultiStaff
+      ? parseVlinkpayCryptoAddressImages(selectedStaffMembers[0]?.vlinkPayCryptoAddresses)
+      : empty
+
+    const fromBusinessImages = parseVlinkpayCryptoAddressImages(businessVlinkpayCryptoAddresses)
+
+    const fromTipImages = tipApiMethod
+      ? parseVlinkpayCryptoAddressImages(tipApiMethod.cryptoAddresses)
+      : empty
+
+    const linkAddress = paymentLinkData?.cryptoAddress
+    const fromLinkImages = linkAddress?.address && linkAddress?.symbol
+      ? parseVlinkpayCryptoAddressImages([{ symbol: linkAddress.symbol, imageUrl: linkAddress.imageUrl }])
+      : empty
+
+    const base = !isMultiStaff && fromStaffAddresses && hasAtLeastOneVlinkpayAddress(fromStaffAddresses)
+      ? fromStaffImages
+      : fromBusinessImages
+
+    return mergeVlinkpayImages(base, fromTipImages, fromLinkImages)
+  }, [
+    isVlinkpay,
+    isMultiStaff,
+    tipApiMethod,
+    selectedStaffMembers,
+    businessVlinkpayCryptoAddresses,
+    paymentLinkData,
+  ])
+
   const confirmLabel = t(
     paymentMode
       ? 'direct_payment.confirm_sent'
@@ -291,6 +334,7 @@ export default function WalletDetails({
         logo={selectedWalletObj.logo}
         amount={activeTipAmount}
         addresses={vlinkpayAddresses}
+        images={vlinkpayImages || emptyVlinkpayImages()}
         showToast={showToast}
         confirmLabel={confirmLabel}
         paySubtitleKey={paySubtitleKey}

@@ -14,6 +14,7 @@ import { parseApiUtcDateTime } from '../../utils/localDate'
 import type {
   AddCommunityChatParticipantInput,
   CommunityChatMessage,
+  CommunityChatMessageCallMetadata,
   CommunityChatMessagesPage,
   CommunityChatParticipant,
   CommunityChatSession,
@@ -80,6 +81,9 @@ interface CommunityChatMessageApiDto {
   EditedAt?: string | null
   isDeleted?: boolean
   IsDeleted?: boolean
+  /** JSON string (US-04 backend) — parsed by `normalizeCommunityChatMessageMetadata`. */
+  metadata?: string | null
+  Metadata?: string | null
 }
 
 interface CommunityChatMessagesPageApiDto {
@@ -109,6 +113,8 @@ function normalizeMessageType(raw: string | undefined): CommunityChatMessageType
       return CommunityChatMessageType.File
     case CommunityChatMessageType.System:
       return CommunityChatMessageType.System
+    case CommunityChatMessageType.Call:
+      return CommunityChatMessageType.Call
     default:
       return CommunityChatMessageType.Text
   }
@@ -127,6 +133,25 @@ function normalizeOptionalPreview(raw: string | null | undefined): string | null
   if (raw == null) return null
   const trimmed = String(raw).trim()
   return trimmed || null
+}
+
+/** `metadata` is a JSON string on the wire (US-04 backend) — parse defensively, never throw. */
+function normalizeCommunityChatMessageMetadata(
+  raw: string | null | undefined,
+): CommunityChatMessageCallMetadata | null {
+  if (!raw) return null
+  try {
+    const parsed = JSON.parse(raw) as Partial<CommunityChatMessageCallMetadata>
+    if (!parsed || typeof parsed !== 'object') return null
+    return {
+      callSessionId: String(parsed.callSessionId ?? '').trim(),
+      callType: String(parsed.callType ?? '').trim(),
+      endReason: String(parsed.endReason ?? '').trim(),
+      durationSeconds: Number(parsed.durationSeconds) || 0,
+    }
+  } catch {
+    return null
+  }
 }
 
 export function normalizeCommunityChatParticipant(
@@ -173,6 +198,7 @@ export function normalizeCommunityChatMessage(
     sentAt: normalizeCommunityChatTimestamp(dto.sentAt ?? dto.SentAt) ?? '',
     editedAt: normalizeCommunityChatTimestamp(dto.editedAt ?? dto.EditedAt),
     isDeleted: Boolean(dto.isDeleted ?? dto.IsDeleted),
+    metadata: normalizeCommunityChatMessageMetadata(dto.metadata ?? dto.Metadata),
   }
 }
 

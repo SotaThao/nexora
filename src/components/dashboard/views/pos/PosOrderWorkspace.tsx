@@ -11,7 +11,7 @@
 // page (PosCheckInTab / CheckInSurface), the same one the customer kiosk runs.
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowLeft, Loader2, Package, UserRound, Plus, X, Printer, ClipboardCheck } from 'lucide-react'
+import { ArrowLeft, Loader2, Package, Plus, X, Printer, ClipboardCheck, Phone } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import type { TechnicianOption } from '../../../checkin/parts/TechnicianPickerGrid'
 import { useNotification } from '../../../../contexts/NotificationContext'
@@ -41,6 +41,7 @@ import {
 import {
   useAssignStaffToServiceLine,
   useMarkServiceLineDone,
+  useSaveOrderServiceLineAssignments,
   useStartOrderService,
   useStartServiceLine,
 } from '../../../../data/hooks/usePosOrders'
@@ -79,8 +80,10 @@ import type {
   CompleteOrderResultApiDto,
 } from '../../../../types/repositories'
 import { Skeleton, SkeletonList, SkeletonListItem } from '../../../ui/skeleton'
-import { formatCustomerPhone } from './customer/customerFormatters'
-import CategoryGroupedCatalogPicker from './CategoryGroupedCatalogPicker'
+import { maskCustomerPhone } from './customer/customerFormatters'
+import CustomerVisitTag from './CustomerVisitTag'
+import OrderCustomerDetailButton from './customer/OrderCustomerDetailButton'
+import PosServiceCatalogPanel from './PosServiceCatalogPanel'
 import TicketActionSkeletonOverlay, { TICKET_SKELETON_ROW_COUNT } from './TicketActionSkeletonOverlay'
 import ChangeServiceModal from './modals/ChangeServiceModal'
 import CustomServiceModal from './modals/CustomServiceModal'
@@ -278,15 +281,20 @@ function resolveNewLineTechnicianAssignment(
   return canPerform(soleAssignedId) ? soleAssignedId : null
 }
 
-function lineTechnicianDisplay(
-  line: DisplayServiceLine,
-  pendingTechnician: { lineId: string; displayName: string | null } | null,
-) {
-  const displayedName =
-    pendingTechnician?.lineId === line.existingId ? pendingTechnician.displayName : line.technicianName
+/** A technician (or "First available") picked on a line but not yet confirmed. */
+type DraftAssignment = {
+  staffId: string | null
+  displayName: string | null
+  note: string
+}
+
+// Always the confirmed technician, never a staged pick: until Assign Services is pressed the line
+// still belongs to whoever is on it, and the ticket has to say so (#1569). A staged pick shows as
+// its own badge on the row instead.
+function lineTechnicianDisplay(line: DisplayServiceLine) {
   return {
-    isFirstAvailable: !displayedName,
-    technicianName: displayedName,
+    isFirstAvailable: !line.technicianName,
+    technicianName: line.technicianName,
   }
 }
 
@@ -303,6 +311,7 @@ const POS_FRONT_DESK_ROUTE_PATH = `/dashboard/${DASHBOARD_MENU_ID.pos}`
 export default function PosOrderWorkspace({
   businessId,
   orderId,
+  isNewCustomer,
   mode = 'edit',
   successReceiptMode,
   onClose,
@@ -322,6 +331,7 @@ export default function PosOrderWorkspace({
 }: {
   businessId: string
   orderId: string
+  isNewCustomer?: boolean
   // Edit is operational order maintenance. Checkout is the only entry mode that reveals
   // tip, payment method, receipt and payment summary immediately.
   mode?: PosOrderWorkspaceMode
@@ -388,6 +398,7 @@ export default function PosOrderWorkspace({
   const removeProductLine = useRemoveOrderProductLine(businessId)
   const updateProductQuantity = useUpdateOrderProductLineQuantity(businessId)
   const assignStaffToServiceLine = useAssignStaffToServiceLine(businessId)
+  const saveServiceLineAssignments = useSaveOrderServiceLineAssignments(businessId)
   const setServiceLineDiscount = useSetOrderServiceLineDiscount(businessId)
   const addServiceAddOnLine = useAddOrderServiceAddOnLine(businessId)
   const removeServiceAddOnLine = useRemoveOrderServiceAddOnLine(businessId)
@@ -456,6 +467,7 @@ export default function PosOrderWorkspace({
     removeProductLine.isPending ||
     updateProductQuantity.isPending ||
     assignStaffToServiceLine.isPending ||
+    saveServiceLineAssignments.isPending ||
     setServiceLineDiscount.isPending ||
     startOrderService.isPending ||
     startServiceLine.isPending ||
@@ -512,13 +524,10 @@ export default function PosOrderWorkspace({
     canEditLines && canViewReport,
   )
   const [noteDraft, setNoteDraft] = useState('')
-  // Chosen technician shown immediately so the row never flashes the previous name while
-  // AssignStaffToServiceLine and the order-detail refetch catch up.
-  const [pendingTechnician, setPendingTechnician] = useState<{
-    lineId: string
-    staffId: string | null
-    displayName: string | null
-  } | null>(null)
+  // Technician picks the front desk has made but not confirmed yet, keyed by service line (#1569).
+  // Nothing here has been written, and nobody has been notified — pressing Assign Services is what
+  // does both, so changing one's mind costs a technician nothing.
+  const [draftAssignments, setDraftAssignments] = useState<Record<string, DraftAssignment>>({})
   // The line whose service is being swapped. Held as id + name so the popup can title itself
   // without reaching back into the list.
   const [changeServiceTarget, setChangeServiceTarget] = useState<{
@@ -629,22 +638,24 @@ export default function PosOrderWorkspace({
   // and the name each row shows, pending assignment included, is the one that decides it.
   const technicianHeadingByLineKey = useMemo(() => {
     const headings = new Map<string, string>()
-    let previousLabel: string | null = null
+    let group: { key: string; label: string; count: number } | null = null
 
     for (const line of visibleLines) {
       if (line.itemType !== 'Service') {
-        previousLabel = null
+        group = null
         continue
       }
-      const { technicianName } = lineTechnicianDisplay(line, pendingTechnician)
+      const { technicianName } = lineTechnicianDisplay(line)
       const label = technicianName
-        ?? t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel')
-      if (label !== previousLabel) headings.set(line.key, label)
-      previousLabel = label
+        ? `${t('components.dashboard.views.pos.PosOrderWorkspace.technicianPrefix')} ${technicianName}`
+        : t('components.dashboard.views.pos.PosOrderWorkspace.needsTechnician')
+      if (!group || group.label !== label) group = { key: line.key, label, count: 0 }
+      group.count += 1
+      headings.set(group.key, `${label} (${group.count})`)
     }
 
     return headings
-  }, [visibleLines, pendingTechnician, t])
+  }, [visibleLines, t])
 
   // Preserve service-line order while deduplicating staff. Exactly one entry means the ticket has
   // one technician on it, which is the only case a new line can be assigned from (see
@@ -675,14 +686,22 @@ export default function PosOrderWorkspace({
   const isServiceCatalogPending =
     isAddingLine || (assignedTechnicianIds.length === 1 && areTechniciansPending && allTechnicians.length === 0)
 
+  // A staged pick only means something against the line it was made on. The ticket is polled and
+  // other people work it, so a draft whose line is gone — or whose technician somebody else has
+  // already set — is dropped rather than replayed over their work when Assign Services is pressed.
   useEffect(() => {
-    if (!pendingTechnician || !order) return
-    const line = order.serviceLines.find((serviceLine) => serviceLine.id === pendingTechnician.lineId)
-    if (!line) return
-    if ((line.assignedPosStaffProfileId ?? null) === pendingTechnician.staffId) {
-      setPendingTechnician(null)
-    }
-  }, [order, pendingTechnician])
+    if (!order) return
+    setDraftAssignments((previous) => {
+      const stillPending = Object.entries(previous).filter(([serviceLineId, draft]) => {
+        const line = order.serviceLines.find((serviceLine) => serviceLine.id === serviceLineId)
+        if (!line) return false
+        return (line.assignedPosStaffProfileId ?? null) !== draft.staffId
+          || (line.note ?? '').trim() !== draft.note
+      })
+      if (stillPending.length === Object.keys(previous).length) return previous
+      return Object.fromEntries(stillPending)
+    })
+  }, [order])
 
   useEffect(() => {
     if (!isAddingLine) serviceLineIdsBeforeAddRef.current = null
@@ -1072,8 +1091,11 @@ export default function PosOrderWorkspace({
     )
   }
 
+  // The target carries the CONFIRMED values, which is what a staged pick is measured against:
+  // picking the technician the line already has clears the draft instead of queueing a no-op.
   const openTechnicianModal = (line: DisplayServiceLine) => {
     if (isBusy || !isPersistedLineId(line.existingId)) return
+    const draft = draftAssignments[line.existingId]
     setTechnicianTarget({
       serviceLineId: line.existingId,
       serviceName: line.serviceName,
@@ -1082,7 +1104,7 @@ export default function PosOrderWorkspace({
       technicianName: line.technicianName,
       note: line.note,
     })
-    setNoteDraft(line.note ?? '')
+    setNoteDraft(draft?.note ?? line.note ?? '')
   }
 
   // One call, so the line keeps its technician, its note and its position. Deleting and re-adding
@@ -1183,37 +1205,124 @@ export default function PosOrderWorkspace({
     )
   }
 
-  const handleSelectTechnician = (posStaffProfileId: string | null) => {
-    const target = technicianTarget
-    if (!target) return
-    // Close before the request so the picker never swaps to a loading list in place.
-    setTechnicianTarget(null)
+  // Staging, not saving (#1569). Landing back on the line's confirmed technician and note drops
+  // the draft entirely, so a change of mind that ends where it started confirms nothing and
+  // notifies nobody.
+  const stageAssignment = (
+    target: { serviceLineId: string; posStaffProfileId?: string; note?: string },
+    posStaffProfileId: string | null,
+    note: string,
+  ) => {
+    const trimmedNote = note.trim()
     const sameTechnician = posStaffProfileId === (target.posStaffProfileId ?? null)
-    const sameNote = noteDraft.trim() === (target.note ?? '').trim()
-    if (sameTechnician && sameNote) return
-    if (!startTicketAction(TicketBusySurface.Technician)) return
-    setPendingTechnician({
-      lineId: target.serviceLineId,
-      staffId: posStaffProfileId,
-      displayName: technicianDisplayName(posStaffProfileId),
-    })
-    saveServiceLine(target.serviceLineId, posStaffProfileId ?? undefined, noteDraft, {
-      onError: () => setPendingTechnician(null),
-      onSettled: endTicketAction,
+    const sameNote = trimmedNote === (target.note ?? '').trim()
+
+    setDraftAssignments((previous) => {
+      if (sameTechnician && sameNote) {
+        if (!(target.serviceLineId in previous)) return previous
+        const { [target.serviceLineId]: _dropped, ...rest } = previous
+        return rest
+      }
+      return {
+        ...previous,
+        [target.serviceLineId]: {
+          staffId: posStaffProfileId,
+          displayName: technicianDisplayName(posStaffProfileId),
+          note: trimmedNote,
+        },
+      }
     })
   }
 
-  // Closing without picking anyone still keeps a note the operator typed — it is saved against
+  const handleSelectTechnician = (posStaffProfileId: string | null) => {
+    const target = technicianTarget
+    if (!target) return
+    setTechnicianTarget(null)
+    stageAssignment(target, posStaffProfileId, noteDraft)
+  }
+
+  // Closing without picking anyone still keeps a note the operator typed — it stages against
   // whoever the line already had, since the endpoint writes both fields together.
   const handleCloseTechnicianModal = () => {
     const target = technicianTarget
     if (!target) return
     setTechnicianTarget(null)
-    if (noteDraft.trim() === (target.note ?? '').trim()) return
+    const staged = draftAssignments[target.serviceLineId]
+    stageAssignment(target, staged ? staged.staffId : target.posStaffProfileId ?? null, noteDraft)
+  }
+
+  // The picker re-opens on what the front desk last chose, staged or confirmed. A staged "First
+  // available" is a real answer, so this cannot collapse into a ?? chain.
+  const stagedTechnicianTarget = technicianTarget
+    ? draftAssignments[technicianTarget.serviceLineId]
+    : undefined
+  const technicianModalSelectedStaffId = stagedTechnicianTarget
+    ? stagedTechnicianTarget.staffId
+    : technicianTarget?.posStaffProfileId ?? null
+
+  const draftAssignmentCount = Object.keys(draftAssignments).length
+  const hasDraftAssignments = draftAssignmentCount > 0
+
+  const handleDiscardAssignments = () => setDraftAssignments({})
+
+  // Starting, checking out and completing all read the ticket — who is on the clock for it, what
+  // gets paid out — so they cannot run on picks the front desk has not confirmed yet.
+  const blockedByStagedAssignments = () => {
+    if (!hasDraftAssignments) return false
+    showToast(t('components.dashboard.views.pos.PosOrderWorkspace.confirmAssignmentsFirst'), 'error')
+    return true
+  }
+
+  // Staged picks live only in this screen, so every way out of it — Back, another Front Desk tab, a
+  // route change — drops them. Warned from the unmount path rather than from the Back button alone:
+  // the front desk must never walk away believing technicians were told something they were not.
+  const stagedExitWarningRef = useRef<{ hasDrafts: boolean; warn: () => void }>({
+    hasDrafts: false,
+    warn: () => {},
+  })
+  stagedExitWarningRef.current = {
+    hasDrafts: hasDraftAssignments,
+    warn: () => showToast(t('components.dashboard.views.pos.PosOrderWorkspace.stagedAssignmentsDiscarded'), 'error'),
+  }
+
+  useEffect(() => () => {
+    if (stagedExitWarningRef.current.hasDrafts) stagedExitWarningRef.current.warn()
+  }, [])
+
+  // Reloading or closing the tab never reaches React's unmount path, so the browser's own prompt
+  // is the only thing standing between an unconfirmed pick and silence.
+  useEffect(() => {
+    if (!hasDraftAssignments) return
+    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    window.addEventListener('beforeunload', warnBeforeUnload)
+    return () => window.removeEventListener('beforeunload', warnBeforeUnload)
+  }, [hasDraftAssignments])
+
+  // The only thing that writes a technician pick — and therefore the only thing that pages anyone.
+  // One request for the whole ticket: the backend applies it in a single transaction, so a
+  // rejected technician leaves every line where it was and nobody is told anything.
+  const handleAssignServices = () => {
+    const staged = Object.entries(draftAssignments)
+    if (staged.length === 0) return
     if (!startTicketAction(TicketBusySurface.Technician)) return
-    saveServiceLine(target.serviceLineId, target.posStaffProfileId, noteDraft, {
-      onSettled: endTicketAction,
-    })
+    saveServiceLineAssignments.mutate(
+      {
+        orderId,
+        assignments: staged.map(([serviceLineId, draft]) => ({
+          serviceLineId,
+          posStaffProfileId: draft.staffId ?? undefined,
+          note: draft.note || undefined,
+        })),
+      },
+      {
+        onSuccess: () => setDraftAssignments({}),
+        onError: reportError,
+        onSettled: endTicketAction,
+      },
+    )
   }
 
   const { data: addOnOptions = [], isLoading: areAddOnOptionsLoading } = useServiceLineAddOnOptions(
@@ -1322,6 +1431,7 @@ export default function PosOrderWorkspace({
   }
 
   const handleStartService = () => {
+    if (blockedByStagedAssignments()) return
     if (hasUnassignedServiceLine) {
       showToast(t('components.dashboard.views.pos.PosOrderWorkspace.assignTechnicianFirst'), 'error')
       return
@@ -1375,6 +1485,8 @@ export default function PosOrderWorkspace({
 
   const handleCheckoutFromUpdate = () => {
     if (isPaid) return
+    if (blockedByStagedAssignments()) return
+
     // Only start service first if there's actually a service to serve — StartOrderService
     // rejects an order with no service line. Reached from the InService Checkout button; a
     // Waiting ticket with no service has nothing to charge and offers neither button.
@@ -1461,6 +1573,7 @@ export default function PosOrderWorkspace({
 
   const handleComplete = () => {
     if (!order || isPaid || !cashPaymentCovered || !isPaymentMethodEligible || !isSplitPaymentReady) return
+    if (blockedByStagedAssignments()) return
     if (hasNoLines) {
       showToast(t('components.dashboard.views.pos.PosOrderWorkspace.addLineFirst'), 'error')
       return
@@ -1565,39 +1678,62 @@ export default function PosOrderWorkspace({
   // JSX block away from coming back. Nothing sells products anywhere while it is hidden: check-in
   // dropped them with the one-page redesign, and this was the last surface.
   const catalogPanel = (
-          <div className="nexora-card space-y-3 p-4">
-            <div className="border-b border-nexoraBorder pb-2">
-              <h3 className="text-xs font-black uppercase tracking-wider text-nexoraMuted">
-                {t('components.dashboard.views.pos.PosOrderWorkspace.tabServices')}
-              </h3>
-            </div>
-
-            <CategoryGroupedCatalogPicker
-              variant="grid"
-              showDuration
-              items={serviceCatalog}
-              isPending={isServiceCatalogPending}
-              onAdd={(itemId) => {
-                const service = serviceCatalog.find((s) => s.id === itemId)
-                if (service) handleCatalogServiceClick(service)
-              }}
-              addLabel={t('components.dashboard.views.pos.PosOrderWorkspace.addButton')}
-              emptyLabel={t('components.dashboard.views.pos.PosOrderWorkspace.noServicesInCategory')}
-              allCategoryLabel={t('components.dashboard.views.pos.PosOrderWorkspace.allCategories')}
-              uncategorizedLabel={t('components.dashboard.views.pos.PosOrderWorkspace.uncategorized')}
-              searchPlaceholder={t('components.dashboard.views.pos.PosOrderWorkspace.searchServicesPlaceholder')}
-            />
-          </div>
+    <PosServiceCatalogPanel
+      items={serviceCatalog}
+      isPending={isServiceCatalogPending}
+      onAdd={(itemId) => {
+        const service = serviceCatalog.find((s) => s.id === itemId)
+        if (service) handleCatalogServiceClick(service)
+      }}
+    />
   )
 
   const orderPanel = (
           <div className="space-y-4">
+            {order ? (
+              <section
+                aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.ticketCustomerTitle')}
+                className="space-y-1 rounded-xl border border-nexoraBrand/20 bg-gradient-to-br from-nexoraBrandSoft/60 via-nexoraSurface to-nexoraSurface px-3 py-2"
+              >
+                <h2 className="text-[11px] font-black uppercase tracking-wider text-nexoraBrandDark">
+                  {t('components.dashboard.views.pos.PosOrderWorkspace.ticketCustomerTitle')}
+                </h2>
+                <div className="min-w-0 space-y-0.5">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <p className="min-w-0 break-words text-sm font-bold uppercase leading-snug text-nexoraText">
+                      {order.customerName}
+                    </p>
+                    {typeof isNewCustomer === 'boolean' ? (
+                      <CustomerVisitTag isNewCustomer={isNewCustomer} />
+                    ) : null}
+                    <OrderCustomerDetailButton
+                      key={order.id}
+                      businessId={businessId}
+                      orderId={order.id}
+                      phoneE164={order.customerPhoneE164 || (
+                        order.customerPhoneCountryCode && order.customerPhone
+                          ? `${order.customerPhoneCountryCode}${order.customerPhone}`
+                          : undefined
+                      )}
+                    />
+                  </div>
+                  {order.customerPhone || order.customerPhoneE164 ? (
+                    <p className="flex items-center gap-1.5 text-xs font-normal text-nexoraText">
+                      <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      <span className="min-w-0 whitespace-nowrap font-sans text-xs font-normal [font-variant-ligatures:none]">
+                        {maskCustomerPhone(order.customerPhoneE164 || order.customerPhone)}
+                      </span>
+                    </p>
+                  ) : null}
+                </div>
+              </section>
+            ) : null}
             <div
               role="region"
               aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.orderDetailTitle')}
               className="space-y-3 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4"
             >
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-[10px] font-black tracking-wider text-nexoraMuted">
                   <span className="uppercase">
                     {t('components.dashboard.views.pos.PosOrderWorkspace.orderDetailTitle')}
@@ -1654,8 +1790,7 @@ export default function PosOrderWorkspace({
                             index > 0 ? 'mt-2' : ''
                           }`}
                         >
-                          <UserRound className="h-3.5 w-3.5 shrink-0 text-nexoraBrandDark" />
-                          <span className="min-w-0 truncate text-[11px] font-black uppercase tracking-wider text-nexoraBrandDark">
+                          <span className="min-w-0 truncate text-[11px] font-black tracking-wider text-nexoraBrandDark">
                             {technicianHeadingByLineKey.get(line.key)}
                           </span>
                         </div>
@@ -1664,7 +1799,7 @@ export default function PosOrderWorkspace({
                         (() => {
                           // Only the button label still needs this — the name itself now lives in the
                           // technician heading above the block.
-                          const { isFirstAvailable } = lineTechnicianDisplay(line, pendingTechnician)
+                          const { isFirstAvailable } = lineTechnicianDisplay(line)
                           const isCustomLine = line.posServiceId === null
                           const canEditServiceLine =
                             canEditLines && !line.completedAt && isPersistedLineId(line.existingId)
@@ -1674,6 +1809,9 @@ export default function PosOrderWorkspace({
                             && !isCustomLine
                           const canEditCustomService = canEditServiceLine && isCustomLine
                           const canMutateLine = canEditLines && isPersistedLineId(line.existingId)
+                          const stagedAssignment = isPersistedLineId(line.existingId)
+                            ? draftAssignments[line.existingId as string]
+                            : undefined
                           return (
                             <div
                               data-testid={`ticket-detail-${line.key}`}
@@ -1697,6 +1835,19 @@ export default function PosOrderWorkspace({
                                   >
                                     {t(posOrderItemStatusLabelKey(line.lineStatus))}
                                   </span>
+                                  {/* The line still belongs to the technician above it — this is
+                                      only what the next Assign Services will hand over. */}
+                                  {stagedAssignment ? (
+                                    <span
+                                      data-testid={`staged-assignment-${line.key}`}
+                                      className="min-w-0 shrink rounded-md bg-amber-100 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-800"
+                                    >
+                                      {t('components.dashboard.views.pos.PosOrderWorkspace.stagedAssignmentBadge', {
+                                        name: stagedAssignment.displayName
+                                          ?? t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel'),
+                                      })}
+                                    </span>
+                                  ) : null}
                                 </div>
                               </div>
                               <div className="text-right">
@@ -1735,7 +1886,8 @@ export default function PosOrderWorkspace({
                                       type="button"
                                       data-testid={`start-line-${line.key}`}
                                       onClick={() => handleStartLine(line)}
-                                      disabled={isBusy}
+                                      disabled={isBusy || Boolean(stagedAssignment)}
+                                      title={stagedAssignment ? t('components.dashboard.views.pos.PosOrderWorkspace.confirmAssignmentsFirst') : undefined}
                                       className="inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50/60 px-2 text-[10px] font-bold text-emerald-700 disabled:opacity-60"
                                     >
                                       {isLineStatusActionPending(line, 'start') ? (
@@ -1749,7 +1901,8 @@ export default function PosOrderWorkspace({
                                       type="button"
                                       data-testid={`complete-line-${line.key}`}
                                       onClick={() => handleCompleteLine(line)}
-                                      disabled={isBusy}
+                                      disabled={isBusy || Boolean(stagedAssignment)}
+                                      title={stagedAssignment ? t('components.dashboard.views.pos.PosOrderWorkspace.confirmAssignmentsFirst') : undefined}
                                       className="inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border border-emerald-300 bg-emerald-500 px-2 text-[10px] font-bold text-white disabled:opacity-60"
                                     >
                                       {isLineStatusActionPending(line, 'complete') ? (
@@ -1945,6 +2098,47 @@ export default function PosOrderWorkspace({
                   ) : null}
                 </div>
               )}
+
+              {/* Sits with the lines rather than the checkout buttons: it is the confirmation for
+                  what was just picked above, and it has to stay reachable in checkout mode too. */}
+              {canEditLines && hasDraftAssignments ? (
+                <div
+                  data-testid="assign-services-bar"
+                  className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3"
+                >
+                  <p className="min-w-[8rem] flex-1 text-[11px] font-semibold leading-tight text-amber-900">
+                    {t(
+                      `components.dashboard.views.pos.PosOrderWorkspace.${
+                        draftAssignmentCount === 1
+                          ? 'stagedAssignmentsSummaryOne'
+                          : 'stagedAssignmentsSummary'
+                      }`,
+                      { count: draftAssignmentCount },
+                    )}
+                  </p>
+                  <button
+                    type="button"
+                    data-testid="discard-assignments"
+                    onClick={handleDiscardAssignments}
+                    disabled={isBusy}
+                    className="h-9 shrink-0 rounded-lg border border-amber-300 bg-white px-3 text-[11px] font-bold text-amber-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {t('components.dashboard.views.pos.PosOrderWorkspace.discardAssignmentsButton')}
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="assign-services"
+                    onClick={handleAssignServices}
+                    disabled={isBusy}
+                    className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {saveServiceLineAssignments.isPending ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                    ) : null}
+                    {t('components.dashboard.views.pos.PosOrderWorkspace.assignServicesButton')}
+                  </button>
+                </div>
+              ) : null}
 
               {noteLines.length > 0 ? (
                 <div className="rounded-xl bg-nexoraCanvas p-3">
@@ -2757,7 +2951,6 @@ export default function PosOrderWorkspace({
         <h1 className="text-2xl font-bold leading-tight text-nexoraText">
           {t('components.dashboard.views.pos.PosOrderWorkspace.titleUpdate', {
             orderNumber: order?.orderNumber ?? '',
-            customerName: order?.customerName ?? '',
           })}
         </h1>
       </div>
@@ -2768,7 +2961,7 @@ export default function PosOrderWorkspace({
         </div>
       ) : (
         <div
-          className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
+          className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
           aria-busy={isBusy}
         >
           {catalogPanel}
@@ -2781,7 +2974,7 @@ export default function PosOrderWorkspace({
         serviceName={technicianTarget?.serviceName ?? ''}
         technicians={technicianTarget ? technicianOptionsForTicket(technicianTarget.posServiceId) : []}
         isLoading={areTechniciansPending && allTechnicians.length === 0}
-        selectedStaffId={technicianTarget?.posStaffProfileId ?? null}
+        selectedStaffId={technicianModalSelectedStaffId}
         currentTechnicianName={technicianTarget?.technicianName}
         turnsError={technicianTurnBoardQuery.isError || technicianTurnRosterQuery.isError}
         note={noteDraft}

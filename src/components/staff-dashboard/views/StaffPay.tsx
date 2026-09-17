@@ -26,6 +26,8 @@ import {
   parseVlinkpayAddressesFromMethod,
   serializeVlinkpayAddresses,
   toVlinkpayCryptoAddressesPayload,
+  toVlinkpayCryptoAddressImagesPayload,
+  type VlinkpayImagePendingMap,
 } from '../../payout/vlinkpayWallet'
 import { PayoutUiKey } from '../../../data/payoutUiKeys'
 import { getUserProfileImageUrl } from '../../../utils/userProfileImage'
@@ -144,7 +146,13 @@ export default function StaffPay() {
     setActiveMethod(null)
   }
 
-  const handleSavePayout = (value, qrCode, accountName, qrFile) => {
+  const handleSavePayout = (
+    value,
+    qrCode,
+    accountName,
+    qrFile,
+    vlinkpayImages?: VlinkpayImagePendingMap,
+  ) => {
     if (!activeMethod?.id) return
     const uiKey = activeMethod.uiKey || ''
     const isVlinkpay = uiKey === PayoutUiKey.VlinkPay
@@ -160,6 +168,9 @@ export default function StaffPay() {
         accountName: toPayoutAccountNameDto(uiKey, accountName),
         imageUrl: qrFile ? null : (qrCode || null),
         imageFile: qrFile || undefined,
+        cryptoAddressImages: isVlinkpay && vlinkpayImages
+          ? toVlinkpayCryptoAddressImagesPayload(vlinkpayImages)
+          : undefined,
       },
       {
         onSuccess: () => {
@@ -348,6 +359,7 @@ export default function StaffPay() {
               : (activeMethod.accountInfo || '')
           }
           initialQrCode={activeMethod.imageUrl || ''}
+          initialCryptoAddresses={activeMethod.uiKey === PayoutUiKey.VlinkPay ? activeMethod.cryptoAddresses : null}
           onClose={handleCloseModal}
           onSubmit={handleSavePayout}
           readOnly={false}

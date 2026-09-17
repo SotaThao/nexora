@@ -27,6 +27,8 @@ import {
   parseVlinkpayAddressesFromMethod,
   serializeVlinkpayAddresses,
   toVlinkpayCryptoAddressesPayload,
+  toVlinkpayCryptoAddressImagesPayload,
+  type VlinkpayImagePendingMap,
 } from './vlinkpayWallet'
 
 interface MerchantPayoutMethodsPanelProps {
@@ -106,6 +108,7 @@ export default function MerchantPayoutMethodsPanel({
     qrCode: string,
     accountName: string,
     qrFile?: File | null,
+    vlinkpayImages?: VlinkpayImagePendingMap,
   ) => {
     if (!editingMethod) return
     const method = getMethod(editingMethod)
@@ -129,6 +132,9 @@ export default function MerchantPayoutMethodsPanel({
         accountName: toPayoutAccountNameDto(editingMethod, accountName),
         imageUrl: qrFile ? null : qrCode || null,
         imageFile: qrFile || undefined,
+        cryptoAddressImages: isVlinkpay && vlinkpayImages
+          ? toVlinkpayCryptoAddressImagesPayload(vlinkpayImages)
+          : undefined,
       },
       {
         onSuccess: () => {
@@ -252,6 +258,7 @@ export default function MerchantPayoutMethodsPanel({
             : (editingMethodData?.accountInfo || '')
         }
         initialQrCode={editingMethodData?.imageUrl || ''}
+        initialCryptoAddresses={editingMethod === PayoutUiKey.VlinkPay ? editingMethodData?.cryptoAddresses : null}
         initialAccountName={editingMethodData?.accountName || ''}
         onClose={() => setEditingMethod(null)}
         onSubmit={handleSave}

@@ -58,6 +58,11 @@ export const errorCodeToI18nKey = {
   PAYOUT_CONFIRM_NOT_ALLOWED: 'errors.payout_confirm_not_allowed',
   PAYOUT_AMOUNT_EXCEEDS_DEBT: 'errors.payout_amount_exceeds_debt',
 
+  // Income/Payout Categories (issue #584 / #1645) — shared TransactionCategory entity
+  TRANSACTION_CATEGORY_NAME_REQUIRED: 'errors.transaction_category_name_required',
+  TRANSACTION_CATEGORY_NAME_TOO_LONG: 'errors.transaction_category_name_too_long',
+  TRANSACTION_CATEGORY_NAME_DUPLICATE: 'errors.transaction_category_name_duplicate',
+
   // Image
   IMAGE_FILE_SIZE_EXCEEDED: 'errors.image_file_size_exceeded',
   IMAGE_UNSUPPORTED_FILE_TYPE: 'errors.image_unsupported_file_type',
@@ -302,6 +307,7 @@ export const errorCodeToI18nKey = {
   SERVICE_LINE_NOT_ASSIGNED: 'errors.pos_service_line_not_assigned',
   SERVICE_LINE_ALREADY_COMPLETED: 'errors.pos_service_line_already_completed',
   SERVICE_LINE_NOTE_TOO_LONG: 'errors.pos_service_line_note_too_long',
+  SERVICE_LINE_DUPLICATE_IN_BATCH: 'errors.pos_service_line_duplicate_in_batch',
   SERVICE_LINE_NOT_OWNED_BY_STAFF: 'errors.pos_service_line_not_owned_by_staff',
   SERVICE_LINE_NOT_STARTABLE: 'errors.pos_service_line_not_startable',
   POS_STAFF_SERVICE_LINE_EDIT_DISABLED: 'errors.pos_staff_service_line_edit_disabled',

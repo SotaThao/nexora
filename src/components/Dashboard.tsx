@@ -813,7 +813,7 @@ export default function Dashboard({
   )
 
   return (
-    <div className="min-h-dvh w-full overflow-x-hidden bg-nexoraCanvas font-sans text-nexoraText">
+    <div data-dashboard-shell className="min-h-dvh w-full overflow-x-hidden bg-nexoraCanvas font-sans text-nexoraText">
       <DashboardSidebar
         isOpen={isDesktopSidebarOpen}
         activeMenu={activeMenu}
