@@ -9,7 +9,11 @@ import {
   workOrderServiceRowClass,
   workOrderServiceTableHeadClass,
 } from './constants'
-import type { WorkOrderEditableLine, WorkOrderServiceApproval } from './workOrderServiceCatalog'
+import {
+  WORK_ORDER_SERVICE_APPROVAL,
+  type WorkOrderEditableLine,
+  type WorkOrderServiceApproval,
+} from './workOrderServiceCatalog'
 import {
   formatWorkOrderDurationMinutes,
   formatWorkOrderMoney,
@@ -151,7 +155,15 @@ function WorkOrderServiceLineRow({
   onRemoveService: () => void
 }) {
   const { t } = useTranslation()
-  const canAct = Boolean(actions) && Boolean(line.isMine) && !line.isAddOn && !line.pendingRemoval
+  const isAwaitingApproval = line.approval === WORK_ORDER_SERVICE_APPROVAL.pending
+  const lineActionsLocked = Boolean(line.pendingRemoval) || isAwaitingApproval
+  // Hide Start/Complete/Accept/Decline while a change (or pending add) awaits customer approval.
+  const canAct = (
+    Boolean(actions)
+    && Boolean(line.isMine)
+    && !line.isAddOn
+    && !lineActionsLocked
+  )
   const isPending = (kind: LineStatusActionKind) =>
     actions?.pendingLineId === line.id && actions.pendingKind === kind
 
@@ -195,7 +207,7 @@ function WorkOrderServiceLineRow({
                 type="button"
                 className={WORK_ORDERS_LAYOUT_CLASS.serviceChangeButton}
                 aria-label={`${t(WORK_ORDERS_I18N.changeService)} ${workOrderTextOrPlaceholder(line.serviceName)}`}
-                disabled={Boolean(line.pendingRemoval)}
+                disabled={lineActionsLocked}
                 onClick={onChangeService}
               >
                 {t(WORK_ORDERS_I18N.changeServiceAction)}
@@ -205,7 +217,7 @@ function WorkOrderServiceLineRow({
                   type="button"
                   className={WORK_ORDERS_LAYOUT_CLASS.serviceRemoveButton}
                   aria-label={`${t(WORK_ORDERS_I18N.removeService)} ${workOrderTextOrPlaceholder(line.serviceName)}`}
-                  disabled={Boolean(line.pendingRemoval)}
+                  disabled={lineActionsLocked}
                   onClick={onRemoveService}
                 >
                   {t(WORK_ORDERS_I18N.removeService)}
