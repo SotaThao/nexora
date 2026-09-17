@@ -13,6 +13,8 @@ import type {
   CheckoutServiceCatalogItemApiDto,
   CompleteOrderPayload,
   CompleteOrderResultApiDto,
+  RecordVlinkPayPaymentPayload,
+  RecordVlinkPayPaymentResultApiDto,
   VlinkPayPaymentStatusApiDto,
   VlinkPayPaymentUrlApiDto,
   VlinkPayPaymentUrlPayload,
@@ -298,6 +300,21 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
     ): Promise<VlinkPayPaymentUrlApiDto> {
       return await client.post<VlinkPayPaymentUrlApiDto>(
         `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/vlinkpay/payment-url`,
+        payload,
+      )
+    },
+
+    /**
+     * Records a VlinkPay payment as a portion of the order. Safe to call again after a lost
+     * result message — it updates the same portion rather than adding a second one.
+     */
+    async recordVlinkPayPayment(
+      businessId: string,
+      orderId: string,
+      payload: RecordVlinkPayPaymentPayload,
+    ): Promise<RecordVlinkPayPaymentResultApiDto> {
+      return await client.post<RecordVlinkPayPaymentResultApiDto>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/vlinkpay/record-payment`,
         payload,
       )
     },

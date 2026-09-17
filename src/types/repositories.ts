@@ -1758,6 +1758,18 @@ export interface VlinkPayPaymentUrlApiDto {
   iframeUrl: string
 }
 
+export interface RecordVlinkPayPaymentPayload {
+  /** Tip attributed to the VlinkPay portion. Only one method on an order may carry the tip. */
+  tipAmount: number
+}
+
+export interface RecordVlinkPayPaymentResultApiDto {
+  /** Amount VlinkPay confirms was collected — not the amount the browser reported. */
+  amount: number
+  txId?: string | null
+  method?: string | null
+}
+
 export interface VlinkPayPaymentStatusApiDto {
   found: boolean
   txId?: string | null
