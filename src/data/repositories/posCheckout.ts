@@ -13,6 +13,9 @@ import type {
   CheckoutServiceCatalogItemApiDto,
   CompleteOrderPayload,
   CompleteOrderResultApiDto,
+  VlinkPayPaymentStatusApiDto,
+  VlinkPayPaymentUrlApiDto,
+  VlinkPayPaymentUrlPayload,
   EligiblePromotionApiDto,
   InServiceOrderApiDto,
   OrderDetailApiDto,
@@ -281,6 +284,34 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
       return await client.post<CompleteOrderResultApiDto>(
         `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/complete`,
         payload,
+      )
+    },
+
+    /**
+     * URL of the VlinkPay payment page to embed in an iframe for this order.
+     * The cashier does not sign in; the URL carries a one-time token.
+     */
+    async getVlinkPayPaymentUrl(
+      businessId: string,
+      orderId: string,
+      payload: VlinkPayPaymentUrlPayload,
+    ): Promise<VlinkPayPaymentUrlApiDto> {
+      return await client.post<VlinkPayPaymentUrlApiDto>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/vlinkpay/payment-url`,
+        payload,
+      )
+    },
+
+    /**
+     * Asks VlinkPay whether this order was paid. Needed because the iframe result message can
+     * be lost, and the money may already have moved — never collect again on a missing message.
+     */
+    async getVlinkPayPaymentStatus(
+      businessId: string,
+      orderId: string,
+    ): Promise<VlinkPayPaymentStatusApiDto> {
+      return await client.get<VlinkPayPaymentStatusApiDto>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/vlinkpay/payment-status`,
       )
     },
   }
