@@ -41,7 +41,7 @@ import type {
   SdpPayload,
 } from '../types/communityChat'
 import { logger } from '../utils/logger'
-import { startRingtone, stopRingtone } from './ringtone'
+import { startRingback, startRingtone, stopRingback, stopRingtone } from './ringtone'
 import { captureStatsSnapshotJson, createPeerConnection, type ManagedPeerConnection } from './webrtc'
 
 export type CallPhase =
@@ -105,12 +105,15 @@ const subscribers = new Set<() => void>()
 function setState(patch: Partial<CallStateSnapshot>) {
   const previousPhase = state.phase
   state = { ...state, ...patch }
-  // Centralized here (rather than at each transition site) so the ringtone can never be left
-  // playing regardless of which path ends the call — answer, decline, cancel-by-peer, tab-race
-  // loss, or error.
+  // Centralized here (rather than at each transition site) so the ringtone/ringback can never be
+  // left playing regardless of which path ends the call — answer, decline, cancel, cancel-by-peer,
+  // tab-race loss, no-answer timeout, or error.
   if (state.phase !== previousPhase) {
     if (state.phase === 'incoming-ringing') startRingtone()
     else if (previousPhase === 'incoming-ringing') stopRingtone()
+
+    if (state.phase === 'outgoing-ringing') startRingback()
+    else if (previousPhase === 'outgoing-ringing') stopRingback()
   }
   subscribers.forEach((notify) => notify())
 }
