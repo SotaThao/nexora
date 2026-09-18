@@ -113,6 +113,7 @@ import { buildServiceOrderItems } from "./bookingSettingsServiceOrder";
 
 const TK = "components.dashboard.views.BookingHubView.settings";
 const TK_HUB = "components.dashboard.views.BookingHubView";
+const SHOW_ASSISTANT_ONLY_MODE = false;
 
 const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 type DayKey = (typeof DAY_KEYS)[number];
@@ -4126,6 +4127,7 @@ export default function BookingSettingsPanel() {
                 {t(`${TK}.languageStatus.${language}`)}
               </div>
             </div>
+            {SHOW_ASSISTANT_ONLY_MODE ? (
             <div className="settings-field settings-span-full">
               <label className="flex items-center gap-2">
                 <input
@@ -4140,6 +4142,7 @@ export default function BookingSettingsPanel() {
                 <p role="status">{t("voiceKnowledge.assistantOnlyModeGreetingWarning")}</p>
               )}
             </div>
+            ) : null}
             {voiceEnabled && (
               <div className="settings-field settings-span-full">
                 <span className="settings-label">{t(`${TK}.voiceFieldLabel`)}</span>
