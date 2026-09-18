@@ -2969,6 +2969,10 @@
     "pos_service_line_not_startable": "Hãy check-in khách trước khi bắt đầu phục vụ.",
     "pos_staff_service_line_edit_disabled": "Tiệm đang tắt tính năng thợ tự sửa dịch vụ. Nhờ quầy chỉnh giúp.",
     "pos_customer_verification_failed": "Đó không phải 4 số cuối của số điện thoại khách này.",
+    "pos_customer_import_file_type_not_allowed": "Vui lòng tải lên file .xlsx hoặc .csv hợp lệ.",
+    "pos_customer_import_file_too_large": "File vượt quá giới hạn 5 MB.",
+    "pos_customer_import_too_many_rows": "File có quá nhiều dòng. Tối đa là 5.000 dòng.",
+    "pos_operations_access_denied": "Bạn không có quyền POS Operations cho business này.",
     "pos_custom_service_name_required": "Nhập tên cho dịch vụ tùy chỉnh này.",
     "pos_custom_service_price_invalid": "Giá dịch vụ tùy chỉnh phải lớn hơn $0.",
     "pos_custom_service_duration_invalid": "Nếu nhập thời gian, phải từ 1 đến 10.000 phút.",
@@ -4704,6 +4708,7 @@
           },
           "CustomerTab": {
             "editCustomer": "Chỉnh sửa khách hàng",
+            "importButton": "Import Excel / CSV",
             "searchLabel": "Tìm kiếm",
             "searchPlaceholder": "Tìm theo tên hoặc số điện thoại…",
             "sortLabel": "Sắp xếp theo ngày tạo",
@@ -6643,7 +6648,160 @@
             "close": "Đóng",
             "back": "Quay lại",
             "cancel": "Hủy",
-            "save": "Lưu thay đổi"
+            "save": "Lưu thay đổi",
+            "import": {
+              "button": "Import Excel / CSV",
+              "buttonShort": "Import",
+              "kicker": "Customer Management",
+              "prototypeTag": "Interactive prototype",
+              "title": "Import khách hàng từ Excel / CSV",
+              "stepperAria": "Tiến trình import",
+              "steps": {
+                "upload": {
+                  "label": "Upload",
+                  "note": "Tải file Excel hoặc CSV lên để bắt đầu kiểm tra dữ liệu."
+                },
+                "mapping": {
+                  "label": "Mapping & Preview",
+                  "note": "Kiểm tra cột nguồn, điều chỉnh mapping và xem dữ liệu mẫu."
+                },
+                "result": {
+                  "label": "Result",
+                  "note": "Xem kết quả import và tải báo cáo các dòng bị bỏ qua."
+                }
+              },
+              "actions": {
+                "close": "Đóng cửa sổ",
+                "continue": "Tiếp tục",
+                "import": "Import khách hàng",
+                "importing": "Đang import…",
+                "done": "Hoàn tất",
+                "back": "Quay lại",
+                "importAnother": "Import file khác"
+              },
+              "footer": {
+                "step1": "Bước 1/3 · Chưa có customer nào được tạo.",
+                "step2": "Bước 2/3 · Phone Number là trường bắt buộc.",
+                "step2Ready": "Bước 2/3 · Sẵn sàng import.",
+                "step3": "Bước 3/3 · {count} customer mới đã được thêm."
+              },
+              "upload": {
+                "heading": "Upload file Excel hoặc CSV",
+                "description": "Chọn file .xlsx hoặc .csv. Hệ thống sẽ kiểm tra file, nhận diện dòng tiêu đề và các cột dữ liệu.",
+                "chooseFile": "Chọn file từ máy",
+                "removeFile": "Bỏ file",
+                "inspecting": "Đang kiểm tra file…"
+              },
+              "fileMeta": {
+                "xlsx": "{size} · {rows} dòng · {sheets} sheets · Sẵn sàng",
+                "csv": "{size} · {rows} dòng · 1 bảng dữ liệu · Sẵn sàng",
+                "xlsxReady": "{size} · Sẵn sàng",
+                "csvReady": "{size} · Sẵn sàng"
+              },
+              "errors": {
+                "unsupportedType": "Không thể đọc file “{name}”. Vui lòng chọn file định dạng .xlsx hoặc .csv.",
+                "tooLarge": "File “{name}” vượt quá giới hạn 5 MB.",
+                "tooManyRows": "File “{name}” có {count} dòng. Tối đa cho phép là {max} dòng.",
+                "emptyFile": "File “{name}” không có dòng dữ liệu.",
+                "missingPhoneColumn": "File “{name}” cần có ít nhất một cột số điện thoại (ví dụ Phone, Mobile, Tel, SĐT).",
+                "readFailed": "Không thể đọc file “{name}”. Vui lòng thử file .xlsx hoặc .csv khác.",
+                "importFailed": "Không thể import khách hàng. Vui lòng thử lại."
+              },
+              "requirements": {
+                "title": "Yêu cầu đối với file",
+                "format": "Định dạng Microsoft Excel .xlsx hoặc .csv.",
+                "size": "Dung lượng tối đa 5 MB và không quá 5.000 dòng.",
+                "phone": "Cần có ít nhất một cột chứa số điện thoại.",
+                "sheet": "Excel cho phép chọn sheet; CSV dùng một bảng dữ liệu. Cả hai đều cho phép chọn dòng tiêu đề và đổi mapping.",
+                "unmapped": "Các cột không được mapping sẽ được bỏ qua."
+              },
+              "privacy": {
+                "title": "Dữ liệu được bảo vệ",
+                "body": "File chỉ được sử dụng cho lần import này. Không ghi nội dung file hoặc thông tin cá nhân vào log."
+              },
+              "mapping": {
+                "sheet": "Sheet",
+                "headerRow": "Dòng tiêu đề",
+                "headerRowOption": "Dòng {row}",
+                "reloaded": "✓ Preview đã tải lại",
+                "heading": "Ánh xạ trường dữ liệu",
+                "subXlsx": "Ghép cột Excel với thông tin khách hàng.",
+                "subCsv": "Ghép cột CSV với thông tin khách hàng.",
+                "fileMetaXlsx": "{rows} dòng dữ liệu · {sheets} sheets",
+                "fileMetaCsv": "{rows} dòng dữ liệu · CSV một bảng",
+                "fileMetaXlsxSimple": "{sheets} sheets",
+                "fileMetaCsvSimple": "CSV một bảng",
+                "unnamedColumn": "Cột {index}",
+                "suggested": "{count}/6 gợi ý",
+                "hint": "Mapping được gợi ý tự động theo tên cột. Mỗi cột nguồn chỉ có thể dùng một lần.",
+                "phoneRequired": "Hãy mapping Phone Number để tiếp tục import.",
+                "duplicateColumn": "Mỗi cột Excel/CSV chỉ được map vào một trường khách hàng."
+              },
+              "fields": {
+                "name": "Customer Name",
+                "phone": "Phone Number",
+                "email": "Email",
+                "dob": "Date of Birth",
+                "created": "Created",
+                "lastVisit": "Last Visit"
+              },
+              "skipColumn": "— Bỏ qua —",
+              "columns": {
+                "fullName": "Full Name",
+                "mobile": "Mobile",
+                "email": "Email Address",
+                "birthday": "Birthday",
+                "createdAt": "Created At",
+                "lastVisit": "Last Visit",
+                "notes": "Customer Notes"
+              },
+              "preview": {
+                "heading": "Preview dữ liệu",
+                "subXlsx": "5 dòng đầu tiên từ sheet “{sheet}”, bắt đầu sau dòng tiêu đề {headerRow}.",
+                "subCsv": "5 dòng đầu tiên từ CSV, bắt đầu sau dòng tiêu đề {headerRow}.",
+                "count": "{shown} / {total} dòng",
+                "empty": "Không có dòng mẫu cho sheet/header này.",
+                "readable": "Dữ liệu đọc được",
+                "maybeSkipped": "Có thể bị bỏ qua khi import",
+                "backendNote": "Backend sẽ validate lại toàn bộ file."
+              },
+              "result": {
+                "heading": "Import đã hoàn tất",
+                "sub": "Danh sách Customer đã được làm mới. Các dòng hợp lệ đã được thêm thành công.",
+                "total": "Tổng số dòng",
+                "imported": "Đã import",
+                "duplicates": "Trùng dữ liệu",
+                "invalid": "Không hợp lệ"
+              },
+              "skipped": {
+                "heading": "{count} dòng đã bị bỏ qua",
+                "sub": "Hiển thị 5 dòng đầu tiên. Tải CSV để xem báo cáo đầy đủ.",
+                "download": "Tải báo cáo CSV",
+                "toast": "Báo cáo CSV đã được tải xuống.",
+                "colRow": "Dòng",
+                "colPhone": "Số điện thoại",
+                "colStatus": "Trạng thái",
+                "colReason": "Lý do",
+                "status": {
+                  "duplicate": "Trùng dữ liệu",
+                  "duplicateInFile": "Trùng trong file",
+                  "invalid": "Không hợp lệ"
+                },
+                "codes": {
+                  "ROW_DUPLICATE_IN_BUSINESS": "Trùng dữ liệu",
+                  "ROW_DUPLICATE_IN_FILE": "Trùng trong file",
+                  "ROW_PHONE_MISSING": "Thiếu SĐT",
+                  "ROW_PHONE_INVALID": "SĐT không hợp lệ"
+                },
+                "reasons": {
+                  "duplicateExisting": "Số điện thoại đã tồn tại trong business.",
+                  "duplicateInFile": "Trùng với dòng hợp lệ xuất hiện trước đó.",
+                  "phoneRequired": "Thiếu số điện thoại bắt buộc.",
+                  "invalidPhone": "Số điện thoại không đúng định dạng.",
+                  "invalidEmail": "Email không đúng định dạng."
+                }
+              }
+            }
           },
           "callLog": {
             "headerTitle": "Lịch sử gọi",

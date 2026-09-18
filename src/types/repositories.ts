@@ -579,6 +579,70 @@ export interface PosCustomerOrderHistoryPage {
   hasPreviousPage: boolean
 }
 
+/** US-112 — POS Customer Excel/CSV import. */
+export type PosCustomerImportSkipCode =
+  | 'ROW_PHONE_MISSING'
+  | 'ROW_PHONE_INVALID'
+  | 'ROW_DUPLICATE_IN_FILE'
+  | 'ROW_DUPLICATE_IN_BUSINESS'
+  | string
+
+export interface PosCustomerImportColumnDto {
+  index: number
+  header: string
+  sampleValues: string[]
+}
+
+export interface PosCustomerImportSuggestedMappingDto {
+  customerNameColumnIndex?: number | null
+  phoneNumberColumnIndex?: number | null
+  emailColumnIndex?: number | null
+  dateOfBirthColumnIndex?: number | null
+  regisDateColumnIndex?: number | null
+  lastVisitColumnIndex?: number | null
+}
+
+export interface PosCustomerImportPreviewDto {
+  sheetNames: string[]
+  selectedSheetName: string
+  headerRow: number
+  columns: PosCustomerImportColumnDto[]
+  suggestedMapping: PosCustomerImportSuggestedMappingDto
+}
+
+export interface PosCustomerImportSkippedRowDto {
+  rowNumber: number
+  phone?: string | null
+  code: PosCustomerImportSkipCode
+  message: string
+}
+
+export interface PosCustomerImportResultDto {
+  totalRows: number
+  importedCount: number
+  skippedDuplicateCount: number
+  skippedInvalidCount: number
+  skippedRows: PosCustomerImportSkippedRowDto[]
+}
+
+export interface PosCustomerImportPreviewRequest {
+  file: File
+  sheetName?: string
+  headerRow?: number
+}
+
+export interface PosCustomerImportRequest {
+  file: File
+  sheetName: string
+  headerRow: number
+  phoneNumberColumnIndex: number
+  customerNameColumnIndex?: number | null
+  emailColumnIndex?: number | null
+  dateOfBirthColumnIndex?: number | null
+  regisDateColumnIndex?: number | null
+  lastVisitColumnIndex?: number | null
+}
+
 export interface CheckInOverviewSummaryApiDto {
   totalCheckIns: number
   newGuests: number
