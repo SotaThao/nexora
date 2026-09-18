@@ -29,7 +29,8 @@ import { Check, FileText, Infinity as InfinityIcon, Layers, Loader2, Plus, Shiel
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useTurnSettings, useUpdateTurnSettings } from '../../../../../data/hooks/usePosTurnSettings'
 import { SkeletonList } from '../../../../ui/skeleton'
-import { MAX_TURN_CREDIT } from '../posTurnTiers'
+import { sanitizeDecimalInput } from '../../../../../utils/currencyInput'
+import { MAX_TURN_CREDIT, MAX_TURN_TIER_UP_TO } from '../posTurnTiers'
 
 const K = 'components.dashboard.views.pos.WeightedTurnSettingsModal.'
 
@@ -66,9 +67,18 @@ function hasAtMostTwoDecimals(value: number) {
 function isValidUpTo(value: string, previousUpTo: number | null) {
   if (value.trim() === '') return false
   const parsed = Number(value)
-  if (!Number.isFinite(parsed) || parsed < 0 || !hasAtMostTwoDecimals(parsed)) return false
+  if (!Number.isFinite(parsed) || parsed < 0 || parsed > MAX_TURN_TIER_UP_TO || !hasAtMostTwoDecimals(parsed))
+    return false
   if (previousUpTo !== null && parsed <= previousUpTo) return false
   return true
+}
+
+/** Clamps to MAX_TURN_TIER_UP_TO as the user types/pastes, so neither this field nor the derived
+ * "From" of the next range can ever reach floating-point-unsafe territory. */
+function sanitizeUpToInput(raw: string): string {
+  const cleaned = sanitizeDecimalInput(raw, 2)
+  const parsed = Number(cleaned)
+  return Number.isFinite(parsed) && parsed > MAX_TURN_TIER_UP_TO ? String(MAX_TURN_TIER_UP_TO) : cleaned
 }
 
 /** Row 0 always starts at $0; every other row starts one cent above the previous row's Up to. */
@@ -254,11 +264,11 @@ export default function WeightedTurnSettingsModal({
                           {index + 1}
                         </span>
 
-                        <div className="w-20 shrink-0">
+                        <div className="w-20 shrink-0 overflow-hidden">
                           <span className="block text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted sm:hidden">
                             {t(K + 'fromLabel')}
                           </span>
-                          <span className="flex h-11 items-center text-sm font-medium text-nexoraMuted sm:h-auto">
+                          <span className="flex h-11 min-w-0 items-center truncate text-sm font-medium text-nexoraMuted sm:h-auto">
                             {from === null ? '—' : wholeCurrency.format(from)}
                           </span>
                         </div>
@@ -279,21 +289,20 @@ export default function WeightedTurnSettingsModal({
                                   $
                                 </span>
                                 <input
-                                  type="number"
-                                  min={0}
-                                  step="0.01"
+                                  type="text"
                                   inputMode="decimal"
+                                  maxLength={String(MAX_TURN_TIER_UP_TO).length + 3}
                                   disabled={!canManage}
                                   value={row.upTo}
-                                  onChange={(event) => updateRow(index, { upTo: event.target.value })}
+                                  onChange={(event) => updateRow(index, { upTo: sanitizeUpToInput(event.target.value) })}
                                   placeholder={t(K + 'upToPlaceholder')}
                                   aria-label={`${t(K + 'upToLabel')} ${index + 1}`}
-                                  className={`${fieldInputClass(showFieldErrors && rowUpToInvalid(index))} pl-6 pr-3 text-right [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+                                  className={`${fieldInputClass(showFieldErrors && rowUpToInvalid(index))} pl-6 pr-3 text-right`}
                                 />
                               </div>
                               {showFieldErrors && rowUpToInvalid(index) ? (
                                 <span className="mt-1 block text-[11px] font-bold text-nexoraDanger">
-                                  {t(K + 'upToInvalid')}
+                                  {t(K + 'upToInvalid', { max: MAX_TURN_TIER_UP_TO })}
                                 </span>
                               ) : null}
                             </>
