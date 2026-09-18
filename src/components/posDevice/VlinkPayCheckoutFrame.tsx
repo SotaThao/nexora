@@ -13,6 +13,7 @@
  *    again, which is why `onUnresolved` exists and is distinct from `onCancelled`.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Loader2, X } from 'lucide-react'
 import type { VlinkPayEmbedResultMessage } from '../../types/repositories'
 
 const RESULT_MESSAGE_TYPE = 'VLINKPAY_PAYMENT_RESULT'
@@ -95,34 +96,67 @@ export function VlinkPayCheckoutFrame({
 
   if (!expectedOrigin) {
     return (
-      <div role="alert">
-        Could not open VlinkPay: the payment link is not valid.
-        <button type="button" onClick={onClose}>
-          Close
-        </button>
+      <div className="fixed inset-0 z-[70] flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
+        <div role="alert" className="nexora-modal-card max-w-md gap-4">
+          <p className="text-base font-bold text-nexoraText">
+            Could not open VlinkPay: the payment link is not valid.
+          </p>
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-11 rounded-lg border border-nexoraBorder bg-nexoraSurface px-4 text-sm font-bold text-nexoraText hover:bg-nexoraCanvas"
+          >
+            Close
+          </button>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="vlinkpay-checkout-frame">
-      <header className="vlinkpay-checkout-frame__header">
-        <span>{title}</span>
-        <button type="button" onClick={handleClose} aria-label="Close payment">
-          ×
-        </button>
-      </header>
+    // No backdrop-click-to-close here, unlike the other POS dialogs: a stray tap while the
+    // customer is mid-payment would drop the frame without a result, and the money may already
+    // have moved. Closing is deliberate, through the header button only.
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className="nexora-card flex h-full max-h-[90dvh] w-full max-w-4xl flex-col overflow-hidden"
+      >
+        <header className="flex shrink-0 items-center gap-3 border-b border-nexoraBorder px-6 py-4">
+          <span className="min-w-0 flex-1 truncate text-xl font-bold text-nexoraText">
+            {title}
+          </span>
+          <button
+            type="button"
+            onClick={handleClose}
+            aria-label="Close payment"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder bg-nexoraSurface text-nexoraText hover:bg-nexoraCanvas"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </header>
 
-      {loading && <div className="vlinkpay-checkout-frame__loading">Loading…</div>}
+        {/* The iframe and the spinner share this box so the payment page is never pushed out of
+            view by the loading state — the spinner sits on top and disappears on load. */}
+        <div className="relative min-h-0 flex-1">
+          {loading ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-nexoraSurface">
+              <Loader2 className="h-6 w-6 animate-spin text-nexoraBrand" />
+            </div>
+          ) : null}
 
-      <iframe
-        title={title}
-        src={iframeUrl}
-        onLoad={() => setLoading(false)}
-        className="vlinkpay-checkout-frame__iframe"
-        // The payment pages scan QR codes, so the camera has to be reachable.
-        allow="camera; microphone"
-      />
+          <iframe
+            title={title}
+            src={iframeUrl}
+            onLoad={() => setLoading(false)}
+            className="h-full w-full border-0"
+            // The payment pages scan QR codes, so the camera has to be reachable.
+            allow="camera; microphone"
+          />
+        </div>
+      </div>
     </div>
   )
 }
