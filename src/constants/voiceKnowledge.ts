@@ -1,3 +1,22 @@
+import type { VoiceKnowledgeLimits } from "@/data/repositories/voiceKnowledge";
+
+/**
+ * Placeholder caps for the first render only — every page of the list carries the real ones and they take
+ * over as soon as the query resolves. Nothing the user can act on happens before then, so these can never
+ * reject a save the API would accept; they exist so the slot dots and budget meter are not drawn empty
+ * while loading. The server is the single source of truth: do not read these anywhere else.
+ */
+export const VOICE_KNOWLEDGE_FALLBACK_LIMITS: VoiceKnowledgeLimits = {
+  maxDocuments: 5,
+  maxFileSizeBytes: 5 * 1024 * 1024,
+  maxContentCharacters: 16000,
+  maxTotalCharacters: 40000,
+  maxFacts: 80,
+  maxQuestionCharacters: 300,
+  maxAnswerCharacters: 1500,
+  maxRegeneratesPerDay: 3,
+};
+
 export enum VoiceKnowledgeStatus {
   Processing = "Processing",
   Active = "Active",
@@ -11,6 +30,7 @@ export const VOICE_KNOWLEDGE_ERROR_KEYS: Record<string, string> = {
   VOICE_KNOWLEDGE_ENCRYPTED_DOCUMENT: "EncryptedDocument",
   VOICE_KNOWLEDGE_EXTRACTION_FAILED: "ExtractionFailed",
   VOICE_KNOWLEDGE_CONDENSE_OUTPUT_INVALID: "CondenseOutputInvalid",
+  VOICE_KNOWLEDGE_CONDENSE_OUTPUT_TRUNCATED: "CondenseOutputTruncated",
   VOICE_KNOWLEDGE_NO_BUSINESS_FACTS: "NoBusinessFacts",
   VOICE_KNOWLEDGE_SUSPECTED_INJECTION: "SuspectedInjection",
   VOICE_KNOWLEDGE_FILE_TOO_LARGE: "sizeError",

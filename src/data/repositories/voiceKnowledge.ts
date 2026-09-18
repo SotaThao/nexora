@@ -21,6 +21,22 @@ export interface VoiceKnowledgeDocument {
 }
 
 /**
+ * The caps the API enforces. Sent with every page so this client never keeps its own copy: the numbers were
+ * previously duplicated here and inside the translated strings, and raising one on the server left the editor
+ * refusing a save the API would have accepted.
+ */
+export interface VoiceKnowledgeLimits {
+  maxDocuments: number;
+  maxFileSizeBytes: number;
+  maxContentCharacters: number;
+  maxTotalCharacters: number;
+  maxFacts: number;
+  maxQuestionCharacters: number;
+  maxAnswerCharacters: number;
+  maxRegeneratesPerDay: number;
+}
+
+/**
  * A page of documents plus tenant-wide totals. `slotsUsed` and `activeCharacters` are supplied by the
  * server rather than derived from `items`, because they gate the upload button and the budget meter and
  * would be wrong the moment failed history spills onto a later page.
@@ -34,6 +50,7 @@ export interface VoiceKnowledgeDocumentPage {
   hasNextPage: boolean;
   slotsUsed: number;
   activeCharacters: number;
+  limits: VoiceKnowledgeLimits;
 }
 
 const base = "/api/v1/merchant/nexora-voice/knowledge-documents";

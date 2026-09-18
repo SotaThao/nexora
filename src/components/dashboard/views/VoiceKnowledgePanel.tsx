@@ -26,21 +26,16 @@ import {
 import {
   readKnowledgeFacts,
   type VoiceKnowledgeDocument,
+  type VoiceKnowledgeLimits,
 } from "@/data/repositories/voiceKnowledge";
 import {
   VoiceKnowledgeStatus as Status,
   VOICE_KNOWLEDGE_ERROR_KEYS,
+  VOICE_KNOWLEDGE_FALLBACK_LIMITS,
   VOICE_KNOWLEDGE_REQUEST_ERROR_KEYS,
 } from "@/constants/voiceKnowledge";
 
-const MAX_FILE_BYTES = 5 * 1024 * 1024;
-const MAX_DOCUMENTS = 5;
-const MAX_CONTENT_CHARS = 8000;
-const MAX_KNOWLEDGE_CHARS = 20000;
-const MAX_REGENERATIONS = 3;
-const MAX_FACTS = 40;
-const MAX_QUESTION_CHARS = 300;
-const MAX_ANSWER_CHARS = 1500;
+const BYTES_PER_MB = 1024 * 1024;
 const buttonClass =
   "rounded-lg border border-nexoraBorder bg-white px-3 py-2 text-sm font-medium text-nexoraText transition hover:bg-nexoraSurfaceMuted disabled:cursor-not-allowed disabled:opacity-50";
 
@@ -115,14 +110,25 @@ export function VoiceKnowledgePanel() {
   const documents = query.data?.items ?? [];
   const count = query.data?.slotsUsed ?? 0;
   const activeChars = query.data?.activeCharacters ?? 0;
-  const slotsRemaining = Math.max(0, MAX_DOCUMENTS - count);
+  const limits = query.data?.limits ?? VOICE_KNOWLEDGE_FALLBACK_LIMITS;
+  // Every message that quotes a cap reads from here, so one server response updates the help text, the
+  // validation errors and the meters together instead of leaving a stale number behind in a translation.
+  const limitValues = {
+    sizeMb: Math.round(limits.maxFileSizeBytes / BYTES_PER_MB),
+    documents: limits.maxDocuments,
+    characters: limits.maxContentCharacters.toLocaleString(),
+    total: limits.maxTotalCharacters.toLocaleString(),
+    regenerates: limits.maxRegeneratesPerDay,
+  };
+  const limitText = (key: string) => interpolate(key, limitValues);
+  const slotsRemaining = Math.max(0, limits.maxDocuments - count);
   const locked = (query.error as { status?: number })?.status === 403;
   const uploadDisabled =
     locked ||
     query.isPending ||
     query.isError ||
     mutation.isPending ||
-    count >= MAX_DOCUMENTS;
+    count >= limits.maxDocuments;
 
   useEffect(() => {
     if (!openMenuId) return;
@@ -150,7 +156,7 @@ export function VoiceKnowledgePanel() {
     } catch (error) {
       const code = String((error as { errorCode?: string })?.errorCode ?? "");
       setMessage(
-        text(
+        limitText(
           VOICE_KNOWLEDGE_REQUEST_ERROR_KEYS[code] ??
             VOICE_KNOWLEDGE_ERROR_KEYS[code] ??
             "error",
@@ -164,7 +170,7 @@ export function VoiceKnowledgePanel() {
     !document.lastRegeneratedAt ||
     document.lastRegeneratedAt.slice(0, 10) !==
       new Date().toISOString().slice(0, 10) ||
-    document.regenerateCount < MAX_REGENERATIONS;
+    document.regenerateCount < limits.maxRegeneratesPerDay;
 
   const download = async (document: VoiceKnowledgeDocument) => {
     if (downloadsInProgress.current.has(document.id)) return;
@@ -196,14 +202,14 @@ export function VoiceKnowledgePanel() {
     if (!file || uploadDisabled) return;
     if (
       !/\.(txt|docx|pdf)$/i.test(file.name) ||
-      file.size > MAX_FILE_BYTES ||
+      file.size > limits.maxFileSizeBytes ||
       file.size === 0
     ) {
-      setMessage(text("sizeError"));
+      setMessage(limitText("sizeError"));
       return;
     }
-    if (count >= MAX_DOCUMENTS) {
-      setMessage(text("countError"));
+    if (count >= limits.maxDocuments) {
+      setMessage(limitText("countError"));
       return;
     }
     void run(() => actions.upload(file));
@@ -213,17 +219,17 @@ export function VoiceKnowledgePanel() {
     const content = JSON.stringify({ facts });
     if (
       !facts.length ||
-      facts.length > MAX_FACTS ||
+      facts.length > limits.maxFacts ||
       facts.some(
         (fact) =>
           !fact.question.trim() ||
           !fact.answer.trim() ||
-          fact.question.length > MAX_QUESTION_CHARS ||
-          fact.answer.length > MAX_ANSWER_CHARS,
+          fact.question.length > limits.maxQuestionCharacters ||
+          fact.answer.length > limits.maxAnswerCharacters,
       ) ||
-      content.length > MAX_CONTENT_CHARS
+      content.length > limits.maxContentCharacters
     ) {
-      setMessage(text("contentError"));
+      setMessage(limitText("contentError"));
       return;
     }
     if (editing && (await run(() => actions.content(editing, content)))) {
@@ -285,13 +291,13 @@ export function VoiceKnowledgePanel() {
                 <span className="font-semibold text-nexoraText">
                   {interpolate("filesUsed", {
                     used: count,
-                    total: MAX_DOCUMENTS,
+                    total: limits.maxDocuments,
                   })}
                 </span>
                 <span>{interpolate("slotsAvailable", { count: slotsRemaining })}</span>
               </div>
               <div className="grid grid-cols-5 gap-1.5" aria-hidden="true">
-                {Array.from({ length: MAX_DOCUMENTS }, (_, index) => (
+                {Array.from({ length: limits.maxDocuments }, (_, index) => (
                   <span
                     key={index}
                     className={`h-1 rounded-full ${index < count ? "bg-nexoraBrand" : "bg-slate-200"}`}
@@ -300,12 +306,12 @@ export function VoiceKnowledgePanel() {
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs text-nexoraMuted">
                 <span>
-                  {interpolate("budget", { used: activeChars.toLocaleString() })}
+                  {interpolate("budget", { used: activeChars.toLocaleString(), total: limits.maxTotalCharacters.toLocaleString() })}
                 </span>
                 <progress
                   className="h-1.5 w-28 accent-nexoraBrand"
-                  max={MAX_KNOWLEDGE_CHARS}
-                  value={Math.min(activeChars, MAX_KNOWLEDGE_CHARS)}
+                  max={limits.maxTotalCharacters}
+                  value={Math.min(activeChars, limits.maxTotalCharacters)}
                   aria-label={text("budgetProgress")}
                 />
               </div>
@@ -384,8 +390,8 @@ export function VoiceKnowledgePanel() {
                 </a>
               </p>
             )}
-            {count >= MAX_DOCUMENTS && (
-              <p className="text-sm text-nexoraMuted">{text("countError")}</p>
+            {count >= limits.maxDocuments && (
+              <p className="text-sm text-nexoraMuted">{limitText("countError")}</p>
             )}
             {message && (
               <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
@@ -448,6 +454,8 @@ export function VoiceKnowledgePanel() {
                       menuRootRef={openMenuId === document.id ? menuRootRef : undefined}
                       text={text}
                       interpolate={interpolate}
+                      limits={limits}
+                      limitText={limitText}
                       canRegenerate={canRegenerate(document)}
                       menuActionClass={menuActionClass}
                       onDownload={() => void download(document)}
@@ -537,6 +545,8 @@ type DocumentRowsProps = {
   menuRootRef?: React.RefObject<HTMLDivElement>;
   text: (key: string) => string;
   interpolate: (key: string, values: Record<string, string | number>) => string;
+  limits: VoiceKnowledgeLimits;
+  limitText: (key: string) => string;
   canRegenerate: boolean;
   menuActionClass: string;
   onDownload: () => void;
@@ -552,7 +562,7 @@ type DocumentRowsProps = {
 
 function DocumentRows({
   document, editing, facts, setFacts, mutationPending, downloading, openMenu,
-  menuRootRef, text, interpolate, canRegenerate, menuActionClass, onDownload,
+  menuRootRef, text, interpolate, limits, limitText, canRegenerate, menuActionClass, onDownload,
   onToggleMenu, onEdit, onRegenerate, onActivate, onToggleStatus, onDelete,
   onSave, onCancel,
 }: DocumentRowsProps) {
@@ -638,7 +648,7 @@ function DocumentRows({
               {openMenu && (
                 <div ref={menuRef} role="menu" className="absolute left-0 z-30 mt-1 w-52 overflow-hidden rounded-lg border border-nexoraBorder bg-white py-1 text-left shadow-lg md:left-auto md:right-0" onKeyDown={handleMenuKeyDown}>
                   {isEditable && <button type="button" role="menuitem" className={menuActionClass} disabled={mutationPending} onClick={onEdit}><Pencil aria-hidden="true" />{text("edit")}</button>}
-                  {document.status !== Status.Processing && <button type="button" role="menuitem" className={menuActionClass} disabled={mutationPending || !canRegenerate} title={!canRegenerate ? text("regenerateCap") : undefined} onClick={onRegenerate}><RefreshCw aria-hidden="true" />{text("regenerate")}</button>}
+                  {document.status !== Status.Processing && <button type="button" role="menuitem" className={menuActionClass} disabled={mutationPending || !canRegenerate} title={!canRegenerate ? limitText("regenerateCap") : undefined} onClick={onRegenerate}><RefreshCw aria-hidden="true" />{text("regenerate")}</button>}
                   {document.status === Status.HeldForReview && <button type="button" role="menuitem" className={menuActionClass} disabled={mutationPending} onClick={onActivate}><Power aria-hidden="true" />{text("activate")}</button>}
                   {isEditable && <button type="button" role="menuitem" className={menuActionClass} disabled={mutationPending} onClick={onToggleStatus}><Power aria-hidden="true" />{text(document.status === Status.Disabled ? "enable" : "disable")}</button>}
                   <button type="button" role="menuitem" className={`${menuActionClass} text-red-600 hover:bg-red-50`} disabled={mutationPending} onClick={onDelete}><Trash2 aria-hidden="true" />{text("delete")}</button>
@@ -656,19 +666,19 @@ function DocumentRows({
                 <div key={index} className="grid gap-3 rounded-lg border border-nexoraBorder bg-white p-4">
                   <label className="text-sm font-medium text-nexoraText">
                     {text("question")}
-                    <input className="mt-1 block w-full rounded-lg border border-nexoraBorder p-2 text-sm" value={fact.question} maxLength={MAX_QUESTION_CHARS} placeholder={text("questionPlaceholder")} onChange={(event) => setFacts((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, question: event.target.value } : item))} />
+                    <input className="mt-1 block w-full rounded-lg border border-nexoraBorder p-2 text-sm" value={fact.question} maxLength={limits.maxQuestionCharacters} placeholder={text("questionPlaceholder")} onChange={(event) => setFacts((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, question: event.target.value } : item))} />
                   </label>
                   <label className="text-sm font-medium text-nexoraText">
                     {text("answer")}
-                    <textarea className="mt-1 block w-full rounded-lg border border-nexoraBorder p-2 text-sm" rows={3} value={fact.answer} maxLength={MAX_ANSWER_CHARS} placeholder={text("answerPlaceholder")} onChange={(event) => setFacts((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, answer: event.target.value } : item))} />
+                    <textarea className="mt-1 block w-full rounded-lg border border-nexoraBorder p-2 text-sm" rows={3} value={fact.answer} maxLength={limits.maxAnswerCharacters} placeholder={text("answerPlaceholder")} onChange={(event) => setFacts((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, answer: event.target.value } : item))} />
                   </label>
                   <button type="button" className="justify-self-start text-sm font-medium text-red-600 hover:underline" onClick={() => setFacts((current) => current.filter((_, itemIndex) => itemIndex !== index))}>{text("remove")}</button>
                 </div>
               ))}
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-xs text-nexoraMuted">{JSON.stringify({ facts }).length} / {MAX_CONTENT_CHARS}</p>
+                <p className="text-xs text-nexoraMuted">{JSON.stringify({ facts }).length} / {limits.maxContentCharacters}</p>
                 <div className="flex flex-wrap gap-2">
-                  <button type="button" className={buttonClass} disabled={mutationPending || facts.length >= MAX_FACTS} onClick={() => setFacts((current) => [...current, { question: "", answer: "" }])}>{text("add")}</button>
+                  <button type="button" className={buttonClass} disabled={mutationPending || facts.length >= limits.maxFacts} onClick={() => setFacts((current) => [...current, { question: "", answer: "" }])}>{text("add")}</button>
                   <button type="button" className="rounded-lg bg-nexoraBrand px-3 py-2 text-sm font-semibold text-white disabled:opacity-50" disabled={mutationPending} onClick={onSave}>{text("save")}</button>
                   <button type="button" className={buttonClass} disabled={mutationPending} onClick={onCancel}>{text("cancel")}</button>
                 </div>
