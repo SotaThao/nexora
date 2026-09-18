@@ -703,6 +703,7 @@ function GuideItem({ icon, title, body }: { icon: React.ReactNode; title: string
   );
 }
 
+/** Temporarily unmounted from merchant UI until unanswered questions is ready to show again. */
 export function VoiceUnansweredPanel() {
   const { t } = useTranslation();
   const text = (key: string) => t(`voiceKnowledge.${key}`);
