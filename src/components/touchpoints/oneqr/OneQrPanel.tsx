@@ -322,13 +322,14 @@ export default function OneQrPanel({
         </p>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,320px)]">
-        <section className="nexora-card space-y-3 p-4">
+      {/* 3-up only from xl — with the sidebar, lg is too narrow for module rows + 4 audience tabs. */}
+      <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,300px)]">
+        <section className="nexora-card min-w-0 space-y-3 p-3 sm:p-4">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-sm font-black text-nexoraText">
+            <h3 className="min-w-0 text-sm font-black text-nexoraText">
               {t('oneqr.builder.modules_title')}
             </h3>
-            <span className="rounded-full bg-nexoraSurfaceMuted px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
+            <span className="shrink-0 rounded-full bg-nexoraSurfaceMuted px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
               {t('oneqr.builder.drag_drop_pill')}
             </span>
           </div>
@@ -352,7 +353,7 @@ export default function OneQrPanel({
           />
         </section>
 
-        <section className="nexora-card space-y-3 p-4">
+        <section className="nexora-card min-w-0 space-y-3 p-3 sm:p-4">
           <h3 className="text-sm font-black text-nexoraText">
             {t('oneqr.builder.config_title')}
           </h3>
@@ -382,7 +383,7 @@ export default function OneQrPanel({
           />
         </section>
 
-        <section className="nexora-card space-y-3 p-4">
+        <section className="nexora-card min-w-0 space-y-3 p-3 sm:p-4 md:col-span-2 xl:col-span-1">
           <h3 className="text-sm font-black text-nexoraText">
             {t('oneqr.builder.preview_title')}
           </h3>

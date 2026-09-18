@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import AppRouter from './app/AppRouter'
+import CallOverlayHost from './calls/components/CallOverlayHost'
 import { VoiceCallPlanRoute } from './data/voiceTrial/domain'
 import { initStorage } from './utils/storage'
 import { KybGateProvider } from './contexts/KybGateContext'
@@ -32,6 +33,7 @@ export default function App() {
       <div className={shellClassName}>
         <AppRouter />
       </div>
+      <CallOverlayHost />
     </KybGateProvider>
   )
 }

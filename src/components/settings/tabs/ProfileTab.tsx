@@ -528,6 +528,7 @@ export default function ProfileTab({
             businessErrors={businessErrors}
             setBusinessErrors={setBusinessErrors}
             canEdit={canEditKybFields}
+            verificationStatus={verificationStatus}
             startEditBusiness={startEditBusiness}
             saveBusiness={saveBusiness}
           />

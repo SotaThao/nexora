@@ -30,6 +30,7 @@ export enum OneQrAudience {
   Customer = 'Customer',
   Staff = 'Staff',
   Owner = 'Owner',
+  AIVoice = 'AIVoice',
 }
 
 export enum OneQrIdentityPolicy {
@@ -54,7 +55,7 @@ export enum OneQrIdentityPolicy {
  *
  * The numeric bands on the backend (0-9, 10-19, 20-29, 90+) only record which
  * role a module was originally designed for; they are NOT an access rule, since
- * every module is assignable to all three audiences (decision 3b).
+ * every module is assignable to every audience (decision 3b).
  */
 export enum OneQrModuleKey {
   // Band 0-9 — originally Customer
@@ -99,6 +100,8 @@ export enum OneQrModuleUnavailableReason {
   MissingDefinition = 'MissingDefinition',
   /** CustomLink saved without an https URL — merchant fills it in. */
   MissingCustomUrl = 'MissingCustomUrl',
+  /** The tile points at a NexoraVoice page but this business has no Voice tenant. */
+  MissingVoiceTenant = 'MissingVoiceTenant',
   /** The admin's `urlTemplate` could not be resolved for this business. */
   InvalidTemplate = 'InvalidTemplate',
 }
@@ -108,6 +111,7 @@ export const ONEQR_AUDIENCE_ORDER = [
   OneQrAudience.Customer,
   OneQrAudience.Staff,
   OneQrAudience.Owner,
+  OneQrAudience.AIVoice,
 ] as const
 
 export const ONEQR_IDENTITY_POLICY_OPTIONS = [
@@ -176,13 +180,14 @@ export type OneQrModuleCatalogEntry = {
 
 /**
  * Seed value for the fallback. Live `allowedAudiences` is per-definition and
- * admin-editable, so a module being open to all three roles is a *default*, not
+ * admin-editable, so a module being open to every role is a *default*, not
  * a rule the FE may assume.
  */
 const ALL_AUDIENCES = [
   OneQrAudience.Customer,
   OneQrAudience.Staff,
   OneQrAudience.Owner,
+  OneQrAudience.AIVoice,
 ]
 
 /**
@@ -235,6 +240,11 @@ export const ONEQR_MODULE_CATALOG: OneQrModuleCatalogEntry[] = [
     defaultIcon: 'crown',
     allowedAudiences: ALL_AUDIENCES,
     comingSoon: true,
+  },
+  {
+    moduleKey: OneQrModuleKey.VoiceBooking,
+    defaultIcon: 'calendar-clock',
+    allowedAudiences: ALL_AUDIENCES,
   },
   {
     moduleKey: OneQrModuleKey.StaffPortal,

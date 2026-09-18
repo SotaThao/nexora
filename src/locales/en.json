@@ -25,7 +25,8 @@
       "audience": {
         "customer": "Customer",
         "staff": "Staff",
-        "owner": "Owner"
+        "owner": "Owner",
+        "aivoice": "AI Voice"
       },
       "identity": {
         "public_first": "Public first, verify when needed",
@@ -115,6 +116,7 @@
           "Disabled": "Hidden — switched off by the platform admin",
           "MissingDefinition": "Hidden — no longer in the system catalog",
           "MissingCustomUrl": "Hidden — no link address saved yet",
+          "MissingVoiceTenant": "Hidden — this business has not subscribed to Voice",
           "InvalidTemplate": "Hidden — its destination could not be resolved"
         },
         "disabled_modules_warning": "These modules were switched off by the platform admin and will be dropped when you save: {{modules}}.",
@@ -268,6 +270,7 @@
       "my_earnings": "My Earnings",
       "my_reviews": "My Reviews",
       "my_salons": "My Salons",
+      "my_tickets": "My Tickets",
       "work_orders": "Work Orders",
       "my_calendar": "My Calendar",
       "report": "Report"
@@ -283,7 +286,7 @@
       "taxiq": "Tax IQ",
       "earnings": "My Earnings",
       "salons": "My Salons",
-      "work-orders": "Work Orders",
+      "work-orders": "My Tickets",
       "calendar": "My Calendar",
       "report": "Report",
       "certifications": "My Certifications",
@@ -1158,9 +1161,31 @@
           "closePreview": "Close image preview",
           "send": "Send message",
           "call": "Voice call",
-          "callUnavailable": "Voice call (coming soon)",
           "videoCall": "Video call",
-          "videoCallUnavailable": "Video call (coming soon)",
+          "incomingCallTitle": "Incoming call",
+          "answerCall": "Answer",
+          "declineCall": "Decline",
+          "cancelCall": "Cancel",
+          "endCall": "End call",
+          "callConnecting": "Connecting…",
+          "callRinging": "Ringing…",
+          "callActive": "Call in progress",
+          "callMissed": "Missed call",
+          "callDeclinedBySelf": "You declined the call",
+          "callDeclinedByPeer": "{{name}} declined the call",
+          "callBusy": "The other person is busy on another call",
+          "callNetworkError": "Call connection error",
+          "callMicPermissionDenied": "Microphone access denied. Please allow microphone permission to make or answer calls.",
+          "callNoDeviceFound": "No microphone found. Please connect a microphone and try again.",
+          "muteCall": "Mute microphone",
+          "unmuteCall": "Unmute microphone",
+          "toggleCamera": "Toggle camera",
+          "cameraOff": "Camera off",
+          "videoCallConnecting": "Connecting video…",
+          "chatSystemMessageMissedCall": "Missed voice call",
+          "chatSystemMessageCallEnded": "Voice call — {{duration}}",
+          "chatSystemMessageCallDeclined": "Call declined",
+          "chatSystemMessageCallCancelled": "Call cancelled",
           "minimize": "Minimize chat",
           "restore": "Open chat with {{name}}",
           "close": "Close chat",
@@ -2438,6 +2463,25 @@
     "states": {
       "loading": "Loading your income...",
       "error": "We couldn't load your income",
+      "retry": "Try Again"
+    },
+    "detail": {
+      "action": "View Details",
+      "weeklyTitle": "Weekly summary",
+      "day": "Day",
+      "amount": "Amount",
+      "tips": "Tips",
+      "totalAmount": "Total amount",
+      "totalTips": "Total tips",
+      "totalDiscount": "Total discount",
+      "totalCommission": "Total commission",
+      "cashCollected": "Cash collected",
+      "close": "Close",
+      "dailyTitle": "Daily details",
+      "ticket": "Ticket",
+      "ownerDiscount": "Owner discount",
+      "noTickets": "No completed tickets for this date.",
+      "loadError": "Could not load ticket details.",
       "retry": "Try Again"
     }
   },
@@ -4060,6 +4104,9 @@
         },
         "PosFrontDeskView": {
             "description": "Check in guests, manage open tickets, and run the turn board.",
+            "enterFullscreen": "Enter POS fullscreen",
+            "exitFullscreen": "Exit POS fullscreen",
+            "moveFullscreenButton": "Drag to move this button, or use the arrow keys when focused.",
             "noAccess": "You don't have permission to manage Front Desk operations for this business.",
             "tabs": {
             "estimate": "Estimate",
@@ -4341,7 +4388,10 @@
             "editSplit": "Edit split"
           },
           "PosOrderWorkspace": {
-            "titleUpdate": "Ticket #{{orderNumber}} · {{customerName}}",
+            "titleUpdate": "Ticket #{{orderNumber}}",
+            "ticketCustomerTitle": "Customer",
+            "customerDetailsUnavailable": "Customer details are unavailable for this ticket.",
+            "customerDetailsLoadFailed": "Couldn't load customer details. Try again.",
             "backButton": "Back",
             "tabServices": "Services",
             "tabProducts": "Products",
@@ -4385,6 +4435,7 @@
             "technicianNameUnavailable": "Name unavailable",
             "technicianPrefix": "Tech.",
             "firstAvailableLabel": "First available",
+            "needsTechnician": "Needs Technician",
             "technicianSearchPlaceholder": "Search technicians…",
             "noTechnicians": "No technician trained for this service yet.",
             "technicianBusyWarning": "{{name}} is currently working on a service. Assign this service to them anyway?",
@@ -4409,6 +4460,11 @@
             "ticketNoteTitle": "Note",
             "ticketNoteLabel": "Ticket note",
             "ticketNotePlaceholder": "Seat, customer preferences, color/powder used…",
+            "ticketNoteTakePhoto": "Take a photo",
+            "ticketNoteChooseFile": "Choose a photo from device",
+            "ticketNotePhotoCount": "{{count}}/{{max}} photos",
+            "ticketNoteRemovePhoto": "Remove photo",
+            "ticketNotePhotoAlt": "Ticket note photo",
             "tipTitle": "Tip",
             "noTipButton": "No Tip",
             "customTipPlaceholder": "Custom",
@@ -4646,6 +4702,7 @@
             "unknownActor": "Unknown user"
           },
           "CustomerTab": {
+            "editCustomer": "Edit Customer",
             "searchLabel": "Search",
             "searchPlaceholder": "Search by name or phone…",
             "sortLabel": "Sort by created date",
@@ -4662,6 +4719,7 @@
             "columnCreatedAt": "Created",
             "columnActions": "Actions",
             "viewAction": "View",
+            "editAction": "Edit",
             "customerStatus": {
               "Active": "Active",
               "InActive": "Inactive"
@@ -5367,16 +5425,35 @@
             "warnGoBack": "Go back"
           },
           "WeightedTurnSettingsModal": {
+            "eyebrow": "Turn board settings",
             "title": "Weighted Turn Settings",
-            "description": "Manager-defined service value ranges. Discounts are included; tips, tax, products, and gift-card payments are excluded.",
+            "description": "Set how service amounts convert into turns.",
+            "closeAria": "Close",
             "bookingTurnCreditLabel": "Booking turn credit",
             "bookingTurnCreditHint": "Shared with the Bookings calendar so both screens use the same number.",
-            "serviceTiersLabel": "Turn credit by service value",
+            "turnsPerBookingLabel": "Turns per booking",
+            "serviceTiersLabel": "Service ranges",
+            "serviceTiersHint": "Set an Up to amount for each range. The next range starts $0.01 above it.",
+            "rangeCount": "{{count}} ranges",
+            "rangeColumnLabel": "Range",
+            "autoBadge": "Auto",
+            "turnCreditColumnLabel": "Turn credit",
+            "turnsUnit": "turns",
+            "fromLabel": "From",
+            "upToLabel": "Up to",
+            "upToPlaceholder": "e.g. 29.99",
+            "upToInvalid": "Enter a non-negative amount, at most two decimal places, greater than the range before it.",
+            "noLimit": "No limit",
+            "addRange": "Add range",
+            "removeRangeAria": "Remove range {{range}}",
             "creditPlaceholder": "e.g. 1.5",
             "creditInvalid": "Enter a number between 0 and {{max}}.",
             "tierCreditAria": "Turn credit for {{range}}",
             "decreasingCreditsWarning": "A more expensive range is worth fewer turns than a cheaper one. You can still save this.",
-            "recordedTurnsNote": "Existing recorded turns stay unchanged. Only visits still open are re-counted.",
+            "serviceValueNoteTitle": "Service value after discounts.",
+            "serviceValueNoteDetail": "Excludes tips, tax, products, and gift-card payments.",
+            "appliesToNewTurnsTitle": "Applies to new turns",
+            "recordedTurnsNote": "Existing recorded turns stay unchanged.",
             "readOnlyNote": "You can view these rules but not change them.",
             "loadFailed": "Could not load the turn rules. Close and try again.",
             "saveFailed": "Could not save the turn rules — they have not been applied. Check your connection and try again.",
@@ -6537,6 +6614,10 @@
             "fieldBirthday": "Birthday",
             "fieldAddress": "Address",
             "fieldAddressPlaceholder": "Street, city, state",
+            "fieldCountry": "Country",
+            "fieldCountryPlaceholder": "Select country",
+            "addressDetecting": "Finding address details…",
+            "addressDetectFailed": "Could not find address details. You can enter them manually.",
             "fieldType": "Type",
             "types": {
               "Individual": "Individual",
@@ -6559,6 +6640,7 @@
             "statusActive": "Active",
             "statusInactive": "Inactive",
             "close": "Close",
+            "back": "Back",
             "cancel": "Cancel",
             "save": "Save changes"
           },
@@ -7300,6 +7382,20 @@
           "state": "State",
           "country": "Country",
           "businessInformation": "Business Information",
+          "businessInfoLock": {
+            "verified": {
+              "badge": "KYB Verified",
+              "hint": "Business information is locked because this account is KYB verified."
+            },
+            "pending": {
+              "badge": "Under Review",
+              "hint": "Business information can't be edited while KYB verification is under review."
+            },
+            "locked": {
+              "badge": "Read only",
+              "hint": "Business information is locked and can't be edited."
+            }
+          },
           "enterTheLegalOr": "Enter the legal or public name of your store or salon as it will appear on customer payment screens.",
           "businessName": "Business Name",
           "businessEmailPlaceholder": "e.g. contact@yoursalon.com",

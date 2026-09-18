@@ -66,6 +66,8 @@ export interface HeaderMessageConversation {
   peerUserProfileId?: string | null
   /** Salon/business for staff-initiated create; merchant roster falls back to profile business. */
   businessId?: string | null
+  /** Peer avatar for 1:1 sessions (US-06 — outgoing call UI); null for group chats. */
+  peerAvatarUrl?: string | null
 }
 
 export interface HeaderChatMessageReplyTo {
@@ -86,6 +88,8 @@ export interface HeaderChatThreadMessage {
   receiptStatus?: HeaderChatMessageReceiptStatus
   /** True if the message has been deleted. */
   isDeleted?: boolean
+  /** Present only for `MessageType.Call` — drives the localized call-history label (US-06). */
+  callMeta?: { callType: string; endReason: string; durationSeconds: number } | null
 }
 
 function applyMockOutgoingReceipts(messages: HeaderChatThreadMessage[]): HeaderChatThreadMessage[] {

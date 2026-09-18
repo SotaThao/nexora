@@ -139,13 +139,13 @@ function SortableModuleRow({
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`flex items-center gap-2 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-3 ${
+      className={`flex min-w-0 items-center gap-1.5 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-2.5 sm:gap-2 sm:p-3 ${
         isDragging ? 'z-10 shadow-nexora-card' : ''
       }`}
     >
       <button
         type="button"
-        className="grid h-9 w-9 shrink-0 cursor-grab touch-none place-items-center rounded-lg text-nexoraMuted hover:bg-nexoraSurfaceMuted active:cursor-grabbing"
+        className="grid h-8 w-8 shrink-0 cursor-grab touch-none place-items-center rounded-lg text-nexoraMuted hover:bg-nexoraSurfaceMuted active:cursor-grabbing sm:h-9 sm:w-9"
         aria-label={t('oneqr.builder.drag_handle', { module: label })}
         {...attributes}
         {...listeners}
@@ -153,7 +153,7 @@ function SortableModuleRow({
         <GripVertical className="h-4 w-4" aria-hidden />
       </button>
 
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-nexoraSurfaceMuted text-nexoraBrand">
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-nexoraSurfaceMuted text-nexoraBrand sm:h-9 sm:w-9">
         <OneQrModuleIcon name={icon} />
       </span>
 
@@ -174,36 +174,38 @@ function SortableModuleRow({
         {unavailableText ? (
           <p className="mt-0.5 flex items-start gap-1 text-[11px] font-bold leading-snug text-nexoraWarning">
             <AlertTriangle className="mt-px h-3 w-3 shrink-0" aria-hidden />
-            <span>{unavailableText}</span>
+            <span className="min-w-0 break-words">{unavailableText}</span>
           </p>
         ) : null}
       </div>
 
-      <button
-        type="button"
-        onClick={onEdit}
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-nexoraMuted transition hover:bg-nexoraSurfaceMuted hover:text-nexoraText"
-        aria-label={t('oneqr.builder.edit_module', { module: label })}
-      >
-        <Pencil className="h-4 w-4" aria-hidden />
-      </button>
+      <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+        <button
+          type="button"
+          onClick={onEdit}
+          className="grid h-8 w-8 place-items-center rounded-lg text-nexoraMuted transition hover:bg-nexoraSurfaceMuted hover:text-nexoraText sm:h-9 sm:w-9"
+          aria-label={t('oneqr.builder.edit_module', { module: label })}
+        >
+          <Pencil className="h-4 w-4" aria-hidden />
+        </button>
 
-      <button
-        type="button"
-        onClick={onRemove}
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-nexoraMuted transition hover:bg-red-50 hover:text-nexoraDanger"
-        aria-label={t('oneqr.builder.remove_module', { module: label })}
-      >
-        <Trash2 className="h-4 w-4" aria-hidden />
-      </button>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="grid h-8 w-8 place-items-center rounded-lg text-nexoraMuted transition hover:bg-red-50 hover:text-nexoraDanger sm:h-9 sm:w-9"
+          aria-label={t('oneqr.builder.remove_module', { module: label })}
+        >
+          <Trash2 className="h-4 w-4" aria-hidden />
+        </button>
 
-      <ToggleSwitch
-        checked={module.isEnabled}
-        onChange={onToggle}
-        activeColor="bg-nexoraBrand"
-        inactiveColor="bg-nexoraBorder"
-        ariaLabel={t('oneqr.builder.toggle_module', { module: label })}
-      />
+        <ToggleSwitch
+          checked={module.isEnabled}
+          onChange={onToggle}
+          activeColor="bg-nexoraBrand"
+          inactiveColor="bg-nexoraBorder"
+          ariaLabel={t('oneqr.builder.toggle_module', { module: label })}
+        />
+      </div>
     </li>
   )
 }

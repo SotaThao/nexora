@@ -30,6 +30,24 @@ export function usePosCustomerDetail(businessId?: string, customerId?: string) {
   })
 }
 
+export function usePosOrderCustomerId(
+  businessId?: string,
+  orderId?: string,
+  phoneE164?: string,
+  enabled = false,
+) {
+  return useQuery<string | null>({
+    queryKey: qk.merchantPosOrderCustomerId(businessId, orderId, phoneE164),
+    queryFn: () => posCustomersRepository.getCustomerIdForOrder(
+      businessId as string,
+      orderId as string,
+      phoneE164 as string,
+    ),
+    enabled: enabled && Boolean(businessId) && Boolean(orderId) && Boolean(phoneE164),
+    retry: false,
+  })
+}
+
 export function usePosCustomerOrderHistory(
   businessId?: string,
   customerId?: string,

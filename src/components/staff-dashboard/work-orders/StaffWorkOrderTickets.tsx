@@ -19,6 +19,7 @@ import {
   type WorkOrderSalon,
   type WorkOrderTicketFilter,
 } from './constants'
+import { setStaffLastWorkOrderSalonId } from './myTicketsSalonPreference'
 import StaffWorkOrderDetail from './StaffWorkOrderDetail'
 import WorkOrderDatePicker from './WorkOrderDatePicker'
 import { WorkOrderErrorCard } from './WorkOrderQueryFeedback'
@@ -73,6 +74,10 @@ export default function StaffWorkOrderTickets({
   const isListLoading = workOrdersQuery.data === undefined && !workOrdersQuery.isError
   const isDetailMode = Boolean(selectedTicketId)
   const chromeClass = isDetailMode ? WORK_ORDERS_LAYOUT_CLASS.hideOnDetailMobile : ''
+
+  useEffect(() => {
+    setStaffLastWorkOrderSalonId(salon.id)
+  }, [salon.id])
 
   useEffect(() => {
     if (!workOrderListParamsNeedSync(searchParams, selectedDateIso, filter)) return

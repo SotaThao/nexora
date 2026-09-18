@@ -80,7 +80,7 @@ export default function TouchpointSectionTabs({
 
   return (
     <div
-      className="grid grid-cols-2 gap-1 sm:flex sm:flex-wrap"
+      className="grid min-w-0 grid-cols-2 gap-1 sm:flex sm:flex-wrap"
       role="tablist"
       aria-label={t('dashboard.menu.touchpoints')}
     >
@@ -96,11 +96,12 @@ export default function TouchpointSectionTabs({
             id={tabDomId(id)}
             aria-controls={panelDomId(id)}
             aria-selected={isActive}
+            title={label}
             tabIndex={isActive ? 0 : -1}
             onClick={() => onSectionChange(id)}
             onKeyDown={(event) => handleKeyDown(event, index)}
             className={[
-              'inline-flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-lg border px-1 py-1.5 text-center text-xs font-bold leading-tight transition sm:min-h-11 sm:flex-row sm:px-3 sm:py-2',
+              'inline-flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-lg border px-1 py-1.5 text-center text-[11px] font-bold leading-tight transition sm:min-h-11 sm:flex-row sm:px-3 sm:py-2 sm:text-xs',
               isActive
                 ? 'border-transparent bg-nexoraBrand text-white shadow-nexora-soft'
                 : 'border-nexoraBorder bg-nexoraSurface text-nexoraMuted hover:border-nexoraLavender hover:bg-nexoraSurfaceMuted hover:text-nexoraText',
@@ -116,7 +117,7 @@ export default function TouchpointSectionTabs({
             >
               <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
             </span>
-            <span className="min-w-0 break-words">{label}</span>
+            <span className="min-w-0 break-words hyphens-auto">{label}</span>
           </button>
         )
       })}

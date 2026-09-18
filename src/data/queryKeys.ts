@@ -221,6 +221,7 @@ export const qk = {
   merchantPosOrderSettings: (businessId?: string) => ['merchantSettings', 'posOrderSettings', businessId ?? ''],
   merchantPosTurnSettings: (businessId?: string) => ['merchantSettings', 'posTurnSettings', businessId ?? ''],
   staffPosPendingAcceptanceCount: () => ['staff', 'posPendingAcceptanceCount'],
+  staffMyTicketsEntryTarget: () => ['staff', 'myTicketsEntryTarget'] as const,
   // POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filtered.
   // `filters` is only appended when explicitly passed — omitting it (e.g. from an
   // invalidateQueries call after Complete/edit) yields a short prefix that matches every
@@ -357,6 +358,8 @@ export const qk = {
   merchantPosBookingDetail: (businessId?: string, bookingId?: string) =>
     ['merchantSettings', 'posBookingDetail', businessId ?? '', bookingId ?? ''],
   // POS Front Desk — Customer tab (US-043), read-only list/detail/order-history.
+  merchantPosCustomerListRoot: () => ['merchantSettings', 'posCustomerList'],
+  merchantPosCustomerDetailRoot: () => ['merchantSettings', 'posCustomerDetail'],
   merchantPosCustomerList: (businessId?: string, filters?: object) => {
     const key: unknown[] = ['merchantSettings', 'posCustomerList', businessId ?? '']
     if (filters) key.push(filters)
@@ -364,6 +367,8 @@ export const qk = {
   },
   merchantPosCustomerDetail: (businessId?: string, customerId?: string) =>
     ['merchantSettings', 'posCustomerDetail', businessId ?? '', customerId ?? ''],
+  merchantPosOrderCustomerId: (businessId?: string, orderId?: string, phoneE164?: string) =>
+    ['merchantSettings', 'posOrderCustomerId', businessId ?? '', orderId ?? '', phoneE164 ?? ''],
   merchantPosCustomerOrders: (businessId?: string, customerId?: string, filters?: object) => {
     const key: unknown[] = ['merchantSettings', 'posCustomerOrders', businessId ?? '', customerId ?? '']
     if (filters) key.push(filters)
@@ -470,6 +475,11 @@ export const qk = {
   staffDashboardSummary: ()    => ['staffDashboardSummary'],
   staffIncomeReport: (sessionId: string, params: unknown) => [
     'staffIncomeReport',
+    sessionId,
+    params,
+  ],
+  staffIncomeReportTickets: (sessionId: string, params: unknown) => [
+    'staffIncomeReportTickets',
     sessionId,
     params,
   ],
@@ -696,6 +706,9 @@ export const qk = {
     ['communityChat', 'messages', sessionId ?? '', filters] as const,
   communityChatMessagesInfinite: (sessionId?: string | null, pageSize?: number) =>
     ['communityChat', 'messages', sessionId ?? '', 'infinite', pageSize ?? 20] as const,
+
+  // Community Call (US-02/US-05) — voice/video call TURN credentials.
+  communityCallIceServers: () => ['communityCall', 'iceServers'] as const,
 
   // Nexora Voice trial (merchant)
   voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],

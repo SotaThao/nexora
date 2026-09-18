@@ -563,6 +563,7 @@ export const STAFF_HOME_PATH = '/staff'
 
 export enum StaffWorkOrdersViewKind {
   Redirect = 'redirect',
+  Entry = 'entry',
   Tickets = 'tickets',
   Detail = 'detail',
 }
