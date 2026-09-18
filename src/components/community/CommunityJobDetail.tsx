@@ -98,8 +98,7 @@ function JobChatDock({ job, onClose }: { job: DemoJob; onClose: () => void }) {
     <div
       role="dialog"
       aria-label={`Cuộc trò chuyện demo với ${job.posterName}`}
-      className="fixed bottom-4 z-[145] hidden w-[340px] max-w-[calc(100vw-32px)] flex-col overflow-hidden rounded-2xl border border-nexoraBorder bg-nexoraSurface shadow-2xl lg:flex"
-      style={{ right: 'calc(min(560px, 100vw) + 16px)', height: 'min(430px, calc(100dvh - 32px))' }}
+      className="fixed inset-0 z-[145] flex w-full flex-col overflow-hidden bg-nexoraSurface shadow-2xl lg:inset-auto lg:bottom-4 lg:right-[calc(min(560px,100vw)+16px)] lg:h-[min(430px,calc(100dvh-32px))] lg:w-[340px] lg:max-w-[calc(100vw-32px)] lg:rounded-2xl lg:border lg:border-nexoraBorder"
     >
       <header className="flex shrink-0 items-center gap-2.5 border-b border-nexoraBorder px-3.5 py-3">
         <Avatar name={job.posterName} className="h-9 w-9 text-xs" />

@@ -8,7 +8,7 @@ export default function GlobalDemoQuickNav() {
   const path = location.pathname
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] font-sans antialiased">
+    <div className="fixed bottom-4 right-4 z-[40] font-sans antialiased">
       {isExpanded ? (
         <div className="flex flex-col items-end gap-1.5 rounded-2xl border border-white/20 bg-[#0B1C30]/95 p-2 shadow-2xl backdrop-blur-md text-white animate-fadeIn">
           <div className="flex items-center justify-between w-full gap-3 px-2 pb-1.5 border-b border-white/10 text-[11px] font-black text-amber-400">
