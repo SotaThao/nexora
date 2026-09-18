@@ -93,15 +93,15 @@ export default function StoreIncomeReportView({ businessId, businessTimeZone }: 
   const [toast, setToast] = useState('')
 
   const fullDate = useMemo(
-    () => new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }),
+    () => new Intl.DateTimeFormat(locale, { month: locale === 'vi-VN' ? 'long' : 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }),
     [locale],
   )
   const rowDate = useMemo(
-    () => new Intl.DateTimeFormat(locale, { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }),
+    () => new Intl.DateTimeFormat(locale, { weekday: 'short', month: locale === 'vi-VN' ? 'long' : 'short', day: 'numeric', timeZone: 'UTC' }),
     [locale],
   )
   const monthName = useMemo(
-    () => new Intl.DateTimeFormat(locale, { month: 'short', timeZone: 'UTC' }),
+    () => new Intl.DateTimeFormat(locale, { month: locale === 'vi-VN' ? 'long' : 'short', timeZone: 'UTC' }),
     [locale],
   )
 

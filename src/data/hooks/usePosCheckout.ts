@@ -8,6 +8,7 @@ import { useQueries, useQuery, useMutation, useQueryClient, type QueryKey } from
 import { qk } from '../queryKeys'
 import { useSessionRole } from '../../auth/useSessionRole'
 import posCheckoutRepository from '../repositories/posCheckout'
+import type { PosCheckoutPaymentMethodType } from '../../constants/posCheckoutPaymentMethod'
 import { resolveOrderDiscountAmount, resolveOrderDiscountCap } from '../../utils/posOrderDiscount'
 import { isPersistedLineId, randomUuid, unlessOptimisticId } from '../../utils/uuid'
 import type {
@@ -15,6 +16,9 @@ import type {
   CheckoutServiceCatalogItemApiDto,
   CompleteOrderPayload,
   CompleteOrderResultApiDto,
+  VlinkPayPaymentStatusApiDto,
+  VlinkPayPaymentUrlApiDto,
+  VlinkPayPaymentUrlPayload,
   EligiblePromotionApiDto,
   InServiceOrderApiDto,
   OrderDetailApiDto,
@@ -734,6 +738,34 @@ export function useSetOrderTip(businessId?: string) {
   })
 }
 
+// The chip the cashier picked on the checkout screen, stored on the order so reopening the ticket
+// shows what they chose instead of falling back to the Cash default.
+export function useSetOrderPaymentMethod(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<
+    boolean,
+    Error,
+    { orderId: string; paymentMethodType: PosCheckoutPaymentMethodType },
+    OrderMutationContext
+  >({
+    mutationFn: ({ orderId, paymentMethodType }) =>
+      posCheckoutRepository.setOrderPaymentMethod(businessId as string, orderId, paymentMethodType),
+    onMutate: async ({ orderId, paymentMethodType }) => {
+      const context = await snapshotOrderDetail(queryClient, businessId, orderId)
+      if (context.previousOrder) {
+        queryClient.setQueryData<OrderDetailApiDto>(
+          context.queryKey,
+          { ...context.previousOrder, paymentMethodType },
+        )
+      }
+      return context
+    },
+    onError: (_err, _vars, context) => rollbackOrderDetail(queryClient, context),
+    // No invalidate on success: the write changes one column whose new value is already in the
+    // cache from onMutate, so refetching the whole order would double the traffic this costs.
+  })
+}
+
 export function useSetOrderNote(businessId?: string) {
   const queryClient = useQueryClient()
   return useMutation<boolean, Error, { orderId: string; note: string | null }, OrderMutationContext>({
@@ -783,6 +815,32 @@ export function useSetOrderPaymentAllocations(businessId?: string) {
 // Complete is the terminal action for an order — it releases every serving staff and
 // removes the order from both In-Service Orders and Turn Board, so all three caches
 // (plus Waitlist, since a busy front desk may be checking it) must refresh together.
+/**
+ * Opens a VlinkPay payment page for an order. Returns the URL to put in an iframe; the cashier
+ * is signed in by the URL itself, so nothing is typed on the POS device.
+ */
+export function useVlinkPayPaymentUrl(businessId?: string) {
+  return useMutation<
+    VlinkPayPaymentUrlApiDto,
+    Error,
+    { orderId: string; payload: VlinkPayPaymentUrlPayload }
+  >({
+    mutationFn: ({ orderId, payload }) =>
+      posCheckoutRepository.getVlinkPayPaymentUrl(businessId as string, orderId, payload),
+  })
+}
+
+/**
+ * Asks VlinkPay whether an order was paid. Called before completing, so a cashier cannot close
+ * the payment window and settle the ticket on a payment that never happened.
+ */
+export function useVlinkPayPaymentStatus(businessId?: string) {
+  return useMutation<VlinkPayPaymentStatusApiDto, Error, { orderId: string }>({
+    mutationFn: ({ orderId }) =>
+      posCheckoutRepository.getVlinkPayPaymentStatus(businessId as string, orderId),
+  })
+}
+
 export function useCompleteOrder(businessId?: string) {
   const queryClient = useQueryClient()
   return useMutation<CompleteOrderResultApiDto, Error, { orderId: string; payload: CompleteOrderPayload }>({

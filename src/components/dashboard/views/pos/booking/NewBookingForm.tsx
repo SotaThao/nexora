@@ -24,6 +24,7 @@ import CategoryGroupedCatalogPicker from '../CategoryGroupedCatalogPicker'
 import { randomUuid } from '../../../../../utils/uuid'
 import { toBookingWallClockIso } from '../../../../../utils/bookingWallClock'
 import { TWELVE_HOUR_INPUT_LANG } from '../../../../../constants/timeFormat'
+import { TOAST_SNACK_DURATION_MS } from '../../../../../constants/toast'
 
 interface BookingLineDraft {
   key: string
@@ -291,7 +292,7 @@ export default function NewBookingForm({
       },
       {
         onSuccess: (bookingId) => {
-          showToast(t('components.dashboard.views.pos.NewBookingForm.createSuccess'))
+          showToast(t('components.dashboard.views.pos.NewBookingForm.createSuccess'), 'success', TOAST_SNACK_DURATION_MS)
           resetForm()
           onCreated(bookingId)
         },

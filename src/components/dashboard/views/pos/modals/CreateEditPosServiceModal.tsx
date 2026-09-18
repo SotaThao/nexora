@@ -55,6 +55,7 @@ export default function CreateEditPosServiceModal({
   const [tags, setTags] = useState<string[]>([])
   const [tagDraft, setTagDraft] = useState('')
   const [status, setStatus] = useState<PosServiceStatus>('Active')
+  const [requireCustomerApproval, setRequireCustomerApproval] = useState(false)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<ServicesPricingServiceModalFieldErrors>({})
@@ -77,6 +78,7 @@ export default function CreateEditPosServiceModal({
     setTags(service?.tags ?? [])
     setTagDraft('')
     setStatus(service?.status ?? 'Active')
+    setRequireCustomerApproval(Boolean(service?.isRequiredApproval))
     setPhotoFile(null)
     setPhotoPreviewUrl(service?.photoUrl ?? null)
     setFieldErrors({})
@@ -177,6 +179,7 @@ export default function CreateEditPosServiceModal({
       categoryIds: selectedCategoryIds,
       tags: submittedTags,
       status,
+      ...(isEditMode ? { isRequiredApproval: requireCustomerApproval } : {}),
       photo: photoFile,
     })
   }
@@ -190,6 +193,8 @@ export default function CreateEditPosServiceModal({
     <ServicesPricingServiceModal
       open={open}
       mode={isEditMode ? 'edit' : 'create'}
+      layout="overview"
+      size="wide"
       value={{
         name,
         price,
@@ -231,6 +236,7 @@ export default function CreateEditPosServiceModal({
         imageHelp: t(`${AI_TK}.serviceModalImageHelp`),
         imageFormats: t(`${AI_TK}.serviceModalImageFormats`),
         imageSizeHint: t(`${AI_TK}.serviceModalImageSizeHint`),
+        imageCompactHelp: t(`${POS_TK}.imageCompactHelp`),
         cameraTitle: t(`${AI_TK}.serviceModalCameraTitle`),
         cameraHint: t(`${AI_TK}.serviceModalCameraHint`),
         photoUploadAria: t(`${AI_TK}.serviceModalPhotoUploadAria`),
@@ -254,88 +260,106 @@ export default function CreateEditPosServiceModal({
           />
         </div>
       }
-      beforeImageExtension={
-        <div className="grid gap-3">
-          <label className={`settings-field${supplyFeeError ? ' has-error' : ''}`}>
-            <ServicesPricingFieldLabel
-              label={t(`${POS_TK}.supplyFeeLabel`)}
-              requirement={t(`${AI_TK}.serviceModalOptional`)}
-              optional
-            />
-            <div className="settings-service-input-wrap settings-service-modal-input-wrap">
-              <span className="settings-service-prefix" aria-hidden="true">$</span>
-              <input
-                className="settings-input settings-service-modal-affix-input is-price"
-                type="text"
-                inputMode="decimal"
-                maxLength={SERVICE_PRICE_INPUT_MAX_LENGTH}
-                value={supplyFee}
-                placeholder={t(`${POS_TK}.supplyFeePlaceholder`)}
-                aria-label={t(`${POS_TK}.supplyFeeLabel`)}
-                aria-invalid={supplyFeeError ? 'true' : undefined}
-                aria-describedby={supplyFeeError ? 'pos-service-supply-fee-error' : undefined}
-                disabled={isSubmitting}
-                onChange={(event) => {
-                  setSupplyFee(normalizeServicesPricingPrice(event.target.value))
-                  setSupplyFeeError('')
-                }}
-              />
-            </div>
-            {supplyFeeError ? (
-              <small id="pos-service-supply-fee-error" className="settings-field-error" role="alert">
-                {supplyFeeError}
-              </small>
-            ) : null}
-          </label>
-          <label className="settings-label" htmlFor="pos-service-tags">
-            <ServicesPricingFieldLabel
-              label={t(`${POS_TK}.tagsLabel`)}
-              requirement={t(`${AI_TK}.serviceModalOptional`)}
-              optional
-            />
-          </label>
-          {tags.length > 0 ? (
-            <div className="mb-2 flex flex-wrap gap-1.5">
-              {tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1 rounded-full bg-nexoraCanvas px-2.5 py-1 text-[10px] font-bold text-nexoraText"
-                >
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setTags((previous) => previous.filter((item) => item !== tag))
-                    }
-                    className="text-slate-400 hover:text-rose-600"
-                    aria-label={`${t(`${POS_TK}.deleteService`)} ${tag}`}
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          ) : null}
-          <input
-            id="pos-service-tags"
-            className="settings-input"
-            type="text"
-            list="pos-service-tag-suggestions"
-            value={tagDraft}
-            maxLength={50}
-            placeholder={t(`${POS_TK}.tagsPlaceholder`)}
-            onChange={(event) => setTagDraft(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key !== 'Enter') return
-              event.preventDefault()
-              addTag(tagDraft)
-            }}
+      overviewFieldsExtension={
+        <label className={`settings-field${supplyFeeError ? ' has-error' : ''}`}>
+          <ServicesPricingFieldLabel
+            label={t(`${POS_TK}.supplyFeeLabel`)}
+            requirement={t(`${AI_TK}.serviceModalOptional`)}
+            optional
           />
-          <datalist id="pos-service-tag-suggestions">
-            {availableSuggestions.map((suggestion) => (
-              <option key={suggestion.id} value={suggestion.name} />
-            ))}
-          </datalist>
+          <div className="settings-service-input-wrap settings-service-modal-input-wrap">
+            <span className="settings-service-prefix" aria-hidden="true">$</span>
+            <input
+              className="settings-input settings-service-modal-affix-input is-price"
+              type="text"
+              inputMode="decimal"
+              maxLength={SERVICE_PRICE_INPUT_MAX_LENGTH}
+              value={supplyFee}
+              placeholder={t(`${POS_TK}.supplyFeePlaceholder`)}
+              aria-label={t(`${POS_TK}.supplyFeeLabel`)}
+              aria-invalid={supplyFeeError ? 'true' : undefined}
+              aria-describedby={supplyFeeError ? 'pos-service-supply-fee-error' : undefined}
+              disabled={isSubmitting}
+              onChange={(event) => {
+                setSupplyFee(normalizeServicesPricingPrice(event.target.value))
+                setSupplyFeeError('')
+              }}
+            />
+          </div>
+          {supplyFeeError ? (
+            <small id="pos-service-supply-fee-error" className="settings-field-error" role="alert">
+              {supplyFeeError}
+            </small>
+          ) : null}
+        </label>
+      }
+      afterDescriptionExtension={
+        <div className="grid gap-3">
+          <div className="settings-field">
+            <label className="settings-label" htmlFor="pos-service-tags">
+              <ServicesPricingFieldLabel
+                label={t(`${POS_TK}.tagsLabel`)}
+                requirement={t(`${AI_TK}.serviceModalOptional`)}
+                optional
+              />
+            </label>
+            {tags.length > 0 ? (
+              <div className="mb-2 flex flex-wrap gap-1.5">
+                {tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1 rounded-full bg-nexoraCanvas px-2.5 py-1 text-[10px] font-bold text-nexoraText"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setTags((previous) => previous.filter((item) => item !== tag))
+                      }
+                      className="text-slate-400 hover:text-rose-600"
+                      aria-label={`${t(`${POS_TK}.deleteService`)} ${tag}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : null}
+            <input
+              id="pos-service-tags"
+              className="settings-input"
+              type="text"
+              list="pos-service-tag-suggestions"
+              value={tagDraft}
+              maxLength={50}
+              placeholder={t(`${POS_TK}.tagsPlaceholder`)}
+              onChange={(event) => setTagDraft(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter') return
+                event.preventDefault()
+                addTag(tagDraft)
+              }}
+            />
+            <datalist id="pos-service-tag-suggestions">
+              {availableSuggestions.map((suggestion) => (
+                <option key={suggestion.id} value={suggestion.name} />
+              ))}
+            </datalist>
+          </div>
+          {isEditMode ? (
+            <label className="settings-service-modal-approval">
+              <input
+                type="checkbox"
+                checked={requireCustomerApproval}
+                disabled={isSubmitting}
+                onChange={(event) => setRequireCustomerApproval(event.target.checked)}
+              />
+              <span>
+                <strong>{t(`${POS_TK}.requireApprovalLabel`)}</strong>
+                <small>{t(`${POS_TK}.requireApprovalHint`)}</small>
+              </span>
+            </label>
+          ) : null}
         </div>
       }
       extension={

@@ -21,19 +21,21 @@ export type PaymentMethodApiDtoLike = {
   isConfigured?: boolean
   businessKybStatus?: string | null
   name?: string
-  cryptoAddresses?: Array<{ network?: string; symbol?: string; address?: string }> | null
+  cryptoAddresses?: Array<{ network?: string; symbol?: string; address?: string; imageUrl?: string | null }> | null
 }
 
 type CryptoAddressRaw = {
   network?: string
   symbol?: string
   address?: string
+  imageUrl?: string | null
   cryptoNetwork?: string
   cryptoSymbol?: string
   cryptoAddress?: string
   CryptoNetwork?: string
   CryptoSymbol?: string
   CryptoAddress?: string
+  ImageUrl?: string | null
 }
 
 /** Keep address+symbol even when BE omits network (defaults to VRC20). */
@@ -55,7 +57,8 @@ export function normalizeCryptoAddresses(
       const address = String(
         entry?.address || entry?.cryptoAddress || entry?.CryptoAddress || '',
       ).trim()
-      return { network, symbol, address }
+      const imageUrl = String(entry?.imageUrl || entry?.ImageUrl || '').trim() || null
+      return { network, symbol, address, imageUrl }
     })
     .filter((entry) => entry.symbol && entry.address)
   return mapped.length ? mapped : null

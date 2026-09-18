@@ -26,6 +26,7 @@ import {
   POS_TABLE_STICKY_ACTION_CELL_CLASS,
   POS_TABLE_STICKY_ACTION_HEADER_CLASS,
 } from '../posTableStyles'
+import { TOAST_SNACK_DURATION_MS } from '../../../../../constants/toast'
 
 const K = 'components.dashboard.views.pos.devices.PosDevicesView'
 
@@ -63,7 +64,7 @@ export default function PosDevicesView({ businessId }: { businessId: string }) {
     if (!editing) return
     try {
       await updateDevice.mutateAsync({ deviceId: editing.id, ...payload })
-      showToast(t(`${K}.savedSuccess`), 'success')
+      showToast(t(`${K}.savedSuccess`), 'success', TOAST_SNACK_DURATION_MS)
       setEditing(null)
     } catch (err) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
@@ -81,7 +82,7 @@ export default function PosDevicesView({ businessId }: { businessId: string }) {
     setRevokingId(device.id)
     try {
       await revokeDevice.mutateAsync(device.id)
-      showToast(t(`${K}.revokedSuccess`), 'success')
+      showToast(t(`${K}.revokedSuccess`), 'success', TOAST_SNACK_DURATION_MS)
     } catch (err) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
     } finally {

@@ -9,6 +9,7 @@ import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getApiErrorCode } from '../../../../types/domain'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
+import { TOAST_SNACK_DURATION_MS } from '../../../../constants/toast'
 import {
   useCreatePosStaffLevel,
   useDeletePosStaffLevel,
@@ -33,7 +34,7 @@ export default function PosStaffLevelsView({ embedded = false }: { embedded?: bo
   const handleCreate = async (name: string) => {
     try {
       await createLevel.mutateAsync(name)
-      showToast(t('components.dashboard.views.pos.PosStaffLevelsView.createdSuccess'), 'success')
+      showToast(t('components.dashboard.views.pos.PosStaffLevelsView.createdSuccess'), 'success', TOAST_SNACK_DURATION_MS)
       setIsAddOpen(false)
     } catch (err) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
@@ -109,7 +110,7 @@ function PosStaffLevelRow({ level }: { level: PosStaffLevelApiDto }) {
     }
     try {
       await updateLevel.mutateAsync({ staffLevelId: level.id, name: trimmed })
-      showToast(t('components.dashboard.views.pos.PosStaffLevelsView.updatedSuccess'), 'success')
+      showToast(t('components.dashboard.views.pos.PosStaffLevelsView.updatedSuccess'), 'success', TOAST_SNACK_DURATION_MS)
       setIsEditing(false)
     } catch (err) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
@@ -124,7 +125,7 @@ function PosStaffLevelRow({ level }: { level: PosStaffLevelApiDto }) {
     if (!confirmed) return
     try {
       await deleteLevel.mutateAsync(level.id)
-      showToast(t('components.dashboard.views.pos.PosStaffLevelsView.deletedSuccess'), 'success')
+      showToast(t('components.dashboard.views.pos.PosStaffLevelsView.deletedSuccess'), 'success', TOAST_SNACK_DURATION_MS)
     } catch (err) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
     }

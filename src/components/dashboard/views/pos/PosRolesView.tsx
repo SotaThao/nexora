@@ -19,6 +19,7 @@ import {
 import type { PosRoleApiDto } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
 import CreatePosRoleModal from './modals/CreatePosRoleModal'
+import { TOAST_SNACK_DURATION_MS } from '../../../../constants/toast'
 
 export default function PosRolesView({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation()
@@ -30,7 +31,7 @@ export default function PosRolesView({ embedded = false }: { embedded?: boolean 
   const handleCreate = async (name: string) => {
     try {
       await createRole.mutateAsync(name)
-      showToast(t('components.dashboard.views.pos.PosRolesView.createdSuccess'), 'success')
+      showToast(t('components.dashboard.views.pos.PosRolesView.createdSuccess'), 'success', TOAST_SNACK_DURATION_MS)
       setIsAddOpen(false)
     } catch (err) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
@@ -135,7 +136,7 @@ function PosRoleCard({ role }: { role: PosRoleApiDto }) {
         roleId: role.id,
         permissionDefinitionIds: Array.from(checkedIds),
       })
-      showToast(t('components.dashboard.views.pos.PosRolesView.savedSuccess'), 'success')
+      showToast(t('components.dashboard.views.pos.PosRolesView.savedSuccess'), 'success', TOAST_SNACK_DURATION_MS)
       setIsEditing(false)
     } catch (err) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
@@ -150,7 +151,7 @@ function PosRoleCard({ role }: { role: PosRoleApiDto }) {
     if (!confirmed) return
     try {
       await deleteRole.mutateAsync(role.id)
-      showToast(t('components.dashboard.views.pos.PosRolesView.deletedSuccess'), 'success')
+      showToast(t('components.dashboard.views.pos.PosRolesView.deletedSuccess'), 'success', TOAST_SNACK_DURATION_MS)
     } catch (err) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
     }

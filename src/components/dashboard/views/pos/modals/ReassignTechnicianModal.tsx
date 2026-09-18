@@ -36,7 +36,7 @@ export interface ReassignTechnicianTarget {
 function formatWeekDate(dateStr: string, language: string) {
   const date = new Date(`${dateStr}T00:00:00Z`)
   const locale = String(language || 'en').toLowerCase().startsWith('vi') ? 'vi-VN' : 'en-US'
-  return new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(date)
+  return new Intl.DateTimeFormat(locale, { month: locale === 'vi-VN' ? 'long' : 'short', day: 'numeric', timeZone: 'UTC' }).format(date)
 }
 
 export default function ReassignTechnicianModal({

@@ -5,6 +5,7 @@
  * posTurnBoardRepository — a Staff caller may be linked to more than one business.
  */
 import httpClient from '../../lib/httpClient'
+import type { PosCheckoutPaymentMethodType } from '../../constants/posCheckoutPaymentMethod'
 import { unlessOptimisticId } from '../../utils/uuid'
 import type {
   AddOrderCustomServiceLinePayload,
@@ -12,6 +13,11 @@ import type {
   CheckoutServiceCatalogItemApiDto,
   CompleteOrderPayload,
   CompleteOrderResultApiDto,
+  RecordVlinkPayPaymentPayload,
+  RecordVlinkPayPaymentResultApiDto,
+  VlinkPayPaymentStatusApiDto,
+  VlinkPayPaymentUrlApiDto,
+  VlinkPayPaymentUrlPayload,
   EligiblePromotionApiDto,
   InServiceOrderApiDto,
   OrderDetailApiDto,
@@ -232,6 +238,17 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
       )
     },
 
+    async setOrderPaymentMethod(
+      businessId: string,
+      orderId: string,
+      paymentMethodType: PosCheckoutPaymentMethodType,
+    ): Promise<boolean> {
+      return await client.put<boolean>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/payment-method`,
+        { paymentMethodType },
+      )
+    },
+
     async setOrderNote(businessId: string, orderId: string, note: string | null): Promise<boolean> {
       return await client.put<boolean>(
         `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/note`,
@@ -269,6 +286,49 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
       return await client.post<CompleteOrderResultApiDto>(
         `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/complete`,
         payload,
+      )
+    },
+
+    /**
+     * URL of the VlinkPay payment page to embed in an iframe for this order.
+     * The cashier does not sign in; the URL carries a one-time token.
+     */
+    async getVlinkPayPaymentUrl(
+      businessId: string,
+      orderId: string,
+      payload: VlinkPayPaymentUrlPayload,
+    ): Promise<VlinkPayPaymentUrlApiDto> {
+      return await client.post<VlinkPayPaymentUrlApiDto>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/vlinkpay/payment-url`,
+        payload,
+      )
+    },
+
+    /**
+     * Records a VlinkPay payment as a portion of the order. Safe to call again after a lost
+     * result message — it updates the same portion rather than adding a second one.
+     */
+    async recordVlinkPayPayment(
+      businessId: string,
+      orderId: string,
+      payload: RecordVlinkPayPaymentPayload,
+    ): Promise<RecordVlinkPayPaymentResultApiDto> {
+      return await client.post<RecordVlinkPayPaymentResultApiDto>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/vlinkpay/record-payment`,
+        payload,
+      )
+    },
+
+    /**
+     * Asks VlinkPay whether this order was paid. Needed because the iframe result message can
+     * be lost, and the money may already have moved — never collect again on a missing message.
+     */
+    async getVlinkPayPaymentStatus(
+      businessId: string,
+      orderId: string,
+    ): Promise<VlinkPayPaymentStatusApiDto> {
+      return await client.get<VlinkPayPaymentStatusApiDto>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/vlinkpay/payment-status`,
       )
     },
   }

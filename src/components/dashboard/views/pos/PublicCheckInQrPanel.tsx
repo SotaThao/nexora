@@ -77,7 +77,7 @@ function PublicCheckInQrEditor({ businessId, businessSlug, businessName, busines
   const ready = activeStatus === 'ready' && design !== null && activeAssets !== null && !hoursBlocked && (mode !== 'artwork' || artworkBrandingReady)
   const disabled = !ready || busy !== null || printing.job !== null
   const copy = async () => {
-    try { await copyTextToClipboard(url); if (!mounted.current) return; setIsCopied(true); showToast(t(TK + 'copied')); window.clearTimeout(copyTimer.current); copyTimer.current = window.setTimeout(() => setIsCopied(false), 2000) } catch { showToast(t('common.error'), 'error') }
+    try { await copyTextToClipboard(url); if (!mounted.current) return; setIsCopied(true); window.clearTimeout(copyTimer.current); copyTimer.current = window.setTimeout(() => setIsCopied(false), 2000) } catch { showToast(t('common.error'), 'error') }
   }
   const download = async (kind: 'pdf' | 'png' | 'qr') => {
     if (busyRef.current || printing.job) return

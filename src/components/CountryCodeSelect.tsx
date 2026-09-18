@@ -163,10 +163,7 @@ export const normalizePhoneE164 = (value: string, fallbackDialCode: string) => {
     : matchCallingCodePrefixedDigits(digits) ??
       parsePhone(`${fallbackDialCode}${digits}`)
 
-  const nationalDigits = stripTrunkPrefixNational(parsed.nationalNumber, parsed.countryCode).slice(
-    0,
-    getE164MaxNationalDigits(parsed.countryCode),
-  )
+  const nationalDigits = stripTrunkPrefixNational(parsed.nationalNumber, parsed.countryCode)
 
   if (!nationalDigits) return ''
   return `${parsed.countryCode}${nationalDigits}`
@@ -274,6 +271,34 @@ export const formatNationalNumber = (nationalNumber, dialCode) => {
   return formatter.input(digits)
 }
 
+/**
+ * Format a national number for display without hiding malformed trailing digits.
+ * The normal input formatter intentionally caps values at the country's E.164 limit;
+ * read-only API data must keep any overflow visible so it can be corrected at the source.
+ */
+export const formatNationalNumberPreservingDigits = (nationalNumber: string, dialCode: string) => {
+  const digits = String(nationalNumber ?? '').replace(/\D/g, '')
+  if (!digits) return ''
+
+  const maxDigits = getDisplayMaxNationalDigits(dialCode, digits)
+  const primaryDigits = digits.slice(0, maxDigits)
+  const overflowDigits = digits.slice(maxDigits)
+  const formattedPrimary = formatNationalNumber(primaryDigits, dialCode)
+  if (!overflowDigits) return formattedPrimary
+
+  const formattedOverflow = overflowDigits.match(/.{1,3}/g)?.join(PHONE_GROUP_SEP) ?? overflowDigits
+  return `${formattedPrimary}${PHONE_GROUP_SEP}${formattedOverflow}`
+}
+
+export const formatPhoneDisplayPreservingDigits = (phone: string | null | undefined): string => {
+  const raw = phone?.trim()
+  if (!raw) return ''
+
+  const parsed = parsePhone(raw)
+  const national = formatNationalNumberPreservingDigits(parsed.nationalNumber, parsed.countryCode)
+  return national ? `${parsed.countryCode} ${national}`.trim() : raw
+}
+
 /** Placeholder pattern matching `formatNationalNumber` grouping for the dial code. */
 export const getNationalPhonePlaceholder = (dialCode: string) => {
   if (isKnownPhoneDialCode(dialCode)) {
@@ -336,23 +361,26 @@ export default function CountryCodeSelect({
       )
     : COUNTRY_CODES
 
+  // Flex stretching also works when the phone row gets its height from its input.
+  // Percentage heights collapse to the text height in that common embedded layout.
   return (
-    <div className={`relative shrink-0 flex ${embedded ? 'h-full self-stretch' : ''}`} ref={dropdownRef}>
+    <div className={`relative shrink-0 flex ${embedded ? 'self-stretch' : ''}`} ref={dropdownRef}>
       <button
         type="button"
         disabled={disabled}
         onClick={() => !disabled && setIsOpen(!isOpen)}
         className={embedded
-          ? `h-full min-h-0 flex items-center gap-1.5 px-3 border-0 border-r border-nexoraBorder rounded-none rounded-l-[9px] text-xs font-bold text-nexoraText transition-colors focus:outline-none select-none ${
+          ? `min-h-0 flex-1 self-stretch flex items-center gap-2 px-3 border-0 border-r border-nexoraBorder rounded-none rounded-l-[9px] text-xs font-bold text-nexoraText transition-colors focus:outline-none select-none ${
             disabled ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed' : 'bg-transparent hover:bg-slate-50 cursor-pointer'
           }`
-          : `h-10 flex items-center gap-1.5 px-3 border border-nexoraBorder border-r-0 rounded-l-lg text-xs font-bold text-nexoraText transition-colors focus:outline-none select-none
+          : `h-10 flex items-center gap-2 px-3 border border-nexoraBorder border-r-0 rounded-l-lg text-xs font-bold text-nexoraText transition-colors focus:outline-none select-none
           ${disabled ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'bg-slate-50 hover:bg-slate-100 cursor-pointer'}`}
       >
         <span className="text-xs font-bold leading-none">{selectedCountry.code}</span>
         <span className="font-bold font-mono leading-none">{selectedCountry.dialCode}</span>
-        <ChevronDown 
-          className={`w-3.5 h-3.5 text-nexoraMuted shrink-0 transition-transform duration-200
+        <ChevronDown
+          aria-hidden="true"
+          className={`pointer-events-none w-4 h-4 text-nexoraMuted shrink-0 transition-transform duration-200
             ${isOpen ? 'rotate-180 text-nexoraBrand' : ''}`} 
         />
       </button>

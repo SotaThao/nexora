@@ -27,6 +27,7 @@ import {
   POS_TABLE_STICKY_ACTION_CELL_CLASS,
   POS_TABLE_STICKY_ACTION_HEADER_CLASS,
 } from '../posTableStyles'
+import { TOAST_SNACK_DURATION_MS } from '../../../../../constants/toast'
 
 // Table/Card is a separate preference from the Order List's List/Card toggle — the two tabs are
 // remembered independently, so they keep their own storage keys.
@@ -121,6 +122,7 @@ export default function TimeClockRoster({
           ? t(tk('beepSent'), { name: row.displayName })
           : t(tk('beepNotDelivered'), { name: row.displayName }),
         result.delivered ? 'success' : 'error',
+        result.delivered ? TOAST_SNACK_DURATION_MS : undefined,
       )
     } catch (err: unknown) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')

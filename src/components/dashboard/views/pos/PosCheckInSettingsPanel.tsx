@@ -10,6 +10,7 @@ import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { useCheckInSettings, useUpdateCheckInSettings } from '../../../../data/hooks/usePosCheckIn'
 import type { PosCheckInLayout, PosCheckInSettingsApiDto } from '../../../../types/repositories'
+import { TOAST_SNACK_DURATION_MS } from '../../../../constants/toast'
 
 const K = 'components.dashboard.views.pos.PosCheckInSettingsPanel'
 
@@ -40,7 +41,7 @@ export default function PosCheckInSettingsPanel({ businessId }: { businessId?: s
     e.preventDefault()
     updateSettings.mutate(form, {
       onSuccess: () => {
-        notify(t('components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully'))
+        notify(t('components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully'), 'success', TOAST_SNACK_DURATION_MS)
         setIsEditing(false)
       },
     })

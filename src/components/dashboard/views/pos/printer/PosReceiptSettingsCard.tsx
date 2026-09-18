@@ -24,6 +24,7 @@ import {
 } from '../../../../../constants/posPrinter'
 import type { PosReceiptSettings } from '../../../../../types/repositories'
 import PosCopiesStepper from './PosCopiesStepper'
+import { TOAST_SNACK_DURATION_MS } from '../../../../../constants/toast'
 
 function isSame(a: PosReceiptSettings, b: PosReceiptSettings): boolean {
   return (
@@ -62,7 +63,7 @@ export default function PosReceiptSettingsCard() {
     event.preventDefault()
     saveSettings.mutate(form, {
       onSuccess: () => {
-        showToast(t('components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully'))
+        showToast(t('components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully'), 'success', TOAST_SNACK_DURATION_MS)
       },
     })
   }

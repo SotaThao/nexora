@@ -41,9 +41,12 @@ import { formatLocalDateIso } from '../../../../../utils/localDate'
 import { shiftLocalDateIso } from '../../bookingCalendarUtils'
 import {
   buildBookingCalendarOverviewDays,
+  getBookingCalendarCompareRange,
   getBookingCalendarRange,
+  getBookingCalendarStatsRange,
   PosBookingCalendarViewMode,
 } from './bookingCalendarView'
+import { TOAST_SNACK_DURATION_MS } from '../../../../../constants/toast'
 
 type ViewMode = 'table' | 'cards' | 'calendar'
 
@@ -118,12 +121,47 @@ export default function BookingTab({
     calendarRequestRange,
     { enabled: viewMode === 'calendar' },
   )
+  const statsRange = useMemo(
+    () => getBookingCalendarStatsRange(calendarAnchorDate, calendarViewMode),
+    [calendarAnchorDate, calendarViewMode],
+  )
+  const compareRange = useMemo(
+    () => getBookingCalendarCompareRange(calendarAnchorDate, calendarViewMode),
+    [calendarAnchorDate, calendarViewMode],
+  )
+  const compareRequestRange = useMemo(
+    () => ({
+      dateFrom: shiftLocalDateIso(compareRange.dateFrom, -1),
+      dateTo: shiftLocalDateIso(compareRange.dateTo, 1),
+    }),
+    [compareRange],
+  )
+  const compareQuery = useAllBookingListPages(
+    businessId,
+    compareRequestRange,
+    { enabled: viewMode === 'calendar' },
+  )
   const calendarBookings = useMemo(
     () => (calendarQuery.data?.items ?? []).filter((booking) => {
       const date = bookingDateKey(booking.scheduledAt, booking.source)
       return date >= calendarRange.dateFrom && date <= calendarRange.dateTo
     }),
     [calendarQuery.data?.items, calendarRange],
+  )
+  // Metrics exclude month-grid spillover days; the overview grid still uses calendarBookings.
+  const statsBookings = useMemo(
+    () => calendarBookings.filter((booking) => {
+      const date = bookingDateKey(booking.scheduledAt, booking.source)
+      return date >= statsRange.dateFrom && date <= statsRange.dateTo
+    }),
+    [calendarBookings, statsRange],
+  )
+  const comparePeriodTotal = useMemo(
+    () => (compareQuery.data?.items ?? []).filter((booking) => {
+      const date = bookingDateKey(booking.scheduledAt, booking.source)
+      return date >= compareRange.dateFrom && date <= compareRange.dateTo
+    }).length,
+    [compareQuery.data?.items, compareRange],
   )
   const overviewDays = useMemo(
     () => buildBookingCalendarOverviewDays(
@@ -164,7 +202,7 @@ export default function BookingTab({
     setCheckingInId(bookingId)
     try {
       await checkInMutation.mutateAsync(bookingId)
-      showToast(t(p + 'checkInSuccess'))
+      showToast(t(p + 'checkInSuccess'), 'success', TOAST_SNACK_DURATION_MS)
     } catch (err: unknown) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
     } finally {
@@ -180,7 +218,7 @@ export default function BookingTab({
     }
     try {
       await cancelMutation.mutateAsync({ bookingId: cancelTargetId, payload: { cancellationReason: cancelReason.trim() } })
-      showToast(t(p + 'cancelSuccess'))
+      showToast(t(p + 'cancelSuccess'), 'success', TOAST_SNACK_DURATION_MS)
       setCancelTargetId(null)
       setCancelReason('')
       setCancelReasonError('')
@@ -224,7 +262,7 @@ export default function BookingTab({
           })),
         },
       })
-      showToast(t(p + 'rescheduleSuccess'))
+      showToast(t(p + 'rescheduleSuccess'), 'success', TOAST_SNACK_DURATION_MS)
       closeReschedule()
     } catch (err: unknown) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
@@ -374,11 +412,13 @@ export default function BookingTab({
       ) : (
         <div className="min-w-0">
           <BookingCalendar
-            bookings={bookings}
+            bookings={statsBookings}
             mode={calendarViewMode}
             anchorDate={calendarAnchorDate}
             range={calendarRange}
             overviewDays={overviewDays}
+            comparePeriodTotal={comparePeriodTotal}
+            compareReady={compareQuery.isSuccess}
             loading={calendarQuery.isLoading}
             error={calendarQuery.isError}
             onRetry={() => { void calendarQuery.refetch() }}
