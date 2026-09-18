@@ -364,7 +364,12 @@ function handleConnectionStateChange(connectionState: RTCPeerConnectionState) {
       disconnectGraceTimer = null
       if (state.phase !== 'connecting' && state.phase !== 'active') return
       const callId = state.callId
-      if (callId) void endActiveCallWithStats(callId, CommunityCallEndReason.NetworkError)
+      if (callId) {
+        logger.warn('Community call: ended as NetworkError (media-driven, disconnected grace elapsed)', {
+          callId,
+        })
+        void endActiveCallWithStats(callId, CommunityCallEndReason.NetworkError)
+      }
     }, COMMUNITY_CALL_DISCONNECT_GRACE_MS)
     return
   }
@@ -372,7 +377,10 @@ function handleConnectionStateChange(connectionState: RTCPeerConnectionState) {
   if (connectionState === 'failed' && (state.phase === 'connecting' || state.phase === 'active')) {
     clearDisconnectGraceTimer()
     const callId = state.callId
-    if (callId) void endActiveCallWithStats(callId, CommunityCallEndReason.NetworkError)
+    if (callId) {
+      logger.warn('Community call: ended as NetworkError (media-driven, connection failed)', { callId })
+      void endActiveCallWithStats(callId, CommunityCallEndReason.NetworkError)
+    }
   }
 }
 
@@ -444,6 +452,15 @@ function handleCallCanceled(event: CallCanceledEvent) {
 
 function handleCallEnded(event: CallEndedEvent) {
   if (!isForCurrentCall(event.callId)) return
+  if (event.endReason === CommunityCallEndReason.NetworkError) {
+    // Chẩn đoán nguồn gốc: nếu media state vẫn 'connected'/'connecting' lúc backend báo NetworkError,
+    // đây là rớt kênh signaling (SignalR) thuần tuý -- không phải WebRTC/ICE thật sự hỏng.
+    logger.warn('Community call: backend ended call as NetworkError (signaling-driven)', {
+      callId: event.callId,
+      durationSeconds: event.durationSeconds,
+      mediaConnectionState: state.peerConnectionRef?.pc.connectionState ?? 'no-peer-connection',
+    })
+  }
   finishCall(event.endReason as CommunityCallEndReason)
 }
 
