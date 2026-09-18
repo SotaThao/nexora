@@ -5443,7 +5443,7 @@
             "fromLabel": "Từ",
             "upToLabel": "Đến",
             "upToPlaceholder": "vd: 29.99",
-            "upToInvalid": "Nhập số tiền không âm, tối đa hai chữ số thập phân, lớn hơn khoảng trước đó.",
+            "upToInvalid": "Nhập số tiền không âm, tối đa {{max}}, tối đa hai chữ số thập phân, lớn hơn khoảng trước đó.",
             "noLimit": "Không giới hạn",
             "addRange": "Thêm khoảng",
             "removeRangeAria": "Xóa khoảng {{range}}",

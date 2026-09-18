@@ -5442,7 +5442,7 @@
             "fromLabel": "From",
             "upToLabel": "Up to",
             "upToPlaceholder": "e.g. 29.99",
-            "upToInvalid": "Enter a non-negative amount, at most two decimal places, greater than the range before it.",
+            "upToInvalid": "Enter a non-negative amount up to {{max}}, at most two decimal places, greater than the range before it.",
             "noLimit": "No limit",
             "addRange": "Add range",
             "removeRangeAria": "Remove range {{range}}",
