@@ -348,13 +348,14 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Global text-based input focus ring styling — skip marketing homepage */
-body:not(.homepage-active) input[type="text"]:focus,
+/* Global text-based input focus ring styling — skip marketing homepage.
+   `.promo-search-input` is excluded so the promo list search keeps a plain gray field chrome. */
+body:not(.homepage-active) input[type="text"]:not(.promo-search-input):focus,
 body:not(.homepage-active) input[type="email"]:focus,
 body:not(.homepage-active) input[type="password"]:focus,
 body:not(.homepage-active) input[type="tel"]:focus,
 body:not(.homepage-active) input[type="number"]:focus,
-body:not(.homepage-active) input[type="search"]:focus,
+body:not(.homepage-active) input[type="search"]:not(.promo-search-input):focus,
 body:not(.homepage-active) textarea:focus,
 body:not(.homepage-active) select:focus {
   outline: none !important;

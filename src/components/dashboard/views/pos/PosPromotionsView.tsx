@@ -351,16 +351,18 @@ export default function PosPromotionsView({ businessId }: { businessId?: string 
 
         <section className="promo-manager" aria-label={t(`${K}.managerAria`)}>
           <div className="promo-toolbar">
-            <label className="promo-search">
+            <div className="promo-search">
               <Search className="h-4 w-4 shrink-0" aria-hidden />
               <input
-                type="search"
+                type="text"
+                className="promo-search-input"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t(`${K}.searchPlaceholder`)}
                 aria-label={t(`${K}.searchPlaceholder`)}
+                autoComplete="off"
               />
-            </label>
+            </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
