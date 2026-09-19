@@ -360,11 +360,10 @@ export function SettingsRoute() {
   ) : settings
 }
 
-// POS Owner Setup — sidebar group (US-014). Salon Information (Business Info)
-// stays editable after KYB; saves are Nexora-local and do not update SSO.
-// verificationStatus is still passed for the local-only hint. Business Hours
-// was previously its own route (PosBusinessHoursRoute, /pos/business-hours) —
-// merged into this screen.
+// POS Owner Setup — sidebar group (US-014). Salon Information is the only
+// screen that stays editable after KYB (Nexora-local; does not update SSO).
+// Settings > Profile still locks Business Info behind KYB. Business Hours was
+// previously its own route — merged into this screen.
 export function PosSalonSettingsRoute() {
   const ctx = useOutletContext<LooseObject>()
   const { data: merchantSetupData } = useMerchantSetup()

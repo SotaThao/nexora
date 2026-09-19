@@ -294,7 +294,6 @@ export default function SettingsViewDesktop({
             hasKyb={hasKyb}
             verificationStatus={form.effectiveVerificationStatus}
             canEditProfile={form.canEditProfile}
-            showBusinessInfoLocalOnlyHint={form.showBusinessInfoLocalOnlyHint}
             currentLanguage={form.currentLanguage}
             showToast={form.showToast}
             handleCopy={form.handleCopy}

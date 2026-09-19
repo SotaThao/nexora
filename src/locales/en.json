@@ -7382,7 +7382,6 @@
           "state": "State",
           "country": "Country",
           "businessInformation": "Business Information",
-          "businessInfoLocalOnlyHint": "Changes update your Nexora salon profile only. They are not sent back to your VlinkPay KYB / SSO account.",
           "businessInfoLock": {
             "verified": {
               "badge": "KYB Verified",

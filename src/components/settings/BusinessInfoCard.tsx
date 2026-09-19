@@ -3,13 +3,16 @@
 // general Settings > Profile tab and from the POS > General Settings screen
 // without duplicating the form/view markup.
 import type { ChangeEvent, Dispatch, FormEvent, SetStateAction } from 'react'
-import { Building2, Camera, Edit2, ExternalLink, HelpCircle, Info } from 'lucide-react'
+import { Building2, Camera, Edit2, ExternalLink, HelpCircle, Lock, ShieldCheck } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import PhoneInput from '../ui/PhoneInput'
 import { formatAddressForMap, type MapAddressParts } from '../../utils/mapUrl'
 import { formatPhoneDisplay } from '../../utils/phoneDisplay'
 
 type SettingsFormErrors = Record<string, string>
+
+const KYB_VERIFIED_STATUSES = new Set(['kyb_approved', 'verified_pro', 'verified_lite'])
+const KYB_PENDING_STATUSES = new Set(['kyb_pending', 'kyb_required'])
 
 type BusinessInfoCardProps = {
   businessAddress?: MapAddressParts
@@ -35,12 +38,7 @@ type BusinessInfoCardProps = {
   businessErrors: SettingsFormErrors
   setBusinessErrors: Dispatch<SetStateAction<SettingsFormErrors>>
   canEdit: boolean
-  /**
-   * When true (KYB already submitted), show that edits apply on Nexora only and
-   * do not update the VlinkPay SSO / KYB account.
-   */
-  showLocalOnlyHint?: boolean
-  /** @deprecated Lock UI removed — business info stays editable after KYB. Kept for call-site compat. */
+  /** Effective KYB status — used to label why edit is locked when canEdit is false. */
   verificationStatus?: string
   startEditBusiness: () => void
   saveBusiness: (e: FormEvent) => void
@@ -70,7 +68,7 @@ export default function BusinessInfoCard({
   businessErrors,
   setBusinessErrors,
   canEdit,
-  showLocalOnlyHint = false,
+  verificationStatus,
   startEditBusiness,
   saveBusiness,
 }: BusinessInfoCardProps) {
@@ -99,6 +97,14 @@ export default function BusinessInfoCard({
       </p>
     ) : null
 
+  const lockKind = KYB_VERIFIED_STATUSES.has(verificationStatus || '')
+    ? 'verified'
+    : KYB_PENDING_STATUSES.has(verificationStatus || '')
+      ? 'pending'
+      : 'locked'
+  const lockBadgeLabel = t(`components.settings.tabs.ProfileTab.businessInfoLock.${lockKind}.badge`)
+  const lockHint = t(`components.settings.tabs.ProfileTab.businessInfoLock.${lockKind}.hint`)
+
   return (
     <div className={`rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 relative ${className}`}>
       <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4 gap-3">
@@ -116,12 +122,28 @@ export default function BusinessInfoCard({
             <Edit2 className="h-3.5 w-3.5" />
           </button>
         )}
+        {!isEditingBusiness && !canEdit && (
+          <span
+            className={`inline-flex items-center gap-1 shrink-0 rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${
+              lockKind === 'verified'
+                ? 'bg-emerald-50 text-emerald-700'
+                : lockKind === 'pending'
+                  ? 'bg-amber-50 text-amber-700'
+                  : 'bg-slate-100 text-slate-600'
+            }`}
+            title={lockHint}
+          >
+            {lockKind === 'verified' ? (
+              <ShieldCheck className="h-3 w-3" aria-hidden />
+            ) : (
+              <Lock className="h-3 w-3" aria-hidden />
+            )}
+            {lockBadgeLabel}
+          </span>
+        )}
       </div>
-      {showLocalOnlyHint && (
-        <p className="mb-4 -mt-2 flex items-start gap-1.5 text-[11px] leading-4 text-nexoraMuted">
-          <Info className="mt-0.5 h-3 w-3 shrink-0 text-nexoraBrand" aria-hidden />
-          <span>{t('components.settings.tabs.ProfileTab.businessInfoLocalOnlyHint')}</span>
-        </p>
+      {!isEditingBusiness && !canEdit && (
+        <p className="mb-4 -mt-2 text-[11px] leading-4 text-nexoraMuted">{lockHint}</p>
       )}
 
       {onLogoChange && (

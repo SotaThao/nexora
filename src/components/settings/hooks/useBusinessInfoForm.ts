@@ -60,15 +60,6 @@ const scrollToFirstBusinessError = (errors: SettingsFormErrors) => {
   }, 0)
 }
 
-/** KYB already submitted/approved — edits stay on Nexora and do not update SSO. */
-const KYB_SUBMITTED_STATUSES = new Set([
-  'kyb_pending',
-  'kyb_required',
-  'kyb_approved',
-  'verified_pro',
-  'verified_lite',
-])
-
 const validateBusinessForm = (form: LooseObject, includeReviewLinks?: boolean): SettingsFormErrors => {
   const errors: SettingsFormErrors = {}
   if (!formValue(form.businessName)) errors.businessName = 'required'
@@ -117,10 +108,13 @@ export default function useBusinessInfoForm({
   setupData,
   verificationStatus,
   includeReviewLinks,
+  /** POS Salon Information only — bypass KYB lock; saves stay Nexora-local (no SSO). */
+  allowEditAfterKyb = false,
 }: {
   setupData?: LooseObject | null
   verificationStatus?: string
   includeReviewLinks?: boolean
+  allowEditAfterKyb?: boolean
 }) {
   const { t } = useTranslation()
   const { showToast: notify } = useNotification()
@@ -133,10 +127,17 @@ export default function useBusinessInfoForm({
     verificationStatus,
     verifiedStatusData?.status as string | undefined,
   )
-  // Salon Information is always editable. After KYB submit/approve, saves stay on
-  // Nexora (+ Voice tenants) and are not pushed back to the VlinkPay SSO account.
-  const canEditProfile = true
-  const showLocalOnlyHint = KYB_SUBMITTED_STATUSES.has(effectiveVerificationStatus)
+
+  // Settings > Profile keeps the KYB lock. POS > Salon Information opts out via
+  // allowEditAfterKyb; those saves are still Nexora-local and never push to SSO.
+  const KYB_EDITABLE_STATUSES = new Set(['basic', 'kyb_rejected', 'rejected'])
+  const canEditProfile = allowEditAfterKyb
+    ? true
+    : !KYB_EDITABLE_STATUSES.has(effectiveVerificationStatus)
+      ? false
+      : !verifiedStatusData
+        ? true
+        : verifiedStatusData.status === 'None' || verifiedStatusData.status === 'Rejected'
 
   const businessInfo: BusinessInfo = {
     businessAddress: {
@@ -181,6 +182,7 @@ export default function useBusinessInfoForm({
   const [businessErrors, setBusinessErrors] = useState<SettingsFormErrors>({})
 
   const startEditBusiness = () => {
+    if (!canEditProfile) return
     setBusinessErrors({})
     setBusinessForm({ ...businessInfo })
     setIsEditingBusiness(true)
@@ -188,6 +190,7 @@ export default function useBusinessInfoForm({
 
   const saveBusiness = async (e: { preventDefault: () => void }, onSaved?: (next: BusinessInfo) => void) => {
     e.preventDefault()
+    if (!canEditProfile) return
     const errors = validateBusinessForm(businessForm, includeReviewLinks)
     if (Object.keys(errors).length > 0) {
       // No toast/popup — jump to the first invalid field.
@@ -275,7 +278,6 @@ export default function useBusinessInfoForm({
     startEditBusiness,
     saveBusiness,
     canEditProfile,
-    showLocalOnlyHint,
     effectiveVerificationStatus,
   }
 }

@@ -51,7 +51,6 @@ export default function ProfileTab({
   hasKyb,
   verificationStatus = 'basic',
   canEditProfile = true,
-  showBusinessInfoLocalOnlyHint = false,
   currentLanguage,
   showToast: providedShowToast,
   handleCopy,
@@ -528,8 +527,8 @@ export default function ProfileTab({
             setBusinessForm={setBusinessForm}
             businessErrors={businessErrors}
             setBusinessErrors={setBusinessErrors}
-            canEdit={true}
-            showLocalOnlyHint={showBusinessInfoLocalOnlyHint}
+            canEdit={canEditKybFields}
+            verificationStatus={verificationStatus}
             startEditBusiness={startEditBusiness}
             saveBusiness={saveBusiness}
           />

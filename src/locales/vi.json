@@ -7379,7 +7379,6 @@
           "state": "Bang hoặc Tỉnh",
           "country": "Quốc gia",
           "businessInformation": "Thông tin doanh nghiệp",
-          "businessInfoLocalOnlyHint": "Thay đổi chỉ cập nhật hồ sơ salon trên Nexora. Không gửi ngược về tài khoản KYB / SSO VlinkPay.",
           "businessInfoLock": {
             "verified": {
               "badge": "Đã KYB",

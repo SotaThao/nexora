@@ -850,6 +850,5 @@ export default function useSettingsForm({
     effectiveVerificationStatus,
     currentLanguage,
     canEditProfile,
-    showBusinessInfoLocalOnlyHint: businessInfoForm.showLocalOnlyHint,
   };
 }
