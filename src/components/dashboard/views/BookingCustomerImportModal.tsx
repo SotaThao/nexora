@@ -19,6 +19,12 @@ import { CheckLgIcon, SpinnerIcon, XLgIcon } from './BookingHubIcons'
 import {
   CUSTOMER_IMPORT_MAX_BYTES,
   formatImportRowCount,
+  headerLooksLikeCreated,
+  headerLooksLikeDob,
+  headerLooksLikeEmail,
+  headerLooksLikeLastVisit,
+  headerLooksLikePhone,
+  suggestCustomerImportMappingFromHeaders,
 } from './customerImportFile'
 import './booking-hub.css'
 
@@ -83,14 +89,31 @@ function selectValueToIndex(value: string): number | null {
 
 function mappingFromSuggested(
   suggested: PosCustomerImportSuggestedMappingDto | undefined,
+  columns: PosCustomerImportColumnDto[] = [],
 ): Record<MappingTarget, string> {
-  return {
+  const fromBackend: Record<MappingTarget, string> = {
     name: indexToSelectValue(suggested?.customerNameColumnIndex),
     phone: indexToSelectValue(suggested?.phoneNumberColumnIndex),
     email: indexToSelectValue(suggested?.emailColumnIndex),
     dob: indexToSelectValue(suggested?.dateOfBirthColumnIndex),
     created: indexToSelectValue(suggested?.regisDateColumnIndex),
     lastVisit: indexToSelectValue(suggested?.lastVisitColumnIndex),
+  }
+
+  const reserved = new Set(
+    Object.values(fromBackend)
+      .map((value) => selectValueToIndex(value))
+      .filter((index): index is number => index != null),
+  )
+  const fromFrontend = suggestCustomerImportMappingFromHeaders(columns, reserved)
+
+  return {
+    name: fromBackend.name || indexToSelectValue(fromFrontend.name),
+    phone: fromBackend.phone || indexToSelectValue(fromFrontend.phone),
+    email: fromBackend.email || indexToSelectValue(fromFrontend.email),
+    dob: fromBackend.dob || indexToSelectValue(fromFrontend.dob),
+    created: fromBackend.created || indexToSelectValue(fromFrontend.created),
+    lastVisit: fromBackend.lastVisit || indexToSelectValue(fromFrontend.lastVisit),
   }
 }
 
@@ -100,14 +123,45 @@ function buildPreviewRows(columns: PosCustomerImportColumnDto[], headerRow: numb
     index: headerRow + 1 + sampleIndex,
     cells: columns.map((column) => column.sampleValues?.[sampleIndex] ?? ''),
     warnings: columns.map((column) => {
-      const value = column.sampleValues?.[sampleIndex] ?? ''
-      const header = column.header.toLowerCase()
+      const value = (column.sampleValues?.[sampleIndex] ?? '').trim()
       if (!value) return false
-      if (header.includes('email') && value.includes('@') && !value.includes('.')) return true
-      if ((header.includes('birth') || header.includes('birthday')) && /\//.test(value)) return true
-      return false
+      return previewCellLooksRisky(column.header, value)
     }),
   }))
+}
+
+/** Lightweight FE hint only — backend still re-validates the full file. */
+function previewCellLooksRisky(header: string, value: string): boolean {
+  const headerLower = header.toLowerCase()
+
+  if (
+    headerLooksLikeEmail(header)
+    || headerLower.includes('email')
+    || /(^|[^a-z])mail([^a-z]|$)/i.test(header)
+  ) {
+    if (!value.includes('@')) return true
+    if (value.includes('@') && !value.includes('.')) return true
+  }
+
+  if (
+    headerLooksLikeDob(header)
+    || headerLooksLikeCreated(header)
+    || headerLooksLikeLastVisit(header)
+    || /birth|birthday|dob|created|registered|visit|seen|date/.test(headerLower)
+  ) {
+    if (/\d{1,2}\/\d{1,2}\/\d{2,4}/.test(value)) return true
+  }
+
+  if (
+    headerLooksLikePhone(header)
+    || /phone|mobile|contact|sdt|tel/.test(headerLower)
+  ) {
+    const digits = value.replace(/\D/g, '')
+    if (digits.length < 7) return true
+    if (/[a-z]/i.test(value)) return true
+  }
+
+  return false
 }
 
 function skipStatusTone(code: PosCustomerImportSkipCode): 'warning' | 'danger' {
@@ -259,7 +313,7 @@ export default function BookingCustomerImportModal({
     setPreview(nextPreview)
     setSheet(nextPreview.selectedSheetName)
     setHeaderRow(String(nextPreview.headerRow || 1))
-    setMapping(mappingFromSuggested(nextPreview.suggestedMapping))
+    setMapping(mappingFromSuggested(nextPreview.suggestedMapping, nextPreview.columns))
     setUploadError(null)
     if (options?.flash) flashReload()
   }
@@ -445,9 +499,11 @@ export default function BookingCustomerImportModal({
       ? (mappingReady ? t(`${TK}.footer.step2Ready`) : t(`${TK}.footer.step2`))
       : (isImporting || !importResult
         ? t(`${TK}.actions.importing`)
-        : t(`${TK}.footer.step3`, {
-          count: formatImportRowCount(importResult.importedCount, currentLanguage),
-        }))
+        : importResult.importedCount > 0
+          ? t(`${TK}.footer.step3`, {
+            count: formatImportRowCount(importResult.importedCount, currentLanguage),
+          })
+          : t(`${TK}.footer.step3None`))
 
   const stepDescription = step === 1
     ? t(`${TK}.steps.upload.note`)
@@ -786,14 +842,21 @@ export default function BookingCustomerImportModal({
                               previewRows.map((row) => (
                                 <tr key={row.index}>
                                   <td className="cust-import-row-index">{row.index}</td>
-                                  {row.cells.map((cell, cellIndex) => (
-                                    <td
-                                      key={`${row.index}-${cellIndex}`}
-                                      className={row.warnings[cellIndex] ? 'is-warning' : undefined}
-                                    >
-                                      {cell || '—'}
-                                    </td>
-                                  ))}
+                                  {row.cells.map((cell, cellIndex) => {
+                                    const tone = !cell
+                                      ? 'is-empty'
+                                      : row.warnings[cellIndex]
+                                        ? 'is-warning'
+                                        : 'is-ok'
+                                    return (
+                                      <td
+                                        key={`${row.index}-${cellIndex}`}
+                                        className={tone}
+                                      >
+                                        {cell || '—'}
+                                      </td>
+                                    )
+                                  })}
                                 </tr>
                               ))
                             )}
@@ -801,15 +864,14 @@ export default function BookingCustomerImportModal({
                         </table>
                       </div>
                       <div className="cust-import-preview-legend">
-                        <span className="cust-import-legend-item">
+                        <span className="cust-import-legend-item is-ok">
                           <span className="cust-import-legend-dot" />
                           {t(`${TK}.preview.readable`)}
                         </span>
-                        <span className="cust-import-legend-item">
+                        <span className="cust-import-legend-item is-warning">
                           <span className="cust-import-legend-dot is-warning" />
                           {t(`${TK}.preview.maybeSkipped`)}
                         </span>
-                        <span>{t(`${TK}.preview.backendNote`)}</span>
                       </div>
                     </div>
                   </div>
@@ -822,11 +884,33 @@ export default function BookingCustomerImportModal({
                 <ImportResultSkeleton />
               ) : (
                 <>
-                  <div className="cust-import-result-hero">
-                    <span className="cust-import-success-symbol" aria-hidden="true">✓</span>
-                    <h3>{t(`${TK}.result.heading`)}</h3>
-                    <p>{t(`${TK}.result.sub`)}</p>
-                  </div>
+                  {(() => {
+                    const noneImported = importResult.importedCount <= 0
+                    const mostlyDuplicates = noneImported
+                      && importResult.skippedDuplicateCount > 0
+                      && importResult.skippedInvalidCount === 0
+                    const heroTone = noneImported ? 'is-warning' : 'is-success'
+                    const headingKey = noneImported
+                      ? `${TK}.result.headingNone`
+                      : `${TK}.result.heading`
+                    const subKey = noneImported
+                      ? (mostlyDuplicates
+                        ? `${TK}.result.subAllDuplicates`
+                        : `${TK}.result.subNone`)
+                      : `${TK}.result.sub`
+                    return (
+                      <div className={`cust-import-result-hero ${heroTone}`}>
+                        <span
+                          className={`cust-import-success-symbol ${heroTone}`}
+                          aria-hidden="true"
+                        >
+                          {noneImported ? '!' : '✓'}
+                        </span>
+                        <h3>{t(headingKey)}</h3>
+                        <p>{t(subKey)}</p>
+                      </div>
+                    )
+                  })()}
                   <div className="cust-import-stats">
                     <div className="cust-import-stat">
                       <span className="cust-import-stat-label">{t(`${TK}.result.total`)}</span>

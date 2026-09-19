@@ -17590,9 +17590,18 @@ body.booking-appointment-panel-modal-open {
   text-align: center;
 }
 
+.booking-hub-view .cust-import-preview-table td.is-ok {
+  color: var(--ci-success);
+  background: var(--ci-success-soft);
+}
+
 .booking-hub-view .cust-import-preview-table td.is-warning {
   color: var(--ci-warning);
   background: var(--ci-warning-soft);
+}
+
+.booking-hub-view .cust-import-preview-table td.is-empty {
+  color: var(--ci-muted);
 }
 
 .booking-hub-view .cust-import-preview-legend {
@@ -17609,6 +17618,15 @@ body.booking-appointment-panel-modal-open {
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  font-weight: 700;
+}
+
+.booking-hub-view .cust-import-legend-item.is-ok {
+  color: var(--ci-success);
+}
+
+.booking-hub-view .cust-import-legend-item.is-warning {
+  color: var(--ci-warning);
 }
 
 .booking-hub-view .cust-import-legend-dot {
@@ -17640,6 +17658,11 @@ body.booking-appointment-panel-modal-open {
   box-shadow: 0 12px 26px rgba(20, 128, 94, 0.22);
   font-size: 28px;
   font-weight: 900;
+}
+
+.booking-hub-view .cust-import-success-symbol.is-warning {
+  background: #d99814;
+  box-shadow: 0 12px 26px rgba(217, 152, 20, 0.22);
 }
 
 .booking-hub-view .cust-import-result-hero h3 {

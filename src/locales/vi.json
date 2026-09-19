@@ -6683,7 +6683,8 @@
                 "step1": "Bước 1/3 · Chưa có customer nào được tạo.",
                 "step2": "Bước 2/3 · Phone Number là trường bắt buộc.",
                 "step2Ready": "Bước 2/3 · Sẵn sàng import.",
-                "step3": "Bước 3/3 · {count} customer mới đã được thêm."
+                "step3": "Bước 3/3 · {count} customer mới đã được thêm.",
+                "step3None": "Bước 3/3 · Không có customer mới nào được thêm."
               },
               "upload": {
                 "heading": "Upload file Excel hoặc CSV",
@@ -6762,12 +6763,14 @@
                 "count": "{shown} / {total} dòng",
                 "empty": "Không có dòng mẫu cho sheet/header này.",
                 "readable": "Dữ liệu đọc được",
-                "maybeSkipped": "Có thể bị bỏ qua khi import",
-                "backendNote": "Backend sẽ validate lại toàn bộ file."
+                "maybeSkipped": "Có thể bị bỏ qua khi import"
               },
               "result": {
                 "heading": "Import đã hoàn tất",
+                "headingNone": "Không import được customer nào",
                 "sub": "Danh sách Customer đã được làm mới. Các dòng hợp lệ đã được thêm thành công.",
+                "subNone": "Không có dòng hợp lệ nào được thêm từ file này.",
+                "subAllDuplicates": "Tất cả các dòng bị bỏ qua vì số điện thoại đã tồn tại.",
                 "total": "Tổng số dòng",
                 "imported": "Đã import",
                 "duplicates": "Trùng dữ liệu",

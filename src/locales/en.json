@@ -6682,7 +6682,8 @@
                 "step1": "Step 1/3 · No customers created yet.",
                 "step2": "Step 2/3 · Phone Number is required.",
                 "step2Ready": "Step 2/3 · Ready to import.",
-                "step3": "Step 3/3 · {count} new customers were added."
+                "step3": "Step 3/3 · {count} new customers were added.",
+                "step3None": "Step 3/3 · No new customers were added."
               },
               "upload": {
                 "heading": "Upload an Excel or CSV file",
@@ -6761,12 +6762,14 @@
                 "count": "{shown} / {total} rows",
                 "empty": "No sample rows available for this sheet/header.",
                 "readable": "Readable data",
-                "maybeSkipped": "May be skipped on import",
-                "backendNote": "Backend will re-validate the full file."
+                "maybeSkipped": "May be skipped on import"
               },
               "result": {
                 "heading": "Import complete",
+                "headingNone": "No customers imported",
                 "sub": "The customer list has been refreshed. Valid rows were added successfully.",
+                "subNone": "No valid rows could be added from this file.",
+                "subAllDuplicates": "Every row was skipped because the phone number already exists.",
                 "total": "Total rows",
                 "imported": "Imported",
                 "duplicates": "Duplicates",

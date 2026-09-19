@@ -18,7 +18,7 @@ export const CUSTOMER_IMPORT_MAX_BYTES = 5 * 1024 * 1024
 const ZIP_LOCAL_SIGNATURE = 0x04034b50
 
 /** Normalized header tokens that indicate a phone column. */
-const PHONE_HEADER_PATTERN = /(?:^|[^a-z0-9])(?:phone|mobile|cellphone|cell|telephone|tel|phonenumber|mobilenumber|sdt|sodienthoai|so_dien_thoai|dien_thoai|dienthoai)(?:[^a-z0-9]|$)/i
+const PHONE_HEADER_PATTERN = /(?:^|[^a-z0-9])(?:phone|mobile|cellphone|cell|telephone|tel|phonenumber|mobilenumber|mobilephone|contactnumber|contact\s*number|contact\s*no|sdt|sodienthoai|so_dien_thoai|dien_thoai|dienthoai)(?:[^a-z0-9]|$)/i
 
 async function inflateRaw(bytes: Uint8Array): Promise<Uint8Array> {
   if (typeof DecompressionStream === 'undefined') {
@@ -191,28 +191,167 @@ function normalizeHeader(value: string): string {
     .replace(/[^a-z0-9]+/g, '')
 }
 
+/** Exact normalized header tokens for FE fallback mapping (when BE leaves a field null). */
+const NAME_HEADER_ALIASES = new Set([
+  'name',
+  'fullname',
+  'customername',
+  'clientname',
+  'myname',
+  'guestname',
+  'hoten',
+  'hovaten',
+  'ten',
+  'tenkhach',
+  'tenkhachhang',
+])
+
+const EMAIL_HEADER_ALIASES = new Set([
+  'email',
+  'mail',
+  'emailaddress',
+  'customeremail',
+  'eaddress',
+  'emailid',
+  'mailid',
+  'emailaddr',
+])
+
+const DOB_HEADER_ALIASES = new Set([
+  'dob',
+  'dateofbirth',
+  'birthday',
+  'birthdate',
+  'birth',
+  'ngaysinh',
+])
+
+const CREATED_HEADER_ALIASES = new Set([
+  'created',
+  'createdat',
+  'createddate',
+  'createdon',
+  'regisdate',
+  'registrationdate',
+  'registered',
+  'registereddate',
+  'joindate',
+  'ngaydangky',
+])
+
+const LAST_VISIT_HEADER_ALIASES = new Set([
+  'lastvisit',
+  'lastvisited',
+  'lastvisitdate',
+  'lastseen',
+  'lancuoighe',
+  'ngayghecuanhat',
+])
+
+const PHONE_HEADER_ALIASES = new Set([
+  'phone',
+  'mobile',
+  'cellphone',
+  'cell',
+  'tel',
+  'telephone',
+  'phonenumber',
+  'mobilenumber',
+  'mobilephone',
+  'contactnumber',
+  'contactno',
+  'contactnum',
+  'phoneno',
+  'sdt',
+  'sodienthoai',
+  'dienthoai',
+])
+
+export type CustomerImportMappingTarget =
+  | 'name'
+  | 'phone'
+  | 'email'
+  | 'dob'
+  | 'created'
+  | 'lastVisit'
+
+export type CustomerImportColumnRef = {
+  index: number
+  header: string
+}
+
+function headerInAliasSet(header: string, aliases: ReadonlySet<string>): boolean {
+  const normalized = normalizeHeader(header)
+  return Boolean(normalized) && aliases.has(normalized)
+}
+
 export function headerLooksLikePhone(header: string): boolean {
   const raw = header.trim()
   if (!raw) return false
   if (PHONE_HEADER_PATTERN.test(raw)) return true
-  const normalized = normalizeHeader(raw)
-  return (
-    normalized === 'phone'
-    || normalized === 'mobile'
-    || normalized === 'cellphone'
-    || normalized === 'cell'
-    || normalized === 'tel'
-    || normalized === 'telephone'
-    || normalized === 'phonenumber'
-    || normalized === 'mobilenumber'
-    || normalized === 'sdt'
-    || normalized === 'sodienthoai'
-    || normalized === 'dienthoai'
-  )
+  return headerInAliasSet(raw, PHONE_HEADER_ALIASES)
+}
+
+export function headerLooksLikeName(header: string): boolean {
+  return headerInAliasSet(header, NAME_HEADER_ALIASES)
+}
+
+export function headerLooksLikeEmail(header: string): boolean {
+  return headerInAliasSet(header, EMAIL_HEADER_ALIASES)
+}
+
+export function headerLooksLikeDob(header: string): boolean {
+  return headerInAliasSet(header, DOB_HEADER_ALIASES)
+}
+
+export function headerLooksLikeCreated(header: string): boolean {
+  return headerInAliasSet(header, CREATED_HEADER_ALIASES)
+}
+
+export function headerLooksLikeLastVisit(header: string): boolean {
+  return headerInAliasSet(header, LAST_VISIT_HEADER_ALIASES)
 }
 
 export function headersIncludePhoneColumn(headers: readonly string[]): boolean {
   return headers.some(headerLooksLikePhone)
+}
+
+const FE_MAPPING_MATCHERS: ReadonlyArray<{
+  target: CustomerImportMappingTarget
+  match: (header: string) => boolean
+}> = [
+  // Phone first — required field; claim the column before weaker aliases can steal it.
+  { target: 'phone', match: headerLooksLikePhone },
+  { target: 'name', match: headerLooksLikeName },
+  { target: 'email', match: headerLooksLikeEmail },
+  { target: 'dob', match: headerLooksLikeDob },
+  { target: 'created', match: headerLooksLikeCreated },
+  { target: 'lastVisit', match: headerLooksLikeLastVisit },
+]
+
+/**
+ * FE fallback column suggestions from header aliases.
+ * Only fills targets that are still empty; never reuses a column already reserved
+ * (e.g. by backend suggestedMapping).
+ */
+export function suggestCustomerImportMappingFromHeaders(
+  columns: readonly CustomerImportColumnRef[],
+  reservedColumnIndexes: ReadonlySet<number> = new Set(),
+): Partial<Record<CustomerImportMappingTarget, number>> {
+  const used = new Set(reservedColumnIndexes)
+  const suggested: Partial<Record<CustomerImportMappingTarget, number>> = {}
+
+  for (const { target, match } of FE_MAPPING_MATCHERS) {
+    for (const column of columns) {
+      if (!column?.header || column.index <= 0 || used.has(column.index)) continue
+      if (!match(column.header)) continue
+      suggested[target] = column.index
+      used.add(column.index)
+      break
+    }
+  }
+
+  return suggested
 }
 
 function parseCsvHeaders(text: string): string[] {
