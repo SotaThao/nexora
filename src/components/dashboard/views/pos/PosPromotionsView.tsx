@@ -2,6 +2,7 @@
 // (centered page, template grid, stats, search/filter, card actions with icons).
 // Deactivating is the normal way to end an offer; deleting is only possible while unused.
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   ArrowRight,
   CheckCircle2,
@@ -32,6 +33,7 @@ import {
 import { PosServiceDiscountType } from '../../../../constants/posDiscount'
 import type { PosPromotionApiDto, PosPromotionPayload } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
+import { printPosPromoPoster } from './printPosPromoPoster'
 import CreateEditPosPromotionModal from './modals/CreateEditPosPromotionModal'
 import {
   formatPromotionArtSaving,
@@ -220,7 +222,7 @@ export default function PosPromotionsView({ businessId }: { businessId?: string 
   }
 
   const handlePrintPoster = () => {
-    window.print()
+    printPosPromoPoster()
   }
 
   const enabledCount = promotions.filter((p) => p.isActive).length
@@ -520,6 +522,7 @@ export default function PosPromotionsView({ businessId }: { businessId?: string 
 
       {isModalOpen ? (
         <CreateEditPosPromotionModal
+          businessId={businessId}
           promotion={editing}
           draft={isCreating ? createDraft : null}
           isSaving={createPromotion.isPending || updatePromotion.isPending}
@@ -528,62 +531,65 @@ export default function PosPromotionsView({ businessId }: { businessId?: string 
         />
       ) : null}
 
-      {previewing ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0c1b3b59] p-4 backdrop-blur-[2px]">
-          <div
-            className="pos-promo-poster-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="pos-promo-poster-title"
-          >
-            <header className="editor-header">
-              <div>
-                <p className="promo-eyebrow">{t(`${K}.preview`)}</p>
-                <h2 id="pos-promo-poster-title">{t(`${K}.promotionPoster`)}</h2>
-              </div>
-              <button
-                type="button"
-                className="promo-close"
-                aria-label={t(`${K}.closePreview`)}
-                onClick={() => setPreviewing(null)}
+      {previewing
+        ? createPortal(
+            <div className="pos-promo-poster-print-backdrop fixed inset-0 z-50 flex items-center justify-center bg-[#0c1b3b59] p-4 backdrop-blur-[2px]">
+              <div
+                className="pos-promo-poster-dialog pos-promo-poster-print-root"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="pos-promo-poster-title"
               >
-                <X className="h-4 w-4" />
-              </button>
-            </header>
-            <div className="poster-body">
-              <div className="poster-output">
-                <PromotionArt
-                  name={previewing.name}
-                  badgeLabel={previewing.badgeLabel}
-                  artSaving={artSaving(previewing)}
-                  imageUrl={promotionBannerImageUrl(previewing)}
-                  theme={
-                    themeFromColorHex(promotionBannerColorHex(previewing)) ??
-                    promoArtThemeForIndex(previewThemeIndex)
-                  }
-                  colorHex={promotionBannerColorHex(previewing)}
-                  specialOfferFallback={t(`${K}.specialOffer`)}
-                  large
-                />
+                <header className="editor-header">
+                  <div>
+                    <p className="promo-eyebrow">{t(`${K}.preview`)}</p>
+                    <h2 id="pos-promo-poster-title">{t(`${K}.promotionPoster`)}</h2>
+                  </div>
+                  <button
+                    type="button"
+                    className="promo-close"
+                    aria-label={t(`${K}.closePreview`)}
+                    onClick={() => setPreviewing(null)}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </header>
+                <div className="poster-body">
+                  <div className="poster-output">
+                    <PromotionArt
+                      name={previewing.name}
+                      badgeLabel={previewing.badgeLabel}
+                      artSaving={artSaving(previewing)}
+                      imageUrl={promotionBannerImageUrl(previewing)}
+                      theme={
+                        themeFromColorHex(promotionBannerColorHex(previewing)) ??
+                        promoArtThemeForIndex(previewThemeIndex)
+                      }
+                      colorHex={promotionBannerColorHex(previewing)}
+                      specialOfferFallback={t(`${K}.specialOffer`)}
+                      large
+                    />
+                  </div>
+                  <div className="poster-details">
+                    <h3>{previewing.name}</h3>
+                    {previewing.description ? (
+                      <p className="poster-description">{previewing.description}</p>
+                    ) : null}
+                    <p className="poster-schedule">{scheduleText(previewing)}</p>
+                  </div>
+                </div>
+                <footer className="editor-footer">
+                  <p className="promo-note">{t(`${K}.printHint`)}</p>
+                  <button type="button" className="promo-button primary" onClick={handlePrintPoster}>
+                    <Printer className="promo-action-icon h-4 w-4" aria-hidden />
+                    <span>{t(`${K}.print`)}</span>
+                  </button>
+                </footer>
               </div>
-              <div className="poster-details">
-                <h3>{previewing.name}</h3>
-                {previewing.description ? (
-                  <p className="poster-description">{previewing.description}</p>
-                ) : null}
-                <p className="poster-schedule">{scheduleText(previewing)}</p>
-              </div>
-            </div>
-            <footer className="editor-footer">
-              <p className="promo-note">{t(`${K}.printHint`)}</p>
-              <button type="button" className="promo-button primary" onClick={handlePrintPoster}>
-                <Printer className="promo-action-icon h-4 w-4" aria-hidden />
-                <span>{t(`${K}.print`)}</span>
-              </button>
-            </footer>
-          </div>
-        </div>
-      ) : null}
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   )
 }

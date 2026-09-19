@@ -1,11 +1,30 @@
-// CreateEditPosPromotionModal — studio layout: details, discount & schedule, checkout placement,
-// and a live banner preview. One window per promotion by design.
-import { useEffect, useState } from 'react'
-import { Globe, Scan, ShoppingBag, Upload, X } from 'lucide-react'
+// CreateEditPosPromotionModal — studio layout matching the reward-promotions HTML prototype:
+// details, discount & schedule, placements, and a multi-banner / poster preview column.
+import { useEffect, useId, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  ExternalLink,
+  Eye,
+  Globe,
+  Plus,
+  Scan,
+  ShoppingBag,
+  Upload,
+  X,
+} from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
-import { MAX_DISCOUNT_PERCENT, PosServiceDiscountType } from '../../../../../constants/posDiscount'
+import {
+  MAX_DISCOUNT_AMOUNT,
+  MAX_DISCOUNT_PERCENT,
+  PosServiceDiscountType,
+} from '../../../../../constants/posDiscount'
 import { TWELVE_HOUR_INPUT_LANG } from '../../../../../constants/timeFormat'
 import { sanitizeDecimalInput } from '../../../../../utils/currencyInput'
+import { usePosPromotionDetail } from '../../../../../data/hooks/usePosPromotions'
 import type { PosPromotionApiDto, PosPromotionPayload } from '../../../../../types/repositories'
 import { POS_WEEK_DAYS, formatPromotionArtSaving } from '../posPromotionDisplay'
 import type { PosPromotionDraft, PromoArtTheme } from '../posPromotionTemplates'
@@ -14,6 +33,8 @@ import {
   promotionBannerImageUrl,
   themeFromColorHex,
 } from '../posPromotionBanner'
+import { printPosPromoPoster } from '../printPosPromoPoster'
+import '../pos-promotions.css'
 
 const BANNER_THEMES: PromoArtTheme[] = [
   'purple',
@@ -25,19 +46,63 @@ const BANNER_THEMES: PromoArtTheme[] = [
   'peach',
   'slate',
 ]
-import '../pos-promotions.css'
 
 const K = 'components.dashboard.views.pos.PosPromotionsView'
-
+const MAX_BANNERS = 8
 const DEFAULT_START = '10:00'
 const DEFAULT_END = '14:00'
 const DEFAULT_THEME: PromoArtTheme = 'purple'
+
+type EditorBanner = {
+  key: string
+  theme: PromoArtTheme
+  /** Remote URL from detail, or object URL for a new file. */
+  imageUrl: string | null
+  imageFile: File | null
+  imageName: string | null
+  /** True when imageUrl is a createObjectURL we must revoke. */
+  localObjectUrl: boolean
+}
+
+/** Keep discount typing decimal-only and clamp to the type's ceiling (100% / $99,999.99). */
+function sanitizeDiscountValueInput(raw: string, max: number): string {
+  const cleaned = sanitizeDecimalInput(raw)
+  if (!cleaned || cleaned.endsWith('.')) return cleaned
+  const n = Number(cleaned)
+  if (!Number.isFinite(n)) return cleaned
+  if (n > max) return String(max)
+  return cleaned
+}
+
+function newBannerKey(): string {
+  return `banner-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+}
+
+function createThemeBanner(theme: PromoArtTheme = DEFAULT_THEME): EditorBanner {
+  return {
+    key: newBannerKey(),
+    theme,
+    imageUrl: null,
+    imageFile: null,
+    imageName: null,
+    localObjectUrl: false,
+  }
+}
+
+function bannerHasImage(banner: EditorBanner): boolean {
+  return Boolean(banner.imageFile || banner.imageUrl)
+}
+
+function revokeLocalUrl(banner: EditorBanner) {
+  if (banner.localObjectUrl && banner.imageUrl) URL.revokeObjectURL(banner.imageUrl)
+}
 
 enum PromotionField {
   Name = 'name',
   Value = 'value',
   Days = 'days',
   Window = 'window',
+  Banners = 'banners',
 }
 
 type PromotionErrors = Partial<Record<PromotionField, string>>
@@ -51,12 +116,14 @@ function toInputTime(value: string): string {
 }
 
 export default function CreateEditPosPromotionModal({
+  businessId,
   promotion,
   draft,
   isSaving,
   onSubmit,
   onClose,
 }: {
+  businessId?: string
   /** Null while creating. */
   promotion: PosPromotionApiDto | null
   /** Prefill from a template when creating; ignored while editing. */
@@ -66,12 +133,15 @@ export default function CreateEditPosPromotionModal({
   onClose: () => void
 }) {
   const { t } = useTranslation()
+  const uploadInputId = useId()
+  const detailQuery = usePosPromotionDetail(businessId, promotion?.id)
+
   const [name, setName] = useState('')
   const [badgeLabel, setBadgeLabel] = useState('')
   const [description, setDescription] = useState('')
-  const [photoFile, setPhotoFile] = useState<File | null>(null)
-  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null)
-  const [theme, setTheme] = useState<PromoArtTheme>(DEFAULT_THEME)
+  const [banners, setBanners] = useState<EditorBanner[]>(() => [createThemeBanner()])
+  const [selectedBannerIndex, setSelectedBannerIndex] = useState(0)
+  const [addTheme, setAddTheme] = useState<PromoArtTheme>(DEFAULT_THEME)
   const [templateCode, setTemplateCode] = useState<string | null>(null)
   const [discountType, setDiscountType] = useState<PosServiceDiscountType>(PosServiceDiscountType.Percent)
   const [valueInput, setValueInput] = useState('')
@@ -82,15 +152,39 @@ export default function CreateEditPosPromotionModal({
   const [showHero, setShowHero] = useState(false)
   const [submitPublic, setSubmitPublic] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<PromotionErrors>({})
+  const [posterOpen, setPosterOpen] = useState(false)
+  const [posterIndex, setPosterIndex] = useState(0)
+
+  const replaceBanners = (next: EditorBanner[]) => {
+    setBanners((prev) => {
+      prev.forEach((banner) => {
+        if (!next.some((item) => item.key === banner.key)) revokeLocalUrl(banner)
+      })
+      return next
+    })
+  }
 
   useEffect(() => {
     if (promotion) {
       setName(promotion.name ?? '')
       setBadgeLabel(promotion.badgeLabel ?? '')
       setDescription(promotion.description ?? '')
-      setPhotoFile(null)
-      setPhotoPreviewUrl(promotionBannerImageUrl(promotion))
-      setTheme(themeFromColorHex(promotion.primaryBannerColorHex) ?? DEFAULT_THEME)
+      const seedTheme = themeFromColorHex(promotion.primaryBannerColorHex) ?? DEFAULT_THEME
+      const seedImage = promotionBannerImageUrl(promotion)
+      replaceBanners([
+        seedImage
+          ? {
+              key: newBannerKey(),
+              theme: seedTheme,
+              imageUrl: seedImage,
+              imageFile: null,
+              imageName: null,
+              localObjectUrl: false,
+            }
+          : createThemeBanner(seedTheme),
+      ])
+      setSelectedBannerIndex(0)
+      setAddTheme(seedTheme)
       setTemplateCode(promotion.templateCode ?? null)
       setDiscountType(
         promotion.discountType === PosServiceDiscountType.Amount
@@ -102,15 +196,15 @@ export default function CreateEditPosPromotionModal({
       setStartTime(toInputTime(promotion.startTime))
       setEndTime(toInputTime(promotion.endTime))
       setIsActive(promotion.isActive)
-      setShowHero(Boolean(promotionBannerImageUrl(promotion)))
+      setShowHero(Boolean(seedImage))
       setSubmitPublic(false)
     } else if (draft) {
       setName(draft.name)
       setBadgeLabel(draft.badgeLabel)
       setDescription(draft.description)
-      setPhotoFile(null)
-      setPhotoPreviewUrl(null)
-      setTheme(draft.theme)
+      replaceBanners([createThemeBanner(draft.theme)])
+      setSelectedBannerIndex(0)
+      setAddTheme(draft.theme)
       setTemplateCode(draft.templateCode ?? null)
       setDiscountType(draft.discountType)
       setValueInput(String(draft.discountValue))
@@ -124,9 +218,9 @@ export default function CreateEditPosPromotionModal({
       setName('')
       setBadgeLabel('')
       setDescription('')
-      setPhotoFile(null)
-      setPhotoPreviewUrl(null)
-      setTheme(DEFAULT_THEME)
+      replaceBanners([createThemeBanner()])
+      setSelectedBannerIndex(0)
+      setAddTheme(DEFAULT_THEME)
       setTemplateCode(null)
       setDiscountType(PosServiceDiscountType.Percent)
       setValueInput('')
@@ -138,17 +232,50 @@ export default function CreateEditPosPromotionModal({
       setSubmitPublic(false)
     }
     setFieldErrors({})
+    setPosterOpen(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- seed once per promotion/draft identity
   }, [promotion, draft])
 
   useEffect(() => {
-    if (!photoFile) return
-    const url = URL.createObjectURL(photoFile)
-    setPhotoPreviewUrl(url)
-    return () => URL.revokeObjectURL(url)
-  }, [photoFile])
+    const detail = detailQuery.data
+    if (!promotion || !detail?.banners?.length) return
+
+    const next = [...detail.banners]
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((banner) => {
+        const theme = themeFromColorHex(banner.colorHex) ?? DEFAULT_THEME
+        return {
+          key: newBannerKey(),
+          theme,
+          imageUrl: banner.imageUrl || null,
+          imageFile: null,
+          imageName: banner.imageUrl ? t(`${K}.uploadedTheme`) : null,
+          localObjectUrl: false,
+        } satisfies EditorBanner
+      })
+
+    if (next.length === 0) return
+    replaceBanners(next)
+    setSelectedBannerIndex(0)
+    setAddTheme(next[0].theme)
+  }, [detailQuery.data, promotion, t])
+
+  useEffect(() => {
+    return () => {
+      banners.forEach(revokeLocalUrl)
+    }
+    // Only on unmount — banners cleanup on replace is handled in replaceBanners.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const parsedValue = Number(valueInput)
   const isPercent = discountType === PosServiceDiscountType.Percent
+  const valueMax = isPercent ? MAX_DISCOUNT_PERCENT : MAX_DISCOUNT_AMOUNT
+  const valueWithinMax =
+    Number.isFinite(parsedValue) && parsedValue > 0 && parsedValue <= valueMax
+
+  const selectedBanner = banners[selectedBannerIndex] ?? banners[0]
+  const atBannerLimit = banners.length >= MAX_BANNERS
 
   const clearFieldError = (field: PromotionField) => {
     setFieldErrors((prev) => {
@@ -157,6 +284,21 @@ export default function CreateEditPosPromotionModal({
       delete next[field]
       return next
     })
+  }
+
+  const syncWindowError = (nextStart: string, nextEnd: string) => {
+    if (!nextStart || !nextEnd) {
+      clearFieldError(PromotionField.Window)
+      return
+    }
+    if (nextEnd <= nextStart) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        [PromotionField.Window]: t(`${K}.windowInvalid`),
+      }))
+      return
+    }
+    clearFieldError(PromotionField.Window)
   }
 
   const validateFields = (): PromotionErrors => {
@@ -170,6 +312,8 @@ export default function CreateEditPosPromotionModal({
       errors[PromotionField.Value] = t(`${K}.errorValueInvalid`)
     } else if (isPercent && parsedValue > MAX_DISCOUNT_PERCENT) {
       errors[PromotionField.Value] = t(`${K}.errorValuePercentMax`, { max: MAX_DISCOUNT_PERCENT })
+    } else if (!isPercent && parsedValue > MAX_DISCOUNT_AMOUNT) {
+      errors[PromotionField.Value] = t(`${K}.errorValueAmountMax`, { max: MAX_DISCOUNT_AMOUNT })
     }
 
     if (days.length === 0) errors[PromotionField.Days] = t(`${K}.errorDaysRequired`)
@@ -180,6 +324,10 @@ export default function CreateEditPosPromotionModal({
       errors[PromotionField.Window] = t(`${K}.windowInvalid`)
     }
 
+    if (banners.length < 1 || banners.length > MAX_BANNERS) {
+      errors[PromotionField.Banners] = t(`${K}.bannerError`)
+    }
+
     return errors
   }
 
@@ -188,24 +336,96 @@ export default function CreateEditPosPromotionModal({
     clearFieldError(PromotionField.Days)
   }
 
+  const updateSelectedBanner = (patch: Partial<EditorBanner>) => {
+    setBanners((prev) =>
+      prev.map((banner, index) => {
+        if (index !== selectedBannerIndex) return banner
+        if (patch.imageFile && banner.localObjectUrl) revokeLocalUrl(banner)
+        return { ...banner, ...patch }
+      }),
+    )
+  }
+
+  const handleThemeSelectChange = (theme: PromoArtTheme) => {
+    setAddTheme(theme)
+    const current = banners[selectedBannerIndex]
+    if (!current) return
+    if (current.localObjectUrl) revokeLocalUrl(current)
+    updateSelectedBanner({
+      theme,
+      imageUrl: null,
+      imageFile: null,
+      imageName: null,
+      localObjectUrl: false,
+    })
+  }
+
+  const handleAddBanner = () => {
+    if (atBannerLimit) return
+    const next = createThemeBanner(addTheme)
+    setBanners((prev) => [...prev, next])
+    setSelectedBannerIndex(banners.length)
+    clearFieldError(PromotionField.Banners)
+  }
+
+  const handleUpload = (file: File | null) => {
+    if (!file || atBannerLimit) return
+    const objectUrl = URL.createObjectURL(file)
+    const next: EditorBanner = {
+      key: newBannerKey(),
+      theme: addTheme,
+      imageUrl: objectUrl,
+      imageFile: file,
+      imageName: file.name,
+      localObjectUrl: true,
+    }
+    setBanners((prev) => [...prev, next])
+    setSelectedBannerIndex(banners.length)
+    clearFieldError(PromotionField.Banners)
+  }
+
+  const moveBanner = (index: number, delta: number) => {
+    const nextIndex = index + delta
+    if (nextIndex < 0 || nextIndex >= banners.length) return
+    setBanners((prev) => {
+      const copy = [...prev]
+      ;[copy[index], copy[nextIndex]] = [copy[nextIndex], copy[index]]
+      return copy
+    })
+    setSelectedBannerIndex(nextIndex)
+  }
+
+  const removeBanner = (index: number) => {
+    if (banners.length <= 1) return
+    setBanners((prev) => {
+      const removed = prev[index]
+      if (removed) revokeLocalUrl(removed)
+      return prev.filter((_, i) => i !== index)
+    })
+    setSelectedBannerIndex((prev) => {
+      if (index < prev) return prev - 1
+      if (index === prev) return Math.min(index, banners.length - 2)
+      return prev
+    })
+  }
+
   const handleSubmit = () => {
     if (isSaving) return
     const errors = validateFields()
     setFieldErrors(errors)
     if (Object.keys(errors).length > 0) return
 
-    const hasExistingImage = Boolean(photoPreviewUrl) && !photoFile
+    const coverFile = banners.find((banner) => banner.imageFile)?.imageFile ?? null
     onSubmit({
       name: name.trim(),
       badgeLabel: badgeLabel.trim() || null,
       description: description.trim() || null,
       templateCode: templateCode || null,
-      photo: photoFile,
-      banners: photoFile
-        ? [{ colorHex: null, image: photoFile }]
-        : hasExistingImage
-          ? undefined
-          : [{ colorHex: colorHexFromTheme(theme), image: null }],
+      photo: coverFile,
+      banners: banners.map((banner) => ({
+        colorHex: bannerHasImage(banner) ? null : colorHexFromTheme(banner.theme),
+        image: banner.imageFile ?? null,
+      })),
       discountType,
       discountValue: parsedValue,
       daysOfWeek: days,
@@ -215,14 +435,57 @@ export default function CreateEditPosPromotionModal({
     })
   }
 
-  const previewRate =
-    valueInput.trim() && Number.isFinite(parsedValue) && parsedValue > 0
-      ? formatPromotionArtSaving(discountType, parsedValue)
-      : t(`${K}.invalidPreview`)
+  const previewRate = valueInput.trim() && valueWithinMax
+    ? formatPromotionArtSaving(discountType, parsedValue)
+    : t(`${K}.invalidPreview`)
 
   const previewName = name.trim() || t(`${K}.previewUntitled`)
+  const previewBadge = badgeLabel.trim() || t(`${K}.specialOffer`)
   const firstError =
-    fieldErrors.name || fieldErrors.value || fieldErrors.days || fieldErrors.window || ''
+    fieldErrors.name ||
+    fieldErrors.value ||
+    fieldErrors.days ||
+    fieldErrors.window ||
+    fieldErrors.banners ||
+    ''
+
+  const themeSelectValue = selectedBanner && bannerHasImage(selectedBanner) ? '' : addTheme
+
+  const bannerLabel = (banner: EditorBanner) => {
+    if (bannerHasImage(banner)) {
+      return banner.imageName || t(`${K}.uploadedTheme`)
+    }
+    return t(`${K}.theme.${banner.theme}`)
+  }
+
+  const renderArt = (banner: EditorBanner | undefined, large = false) => {
+    if (!banner) return null
+    if (bannerHasImage(banner) && banner.imageUrl) {
+      return (
+        <div className={`promo-art image-art${large ? ' poster-art' : ''}`}>
+          <img src={banner.imageUrl} alt="" width={large ? 640 : 400} height={large ? 400 : 250} />
+        </div>
+      )
+    }
+    return (
+      <div className={`promo-art theme-${banner.theme}${large ? ' poster-art' : ''}`}>
+        <span className="art-badge">{previewBadge}</span>
+        <h3>{previewName}</h3>
+        <strong className="art-saving">{previewRate}</strong>
+      </div>
+    )
+  }
+
+  const schedulePreview = useMemo(() => {
+    const dayPart = days.length
+      ? days
+          .map((day) =>
+            t(`components.dashboard.views.pos.OrderDiscountSection.dayShort.${day}`),
+          )
+          .join(' · ')
+      : '—'
+    return `${dayPart} / ${startTime || '—'}–${endTime || '—'}`
+  }, [days, startTime, endTime, t])
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0c1b3b59] p-4 backdrop-blur-[2px]">
@@ -312,7 +575,13 @@ export default function CreateEditPosPromotionModal({
                   <select
                     value={discountType}
                     onChange={(e) => {
-                      setDiscountType(e.target.value as PosServiceDiscountType)
+                      const nextType = e.target.value as PosServiceDiscountType
+                      const nextMax =
+                        nextType === PosServiceDiscountType.Percent
+                          ? MAX_DISCOUNT_PERCENT
+                          : MAX_DISCOUNT_AMOUNT
+                      setDiscountType(nextType)
+                      setValueInput((prev) => sanitizeDiscountValueInput(prev, nextMax))
                       clearFieldError(PromotionField.Value)
                     }}
                   >
@@ -327,7 +596,7 @@ export default function CreateEditPosPromotionModal({
                     inputMode="decimal"
                     value={valueInput}
                     onChange={(e) => {
-                      setValueInput(sanitizeDecimalInput(e.target.value))
+                      setValueInput(sanitizeDiscountValueInput(e.target.value, valueMax))
                       clearFieldError(PromotionField.Value)
                     }}
                     placeholder={isPercent ? '15' : '10'}
@@ -368,8 +637,9 @@ export default function CreateEditPosPromotionModal({
                     lang={TWELVE_HOUR_INPUT_LANG}
                     value={startTime}
                     onChange={(e) => {
-                      setStartTime(e.target.value)
-                      clearFieldError(PromotionField.Window)
+                      const next = e.target.value
+                      setStartTime(next)
+                      syncWindowError(next, endTime)
                     }}
                     aria-invalid={Boolean(fieldErrors.window)}
                     className={fieldErrors.window ? 'is-invalid' : undefined}
@@ -382,8 +652,9 @@ export default function CreateEditPosPromotionModal({
                     lang={TWELVE_HOUR_INPUT_LANG}
                     value={endTime}
                     onChange={(e) => {
-                      setEndTime(e.target.value)
-                      clearFieldError(PromotionField.Window)
+                      const next = e.target.value
+                      setEndTime(next)
+                      syncWindowError(startTime, next)
                     }}
                     aria-invalid={Boolean(fieldErrors.window)}
                     className={fieldErrors.window ? 'is-invalid' : undefined}
@@ -442,30 +713,78 @@ export default function CreateEditPosPromotionModal({
             <h3 className="section-number" id="promo-banners-title">
               {t(`${K}.bannersSection`)}
             </h3>
-            <div aria-live="polite">
-              {photoPreviewUrl ? (
-                <div className="promo-art image-art">
-                  <img src={photoPreviewUrl} alt="" width={400} height={250} />
-                </div>
-              ) : (
-                <div className={`promo-art theme-${theme}`}>
-                  <span className="art-badge">{badgeLabel.trim() || t(`${K}.specialOffer`)}</span>
-                  <h3>{previewName}</h3>
-                  <strong className="art-saving">{previewRate}</strong>
-                </div>
-              )}
-            </div>
+            <div aria-live="polite">{renderArt(selectedBanner)}</div>
             <p className="promo-note">{t(`${K}.bannerHint`)}</p>
+
+            <div className="promo-banner-list">
+              {banners.map((banner, index) => (
+                <div
+                  key={banner.key}
+                  className="banner-row"
+                  aria-current={index === selectedBannerIndex}
+                >
+                  <span className="banner-name">
+                    {index + 1}. {bannerLabel(banner)}
+                    {index === 0 ? <small>{t(`${K}.cover`)}</small> : null}
+                  </span>
+                  <div className="banner-actions">
+                    <button
+                      type="button"
+                      className="promo-button icon-button"
+                      aria-label={t(`${K}.previewBanner`)}
+                      title={t(`${K}.previewBanner`)}
+                      onClick={() => setSelectedBannerIndex(index)}
+                    >
+                      <Eye className="promo-action-icon" aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      className="promo-button icon-button"
+                      aria-label={t(`${K}.moveUp`)}
+                      title={t(`${K}.moveUp`)}
+                      disabled={index === 0}
+                      onClick={() => moveBanner(index, -1)}
+                    >
+                      <ArrowUp className="promo-action-icon" aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      className="promo-button icon-button"
+                      aria-label={t(`${K}.moveDown`)}
+                      title={t(`${K}.moveDown`)}
+                      disabled={index === banners.length - 1}
+                      onClick={() => moveBanner(index, 1)}
+                    >
+                      <ArrowDown className="promo-action-icon" aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      className="promo-button icon-button danger"
+                      aria-label={t(`${K}.removeBanner`)}
+                      title={t(`${K}.removeBanner`)}
+                      disabled={banners.length <= 1}
+                      onClick={() => removeBanner(index)}
+                    >
+                      <X className="promo-action-icon" aria-hidden />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {fieldErrors.banners ? <p className="field-error">{fieldErrors.banners}</p> : null}
 
             <div className="promo-field-row banner-add-row">
               <label className="promo-field">
                 <span>{t(`${K}.chooseTheme`)}</span>
                 <select
-                  value={photoPreviewUrl ? '' : theme}
-                  disabled={Boolean(photoPreviewUrl)}
-                  onChange={(e) => setTheme(e.target.value as PromoArtTheme)}
+                  value={themeSelectValue}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    if (!value) return
+                    handleThemeSelectChange(value as PromoArtTheme)
+                  }}
                 >
-                  {photoPreviewUrl ? (
+                  {selectedBanner && bannerHasImage(selectedBanner) ? (
                     <option value="">{t(`${K}.uploadedTheme`)}</option>
                   ) : null}
                   {BANNER_THEMES.map((themeId) => (
@@ -475,22 +794,45 @@ export default function CreateEditPosPromotionModal({
                   ))}
                 </select>
               </label>
+              <button
+                type="button"
+                className="promo-button"
+                disabled={atBannerLimit}
+                onClick={handleAddBanner}
+              >
+                <Plus className="promo-action-icon h-4 w-4" aria-hidden />
+                <span>{t(`${K}.addBanner`)}</span>
+              </button>
             </div>
 
-            <label className="promo-upload">
+            <label className="promo-upload" htmlFor={uploadInputId}>
               <Upload className="h-5 w-5 text-nexoraBrand" aria-hidden />
               <strong>{t(`${K}.upload`)}</strong>
-              <span className="promo-note">
-                {photoFile?.name ||
-                  (photoPreviewUrl && !photoFile ? t(`${K}.currentImage`) : t(`${K}.chooseFile`))}
-              </span>
+              <span className="promo-note">{t(`${K}.chooseFile`)}</span>
               <input
+                id={uploadInputId}
                 type="file"
                 accept="image/png,image/jpeg,image/webp"
-                onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
+                disabled={atBannerLimit}
+                onChange={(e) => {
+                  handleUpload(e.target.files?.[0] ?? null)
+                  e.target.value = ''
+                }}
               />
             </label>
             <p className="promo-note">{t(`${K}.uploadHint`)}</p>
+
+            <button
+              type="button"
+              className="promo-text-button"
+              onClick={() => {
+                setPosterIndex(selectedBannerIndex)
+                setPosterOpen(true)
+              }}
+            >
+              <ExternalLink className="h-4 w-4" aria-hidden />
+              <span>{t(`${K}.previewPrint`)}</span>
+            </button>
           </aside>
         </div>
 
@@ -520,6 +862,82 @@ export default function CreateEditPosPromotionModal({
           </div>
         </footer>
       </div>
+
+      {posterOpen
+        ? createPortal(
+            <div className="pos-promo-poster-print-backdrop fixed inset-0 z-[60] flex items-center justify-center bg-[#0c1b3b59] p-4 backdrop-blur-[2px]">
+              <div
+                className="pos-promo-poster-dialog pos-promo-poster-print-root"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="pos-promo-draft-poster-title"
+              >
+                <header className="editor-header">
+                  <div>
+                    <p className="promo-eyebrow">{t(`${K}.preview`)}</p>
+                    <h2 id="pos-promo-draft-poster-title">{t(`${K}.promotionPoster`)}</h2>
+                  </div>
+                  <button
+                    type="button"
+                    className="promo-close"
+                    aria-label={t(`${K}.closePreview`)}
+                    onClick={() => setPosterOpen(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </header>
+                <div className="poster-body">
+                  <div className="poster-output">
+                    {renderArt(banners[posterIndex] ?? selectedBanner, true)}
+                  </div>
+                  {banners.length > 1 ? (
+                    <div className="poster-pager">
+                      <button
+                        type="button"
+                        className="promo-button"
+                        disabled={posterIndex === 0}
+                        aria-label={t(`${K}.previousBanner`)}
+                        onClick={() => setPosterIndex((i) => Math.max(0, i - 1))}
+                      >
+                        <ArrowLeft className="h-4 w-4" aria-hidden />
+                      </button>
+                      <span>
+                        {posterIndex + 1} / {banners.length}
+                      </span>
+                      <button
+                        type="button"
+                        className="promo-button"
+                        disabled={posterIndex >= banners.length - 1}
+                        aria-label={t(`${K}.nextBanner`)}
+                        onClick={() => setPosterIndex((i) => Math.min(banners.length - 1, i + 1))}
+                      >
+                        <ArrowRight className="h-4 w-4" aria-hidden />
+                      </button>
+                    </div>
+                  ) : null}
+                  <div className="poster-details">
+                    <h3>{previewName}</h3>
+                    {description.trim() ? (
+                      <p className="poster-description">{description.trim()}</p>
+                    ) : null}
+                    <p className="poster-schedule">{schedulePreview}</p>
+                  </div>
+                </div>
+                <footer className="editor-footer">
+                  <p className="promo-note">{t(`${K}.printHint`)}</p>
+                  <button
+                    type="button"
+                    className="promo-button primary"
+                    onClick={() => printPosPromoPoster()}
+                  >
+                    {t(`${K}.print`)}
+                  </button>
+                </footer>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   )
 }

@@ -51,18 +51,39 @@ export function formatPromotionWindow(startTime: string, endTime: string, langua
   return `${formatPosClockTime(startTime, language)}–${formatPosClockTime(endTime, language)}`
 }
 
+/**
+ * Decimal money string without scientific notation.
+ * `Number#toFixed` returns "1e+24" for |n| ≥ 1e21 — bad for the banner preview.
+ */
+function formatPromotionMoneyAmount(value: number): string {
+  if (!Number.isFinite(value)) return '0.00'
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    useGrouping: true,
+  }).format(value)
+}
+
+/** Percent figure without scientific notation (e.g. never "1.23e+60"). */
+function formatPromotionPercentAmount(value: number): string {
+  if (!Number.isFinite(value)) return '0'
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 2,
+    useGrouping: false,
+  }).format(value)
+}
+
 /** "15% off" / "$10 off" — the figure the counter and the customer both talk about. */
 export function formatPromotionRate(discountType: string, discountValue: number): string {
   return discountType === PosServiceDiscountType.Percent
-    ? `${discountValue % 1 === 0 ? discountValue.toFixed(0) : discountValue}%`
-    : `$${discountValue.toFixed(2)}`
+    ? `${formatPromotionPercentAmount(discountValue)}%`
+    : `$${formatPromotionMoneyAmount(discountValue)}`
 }
 
 /** HTML prototype art card: "15% off" / "$5.00 off". */
 export function formatPromotionArtSaving(discountType: string, discountValue: number): string {
   if (discountType === PosServiceDiscountType.Percent) {
-    const n = discountValue % 1 === 0 ? discountValue.toFixed(0) : String(discountValue)
-    return `${n}% off`
+    return `${formatPromotionPercentAmount(discountValue)}% off`
   }
-  return `$${Number(discountValue).toFixed(2)} off`
+  return `$${formatPromotionMoneyAmount(discountValue)} off`
 }

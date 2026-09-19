@@ -1305,16 +1305,17 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 /* Print styles for QR Code Stand
    Scoped so other print surfaces (e.g. AI Voice setup guide) are not wiped blank. */
 @media print {
-  /* Hide all screen-only parts of the dashboard and other components */
-  body:not(.printing-ai-voice-guide) aside,
-  body:not(.printing-ai-voice-guide) .lg\:pl-72,
-  body:not(.printing-ai-voice-guide) main,
-  body:not(.printing-ai-voice-guide) header,
-  body:not(.printing-ai-voice-guide) footer,
-  body:not(.printing-ai-voice-guide) .no-print,
-  body:not(.printing-ai-voice-guide) button,
-  body:not(.printing-ai-voice-guide) a,
-  body:not(.printing-ai-voice-guide) .fixed.bottom-4 {
+  /* Hide all screen-only parts of the dashboard and other components.
+     Skip dedicated print body classes (invoice / report / promo poster / AI voice). */
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) aside,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) .lg\:pl-72,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) main,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) header,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) footer,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) .no-print,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) button,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) a,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) .fixed.bottom-4 {
     display: none !important;
   }
 
