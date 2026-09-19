@@ -105,7 +105,7 @@ export default function PosGeneralSettingsView({
           businessErrors={businessInfoForm.businessErrors}
           setBusinessErrors={businessInfoForm.setBusinessErrors}
           canEdit={businessInfoForm.canEditProfile}
-          verificationStatus={businessInfoForm.effectiveVerificationStatus}
+          showLocalOnlyHint={businessInfoForm.showLocalOnlyHint}
           startEditBusiness={businessInfoForm.startEditBusiness}
           saveBusiness={saveBusiness}
         />
