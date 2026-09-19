@@ -446,6 +446,16 @@ body:not(.homepage-active):not(.public-booking-active) input.vlinkpay-address-in
     font-size: 12px !important;
     font-weight: 400;
   }
+
+  /* POS Promotions list chrome — keep compact vs HTML (not the 16px iOS floor). */
+  body:not(.homepage-active):not(.public-booking-active) .pos-promotions-page .promo-language select {
+    font-size: 11px !important;
+  }
+
+  body:not(.homepage-active):not(.public-booking-active) .pos-promotions-page .promo-search input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+  body:not(.homepage-active):not(.public-booking-active) .pos-promotions-page .promo-toolbar select {
+    font-size: 12px !important;
+  }
 }
 
 /* Prevent zoom on all other mobile browsers on narrow viewports */
@@ -467,6 +477,16 @@ body:not(.homepage-active):not(.public-booking-active) input.vlinkpay-address-in
   body:not(.homepage-active):not(.public-booking-active) .booking-hub-view .settings-service-dialog.is-overview textarea.settings-input {
     font-size: 12px !important;
     font-weight: 400;
+  }
+
+  /* POS Promotions list chrome — keep compact vs HTML (not the 16px iOS floor). */
+  body:not(.homepage-active):not(.public-booking-active) .pos-promotions-page .promo-language select {
+    font-size: 11px !important;
+  }
+
+  body:not(.homepage-active):not(.public-booking-active) .pos-promotions-page .promo-search input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+  body:not(.homepage-active):not(.public-booking-active) .pos-promotions-page .promo-toolbar select {
+    font-size: 12px !important;
   }
 }
 

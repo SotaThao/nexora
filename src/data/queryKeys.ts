@@ -314,6 +314,9 @@ export const qk = {
   // the eligible list depends on the order's check-in time, so it is keyed by orderId.
   merchantPosPromotions: (businessId?: string) =>
     ['merchantSettings', 'posPromotions', businessId ?? ''],
+  merchantPosPromotionDetail: (businessId?: string, promotionId?: string) =>
+    ['merchantSettings', 'posPromotionDetail', businessId ?? '', promotionId ?? ''],
+  merchantPosPromotionTemplates: () => ['merchantSettings', 'posPromotionTemplates'],
   merchantPosEligiblePromotions: (businessId?: string, orderId?: string) =>
     ['merchantSettings', 'posEligiblePromotions', businessId ?? '', orderId ?? ''],
   merchantPosCheckoutServiceCatalog: (businessId?: string) =>

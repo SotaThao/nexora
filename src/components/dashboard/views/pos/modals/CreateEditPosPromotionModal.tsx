@@ -1,25 +1,38 @@
-// CreateEditPosPromotionModal — one offer: what it is called, how much it takes off, which days it
-// runs and the daily window it runs in.
-//
-// One window per promotion by design: a different window on Saturday is a second offer with its own
-// name, which is also how the front desk reads the cards at the counter.
-import { useEffect, useRef, useState } from 'react'
-import { ImagePlus, X } from 'lucide-react'
+// CreateEditPosPromotionModal — studio layout: details, discount & schedule, checkout placement,
+// and a live banner preview. One window per promotion by design.
+import { useEffect, useState } from 'react'
+import { Globe, Scan, ShoppingBag, Upload, X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
-import IconButton from '../../../../ui/IconButton'
 import { MAX_DISCOUNT_PERCENT, PosServiceDiscountType } from '../../../../../constants/posDiscount'
 import { TWELVE_HOUR_INPUT_LANG } from '../../../../../constants/timeFormat'
 import { sanitizeDecimalInput } from '../../../../../utils/currencyInput'
 import type { PosPromotionApiDto, PosPromotionPayload } from '../../../../../types/repositories'
-import { POS_WEEK_DAYS } from '../posPromotionDisplay'
+import { POS_WEEK_DAYS, formatPromotionArtSaving } from '../posPromotionDisplay'
+import type { PosPromotionDraft, PromoArtTheme } from '../posPromotionTemplates'
+import {
+  colorHexFromTheme,
+  promotionBannerImageUrl,
+  themeFromColorHex,
+} from '../posPromotionBanner'
+
+const BANNER_THEMES: PromoArtTheme[] = [
+  'purple',
+  'gold',
+  'rose',
+  'ocean',
+  'teal',
+  'sage',
+  'peach',
+  'slate',
+]
+import '../pos-promotions.css'
 
 const K = 'components.dashboard.views.pos.PosPromotionsView'
 
 const DEFAULT_START = '10:00'
 const DEFAULT_END = '14:00'
+const DEFAULT_THEME: PromoArtTheme = 'purple'
 
-// Per-field validation mirroring PosPromotionInputValidator on the backend. Save stays clickable so
-// an incomplete form answers with the field that is actually wrong instead of a dead button.
 enum PromotionField {
   Name = 'name',
   Value = 'value',
@@ -29,70 +42,103 @@ enum PromotionField {
 
 type PromotionErrors = Partial<Record<PromotionField, string>>
 
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null
-  return (
-    <p role="alert" aria-live="polite" className="mt-1 text-[11px] font-bold text-rose-600">
-      {message}
-    </p>
-  )
-}
-
-/** 'HH:mm' from the time input; the API takes 'HH:mm:ss'. */
 function toApiTime(value: string): string {
   return value.length === 5 ? `${value}:00` : value
 }
 
-/** 'HH:mm:ss' from the API; the time input takes 'HH:mm'. */
 function toInputTime(value: string): string {
   return value.slice(0, 5)
 }
 
 export default function CreateEditPosPromotionModal({
   promotion,
+  draft,
   isSaving,
   onSubmit,
   onClose,
 }: {
   /** Null while creating. */
   promotion: PosPromotionApiDto | null
+  /** Prefill from a template when creating; ignored while editing. */
+  draft?: PosPromotionDraft | null
   isSaving: boolean
   onSubmit: (payload: PosPromotionPayload) => void
   onClose: () => void
 }) {
   const { t } = useTranslation()
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const [name, setName] = useState('')
   const [badgeLabel, setBadgeLabel] = useState('')
   const [description, setDescription] = useState('')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null)
+  const [theme, setTheme] = useState<PromoArtTheme>(DEFAULT_THEME)
+  const [templateCode, setTemplateCode] = useState<string | null>(null)
   const [discountType, setDiscountType] = useState<PosServiceDiscountType>(PosServiceDiscountType.Percent)
   const [valueInput, setValueInput] = useState('')
   const [days, setDays] = useState<string[]>([])
   const [startTime, setStartTime] = useState(DEFAULT_START)
   const [endTime, setEndTime] = useState(DEFAULT_END)
-  const [isActive, setIsActive] = useState(true)
+  const [isActive, setIsActive] = useState(false)
+  const [showHero, setShowHero] = useState(false)
+  const [submitPublic, setSubmitPublic] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<PromotionErrors>({})
 
   useEffect(() => {
-    setName(promotion?.name ?? '')
-    setBadgeLabel(promotion?.badgeLabel ?? '')
-    setDescription(promotion?.description ?? '')
-    setPhotoFile(null)
-    setPhotoPreviewUrl(promotion?.photoUrl ?? null)
-    setDiscountType(
-      promotion?.discountType === PosServiceDiscountType.Amount
-        ? PosServiceDiscountType.Amount
-        : PosServiceDiscountType.Percent,
-    )
-    setValueInput(promotion ? String(promotion.discountValue) : '')
-    setDays(promotion?.daysOfWeek ?? [])
-    setStartTime(promotion ? toInputTime(promotion.startTime) : DEFAULT_START)
-    setEndTime(promotion ? toInputTime(promotion.endTime) : DEFAULT_END)
-    setIsActive(promotion?.isActive ?? true)
+    if (promotion) {
+      setName(promotion.name ?? '')
+      setBadgeLabel(promotion.badgeLabel ?? '')
+      setDescription(promotion.description ?? '')
+      setPhotoFile(null)
+      setPhotoPreviewUrl(promotionBannerImageUrl(promotion))
+      setTheme(themeFromColorHex(promotion.primaryBannerColorHex) ?? DEFAULT_THEME)
+      setTemplateCode(promotion.templateCode ?? null)
+      setDiscountType(
+        promotion.discountType === PosServiceDiscountType.Amount
+          ? PosServiceDiscountType.Amount
+          : PosServiceDiscountType.Percent,
+      )
+      setValueInput(String(promotion.discountValue))
+      setDays(promotion.daysOfWeek ?? [])
+      setStartTime(toInputTime(promotion.startTime))
+      setEndTime(toInputTime(promotion.endTime))
+      setIsActive(promotion.isActive)
+      setShowHero(Boolean(promotionBannerImageUrl(promotion)))
+      setSubmitPublic(false)
+    } else if (draft) {
+      setName(draft.name)
+      setBadgeLabel(draft.badgeLabel)
+      setDescription(draft.description)
+      setPhotoFile(null)
+      setPhotoPreviewUrl(null)
+      setTheme(draft.theme)
+      setTemplateCode(draft.templateCode ?? null)
+      setDiscountType(draft.discountType)
+      setValueInput(String(draft.discountValue))
+      setDays([...draft.daysOfWeek])
+      setStartTime(draft.startTime)
+      setEndTime(draft.endTime)
+      setIsActive(false)
+      setShowHero(true)
+      setSubmitPublic(false)
+    } else {
+      setName('')
+      setBadgeLabel('')
+      setDescription('')
+      setPhotoFile(null)
+      setPhotoPreviewUrl(null)
+      setTheme(DEFAULT_THEME)
+      setTemplateCode(null)
+      setDiscountType(PosServiceDiscountType.Percent)
+      setValueInput('')
+      setDays([])
+      setStartTime(DEFAULT_START)
+      setEndTime(DEFAULT_END)
+      setIsActive(false)
+      setShowHero(false)
+      setSubmitPublic(false)
+    }
     setFieldErrors({})
-  }, [promotion])
+  }, [promotion, draft])
 
   useEffect(() => {
     if (!photoFile) return
@@ -148,11 +194,18 @@ export default function CreateEditPosPromotionModal({
     setFieldErrors(errors)
     if (Object.keys(errors).length > 0) return
 
+    const hasExistingImage = Boolean(photoPreviewUrl) && !photoFile
     onSubmit({
       name: name.trim(),
       badgeLabel: badgeLabel.trim() || null,
       description: description.trim() || null,
+      templateCode: templateCode || null,
       photo: photoFile,
+      banners: photoFile
+        ? [{ colorHex: null, image: photoFile }]
+        : hasExistingImage
+          ? undefined
+          : [{ colorHex: colorHexFromTheme(theme), image: null }],
       discountType,
       discountValue: parsedValue,
       daysOfWeek: days,
@@ -162,222 +215,310 @@ export default function CreateEditPosPromotionModal({
     })
   }
 
-  const inputClass =
-    'h-10 w-full rounded-lg border bg-white px-3 text-xs text-nexoraText outline-none border-nexoraBorder focus:border-nexoraBrand'
-  const invalidInputClass =
-    'h-10 w-full rounded-lg border bg-white px-3 text-xs text-nexoraText outline-none border-rose-400 focus:border-rose-400'
-  const fieldClass = (field: PromotionField) => (fieldErrors[field] ? invalidInputClass : inputClass)
+  const previewRate =
+    valueInput.trim() && Number.isFinite(parsedValue) && parsedValue > 0
+      ? formatPromotionArtSaving(discountType, parsedValue)
+      : t(`${K}.invalidPreview`)
+
+  const previewName = name.trim() || t(`${K}.previewUntitled`)
+  const firstError =
+    fieldErrors.name || fieldErrors.value || fieldErrors.days || fieldErrors.window || ''
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="nexora-modal-card flex w-full max-w-md flex-col rounded-2xl bg-nexoraSurface shadow-xl">
-        <div className="flex items-center justify-between gap-3 border-b border-nexoraBorder px-4 py-3">
-          <h2 className="text-sm font-bold text-nexoraText">
-            {promotion ? t(`${K}.editTitle`) : t(`${K}.createTitle`)}
-          </h2>
-          <IconButton label={t(`${K}.cancel`)} onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0c1b3b59] p-4 backdrop-blur-[2px]">
+      <div
+        className="pos-promo-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pos-promo-editor-title"
+      >
+        <header className="editor-header">
+          <div>
+            <p className="promo-eyebrow">{t(`${K}.studioEyebrow`)}</p>
+            <h2 id="pos-promo-editor-title">
+              {promotion ? t(`${K}.editTitle`) : t(`${K}.createTitle`)}
+            </h2>
+          </div>
+          <button
+            type="button"
+            className="promo-close"
+            aria-label={t(`${K}.cancel`)}
+            onClick={onClose}
+          >
             <X className="h-4 w-4" />
-          </IconButton>
+          </button>
+        </header>
+
+        <div className="editor-help">
+          <strong>{t(`${K}.helpTitle`)}</strong>
+          <span>{t(`${K}.helpSteps`)}</span>
+          <small>{t(`${K}.helpNote`)}</small>
         </div>
 
-        <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
-          <div>
-            <label className="mb-1 block text-[11px] font-semibold text-nexoraMuted">{t(`${K}.nameLabel`)}</label>
-            <input
-              type="text"
-              value={name}
-              maxLength={100}
-              onChange={(e) => {
-                setName(e.target.value)
-                clearFieldError(PromotionField.Name)
-              }}
-              placeholder={t(`${K}.namePlaceholder`)}
-              aria-invalid={Boolean(fieldErrors.name)}
-              className={fieldClass(PromotionField.Name)}
-            />
-            <FieldError message={fieldErrors.name} />
-          </div>
+        <div className="editor-body">
+          <div className="editor-fields">
+            <section className="editor-section" aria-labelledby="promo-details-title">
+              <h3 className="section-number" id="promo-details-title">
+                {t(`${K}.detailsSection`)}
+              </h3>
+              <div className="promo-field-row details-row">
+                <label className="promo-field">
+                  <span>{t(`${K}.nameLabel`)}</span>
+                  <input
+                    type="text"
+                    value={name}
+                    maxLength={100}
+                    onChange={(e) => {
+                      setName(e.target.value)
+                      clearFieldError(PromotionField.Name)
+                    }}
+                    placeholder={t(`${K}.namePlaceholder`)}
+                    aria-invalid={Boolean(fieldErrors.name)}
+                    className={fieldErrors.name ? 'is-invalid' : undefined}
+                  />
+                </label>
+                <label className="promo-field">
+                  <span>{t(`${K}.badgeLabel`)}</span>
+                  <input
+                    type="text"
+                    value={badgeLabel}
+                    maxLength={50}
+                    onChange={(e) => setBadgeLabel(e.target.value)}
+                    placeholder={t(`${K}.badgePlaceholder`)}
+                  />
+                </label>
+              </div>
+              {fieldErrors.name ? <p className="field-error">{fieldErrors.name}</p> : null}
+              <p className="promo-note">{t(`${K}.detailsHint`)}</p>
+              <label className="promo-field">
+                <span>{t(`${K}.descriptionLabel`)}</span>
+                <textarea
+                  value={description}
+                  maxLength={1000}
+                  rows={3}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder={t(`${K}.descriptionPlaceholder`)}
+                />
+              </label>
+            </section>
 
-          <div>
-            <label className="mb-1 block text-[11px] font-semibold text-nexoraMuted">{t(`${K}.badgeLabel`)}</label>
-            <input
-              type="text"
-              value={badgeLabel}
-              maxLength={50}
-              onChange={(e) => setBadgeLabel(e.target.value)}
-              placeholder={t(`${K}.badgePlaceholder`)}
-              className={inputClass}
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-[11px] font-semibold text-nexoraMuted">
-              {t(`${K}.descriptionLabel`)}
-            </label>
-            <textarea
-              value={description}
-              maxLength={1000}
-              rows={2}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={t(`${K}.descriptionPlaceholder`)}
-              className="w-full rounded-lg border border-nexoraBorder bg-white px-3 py-2 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
-            />
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              aria-label={t(`${K}.photoLabel`)}
-              onClick={() => fileInputRef.current?.click()}
-              className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-nexoraBorder bg-nexoraCanvas text-slate-400 hover:border-nexoraBrand hover:text-nexoraBrand"
-            >
-              {photoPreviewUrl ? (
-                <img src={photoPreviewUrl} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <ImagePlus className="h-5 w-5" />
-              )}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
-            />
-            <span className="text-[11px] text-nexoraMuted">{t(`${K}.photoLabel`)}</span>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-[11px] font-semibold text-nexoraMuted">{t(`${K}.typeLabel`)}</label>
-              <div className="flex items-center gap-2">
-                {[PosServiceDiscountType.Percent, PosServiceDiscountType.Amount].map((type) => (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => {
-                      setDiscountType(type)
+            <section className="editor-section" aria-labelledby="promo-schedule-title">
+              <h3 className="section-number" id="promo-schedule-title">
+                {t(`${K}.scheduleSection`)}
+              </h3>
+              <div className="promo-field-row">
+                <label className="promo-field">
+                  <span>{t(`${K}.typeLabel`)}</span>
+                  <select
+                    value={discountType}
+                    onChange={(e) => {
+                      setDiscountType(e.target.value as PosServiceDiscountType)
                       clearFieldError(PromotionField.Value)
                     }}
-                    className={`h-10 flex-1 rounded-lg border text-[11px] font-semibold transition-colors ${
-                      discountType === type
-                        ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
-                        : 'border-nexoraBorder bg-white text-nexoraText hover:border-nexoraBrand/50'
-                    }`}
                   >
-                    {t(`components.dashboard.views.pos.OrderDiscountSection.type.${type}`)}
-                  </button>
-                ))}
+                    <option value={PosServiceDiscountType.Percent}>{t(`${K}.typePercent`)}</option>
+                    <option value={PosServiceDiscountType.Amount}>{t(`${K}.typeAmount`)}</option>
+                  </select>
+                </label>
+                <label className="promo-field">
+                  <span>{t(`${K}.valueLabel`)}</span>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={valueInput}
+                    onChange={(e) => {
+                      setValueInput(sanitizeDecimalInput(e.target.value))
+                      clearFieldError(PromotionField.Value)
+                    }}
+                    placeholder={isPercent ? '15' : '10'}
+                    aria-invalid={Boolean(fieldErrors.value)}
+                    className={fieldErrors.value ? 'is-invalid' : undefined}
+                  />
+                </label>
               </div>
-            </div>
-            <div>
-              <div aria-hidden className="mb-1 h-[15px]" />
-              <div className="relative">
-                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs font-medium text-nexoraMuted">
-                  {isPercent ? '%' : '$'}
-                </span>
+              {fieldErrors.value ? <p className="field-error">{fieldErrors.value}</p> : null}
+
+              <fieldset className="promo-days">
+                <legend>{t(`${K}.daysLabel`)}</legend>
+                <div>
+                  {POS_WEEK_DAYS.map((day) => (
+                    <label
+                      key={day}
+                      className={`promo-day${fieldErrors.days ? ' is-invalid' : ''}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={days.includes(day)}
+                        onChange={() => toggleDay(day)}
+                      />
+                      <span>
+                        {t(`components.dashboard.views.pos.OrderDiscountSection.dayShort.${day}`)}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              {fieldErrors.days ? <p className="field-error">{fieldErrors.days}</p> : null}
+
+              <div className="promo-field-row">
+                <label className="promo-field">
+                  <span>{t(`${K}.startLabel`)}</span>
+                  <input
+                    type="time"
+                    lang={TWELVE_HOUR_INPUT_LANG}
+                    value={startTime}
+                    onChange={(e) => {
+                      setStartTime(e.target.value)
+                      clearFieldError(PromotionField.Window)
+                    }}
+                    aria-invalid={Boolean(fieldErrors.window)}
+                    className={fieldErrors.window ? 'is-invalid' : undefined}
+                  />
+                </label>
+                <label className="promo-field">
+                  <span>{t(`${K}.endLabel`)}</span>
+                  <input
+                    type="time"
+                    lang={TWELVE_HOUR_INPUT_LANG}
+                    value={endTime}
+                    onChange={(e) => {
+                      setEndTime(e.target.value)
+                      clearFieldError(PromotionField.Window)
+                    }}
+                    aria-invalid={Boolean(fieldErrors.window)}
+                    className={fieldErrors.window ? 'is-invalid' : undefined}
+                  />
+                </label>
+              </div>
+              {fieldErrors.window ? <p className="field-error">{fieldErrors.window}</p> : null}
+              <p className="promo-note">{t(`${K}.timeHint`)}</p>
+            </section>
+
+            <section className="editor-section" aria-labelledby="promo-placements-title">
+              <h3 className="section-number" id="promo-placements-title">
+                {t(`${K}.placementsSection`)}
+              </h3>
+              <label className="promo-check-card">
                 <input
-                  type="text"
-                  inputMode="decimal"
-                  value={valueInput}
-                  onChange={(e) => {
-                    setValueInput(sanitizeDecimalInput(e.target.value))
-                    clearFieldError(PromotionField.Value)
-                  }}
-                  placeholder={isPercent ? '15' : '10'}
-                  aria-label={t(`${K}.valueLabel`)}
-                  aria-invalid={Boolean(fieldErrors.value)}
-                  className={`${fieldClass(PromotionField.Value)} pl-7`}
+                  type="checkbox"
+                  checked={isActive}
+                  onChange={(e) => setIsActive(e.target.checked)}
                 />
-              </div>
-              <FieldError message={fieldErrors.value} />
-            </div>
+                <span>
+                  <strong>{t(`${K}.activeLabel`)}</strong>
+                  <small>{t(`${K}.checkoutHint`)}</small>
+                </span>
+                <ShoppingBag className="promo-check-icon h-5 w-5" aria-hidden />
+              </label>
+              <label className="promo-check-card">
+                <input
+                  type="checkbox"
+                  checked={showHero}
+                  onChange={(e) => setShowHero(e.target.checked)}
+                />
+                <span>
+                  <strong>{t(`${K}.heroLabel`)}</strong>
+                  <small>{t(`${K}.heroHint`)}</small>
+                </span>
+                <Scan className="promo-check-icon h-5 w-5" aria-hidden />
+              </label>
+              <label className="promo-check-card">
+                <input
+                  type="checkbox"
+                  checked={submitPublic}
+                  onChange={(e) => setSubmitPublic(e.target.checked)}
+                />
+                <span>
+                  <strong>{t(`${K}.publicLabel`)}</strong>
+                  <small>{t(`${K}.publicHint`)}</small>
+                </span>
+                <Globe className="promo-check-icon h-5 w-5" aria-hidden />
+              </label>
+              <p className="promo-note">{t(`${K}.publicNote`)}</p>
+            </section>
           </div>
 
-          <div>
-            <label className="mb-1 block text-[11px] font-semibold text-nexoraMuted">{t(`${K}.daysLabel`)}</label>
-            <div className="flex flex-wrap gap-1.5">
-              {POS_WEEK_DAYS.map((day) => (
-                <button
-                  key={day}
-                  type="button"
-                  onClick={() => toggleDay(day)}
-                  className={`h-9 min-w-[44px] rounded-full border px-3 text-[11px] font-semibold transition-colors ${
-                    days.includes(day)
-                      ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
-                      : fieldErrors.days
-                        ? 'border-rose-400 bg-white text-nexoraText'
-                        : 'border-nexoraBorder bg-white text-nexoraText hover:border-nexoraBrand/50'
-                  }`}
+          <aside className="editor-preview" aria-labelledby="promo-banners-title">
+            <h3 className="section-number" id="promo-banners-title">
+              {t(`${K}.bannersSection`)}
+            </h3>
+            <div aria-live="polite">
+              {photoPreviewUrl ? (
+                <div className="promo-art image-art">
+                  <img src={photoPreviewUrl} alt="" width={400} height={250} />
+                </div>
+              ) : (
+                <div className={`promo-art theme-${theme}`}>
+                  <span className="art-badge">{badgeLabel.trim() || t(`${K}.specialOffer`)}</span>
+                  <h3>{previewName}</h3>
+                  <strong className="art-saving">{previewRate}</strong>
+                </div>
+              )}
+            </div>
+            <p className="promo-note">{t(`${K}.bannerHint`)}</p>
+
+            <div className="promo-field-row banner-add-row">
+              <label className="promo-field">
+                <span>{t(`${K}.chooseTheme`)}</span>
+                <select
+                  value={photoPreviewUrl ? '' : theme}
+                  disabled={Boolean(photoPreviewUrl)}
+                  onChange={(e) => setTheme(e.target.value as PromoArtTheme)}
                 >
-                  {t(`components.dashboard.views.pos.OrderDiscountSection.dayShort.${day}`)}
-                </button>
-              ))}
+                  {photoPreviewUrl ? (
+                    <option value="">{t(`${K}.uploadedTheme`)}</option>
+                  ) : null}
+                  {BANNER_THEMES.map((themeId) => (
+                    <option key={themeId} value={themeId}>
+                      {t(`${K}.theme.${themeId}`)}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
-            <FieldError message={fieldErrors.days} />
-          </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-[11px] font-semibold text-nexoraMuted">{t(`${K}.startLabel`)}</label>
+            <label className="promo-upload">
+              <Upload className="h-5 w-5 text-nexoraBrand" aria-hidden />
+              <strong>{t(`${K}.upload`)}</strong>
+              <span className="promo-note">
+                {photoFile?.name ||
+                  (photoPreviewUrl && !photoFile ? t(`${K}.currentImage`) : t(`${K}.chooseFile`))}
+              </span>
               <input
-                type="time"
-                lang={TWELVE_HOUR_INPUT_LANG}
-                value={startTime}
-                onChange={(e) => {
-                  setStartTime(e.target.value)
-                  clearFieldError(PromotionField.Window)
-                }}
-                aria-invalid={Boolean(fieldErrors.window)}
-                className={fieldClass(PromotionField.Window)}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
               />
-            </div>
-            <div>
-              <label className="mb-1 block text-[11px] font-semibold text-nexoraMuted">{t(`${K}.endLabel`)}</label>
-              <input
-                type="time"
-                lang={TWELVE_HOUR_INPUT_LANG}
-                value={endTime}
-                onChange={(e) => {
-                  setEndTime(e.target.value)
-                  clearFieldError(PromotionField.Window)
-                }}
-                aria-invalid={Boolean(fieldErrors.window)}
-                className={fieldClass(PromotionField.Window)}
-              />
-            </div>
-          </div>
-
-          <FieldError message={fieldErrors.window} />
-
-          <label className="flex items-center gap-2 text-xs font-semibold text-nexoraText">
-            <input
-              type="checkbox"
-              checked={isActive}
-              onChange={(e) => setIsActive(e.target.checked)}
-              className="h-4 w-4 rounded border-nexoraBorder text-nexoraBrand"
-            />
-            {t(`${K}.activeLabel`)}
-          </label>
+            </label>
+            <p className="promo-note">{t(`${K}.uploadHint`)}</p>
+          </aside>
         </div>
 
-        <div className="flex items-center justify-end gap-2 border-t border-nexoraBorder px-4 py-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="h-10 rounded-lg border border-nexoraBorder px-4 text-xs font-semibold text-nexoraText hover:bg-nexoraCanvas"
-          >
-            {t(`${K}.cancel`)}
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isSaving}
-            className="h-10 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
-          >
-            {t(`${K}.save`)}
-          </button>
-        </div>
+        <footer className="editor-footer">
+          <div>
+            {firstError ? (
+              <p className="promo-error" role="alert">
+                {firstError}
+              </p>
+            ) : null}
+            <p className="promo-note">
+              {promotion ? t(`${K}.editNote`) : t(`${K}.saveNote`)}
+            </p>
+          </div>
+          <div className="editor-footer-actions">
+            <button type="button" className="promo-button" onClick={onClose} disabled={isSaving}>
+              {t(`${K}.cancel`)}
+            </button>
+            <button
+              type="button"
+              className="promo-button primary"
+              onClick={handleSubmit}
+              disabled={isSaving}
+            >
+              {t(`${K}.save`)}
+            </button>
+          </div>
+        </footer>
       </div>
     </div>
   )
