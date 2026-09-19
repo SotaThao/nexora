@@ -16954,6 +16954,7 @@ body.booking-appointment-panel-modal-open {
   --ci-danger-soft: #fff0f2;
   display: flex;
   width: min(1120px, 100%);
+  max-height: calc(100vh - 36px);
   max-height: calc(100dvh - 36px);
   flex-direction: column;
   overflow: hidden;

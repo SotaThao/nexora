@@ -980,7 +980,7 @@ export default function BookingCustomerImportModal({
                             </tr>
                           </thead>
                           <tbody>
-                            {importResult.skippedRows.map((row) => (
+                            {importResult.skippedRows.slice(0, 5).map((row) => (
                               <tr key={`${row.rowNumber}-${row.code}`}>
                                 <td>{row.rowNumber}</td>
                                 <td>{row.phone || '—'}</td>
