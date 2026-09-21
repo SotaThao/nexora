@@ -1,9 +1,11 @@
 /**
  * Starter templates for the Promotions studio — illustrative only; choosing one opens the
  * create form pre-filled and does not publish. Day names match PosPromotionApiDto (full English).
+ * Prefer GET /merchant/pos/promotion-templates via `templateFromApi`; keep this list as offline fallback.
  */
 import { PosServiceDiscountType } from '../../../../constants/posDiscount'
-import type { PosWeekDay } from './posPromotionDisplay'
+import type { PosPromotionTemplateApiDto } from '../../../../types/repositories'
+import { formatPromotionArtSaving, type PosWeekDay } from './posPromotionDisplay'
 
 export type PromoArtTheme =
   | 'purple'
@@ -170,9 +172,60 @@ export const POS_PROMOTION_TEMPLATES: readonly PosPromotionTemplate[] = [
 ]
 
 const THEMES: PromoArtTheme[] = ['purple', 'gold', 'rose', 'ocean', 'teal', 'sage', 'peach', 'slate']
+const TEMPLATE_SYMBOLS = ['✨', '☀︎', '📅', '🎉', '🍝', '🛍️', '💫', '🏷️'] as const
 
 export function promoArtThemeForIndex(index: number): PromoArtTheme {
   return THEMES[index % THEMES.length]
+}
+
+function asWeekDays(days: string[]): PosWeekDay[] {
+  const allowed = new Set<string>([
+    'Sunday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+  ])
+  return days.filter((day): day is PosWeekDay => allowed.has(day))
+}
+
+/** Map a studio-metadata template from the API into the card + draft shape the page already uses. */
+export function templateFromApi(
+  dto: PosPromotionTemplateApiDto,
+  index: number,
+): PosPromotionTemplate {
+  const discountType =
+    dto.discountType === PosServiceDiscountType.Amount
+      ? PosServiceDiscountType.Amount
+      : PosServiceDiscountType.Percent
+  const offerText = formatPromotionArtSaving(discountType, dto.discountValue)
+  const theme = promoArtThemeForIndex(index)
+
+  return {
+    id: dto.code || `api-template-${index}`,
+    symbol: TEMPLATE_SYMBOLS[index % TEMPLATE_SYMBOLS.length],
+    theme,
+    purpose: { en: dto.name, vi: dto.name },
+    offer: { en: offerText, vi: offerText },
+    hint: {
+      en: dto.description || 'Adjust the rate, days and hours before publishing.',
+      vi: dto.description || 'Sửa mức giảm, ngày và khung giờ trước khi đăng.',
+    },
+    draft: {
+      name: dto.name,
+      badgeLabel: dto.badgeLabel,
+      description: dto.description,
+      discountType,
+      discountValue: dto.discountValue,
+      daysOfWeek: asWeekDays(dto.daysOfWeek),
+      startTime: dto.startTime.slice(0, 5) || '10:00',
+      endTime: dto.endTime.slice(0, 5) || '14:00',
+      theme,
+      templateCode: dto.code,
+    },
+  }
 }
 
 export function localizeTemplateText(value: Localized, language: string): string {
@@ -181,6 +234,22 @@ export function localizeTemplateText(value: Localized, language: string): string
 
 /** Build a create-form draft from a template, localized for the current UI language. */
 export function draftFromTemplate(template: PosPromotionTemplate, language: string): PosPromotionDraft {
+  // API-sourced templates already carry copy + templateCode on the draft.
+  if (template.draft.templateCode) {
+    return {
+      name: template.draft.name,
+      badgeLabel: template.draft.badgeLabel,
+      description: template.draft.description,
+      discountType: template.draft.discountType,
+      discountValue: template.draft.discountValue,
+      daysOfWeek: [...template.draft.daysOfWeek],
+      startTime: template.draft.startTime,
+      endTime: template.draft.endTime,
+      theme: template.theme,
+      templateCode: template.draft.templateCode,
+    }
+  }
+
   const vi = language === 'vi'
   const byId: Record<string, { name: string; badge: string; description: string }> = {
     upgrade: {

@@ -32,6 +32,7 @@ export function usePosPromotionTemplates() {
   return useQuery<PosPromotionStudioMetadataApiDto>({
     queryKey: qk.merchantPosPromotionTemplates(),
     queryFn: () => posPromotionsRepository.getPosPromotionTemplates(),
+    staleTime: 5 * 60 * 1000,
   })
 }
 

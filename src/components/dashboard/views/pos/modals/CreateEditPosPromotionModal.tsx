@@ -8,8 +8,8 @@ import {
   ArrowRight,
   ArrowUp,
   ExternalLink,
-  Eye,
   Globe,
+  Loader2,
   Plus,
   Scan,
   ShoppingBag,
@@ -24,6 +24,7 @@ import {
 } from '../../../../../constants/posDiscount'
 import { TWELVE_HOUR_INPUT_LANG } from '../../../../../constants/timeFormat'
 import { sanitizeDecimalInput } from '../../../../../utils/currencyInput'
+import { normalizeAllowedImageFile } from '../../../../../utils/imageFile'
 import { usePosPromotionDetail } from '../../../../../data/hooks/usePosPromotions'
 import type { PosPromotionApiDto, PosPromotionPayload } from '../../../../../types/repositories'
 import { POS_WEEK_DAYS, formatPromotionArtSaving } from '../posPromotionDisplay'
@@ -277,6 +278,32 @@ export default function CreateEditPosPromotionModal({
   const selectedBanner = banners[selectedBannerIndex] ?? banners[0]
   const atBannerLimit = banners.length >= MAX_BANNERS
 
+  /** Color themes already used by a solid banner — each theme may appear once in the list. */
+  const usedColorThemes = useMemo(() => {
+    const used = new Set<PromoArtTheme>()
+    banners.forEach((banner) => {
+      if (!bannerHasImage(banner)) used.add(banner.theme)
+    })
+    return used
+  }, [banners])
+
+  const nextAvailableTheme = useMemo(
+    () => BANNER_THEMES.find((themeId) => !usedColorThemes.has(themeId)) ?? null,
+    [usedColorThemes],
+  )
+
+  const canAddThemeBanner =
+    !atBannerLimit && Boolean(nextAvailableTheme) && !usedColorThemes.has(addTheme)
+
+  // If the pending add color gets taken, jump the picker to the next free theme.
+  useEffect(() => {
+    if (!usedColorThemes.has(addTheme)) return
+    if (nextAvailableTheme) setAddTheme(nextAvailableTheme)
+  }, [addTheme, nextAvailableTheme, usedColorThemes])
+
+  /** Any solid theme already in the banner list is locked — picker is only for the next Add. */
+  const isThemeLockedInDropdown = (themeId: PromoArtTheme) => usedColorThemes.has(themeId)
+
   const clearFieldError = (field: PromotionField) => {
     setFieldErrors((prev) => {
       if (!prev[field]) return prev
@@ -336,33 +363,17 @@ export default function CreateEditPosPromotionModal({
     clearFieldError(PromotionField.Days)
   }
 
-  const updateSelectedBanner = (patch: Partial<EditorBanner>) => {
-    setBanners((prev) =>
-      prev.map((banner, index) => {
-        if (index !== selectedBannerIndex) return banner
-        if (patch.imageFile && banner.localObjectUrl) revokeLocalUrl(banner)
-        return { ...banner, ...patch }
-      }),
-    )
-  }
-
+  /** Dropdown only picks the color for the next "Add banner" — never mutates the selected row. */
   const handleThemeSelectChange = (theme: PromoArtTheme) => {
+    if (usedColorThemes.has(theme)) return
     setAddTheme(theme)
-    const current = banners[selectedBannerIndex]
-    if (!current) return
-    if (current.localObjectUrl) revokeLocalUrl(current)
-    updateSelectedBanner({
-      theme,
-      imageUrl: null,
-      imageFile: null,
-      imageName: null,
-      localObjectUrl: false,
-    })
   }
 
   const handleAddBanner = () => {
     if (atBannerLimit) return
-    const next = createThemeBanner(addTheme)
+    const themeToAdd = !usedColorThemes.has(addTheme) ? addTheme : nextAvailableTheme
+    if (!themeToAdd) return
+    const next = createThemeBanner(themeToAdd)
     setBanners((prev) => [...prev, next])
     setSelectedBannerIndex(banners.length)
     clearFieldError(PromotionField.Banners)
@@ -370,13 +381,21 @@ export default function CreateEditPosPromotionModal({
 
   const handleUpload = (file: File | null) => {
     if (!file || atBannerLimit) return
-    const objectUrl = URL.createObjectURL(file)
+    const normalized = normalizeAllowedImageFile(file)
+    if (!normalized) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        [PromotionField.Banners]: t(`${K}.bannerImageInvalidType`),
+      }))
+      return
+    }
+    const objectUrl = URL.createObjectURL(normalized)
     const next: EditorBanner = {
       key: newBannerKey(),
       theme: addTheme,
       imageUrl: objectUrl,
-      imageFile: file,
-      imageName: file.name,
+      imageFile: normalized,
+      imageName: normalized.name,
       localObjectUrl: true,
     }
     setBanners((prev) => [...prev, next])
@@ -415,17 +434,22 @@ export default function CreateEditPosPromotionModal({
     setFieldErrors(errors)
     if (Object.keys(errors).length > 0) return
 
-    const coverFile = banners.find((banner) => banner.imageFile)?.imageFile ?? null
     onSubmit({
       name: name.trim(),
       badgeLabel: badgeLabel.trim() || null,
       description: description.trim() || null,
       templateCode: templateCode || null,
-      photo: coverFile,
-      banners: banners.map((banner) => ({
-        colorHex: bannerHasImage(banner) ? null : colorHexFromTheme(banner.theme),
-        image: banner.imageFile ?? null,
-      })),
+      // New studio integrations send Banners[] only — Photo is legacy.
+      photo: null,
+      banners: banners.map((banner) => {
+        if (banner.imageFile) {
+          return { colorHex: null, image: banner.imageFile }
+        }
+        if (banner.imageUrl && !banner.localObjectUrl) {
+          return { colorHex: null, image: null, imageUrl: banner.imageUrl }
+        }
+        return { colorHex: colorHexFromTheme(banner.theme), image: null }
+      }),
       discountType,
       discountValue: parsedValue,
       daysOfWeek: days,
@@ -449,7 +473,7 @@ export default function CreateEditPosPromotionModal({
     fieldErrors.banners ||
     ''
 
-  const themeSelectValue = selectedBanner && bannerHasImage(selectedBanner) ? '' : addTheme
+  const themeSelectValue = addTheme
 
   const bannerLabel = (banner: EditorBanner) => {
     if (bannerHasImage(banner)) {
@@ -716,60 +740,64 @@ export default function CreateEditPosPromotionModal({
             <div aria-live="polite">{renderArt(selectedBanner)}</div>
             <p className="promo-note">{t(`${K}.bannerHint`)}</p>
 
-            <div className="promo-banner-list">
-              {banners.map((banner, index) => (
-                <div
-                  key={banner.key}
-                  className="banner-row"
-                  aria-current={index === selectedBannerIndex}
-                >
-                  <span className="banner-name">
-                    {index + 1}. {bannerLabel(banner)}
-                    {index === 0 ? <small>{t(`${K}.cover`)}</small> : null}
-                  </span>
-                  <div className="banner-actions">
-                    <button
-                      type="button"
-                      className="promo-button icon-button"
-                      aria-label={t(`${K}.previewBanner`)}
-                      title={t(`${K}.previewBanner`)}
-                      onClick={() => setSelectedBannerIndex(index)}
-                    >
-                      <Eye className="promo-action-icon" aria-hidden />
-                    </button>
-                    <button
-                      type="button"
-                      className="promo-button icon-button"
-                      aria-label={t(`${K}.moveUp`)}
-                      title={t(`${K}.moveUp`)}
-                      disabled={index === 0}
-                      onClick={() => moveBanner(index, -1)}
-                    >
-                      <ArrowUp className="promo-action-icon" aria-hidden />
-                    </button>
-                    <button
-                      type="button"
-                      className="promo-button icon-button"
-                      aria-label={t(`${K}.moveDown`)}
-                      title={t(`${K}.moveDown`)}
-                      disabled={index === banners.length - 1}
-                      onClick={() => moveBanner(index, 1)}
-                    >
-                      <ArrowDown className="promo-action-icon" aria-hidden />
-                    </button>
-                    <button
-                      type="button"
-                      className="promo-button icon-button danger"
-                      aria-label={t(`${K}.removeBanner`)}
-                      title={t(`${K}.removeBanner`)}
-                      disabled={banners.length <= 1}
-                      onClick={() => removeBanner(index)}
-                    >
-                      <X className="promo-action-icon" aria-hidden />
-                    </button>
+            <div className="promo-banner-list" role="listbox" aria-label={t(`${K}.bannersSection`)}>
+              {banners.map((banner, index) => {
+                const selected = index === selectedBannerIndex
+                return (
+                  <div
+                    key={banner.key}
+                    role="option"
+                    tabIndex={0}
+                    aria-selected={selected}
+                    aria-current={selected ? 'true' : undefined}
+                    className={`banner-row${selected ? ' is-selected' : ''}`}
+                    onClick={() => setSelectedBannerIndex(index)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        setSelectedBannerIndex(index)
+                      }
+                    }}
+                  >
+                    <span className="banner-name">
+                      {index + 1}. {bannerLabel(banner)}
+                      {index === 0 ? <small>{t(`${K}.cover`)}</small> : null}
+                    </span>
+                    <div className="banner-actions" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        className="promo-button icon-button"
+                        aria-label={t(`${K}.moveUp`)}
+                        title={t(`${K}.moveUp`)}
+                        disabled={index === 0}
+                        onClick={() => moveBanner(index, -1)}
+                      >
+                        <ArrowUp className="promo-action-icon" aria-hidden />
+                      </button>
+                      <button
+                        type="button"
+                        className="promo-button icon-button"
+                        aria-label={t(`${K}.moveDown`)}
+                        title={t(`${K}.moveDown`)}
+                        disabled={index === banners.length - 1}
+                        onClick={() => moveBanner(index, 1)}
+                      >
+                        <ArrowDown className="promo-action-icon" aria-hidden />
+                      </button>
+                      <button
+                        type="button"
+                        className="promo-button icon-button danger"
+                        aria-label={t(`${K}.removeBanner`)}
+                        title={t(`${K}.removeBanner`)}
+                        disabled={banners.length <= 1}
+                        onClick={() => removeBanner(index)}
+                      >
+                        <X className="promo-action-icon" aria-hidden />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
             {fieldErrors.banners ? <p className="field-error">{fieldErrors.banners}</p> : null}
 
@@ -778,32 +806,46 @@ export default function CreateEditPosPromotionModal({
                 <span>{t(`${K}.chooseTheme`)}</span>
                 <select
                   value={themeSelectValue}
+                  aria-describedby={usedColorThemes.size > 0 ? 'promo-theme-select-hint' : undefined}
                   onChange={(e) => {
                     const value = e.target.value
                     if (!value) return
                     handleThemeSelectChange(value as PromoArtTheme)
                   }}
                 >
-                  {selectedBanner && bannerHasImage(selectedBanner) ? (
-                    <option value="">{t(`${K}.uploadedTheme`)}</option>
-                  ) : null}
-                  {BANNER_THEMES.map((themeId) => (
-                    <option key={themeId} value={themeId}>
-                      {t(`${K}.theme.${themeId}`)}
-                    </option>
-                  ))}
+                  {BANNER_THEMES.map((themeId) => {
+                    const locked = isThemeLockedInDropdown(themeId)
+                    return (
+                      <option
+                        key={themeId}
+                        value={themeId}
+                        disabled={locked}
+                        aria-disabled={locked}
+                      >
+                        {locked
+                          ? t(`${K}.themeUsedOption`, { name: t(`${K}.theme.${themeId}`) })
+                          : t(`${K}.theme.${themeId}`)}
+                      </option>
+                    )
+                  })}
                 </select>
               </label>
               <button
                 type="button"
                 className="promo-button"
-                disabled={atBannerLimit}
+                disabled={!canAddThemeBanner}
+                title={!canAddThemeBanner ? t(`${K}.themeAlreadyUsed`) : undefined}
                 onClick={handleAddBanner}
               >
                 <Plus className="promo-action-icon h-4 w-4" aria-hidden />
                 <span>{t(`${K}.addBanner`)}</span>
               </button>
             </div>
+            {usedColorThemes.size > 0 ? (
+              <p id="promo-theme-select-hint" className="promo-note">
+                {t(`${K}.themeAlreadyUsed`)}
+              </p>
+            ) : null}
 
             <label className="promo-upload" htmlFor={uploadInputId}>
               <Upload className="h-5 w-5 text-nexoraBrand" aria-hidden />
@@ -812,7 +854,7 @@ export default function CreateEditPosPromotionModal({
               <input
                 id={uploadInputId}
                 type="file"
-                accept="image/png,image/jpeg,image/webp"
+                accept="image/png,image/jpeg,image/jpg,image/webp,.png,.jpg,.jpeg,.webp"
                 disabled={atBannerLimit}
                 onChange={(e) => {
                   handleUpload(e.target.files?.[0] ?? null)
@@ -856,8 +898,12 @@ export default function CreateEditPosPromotionModal({
               className="promo-button primary"
               onClick={handleSubmit}
               disabled={isSaving}
+              aria-busy={isSaving}
             >
-              {t(`${K}.save`)}
+              {isSaving ? (
+                <Loader2 className="promo-action-icon h-4 w-4 animate-spin" aria-hidden />
+              ) : null}
+              <span>{t(`${K}.save`)}</span>
             </button>
           </div>
         </footer>

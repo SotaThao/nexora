@@ -1,10 +1,12 @@
 /**
  * Promo poster print.
  *
- * Chrome drops CSS theme backgrounds when printing. Uploaded photos must stay as the
- * original <img> bytes — redrawing them through canvas washes out reds/saturation.
+ * Match the on-screen preview exactly: clone the live art (theme card or uploaded photo),
+ * bake colors/gradients as inline styles so Chrome cannot drop them when printing, then
+ * print a dedicated host without mutating the dialog.
  *
- * Never mutate the on-screen preview: build a dedicated print host, print it, then remove it.
+ * Uploaded photos stay as the original <img> URL — never re-encode through canvas
+ * (that washes saturation).
  */
 import { printDomWithBodyClass } from './receipt/browserPrintTransport'
 import type { PromoArtTheme } from './posPromotionTemplates'
@@ -12,57 +14,23 @@ import type { PromoArtTheme } from './posPromotionTemplates'
 const PRINT_BODY_CLASS = 'printing-pos-promo-poster'
 const PRINT_HOST_ID = 'pos-promo-poster-print-host'
 
-const THEME_PRINT_FILL: Record<PromoArtTheme, { background: string; color: string }> = {
-  purple: { background: '#eeeefe', color: '#4c4698' },
-  gold: { background: '#fbf2df', color: '#84632e' },
-  rose: { background: '#faebf0', color: '#97546e' },
-  teal: { background: '#e7f4f0', color: '#326f64' },
-  ocean: { background: '#eaf0fa', color: '#416791' },
-  sage: { background: '#eaf2e9', color: '#4c6c43' },
-  peach: { background: '#fff0e8', color: '#92512f' },
-  slate: { background: '#edf0f4', color: '#536174' },
+/** Same gradients/colors as `.promo-art.theme-*` in pos-promotions.css. */
+const THEME_PRINT_STYLE: Record<PromoArtTheme, { background: string; color: string }> = {
+  purple: { background: 'linear-gradient(115deg, #eeeefe, #f7f6fc)', color: '#4c4698' },
+  gold: { background: 'linear-gradient(115deg, #fbf2df, #faf7ef)', color: '#84632e' },
+  rose: { background: 'linear-gradient(115deg, #faebf0, #fbf5f6)', color: '#97546e' },
+  teal: { background: 'linear-gradient(115deg, #e7f4f0, #f4f9f7)', color: '#326f64' },
+  ocean: { background: 'linear-gradient(115deg, #eaf0fa, #f5f8fc)', color: '#416791' },
+  sage: { background: 'linear-gradient(115deg, #eaf2e9, #f5f8f1)', color: '#4c6c43' },
+  peach: { background: 'linear-gradient(115deg, #fff0e8, #fff8f3)', color: '#92512f' },
+  slate: { background: 'linear-gradient(115deg, #edf0f4, #f7f8fa)', color: '#536174' },
 }
 
 function themeFromClassList(classList: DOMTokenList): PromoArtTheme | null {
-  for (const theme of Object.keys(THEME_PRINT_FILL) as PromoArtTheme[]) {
+  for (const theme of Object.keys(THEME_PRINT_STYLE) as PromoArtTheme[]) {
     if (classList.contains(`theme-${theme}`)) return theme
   }
   return null
-}
-
-function roundRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  r: number,
-) {
-  const radius = Math.min(r, w / 2, h / 2)
-  ctx.beginPath()
-  ctx.moveTo(x + radius, y)
-  ctx.arcTo(x + w, y, x + w, y + h, radius)
-  ctx.arcTo(x + w, y + h, x, y + h, radius)
-  ctx.arcTo(x, y + h, x, y, radius)
-  ctx.arcTo(x, y, x + w, y, radius)
-  ctx.closePath()
-}
-
-function wrapLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
-  const words = text.split(/\s+/).filter(Boolean)
-  if (words.length === 0) return []
-  const lines: string[] = []
-  let current = words[0]
-  for (let i = 1; i < words.length; i += 1) {
-    const next = `${current} ${words[i]}`
-    if (ctx.measureText(next).width <= maxWidth) current = next
-    else {
-      lines.push(current)
-      current = words[i]
-    }
-  }
-  lines.push(current)
-  return lines
 }
 
 async function waitForImage(img: HTMLImageElement): Promise<void> {
@@ -74,66 +42,95 @@ async function waitForImage(img: HTMLImageElement): Promise<void> {
   })
 }
 
-function buildThemePng(art: HTMLElement): string | null {
-  const width = 640
-  const height = 420
-  const scale = 2
-  const canvas = document.createElement('canvas')
-  canvas.width = width * scale
-  canvas.height = height * scale
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return null
-  ctx.scale(scale, scale)
-
-  const theme = themeFromClassList(art.classList) ?? 'purple'
-  const fill = THEME_PRINT_FILL[theme]
-  const badge = art.querySelector('.art-badge')?.textContent?.trim() ?? ''
-  const title = art.querySelector('h3')?.textContent?.trim() ?? ''
-  const saving = art.querySelector('.art-saving')?.textContent?.trim() ?? ''
-  const pad = 28
-  const maxText = width - pad * 2
-
-  ctx.fillStyle = fill.background
-  roundRect(ctx, 0, 0, width, height, 10)
-  ctx.fill()
-
-  let y = pad + 8
-  ctx.textBaseline = 'top'
-  ctx.fillStyle = fill.color
-
-  if (badge) {
-    ctx.font = '500 11px Inter, system-ui, sans-serif'
-    const badgeWidth = Math.min(ctx.measureText(badge).width + 14, maxText)
-    ctx.fillStyle = 'rgba(255,255,255,0.7)'
-    roundRect(ctx, pad, y, badgeWidth, 22, 5)
-    ctx.fill()
-    ctx.fillStyle = fill.color
-    ctx.fillText(badge, pad + 7, y + 5, maxText)
-    y += 36
-  }
-
-  if (title) {
-    ctx.font = '500 22px Inter, system-ui, sans-serif'
-    wrapLines(ctx, title, maxText).forEach((line) => {
-      ctx.fillText(line, pad, y, maxText)
-      y += 28
-    })
-    y += 8
-  }
-
-  if (saving) {
-    ctx.font = '400 40px Georgia, "Times New Roman", serif'
-    wrapLines(ctx, saving, maxText).forEach((line) => {
-      ctx.fillText(line, pad, y, maxText)
-      y += 48
-    })
-  }
-
-  return canvas.toDataURL('image/png')
-}
-
 function removePrintHost() {
   document.getElementById(PRINT_HOST_ID)?.remove()
+}
+
+/**
+ * Clone the preview art and force the same colors Chrome shows on screen.
+ * Inline styles + print-color-adjust beat the "drop background on print" quirk.
+ */
+function cloneThemeArtForPrint(liveArt: HTMLElement): HTMLElement {
+  const clone = liveArt.cloneNode(true) as HTMLElement
+  clone.classList.add('promo-art-print-clone')
+
+  const computed = window.getComputedStyle(liveArt)
+  const theme = themeFromClassList(liveArt.classList) ?? 'purple'
+  const fallback = THEME_PRINT_STYLE[theme]
+
+  // Prefer the live computed look (covers custom colorHex inline styles).
+  const liveColor = computed.color?.trim()
+  const liveBgImage = computed.backgroundImage?.trim()
+  const liveBgColor = computed.backgroundColor?.trim()
+
+  const background =
+    liveBgImage && liveBgImage !== 'none'
+      ? liveBgImage
+      : liveBgColor && liveBgColor !== 'rgba(0, 0, 0, 0)' && liveBgColor !== 'transparent'
+        ? liveBgColor
+        : fallback.background
+
+  clone.style.setProperty('background', background, 'important')
+  clone.style.setProperty('color', liveColor || fallback.color, 'important')
+  clone.style.setProperty('-webkit-print-color-adjust', 'exact', 'important')
+  clone.style.setProperty('print-color-adjust', 'exact', 'important')
+  clone.style.setProperty('color-adjust', 'exact', 'important')
+
+  // Poster preview sizing — keep proportions close to the dialog card.
+  clone.style.setProperty('min-height', '280px', 'important')
+  clone.style.setProperty('padding', '28px', 'important')
+  clone.style.setProperty('border-radius', '10px', 'important')
+  clone.style.setProperty('box-sizing', 'border-box', 'important')
+  clone.style.setProperty('width', '100%', 'important')
+
+  const title = clone.querySelector('h3')
+  if (title instanceof HTMLElement) {
+    title.style.setProperty('font-size', '26px', 'important')
+    title.style.setProperty('font-weight', '600', 'important')
+    title.style.setProperty('color', 'inherit', 'important')
+    title.style.setProperty('margin', '0', 'important')
+  }
+
+  const saving = clone.querySelector('.art-saving')
+  if (saving instanceof HTMLElement) {
+    saving.style.setProperty('font-size', '46px', 'important')
+    saving.style.setProperty('font-weight', '600', 'important')
+    saving.style.setProperty('font-family', 'inherit', 'important')
+    saving.style.setProperty('color', 'inherit', 'important')
+  }
+
+  const badge = clone.querySelector('.art-badge')
+  if (badge instanceof HTMLElement) {
+    badge.style.setProperty('background', 'rgba(255, 255, 255, 0.7)', 'important')
+    badge.style.setProperty('color', 'inherit', 'important')
+    badge.style.setProperty('-webkit-print-color-adjust', 'exact', 'important')
+    badge.style.setProperty('print-color-adjust', 'exact', 'important')
+  }
+
+  return clone
+}
+
+async function cloneImageArtForPrint(liveArt: HTMLElement): Promise<HTMLElement | null> {
+  const source = liveArt.querySelector('img')
+  if (!source?.src) return null
+  await waitForImage(source)
+
+  const wrap = document.createElement('div')
+  wrap.className = 'promo-art image-art promo-art-print-clone'
+  wrap.style.setProperty('background', '#edf0f6', 'important')
+  wrap.style.setProperty('border-radius', '10px', 'important')
+  wrap.style.setProperty('overflow', 'hidden', 'important')
+  wrap.style.setProperty('padding', '0', 'important')
+  wrap.style.setProperty('-webkit-print-color-adjust', 'exact', 'important')
+  wrap.style.setProperty('print-color-adjust', 'exact', 'important')
+
+  const img = document.createElement('img')
+  img.src = source.currentSrc || source.src
+  img.alt = ''
+  img.className = 'promo-art-print-raster'
+  await waitForImage(img)
+  wrap.appendChild(img)
+  return wrap
 }
 
 async function buildPrintHost(liveRoot: Element): Promise<HTMLElement | null> {
@@ -152,25 +149,11 @@ async function buildPrintHost(liveRoot: Element): Promise<HTMLElement | null> {
   output.className = 'poster-output'
 
   if (liveArt.classList.contains('image-art')) {
-    const source = liveArt.querySelector('img')
-    if (!source?.src) return null
-    await waitForImage(source)
-    const img = document.createElement('img')
-    // Same URL as the preview — do not re-encode through canvas (washes color).
-    img.src = source.currentSrc || source.src
-    img.alt = ''
-    img.className = 'promo-art-print-raster'
-    await waitForImage(img)
-    output.appendChild(img)
+    const imageClone = await cloneImageArtForPrint(liveArt)
+    if (!imageClone) return null
+    output.appendChild(imageClone)
   } else {
-    const dataUrl = buildThemePng(liveArt)
-    if (!dataUrl) return null
-    const img = document.createElement('img')
-    img.src = dataUrl
-    img.alt = ''
-    img.className = 'promo-art-print-raster'
-    await waitForImage(img)
-    output.appendChild(img)
+    output.appendChild(cloneThemeArtForPrint(liveArt))
   }
 
   host.appendChild(output)
@@ -188,7 +171,9 @@ async function buildPrintHost(liveRoot: Element): Promise<HTMLElement | null> {
 /** Print the open promo poster without altering the on-screen preview. */
 export function printPosPromoPoster(): void {
   void (async () => {
-    const liveRoot = document.querySelector('.pos-promo-poster-print-root:not(.pos-promo-poster-print-host)')
+    const liveRoot = document.querySelector(
+      '.pos-promo-poster-print-root:not(.pos-promo-poster-print-host)',
+    )
     if (!liveRoot) return
 
     const host = await buildPrintHost(liveRoot)

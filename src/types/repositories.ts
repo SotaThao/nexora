@@ -1069,10 +1069,12 @@ export interface PosPromotionBannerApiDto {
   sortOrder: number
 }
 
-/** Multipart banner entry on create/update — color and/or image. */
+/** Multipart banner entry on create/update — exactly one of colorHex / image (or imageUrl to re-fetch). */
 export interface PosPromotionBannerPayload {
   colorHex?: string | null
   image?: File | null
+  /** Existing remote image — repository re-fetches and re-uploads on full-replace update. */
+  imageUrl?: string | null
 }
 
 /**

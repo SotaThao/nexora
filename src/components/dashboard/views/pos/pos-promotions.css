@@ -754,7 +754,7 @@
   min-width: 32px;
 }
 
-.pos-promotions-page .promo-more summary.promo-button {
+.pos-promotions-page .promo-more > .promo-button.icon-button {
   flex: 0 0 auto;
   width: 32px;
   min-width: 32px;
@@ -893,11 +893,10 @@
   min-width: 32px;
 }
 
-.pos-promotions-page .promo-more summary {
+.pos-promotions-page .promo-more > .promo-button.icon-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  list-style: none;
   width: 32px;
   min-width: 32px;
   min-height: 32px;
@@ -910,26 +909,24 @@
   cursor: pointer;
 }
 
-.pos-promotions-page .promo-more summary::-webkit-details-marker {
-  display: none;
-}
-
-.pos-promotions-page .promo-more[open] summary,
-.pos-promotions-page .promo-more summary:hover {
+.pos-promotions-page .promo-more.is-open > .promo-button.icon-button,
+.pos-promotions-page .promo-more > .promo-button.icon-button:hover {
   background: var(--promo-tint);
   border-color: #c8c3f2;
   color: var(--promo-brand);
 }
 
-.pos-promotions-page .promo-more[open] {
-  z-index: 5;
+.pos-promotions-page .promo-more.is-open {
+  z-index: 40;
 }
 
 .pos-promotions-page .promo-more-menu {
   position: absolute;
   right: 0;
-  top: calc(100% + 7px);
-  z-index: 5;
+  /* Open upward so the last card’s Delete isn’t covered by the dashboard copyright footer. */
+  bottom: calc(100% + 7px);
+  top: auto;
+  z-index: 40;
   width: 190px;
   max-width: calc(100vw - 56px);
   padding: 6px;
@@ -1455,9 +1452,22 @@
   border-radius: 8px;
   padding: 7px 9px;
   background: var(--promo-surface);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-.pos-promo-dialog .banner-row[aria-current='true'] {
+.pos-promo-dialog .banner-row:hover {
+  border-color: #c5c3eb;
+  background: #fafaff;
+}
+
+.pos-promo-dialog .banner-row:focus-visible {
+  outline: 2px solid rgba(70, 72, 216, 0.35);
+  outline-offset: 1px;
+}
+
+.pos-promo-dialog .banner-row[aria-current='true'],
+.pos-promo-dialog .banner-row.is-selected {
   border-color: #c5c3eb;
   background: #f7f7fe;
 }
@@ -1731,19 +1741,40 @@
     padding-bottom: 5px;
   }
 
-  /* Icon + text on one row; ⋯ may wrap underneath. */
+  /* Bleed actions to the card edges so Edit / Preview sit at the corners. */
   .pos-promotions-page .promotion-actions {
-    gap: 2px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2px 0;
+    margin-left: -14px;
+    margin-right: -14px;
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .pos-promotions-page .promotion-actions > .promo-button {
-    flex: 1 1 calc(25% - 4px);
-    max-width: calc(25% - 2px);
+    flex: 0 1 auto;
+    width: auto;
+    max-width: none;
+    min-width: 0;
     min-height: 26px;
     height: auto;
-    padding: 3px 2px;
+    padding: 3px 6px;
     font-size: 9px;
     gap: 2px;
+    justify-content: center;
+  }
+
+  .pos-promotions-page .promotion-actions > .promo-button:first-child {
+    justify-content: flex-start;
+    padding-left: 10px;
+  }
+
+  .pos-promotions-page .promotion-actions > .promo-button:nth-child(4) {
+    justify-content: flex-end;
+    padding-right: 10px;
   }
 
   .pos-promotions-page .promotion-actions > .promo-button .promo-action-icon {
@@ -1766,14 +1797,24 @@
   .pos-promotions-page .promotion-actions .promo-more {
     flex: 0 0 100%;
     width: 100%;
+    padding-left: 10px;
   }
 
-  .pos-promotions-page .promotion-actions .promo-more summary.promo-button,
+  .pos-promotions-page .promotion-actions .promo-more > .promo-button.icon-button,
   .pos-promotions-page .promotion-actions .icon-button {
     width: 26px;
     height: 26px;
     min-width: 26px;
     min-height: 26px;
+  }
+
+  /* Full-width ⋯ row keeps the trigger on the left — anchor Delete there, not at right:0. */
+  .pos-promotions-page .promo-more-menu {
+    left: 10px;
+    right: auto;
+    top: calc(100% + 6px);
+    bottom: auto;
+    width: min(190px, calc(100vw - 32px));
   }
 
   .pos-promo-dialog .editor-body {
@@ -1977,21 +2018,111 @@
     page-break-inside: avoid !important;
   }
 
+  /* Theme card clone — keep the same lavender/gradient look as the preview dialog. */
+  body.printing-pos-promo-poster .pos-promo-poster-print-host .promo-art-print-clone {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    gap: 9px !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 280px !important;
+    padding: 28px !important;
+    border-radius: 10px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  body.printing-pos-promo-poster .pos-promo-poster-print-host .promo-art-print-clone.theme-purple {
+    background: linear-gradient(115deg, #eeeefe, #f7f6fc) !important;
+    color: #4c4698 !important;
+  }
+  body.printing-pos-promo-poster .pos-promo-poster-print-host .promo-art-print-clone.theme-gold {
+    background: linear-gradient(115deg, #fbf2df, #faf7ef) !important;
+    color: #84632e !important;
+  }
+  body.printing-pos-promo-poster .pos-promo-poster-print-host .promo-art-print-clone.theme-rose {
+    background: linear-gradient(115deg, #faebf0, #fbf5f6) !important;
+    color: #97546e !important;
+  }
+  body.printing-pos-promo-poster .pos-promo-poster-print-host .promo-art-print-clone.theme-teal {
+    background: linear-gradient(115deg, #e7f4f0, #f4f9f7) !important;
+    color: #326f64 !important;
+  }
+  body.printing-pos-promo-poster .pos-promo-poster-print-host .promo-art-print-clone.theme-ocean {
+    background: linear-gradient(115deg, #eaf0fa, #f5f8fc) !important;
+    color: #416791 !important;
+  }
+  body.printing-pos-promo-poster .pos-promo-poster-print-host .promo-art-print-clone.theme-sage {
+    background: linear-gradient(115deg, #eaf2e9, #f5f8f1) !important;
+    color: #4c6c43 !important;
+  }
+  body.printing-pos-promo-poster .pos-promo-poster-print-host .promo-art-print-clone.theme-peach {
+    background: linear-gradient(115deg, #fff0e8, #fff8f3) !important;
+    color: #92512f !important;
+  }
+  body.printing-pos-promo-poster .pos-promo-poster-print-host .promo-art-print-clone.theme-slate {
+    background: linear-gradient(115deg, #edf0f4, #f7f8fa) !important;
+    color: #536174 !important;
+  }
+
+  body.printing-pos-promo-poster .pos-promo-poster-print-host .promo-art-print-clone .art-badge {
+    display: inline-block !important;
+    padding: 3px 7px !important;
+    border-radius: 5px !important;
+    background: rgba(255, 255, 255, 0.7) !important;
+    color: inherit !important;
+    font-size: 9px !important;
+    font-weight: 500 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body.printing-pos-promo-poster .pos-promo-poster-print-host .promo-art-print-clone h3 {
+    margin: 0 !important;
+    font-size: 26px !important;
+    font-weight: 600 !important;
+    line-height: 1.3 !important;
+    color: inherit !important;
+  }
+
+  body.printing-pos-promo-poster .pos-promo-poster-print-host .promo-art-print-clone .art-saving {
+    font-size: 46px !important;
+    font-weight: 600 !important;
+    line-height: 1.1 !important;
+    font-family: inherit !important;
+    color: inherit !important;
+  }
+
+  body.printing-pos-promo-poster .pos-promo-poster-print-host .promo-art-print-clone.image-art {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+    background: #edf0f6 !important;
+  }
+
   body.printing-pos-promo-poster .pos-promo-poster-print-host .promo-art-print-raster {
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
     width: auto !important;
     max-width: 100% !important;
-    /* Leave headroom for title/description/schedule on the same page. */
     max-height: 6.2in !important;
     height: auto !important;
     margin: 0 auto !important;
     object-fit: contain !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
-    break-after: avoid !important;
-    page-break-after: avoid !important;
   }
 
   body.printing-pos-promo-poster .pos-promo-poster-print-host .poster-details {

@@ -1,12 +1,16 @@
 /**
  * posPromotionsRepository — the salon's promotion catalog (POS All-Services Discount).
+ * Contract: docs mirror `pos-promotion-studio-api.md` (Swagger live).
  * businessId is an explicit param on every call, same as posCheckoutRepository: a Staff caller may
  * be linked to more than one business, and the endpoints are gated per business server-side.
  */
 import httpClient from '../../lib/httpClient'
+import { PosServiceDiscountType } from '../../constants/posDiscount'
+import { normalizeAllowedImageFile } from '../../utils/imageFile'
 import type {
   PosPromotionApiDto,
   PosPromotionBannerApiDto,
+  PosPromotionBannerPayload,
   PosPromotionDetailApiDto,
   PosPromotionPayload,
   PosPromotionStudioMetadataApiDto,
@@ -14,6 +18,23 @@ import type {
 } from '../../types/repositories'
 
 type HttpClient = typeof httpClient
+
+/** System.DayOfWeek order — 0 Sunday … 6 Saturday (matches studio API guide). */
+const WEEK_DAYS = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+] as const
+
+type WeekDay = (typeof WEEK_DAYS)[number]
+
+const DAY_NAME_TO_INDEX: Record<string, number> = Object.fromEntries(
+  WEEK_DAYS.map((day, index) => [day, index]),
+)
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' ? (value as Record<string, unknown>) : {}
@@ -41,9 +62,48 @@ function readNumber(raw: Record<string, unknown>, ...keys: string[]): number {
   return 0
 }
 
+/** API may return DayOfWeek as 0–6 or as English names — UI always uses names. */
+function normalizeDay(value: unknown): WeekDay | null {
+  if (typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 6) {
+    return WEEK_DAYS[value]
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (trimmed in DAY_NAME_TO_INDEX) return trimmed as WeekDay
+    const asNum = Number(trimmed)
+    if (Number.isInteger(asNum) && asNum >= 0 && asNum <= 6) return WEEK_DAYS[asNum]
+  }
+  return null
+}
+
 function readDays(raw: Record<string, unknown>): string[] {
   const value = raw.daysOfWeek ?? raw.DaysOfWeek
-  return Array.isArray(value) ? value.map(String) : []
+  if (!Array.isArray(value)) return []
+  const days: string[] = []
+  for (const item of value) {
+    const day = normalizeDay(item)
+    if (day && !days.includes(day)) days.push(day)
+  }
+  return days
+}
+
+/** API may return DiscountType as 0|1 or as Percent|Amount — UI always uses string enum. */
+function normalizeDiscountType(value: unknown): string {
+  if (value === 0 || value === '0' || value === PosServiceDiscountType.Percent) {
+    return PosServiceDiscountType.Percent
+  }
+  if (value === 1 || value === '1' || value === PosServiceDiscountType.Amount) {
+    return PosServiceDiscountType.Amount
+  }
+  return String(value ?? PosServiceDiscountType.Percent)
+}
+
+function discountTypeToApi(value: string): 0 | 1 {
+  return value === PosServiceDiscountType.Amount ? 1 : 0
+}
+
+function dayNameToApi(day: string): number {
+  return DAY_NAME_TO_INDEX[day] ?? 0
 }
 
 function normalizeBanner(value: unknown, index: number): PosPromotionBannerApiDto {
@@ -73,7 +133,7 @@ export function normalizePosPromotion(value: unknown): PosPromotionApiDto {
     primaryBannerColorHex: readString(raw, 'primaryBannerColorHex', 'PrimaryBannerColorHex'),
     primaryBannerImageUrl,
     photoUrl: readString(raw, 'photoUrl', 'PhotoUrl') ?? primaryBannerImageUrl,
-    discountType: String(raw.discountType ?? raw.DiscountType ?? ''),
+    discountType: normalizeDiscountType(raw.discountType ?? raw.DiscountType),
     discountValue: readNumber(raw, 'discountValue', 'DiscountValue'),
     daysOfWeek: readDays(raw),
     startTime: String(raw.startTime ?? raw.StartTime ?? ''),
@@ -115,7 +175,7 @@ function normalizeTemplate(value: unknown): PosPromotionTemplateApiDto {
     name: String(raw.name ?? raw.Name ?? ''),
     badgeLabel: String(raw.badgeLabel ?? raw.BadgeLabel ?? ''),
     description: String(raw.description ?? raw.Description ?? ''),
-    discountType: String(raw.discountType ?? raw.DiscountType ?? ''),
+    discountType: normalizeDiscountType(raw.discountType ?? raw.DiscountType),
     discountValue: readNumber(raw, 'discountValue', 'DiscountValue'),
     daysOfWeek: readDays(raw),
     startTime: String(raw.startTime ?? raw.StartTime ?? '').slice(0, 5),
@@ -123,32 +183,110 @@ function normalizeTemplate(value: unknown): PosPromotionTemplateApiDto {
   }
 }
 
-function buildFormData(payload: PosPromotionPayload): FormData {
+/** Re-upload an existing banner image on full-replace update (API only accepts ColorHex | Image file). */
+async function fileFromImageUrl(url: string): Promise<File> {
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`Failed to load promotion banner image (${response.status})`)
+  }
+  const blob = await response.blob()
+  const pathName = url.split('?')[0] ?? url
+  const extMatch = pathName.match(/\.([a-zA-Z0-9]+)$/)
+  const ext = extMatch?.[1]?.toLowerCase() || 'jpg'
+  const mime =
+    blob.type ||
+    (ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg')
+  const raw = new File([blob], `banner.${ext === 'jpeg' ? 'jpeg' : ext}`, { type: mime })
+  const normalized = normalizeAllowedImageFile(raw)
+  if (!normalized) {
+    throw new Error('Promotion banner image type is not supported')
+  }
+  return normalized
+}
+
+async function resolveBanners(
+  banners: PosPromotionBannerPayload[],
+): Promise<Array<{ colorHex: string | null; image: File | null }>> {
+  return Promise.all(
+    banners.map(async (banner) => {
+      if (banner.image) {
+        const normalized = normalizeAllowedImageFile(banner.image)
+        if (!normalized) {
+          throw Object.assign(new Error('Promotion banner image type is not supported'), {
+            errorCode: 'POS_PROMOTION_BANNER_IMAGE_INVALID_TYPE',
+          })
+        }
+        return { colorHex: null, image: normalized }
+      }
+      if (banner.imageUrl) {
+        return { colorHex: null, image: await fileFromImageUrl(banner.imageUrl) }
+      }
+      const colorHex = banner.colorHex?.trim() || null
+      return { colorHex, image: null }
+    }),
+  )
+}
+
+/**
+ * Multipart body per studio API guide — PascalCase keys, DiscountType 0|1, DaysOfWeek 0–6.
+ * Each banner sends exactly one of ColorHex / Image (never both).
+ */
+async function buildFormData(payload: PosPromotionPayload): Promise<FormData> {
   const formData = new FormData()
-  formData.append('name', payload.name)
-  if (payload.badgeLabel) formData.append('badgeLabel', payload.badgeLabel)
-  if (payload.description) formData.append('description', payload.description)
-  if (payload.templateCode) formData.append('templateCode', payload.templateCode)
-  if (payload.photo) formData.append('photo', payload.photo)
+  formData.append('Name', payload.name)
+  if (payload.badgeLabel) formData.append('BadgeLabel', payload.badgeLabel)
+  if (payload.description) formData.append('Description', payload.description)
+  if (payload.templateCode) formData.append('TemplateCode', payload.templateCode)
 
-  const banners = payload.banners ?? []
+  const resolved = await resolveBanners(payload.banners ?? [])
+  if (resolved.length === 0 && payload.photo) {
+    const photo = normalizeAllowedImageFile(payload.photo)
+    if (photo) formData.append('Photo', photo, photo.name)
+  }
 
-  banners.forEach((banner, index) => {
-    if (banner.colorHex) {
-      formData.append(`banners[${index}].colorHex`, banner.colorHex)
-    }
+  resolved.forEach((banner, index) => {
     if (banner.image) {
-      formData.append(`banners[${index}].image`, banner.image)
+      // Explicit filename keeps ASP.NET ContentType + extension aligned with the File.
+      formData.append(`Banners[${index}].Image`, banner.image, banner.image.name)
+      return
+    }
+    if (banner.colorHex) {
+      formData.append(`Banners[${index}].ColorHex`, banner.colorHex)
     }
   })
 
-  formData.append('discountType', payload.discountType)
-  formData.append('discountValue', String(payload.discountValue))
-  payload.daysOfWeek.forEach((day) => formData.append('daysOfWeek', day))
-  formData.append('startTime', payload.startTime)
-  formData.append('endTime', payload.endTime)
-  formData.append('isActive', String(payload.isActive))
+  formData.append('DiscountType', String(discountTypeToApi(payload.discountType)))
+  formData.append('DiscountValue', String(payload.discountValue))
+  payload.daysOfWeek.forEach((day) => formData.append('DaysOfWeek', String(dayNameToApi(day))))
+  formData.append('StartTime', payload.startTime)
+  formData.append('EndTime', payload.endTime)
+  formData.append('IsActive', String(payload.isActive))
   return formData
+}
+
+/** Build banner payloads for a full-replace update from list/detail primary fields. */
+export function bannersPayloadFromPromotion(
+  promotion: Pick<
+    PosPromotionApiDto,
+    'primaryBannerColorHex' | 'primaryBannerImageUrl' | 'photoUrl'
+  > & { banners?: PosPromotionBannerApiDto[] },
+): PosPromotionBannerPayload[] {
+  if (promotion.banners && promotion.banners.length > 0) {
+    return [...promotion.banners]
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((banner) =>
+        banner.imageUrl
+          ? { colorHex: null, image: null, imageUrl: banner.imageUrl }
+          : { colorHex: banner.colorHex ?? null, image: null },
+      )
+  }
+
+  const imageUrl = promotion.primaryBannerImageUrl || promotion.photoUrl || null
+  if (imageUrl) return [{ colorHex: null, image: null, imageUrl }]
+  if (promotion.primaryBannerColorHex) {
+    return [{ colorHex: promotion.primaryBannerColorHex, image: null }]
+  }
+  return []
 }
 
 export function createPosPromotionsRepository(client: HttpClient = httpClient) {
@@ -182,7 +320,7 @@ export function createPosPromotionsRepository(client: HttpClient = httpClient) {
     async createPosPromotion(businessId: string, payload: PosPromotionPayload): Promise<string> {
       return await client.upload<string>(
         `/api/v1/merchant/pos/${businessId}/promotions`,
-        buildFormData(payload),
+        await buildFormData(payload),
         'POST',
       )
     },
@@ -194,7 +332,7 @@ export function createPosPromotionsRepository(client: HttpClient = httpClient) {
     ): Promise<boolean> {
       return await client.upload<boolean>(
         `/api/v1/merchant/pos/${businessId}/promotions/${promotionId}`,
-        buildFormData(payload),
+        await buildFormData(payload),
         'PUT',
       )
     },
