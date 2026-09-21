@@ -289,10 +289,6 @@ export default function useSettingsForm({
   const [addressForm, setAddressForm] = useState<LooseObject>({});
   const [addressErrors, setAddressErrors] = useState<SettingsFormErrors>({});
 
-  const [isEditingBusiness, setIsEditingBusiness] = useState(false);
-  const [businessForm, setBusinessForm] = useState<LooseObject>({});
-  const [businessErrors, setBusinessErrors] = useState<SettingsFormErrors>({});
-
   const [isEditingReviews, setIsEditingReviews] = useState(false);
   const [reviewsForm, setReviewsForm] = useState({
     googleReview: "",
@@ -311,8 +307,6 @@ export default function useSettingsForm({
   useEffect(() => {
     if (canEditProfile) return;
     setIsEditingBasic(false);
-    setIsEditingBusiness(false);
-    businessInfoForm.setIsEditingBusiness(false);
   }, [canEditProfile]);
 
   // Load profile settings + business profile into the form.
@@ -491,17 +485,6 @@ export default function useSettingsForm({
   // only to keep the Owner-Profile-header's `profile.businessName` mirror
   // (used outside the Business Information card, e.g. the sidebar/profile card)
   // in sync immediately, matching the previous optimistic-update behavior.
-  const startEditBusiness = () => {
-    if (!canEditProfile) return;
-    setBusinessErrors({});
-    setBusinessForm({
-      businessName: profile.businessName,
-      businessPhone: profile.businessPhone,
-      businessEmail: profile.businessEmail,
-      businessWebsite: profile.businessWebsite,
-    });
-    setIsEditingBusiness(true);
-  };
   const saveBusiness = (e) => {
     businessInfoForm.saveBusiness(e, (next) => {
       saveProfile({ ...profile, ...next });

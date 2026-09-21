@@ -6,6 +6,7 @@
 // cache, so there is no parallel source of truth for the actual business data —
 // only the local edit-form state is per-mount, which is expected for a form).
 import { useState } from 'react'
+import { flushSync } from 'react-dom'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { resolveEffectiveKybStatus } from '../../../utils/kybStatus'
@@ -14,13 +15,50 @@ import { useVerifiedStatus } from '../../../data/hooks/useProfileSettings'
 import { getApiErrorCode } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { isValidEmail, isValidHttpUrl, isValidPhone } from '../../../utils/validation'
+import { scrollToElementById } from '../../../utils/scrollToElement'
 import type { MapAddressParts } from '../../../utils/mapUrl'
 
 type SettingsFormErrors = Record<string, string>
 
 const formValue = (input: unknown) => String(input ?? '').trim()
 
-const KYB_EDITABLE_STATUSES = new Set(['basic', 'kyb_rejected', 'rejected'])
+/** Accept bare domains from KYB/SSO (e.g. "mysalon.com") by prefixing https://. */
+const normalizeWebsiteUrl = (input: unknown) => {
+  const raw = formValue(input)
+  if (!raw) return ''
+  if (/^https?:\/\//i.test(raw)) return raw
+  return `https://${raw}`
+}
+
+/** Form field order (top → bottom) → input id in BusinessInfoCard. */
+const BUSINESS_FIELD_SCROLL_IDS: Array<{ field: string; id: string }> = [
+  { field: 'businessName', id: 'settings-business-name' },
+  { field: 'businessPhone', id: 'settings-business-phone' },
+  { field: 'businessEmail', id: 'settings-business-email' },
+  { field: 'businessWebsite', id: 'settings-business-website' },
+  { field: 'businessAddress.street', id: 'settings-business-address-street' },
+  { field: 'businessAddress.city', id: 'settings-business-address-city' },
+  { field: 'businessAddress.state', id: 'settings-business-address-state' },
+  { field: 'businessAddress.zipCode', id: 'settings-business-address-zipCode' },
+  { field: 'businessAddress.country', id: 'settings-business-address-country' },
+  { field: 'googleReview', id: 'settings-business-google-review' },
+  { field: 'yelpReview', id: 'settings-business-yelp-review' },
+  { field: 'facebookReview', id: 'settings-business-facebook' },
+  { field: 'instagramReview', id: 'settings-business-instagram' },
+  { field: 'bookingNotificationPhone', id: 'settings-booking-notification-phone' },
+  { field: 'salesTaxRatePercent', id: 'settings-sales-tax-rate-percent' },
+]
+
+const scrollToFirstBusinessError = (errors: SettingsFormErrors) => {
+  const first = BUSINESS_FIELD_SCROLL_IDS.find(({ field }) => errors[field])
+  if (!first) return
+  // Defer until after React paints the error styles / aria-invalid.
+  window.setTimeout(() => {
+    scrollToElementById(first.id)
+    const el = document.getElementById(first.id) as HTMLElement | null
+    el?.focus?.({ preventScroll: true })
+  }, 0)
+}
 
 const validateBusinessForm = (form: LooseObject, includeReviewLinks?: boolean): SettingsFormErrors => {
   const errors: SettingsFormErrors = {}
@@ -28,10 +66,13 @@ const validateBusinessForm = (form: LooseObject, includeReviewLinks?: boolean): 
   else if (formValue(form.businessName).length < 2) errors.businessName = 'invalid'
   if (!formValue(form.businessPhone)) errors.businessPhone = 'required'
   else if (!isValidPhone(form.businessPhone)) errors.businessPhone = 'phone'
-  if (!formValue(form.businessEmail)) errors.businessEmail = 'required'
-  else if (!isValidEmail(form.businessEmail)) errors.businessEmail = 'email'
-  if (formValue(form.businessWebsite) && !isValidHttpUrl(form.businessWebsite)) {
-    errors.businessWebsite = 'url'
+  // Feedback email is optional on the API — only validate format when provided.
+  if (formValue(form.businessEmail) && !isValidEmail(form.businessEmail)) {
+    errors.businessEmail = 'email'
+  }
+  if (formValue(form.businessWebsite)) {
+    const website = normalizeWebsiteUrl(form.businessWebsite)
+    if (!isValidHttpUrl(website)) errors.businessWebsite = 'url'
   }
   if (includeReviewLinks) {
     if (formValue(form.googleReview) && !isValidHttpUrl(form.googleReview)) errors.googleReview = 'url'
@@ -67,10 +108,13 @@ export default function useBusinessInfoForm({
   setupData,
   verificationStatus,
   includeReviewLinks,
+  /** POS Salon Information only — bypass KYB lock; saves stay Nexora-local (no SSO). */
+  allowEditAfterKyb = false,
 }: {
   setupData?: LooseObject | null
   verificationStatus?: string
   includeReviewLinks?: boolean
+  allowEditAfterKyb?: boolean
 }) {
   const { t } = useTranslation()
   const { showToast: notify } = useNotification()
@@ -83,11 +127,17 @@ export default function useBusinessInfoForm({
     verificationStatus,
     verifiedStatusData?.status as string | undefined,
   )
-  const canEditProfile = !KYB_EDITABLE_STATUSES.has(effectiveVerificationStatus)
-    ? false
-    : !verifiedStatusData
-      ? true
-      : verifiedStatusData.status === 'None' || verifiedStatusData.status === 'Rejected'
+
+  // Settings > Profile keeps the KYB lock. POS > Salon Information opts out via
+  // allowEditAfterKyb; those saves are still Nexora-local and never push to SSO.
+  const KYB_EDITABLE_STATUSES = new Set(['basic', 'kyb_rejected', 'rejected'])
+  const canEditProfile = allowEditAfterKyb
+    ? true
+    : !KYB_EDITABLE_STATUSES.has(effectiveVerificationStatus)
+      ? false
+      : !verifiedStatusData
+        ? true
+        : verifiedStatusData.status === 'None' || verifiedStatusData.status === 'Rejected'
 
   const businessInfo: BusinessInfo = {
     businessAddress: {
@@ -142,8 +192,13 @@ export default function useBusinessInfoForm({
     e.preventDefault()
     if (!canEditProfile) return
     const errors = validateBusinessForm(businessForm, includeReviewLinks)
-    setBusinessErrors(errors)
-    if (Object.keys(errors).length > 0) return
+    if (Object.keys(errors).length > 0) {
+      // No toast/popup — jump to the first invalid field.
+      flushSync(() => setBusinessErrors(errors))
+      scrollToFirstBusinessError(errors)
+      return
+    }
+    setBusinessErrors({})
 
     const next: BusinessInfo = {
       businessAddress: {
@@ -156,7 +211,7 @@ export default function useBusinessInfoForm({
       businessName: formValue(businessForm.businessName),
       businessPhone: formValue(businessForm.businessPhone),
       businessEmail: formValue(businessForm.businessEmail),
-      businessWebsite: formValue(businessForm.businessWebsite),
+      businessWebsite: normalizeWebsiteUrl(businessForm.businessWebsite),
       bookingNotificationPhone: formValue(businessForm.bookingNotificationPhone),
       salesTaxRatePercent: formValue(businessForm.salesTaxRatePercent),
       googleReview: formValue(businessForm.googleReview),
