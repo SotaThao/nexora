@@ -360,6 +360,17 @@ export const qk = {
   },
   merchantPosBookingDetail: (businessId?: string, bookingId?: string) =>
     ['merchantSettings', 'posBookingDetail', businessId ?? '', bookingId ?? ''],
+  merchantPosUnassignedBookingAssignments: (businessId?: string, filters?: { dateFrom?: string; dateTo?: string }) => {
+    const key: unknown[] = ['merchantSettings', 'posUnassignedBookingAssignments', businessId ?? '']
+    if (filters?.dateFrom || filters?.dateTo) key.push(filters)
+    return key
+  },
+  merchantPosBookingAssignmentCandidates: (businessId?: string, bookingId?: string, serviceLineId?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posBookingAssignmentCandidates', businessId ?? '']
+    if (bookingId) key.push(bookingId)
+    if (serviceLineId) key.push(serviceLineId)
+    return key
+  },
   // POS Front Desk — Customer tab (US-043), read-only list/detail/order-history.
   merchantPosCustomerListRoot: () => ['merchantSettings', 'posCustomerList'],
   merchantPosCustomerDetailRoot: () => ['merchantSettings', 'posCustomerDetail'],

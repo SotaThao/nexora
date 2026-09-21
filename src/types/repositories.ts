@@ -1616,6 +1616,44 @@ export interface RescheduleBookingPayload {
   items: RescheduleBookingItemPayload[]
 }
 
+export interface SuggestedTechnicianApiDto {
+  posStaffProfileId: string
+  displayName: string
+  photoUrl?: string | null
+  staffLevelName?: string | null
+  bookedServiceLineCountToday: number
+  // Today's real weighted turns (same number as the Turn Board), not specific to this booking's date.
+  turnScore: number
+}
+
+export interface UnassignedBookingAssignmentApiDto {
+  bookingId: string
+  serviceLineId: string
+  scheduledAt: string
+  source: string
+  durationMinutes: number
+  customerName: string
+  serviceName: string
+  isUrgent: boolean
+  suggestedTechnician?: SuggestedTechnicianApiDto | null
+}
+
+export interface BookingAssignmentCandidateApiDto {
+  rank: number
+  posStaffProfileId: string
+  displayName: string
+  photoUrl?: string | null
+  staffLevelName?: string | null
+  isEligible: boolean
+  ineligibleReason?: string | null
+  bookedServiceLineCountToday: number
+  turnScore: number
+}
+
+export interface AssignBookingServiceLineStaffPayload {
+  posStaffProfileId: string
+}
+
 // POS Booking — Public Booking Page discovery (Ticket 4). Anonymous, no auth — resolved by
 // Business.Slug. Technicians are filtered by employment status only (never real-time
 // clock/busy state), per POS-Booking-Business.md.

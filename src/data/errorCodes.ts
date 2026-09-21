@@ -432,6 +432,7 @@ export const errorCodeToI18nKey = {
   POS_BOOKING_ADVANCE_LIMIT_EXCEEDED: 'errors.pos_booking_advance_limit_exceeded',
   POS_BOOKING_STAFF_OUTSIDE_SCHEDULE: 'errors.pos_booking_staff_outside_schedule',
   POS_BOOKING_SLOT_CONFLICT: 'errors.pos_booking_slot_conflict',
+  POS_BOOKING_INVALID_STATUS_FOR_ASSIGNMENT: 'errors.pos_booking_invalid_status_for_assignment',
   POS_BOOKING_PHONE_ALREADY_ACTIVE: 'errors.pos_booking_phone_already_active',
   POS_BOOKING_CUSTOMER_PHONE_REQUIRED: 'errors.pos_booking_customer_phone_required',
   POS_BOOKING_NOT_FOUND: 'errors.pos_booking_not_found',
