@@ -94,12 +94,13 @@ function PromotionArt({
   const customStyle =
     colorHex && !theme
       ? { background: `linear-gradient(115deg, ${colorHex}22, ${colorHex}0d)`, color: colorHex }
-      : colorHex
-        ? { color: colorHex }
-        : undefined
+      : undefined
 
   return (
-    <div className={`promo-art theme-${theme || 'purple'}`} style={customStyle}>
+    <div
+      className={`promo-art${theme ? ` theme-${theme}` : ''}${large ? ' poster-art' : ''}`}
+      style={customStyle}
+    >
       <span className="art-badge">{badgeLabel || specialOfferFallback}</span>
       <h3>{name || '—'}</h3>
       <strong className="art-saving">{artSaving}</strong>
@@ -314,7 +315,10 @@ export default function PosPromotionsView({ businessId }: { businessId?: string 
   }
 
   const enabledCount = promotions.filter((p) => p.isActive).length
-  const bannerCount = promotions.filter((p) => Boolean(promotionBannerImageUrl(p))).length
+  // List DTO only exposes the cover — count image or solid-color covers (not multi-banner total).
+  const bannerCount = promotions.filter(
+    (p) => Boolean(promotionBannerImageUrl(p) || promotionBannerColorHex(p)),
+  ).length
 
   const filteredPromotions = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
@@ -495,8 +499,9 @@ export default function PosPromotionsView({ businessId }: { businessId?: string 
               {filteredPromotions.map((promotion, index) => {
                 const imageUrl = promotionBannerImageUrl(promotion)
                 const colorHex = promotionBannerColorHex(promotion)
-                const theme =
-                  themeFromColorHex(colorHex) ?? promoArtThemeForIndex(index)
+                const matchedTheme = themeFromColorHex(colorHex)
+                // Unknown custom hex must not fall back to a palette theme — that hides the gradient.
+                const theme = matchedTheme ?? (colorHex ? '' : promoArtThemeForIndex(index))
                 const bannerLabel = `1 ${t(`${K}.bannerUnit`)}`
                 return (
                   <article key={promotion.id} className="promotion-card">
@@ -690,7 +695,9 @@ export default function PosPromotionsView({ businessId }: { businessId?: string 
                       imageUrl={promotionBannerImageUrl(previewing)}
                       theme={
                         themeFromColorHex(promotionBannerColorHex(previewing)) ??
-                        promoArtThemeForIndex(previewThemeIndex)
+                        (promotionBannerColorHex(previewing)
+                          ? ''
+                          : promoArtThemeForIndex(previewThemeIndex))
                       }
                       colorHex={promotionBannerColorHex(previewing)}
                       specialOfferFallback={t(`${K}.specialOffer`)}

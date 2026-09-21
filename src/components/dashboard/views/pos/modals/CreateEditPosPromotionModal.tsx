@@ -430,6 +430,8 @@ export default function CreateEditPosPromotionModal({
 
   const handleSubmit = () => {
     if (isSaving) return
+    // Edit PUT is a full banner replace — wait for detail so we don't wipe extra banners.
+    if (promotion && !detailQuery.isSuccess) return
     const errors = validateFields()
     setFieldErrors(errors)
     if (Object.keys(errors).length > 0) return
@@ -465,6 +467,9 @@ export default function CreateEditPosPromotionModal({
 
   const previewName = name.trim() || t(`${K}.previewUntitled`)
   const previewBadge = badgeLabel.trim() || t(`${K}.specialOffer`)
+  const isEditDetailPending = Boolean(promotion) && detailQuery.isPending
+  const isEditDetailFailed = Boolean(promotion) && detailQuery.isError
+  const saveDisabled = isSaving || isEditDetailPending || isEditDetailFailed
   const firstError =
     fieldErrors.name ||
     fieldErrors.value ||
@@ -885,8 +890,17 @@ export default function CreateEditPosPromotionModal({
                 {firstError}
               </p>
             ) : null}
+            {isEditDetailFailed ? (
+              <p className="promo-error" role="alert">
+                {t(`${K}.editDetailLoadError`)}
+              </p>
+            ) : null}
             <p className="promo-note">
-              {promotion ? t(`${K}.editNote`) : t(`${K}.saveNote`)}
+              {isEditDetailPending
+                ? t(`${K}.editDetailLoading`)
+                : promotion
+                  ? t(`${K}.editNote`)
+                  : t(`${K}.saveNote`)}
             </p>
           </div>
           <div className="editor-footer-actions">
@@ -897,10 +911,10 @@ export default function CreateEditPosPromotionModal({
               type="button"
               className="promo-button primary"
               onClick={handleSubmit}
-              disabled={isSaving}
-              aria-busy={isSaving}
+              disabled={saveDisabled}
+              aria-busy={isSaving || isEditDetailPending}
             >
-              {isSaving ? (
+              {isSaving || isEditDetailPending ? (
                 <Loader2 className="promo-action-icon h-4 w-4 animate-spin" aria-hidden />
               ) : null}
               <span>{t(`${K}.save`)}</span>

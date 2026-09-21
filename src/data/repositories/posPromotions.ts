@@ -266,9 +266,8 @@ async function buildFormData(payload: PosPromotionPayload): Promise<FormData> {
 
 /** Build banner payloads for a full-replace update from list/detail primary fields. */
 export function bannersPayloadFromPromotion(
-  promotion: Pick<
-    PosPromotionApiDto,
-    'primaryBannerColorHex' | 'primaryBannerImageUrl' | 'photoUrl'
+  promotion: Partial<
+    Pick<PosPromotionApiDto, 'primaryBannerColorHex' | 'primaryBannerImageUrl' | 'photoUrl'>
   > & { banners?: PosPromotionBannerApiDto[] },
 ): PosPromotionBannerPayload[] {
   if (promotion.banners && promotion.banners.length > 0) {

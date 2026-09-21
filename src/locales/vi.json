@@ -5492,6 +5492,8 @@
             "invalidPreview": "Nhập mức giảm hợp lệ",
             "saveNote": "Chương trình mới được lưu ở trạng thái tắt.",
             "editNote": "Thay đổi có hiệu lực sau khi lưu.",
+            "editDetailLoading": "Đang tải banner…",
+            "editDetailLoadError": "Không tải được banner của chương trình này. Đóng và thử lại.",
             "windowInvalid": "Giờ kết thúc phải sau giờ bắt đầu.",
             "errorNameRequired": "Vui lòng nhập tên chương trình.",
             "errorValueRequired": "Vui lòng nhập mức giảm.",

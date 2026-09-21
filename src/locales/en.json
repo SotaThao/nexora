@@ -5491,6 +5491,8 @@
             "invalidPreview": "Enter a valid discount",
             "saveNote": "New promotions are saved disabled.",
             "editNote": "Changes take effect after saving.",
+            "editDetailLoading": "Loading banners…",
+            "editDetailLoadError": "Could not load banners for this promotion. Close and try again.",
             "windowInvalid": "The end time must be later than the start time.",
             "errorNameRequired": "Enter a name for this promotion.",
             "errorValueRequired": "Enter how much this promotion takes off.",
