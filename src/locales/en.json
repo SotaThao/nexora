@@ -4395,7 +4395,10 @@
             "reasonOutsideSchedule": "Not scheduled to work at this time",
             "reasonSlotConflict": "Already has a booking at this time",
             "reasonStaffLocked": "Account is locked",
-            "reasonUnknown": "Not available"
+            "reasonUnknown": "Not available",
+            "loadError": "Could not load Anyone appointments. Please try again.",
+            "candidatesLoadError": "Could not load technicians. Please try again.",
+            "retryButton": "Retry"
           },
           "PosQuickSplitPanel": {
             "close": "Close",

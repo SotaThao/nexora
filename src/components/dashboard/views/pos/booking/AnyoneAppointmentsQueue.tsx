@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Loader2, UserRound } from 'lucide-react'
+import { Loader2, RefreshCw, UserRound } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import { getApiErrorCode } from '../../../../../types/domain'
@@ -34,7 +34,7 @@ export default function AnyoneAppointmentsQueue({
   const { showToast } = useNotification()
   const p = 'components.dashboard.views.pos.AnyoneAppointmentsQueue.'
 
-  const { data: queue, isLoading } = useUnassignedBookingAssignments(businessId, { dateFrom, dateTo })
+  const { data: queue, isLoading, isError, refetch } = useUnassignedBookingAssignments(businessId, { dateFrom, dateTo })
   const assignMutation = useAssignBookingServiceLineStaff(businessId)
   const [assigningLineId, setAssigningLineId] = useState<string | null>(null)
   const [candidatesTarget, setCandidatesTarget] = useState<UnassignedBookingAssignmentApiDto | null>(null)
@@ -64,6 +64,22 @@ export default function AnyoneAppointmentsQueue({
     )
   }
 
+  if (isError) {
+    return (
+      <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
+        <p className="text-[12px] font-bold text-rose-700">{t(p + 'loadError')}</p>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="flex shrink-0 items-center gap-1.5 rounded-xl border border-rose-200 bg-white px-3 py-1.5 text-[11px] font-bold text-rose-700 transition hover:bg-rose-100"
+        >
+          <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+          {t(p + 'retryButton')}
+        </button>
+      </div>
+    )
+  }
+
   const lines = queue ?? []
 
   if (lines.length === 0) return null
@@ -85,7 +101,7 @@ export default function AnyoneAppointmentsQueue({
         </div>
       </div>
 
-      <ul className="divide-y divide-nexoraBorder">
+      <ul className="divide-y divide-nexoraBorder overflow-x-auto">
         {lines.map((line) => {
           const timeLabel = formatBookingWallClockTime(line.scheduledAt, line.source)
           const isAssigning = assigningLineId === line.serviceLineId
@@ -94,7 +110,7 @@ export default function AnyoneAppointmentsQueue({
           return (
             <li
               key={line.serviceLineId}
-              className={`relative grid grid-cols-[85px_minmax(150px,1fr)_minmax(230px,1.5fr)_215px] items-center gap-3 px-4 py-3 ${
+              className={`relative grid min-w-[680px] grid-cols-[85px_minmax(150px,1fr)_minmax(230px,1.5fr)_215px] items-center gap-3 px-4 py-3 ${
                 line.isUrgent ? 'bg-amber-50/30' : ''
               }`}
             >

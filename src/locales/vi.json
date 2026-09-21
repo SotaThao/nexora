@@ -4395,7 +4395,10 @@
             "reasonOutsideSchedule": "Không có lịch làm vào giờ này",
             "reasonSlotConflict": "Đã có lịch hẹn khác trùng giờ",
             "reasonStaffLocked": "Tài khoản đã bị khoá",
-            "reasonUnknown": "Không phù hợp"
+            "reasonUnknown": "Không phù hợp",
+            "loadError": "Không thể tải danh sách lịch hẹn Anyone. Vui lòng thử lại.",
+            "candidatesLoadError": "Không thể tải danh sách kỹ thuật viên. Vui lòng thử lại.",
+            "retryButton": "Thử lại"
           },
           "PosQuickSplitPanel": {
             "close": "Đóng",
