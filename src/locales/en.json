@@ -2474,6 +2474,7 @@
       "totalAmount": "Total amount",
       "totalTips": "Total tips",
       "totalDiscount": "Total discount",
+      "totalSupplyFee": "Total supply fee",
       "totalCommission": "Total commission",
       "cashCollected": "Cash collected",
       "close": "Close",

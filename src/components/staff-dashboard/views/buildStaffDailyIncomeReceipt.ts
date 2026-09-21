@@ -12,6 +12,8 @@ export function buildStaffDailyIncomeReceipt(
   currencyFormatter: Intl.NumberFormat,
   currentLanguage: string,
   t: Translate,
+  totalSupplyFee: number,
+  totalCommission: number,
 ): PosTechnicianReportPrint {
   const tickets = data?.tickets ?? []
   return {
@@ -36,6 +38,8 @@ export function buildStaffDailyIncomeReceipt(
       { label: t(`${TK}.totalAmount`), value: currencyFormatter.format(data?.totalAmount ?? 0) },
       { label: t(`${TK}.totalTips`), value: currencyFormatter.format(data?.totalTips ?? 0) },
       { label: t(`${TK}.totalDiscount`), value: currencyFormatter.format(data?.totalDiscount ?? 0) },
+      { label: t(`${TK}.totalSupplyFee`), value: currencyFormatter.format(totalSupplyFee) },
+      { label: t(`${TK}.totalCommission`), value: currencyFormatter.format(totalCommission) },
       { label: t(`${TK}.cashCollected`), value: currencyFormatter.format(data?.totalCollected ?? 0) },
     ],
   }

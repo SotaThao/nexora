@@ -12,6 +12,8 @@ type Props = {
   name: string
   periodLabel: string
   currencyFormatter: Intl.NumberFormat
+  totalSupplyFee: number
+  totalCommission: number
   onClose: () => void
 }
 
@@ -21,6 +23,8 @@ export default function StaffDailyIncomeDetailModal({
   name,
   periodLabel,
   currencyFormatter,
+  totalSupplyFee,
+  totalCommission,
   onClose,
 }: Props) {
   const { t, currentLanguage } = useTranslation()
@@ -77,6 +81,8 @@ export default function StaffDailyIncomeDetailModal({
                 currencyFormatter,
                 currentLanguage,
                 t,
+                totalSupplyFee,
+                totalCommission,
               )}
             />
           )}
