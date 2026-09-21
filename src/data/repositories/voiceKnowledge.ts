@@ -34,6 +34,8 @@ export interface VoiceKnowledgeLimits {
   maxQuestionCharacters: number;
   maxAnswerCharacters: number;
   maxRegeneratesPerDay: number;
+  maxFactsPerLanguage: number;
+  maxContentCharactersPerLanguage: number;
 }
 
 /**
@@ -84,16 +86,33 @@ export const voiceKnowledgeRepository = {
       `/api/v1/merchant/nexora-voice/unanswered-questions?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
     ),
 };
+/**
+ * One question and answer the assistant can read out. `language` says which call language it is written in
+ * and is absent on documents condensed before language tagging, which the server reads as "use it whatever
+ * the call is speaking" — so it must be preserved on save rather than filled in with a guess.
+ */
+export interface VoiceKnowledgeFact {
+  question: string;
+  answer: string;
+  language?: string;
+}
+
 export function readKnowledgeFacts(
   content: string | null,
-): Array<{ question: string; answer: string }> {
+): VoiceKnowledgeFact[] {
   try {
     const value = JSON.parse(content || "{}");
     return Array.isArray(value.facts)
-      ? value.facts.filter(
-          (f: { question?: unknown; answer?: unknown }) =>
-            typeof f.question === "string" && typeof f.answer === "string",
-        )
+      ? value.facts
+          .filter(
+            (f: { question?: unknown; answer?: unknown }) =>
+              typeof f.question === "string" && typeof f.answer === "string",
+          )
+          .map((f: VoiceKnowledgeFact) => ({
+            question: f.question,
+            answer: f.answer,
+            ...(typeof f.language === "string" ? { language: f.language } : {}),
+          }))
       : [];
   } catch {
     return [];

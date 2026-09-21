@@ -26,6 +26,7 @@ import {
 import {
   readKnowledgeFacts,
   type VoiceKnowledgeDocument,
+  type VoiceKnowledgeFact,
   type VoiceKnowledgeLimits,
 } from "@/data/repositories/voiceKnowledge";
 import {
@@ -36,6 +37,8 @@ import {
 } from "@/constants/voiceKnowledge";
 
 const BYTES_PER_MB = 1024 * 1024;
+/** "Q: " + newline + "A: " + newline, matching how the prompt builder renders one fact. */
+const RENDERED_FACT_OVERHEAD = 8;
 const buttonClass =
   "rounded-lg border border-nexoraBorder bg-white px-3 py-2 text-sm font-medium text-nexoraText transition hover:bg-nexoraSurfaceMuted disabled:cursor-not-allowed disabled:opacity-50";
 
@@ -59,6 +62,25 @@ const statusClass: Record<Status, string> = {
   [Status.Disabled]: "border-slate-200 bg-slate-100 text-slate-600",
   [Status.HeldForReview]: "border-amber-200 bg-amber-50 text-amber-800",
 };
+
+/**
+ * Facts in editing order, split into the languages present. A document condensed before language tagging has
+ * one untagged group and therefore renders exactly as it did before grouping existed; only a document holding
+ * more than one language shows any language chrome at all. Each entry keeps its index in the flat array so
+ * editing still addresses the state the panel actually stores.
+ */
+function groupFactsByLanguage(facts: VoiceKnowledgeFact[]) {
+  const groups: Array<{
+    language?: string;
+    entries: Array<{ fact: VoiceKnowledgeFact; index: number }>;
+  }> = [];
+  facts.forEach((fact, index) => {
+    const group = groups.find((candidate) => candidate.language === fact.language);
+    if (group) group.entries.push({ fact, index });
+    else groups.push({ language: fact.language, entries: [{ fact, index }] });
+  });
+  return groups;
+}
 
 function KnowledgeFileIcon({ extension }: { extension: string }) {
   const normalized = extension.replace(".", "").toUpperCase();
@@ -104,9 +126,7 @@ export function VoiceKnowledgePanel() {
     () => new Set(),
   );
   const [editing, setEditing] = useState<string | null>(null);
-  const [facts, setFacts] = useState<
-    Array<{ question: string; answer: string }>
-  >([]);
+  const [facts, setFacts] = useState<VoiceKnowledgeFact[]>([]);
   const documents = query.data?.items ?? [];
   const count = query.data?.slotsUsed ?? 0;
   const activeChars = query.data?.activeCharacters ?? 0;
@@ -215,9 +235,23 @@ export function VoiceKnowledgePanel() {
     void run(() => actions.upload(file));
   };
 
+  // Mirrors the server's per-language ceiling. Without it a merchant only learns they overfilled one
+  // language from the API's condense-output error, which tells them to regenerate — the one action that
+  // throws away the edit they were trying to save.
+  const exceedsPerLanguageLimit = () =>
+    groupFactsByLanguage(facts).some(
+      (group) =>
+        group.entries.length > limits.maxFactsPerLanguage ||
+        group.entries.reduce(
+          (total, { fact }) => total + fact.question.length + fact.answer.length + RENDERED_FACT_OVERHEAD,
+          0,
+        ) > limits.maxContentCharactersPerLanguage,
+    );
+
   const save = async () => {
     const content = JSON.stringify({ facts });
     if (
+      exceedsPerLanguageLimit() ||
       !facts.length ||
       facts.length > limits.maxFacts ||
       facts.some(
@@ -537,8 +571,8 @@ export function VoiceKnowledgePanel() {
 type DocumentRowsProps = {
   document: VoiceKnowledgeDocument;
   editing: boolean;
-  facts: Array<{ question: string; answer: string }>;
-  setFacts: React.Dispatch<React.SetStateAction<Array<{ question: string; answer: string }>>>;
+  facts: VoiceKnowledgeFact[];
+  setFacts: React.Dispatch<React.SetStateAction<VoiceKnowledgeFact[]>>;
   mutationPending: boolean;
   downloading: boolean;
   openMenu: boolean;
@@ -662,23 +696,37 @@ function DocumentRows({
         <tr className="block border-b border-nexoraRule bg-nexoraCanvas md:table-row">
           <td className="block p-4 md:table-cell md:px-6 md:py-5" colSpan={4}>
             <div role="region" aria-label={interpolate("editRegionAria", { name: document.fileName })} className="space-y-4">
-              {facts.map((fact, index) => (
-                <div key={index} className="grid gap-3 rounded-lg border border-nexoraBorder bg-white p-4">
-                  <label className="text-sm font-medium text-nexoraText">
-                    {text("question")}
-                    <input className="mt-1 block w-full rounded-lg border border-nexoraBorder p-2 text-sm" value={fact.question} maxLength={limits.maxQuestionCharacters} placeholder={text("questionPlaceholder")} onChange={(event) => setFacts((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, question: event.target.value } : item))} />
-                  </label>
-                  <label className="text-sm font-medium text-nexoraText">
-                    {text("answer")}
-                    <textarea className="mt-1 block w-full rounded-lg border border-nexoraBorder p-2 text-sm" rows={3} value={fact.answer} maxLength={limits.maxAnswerCharacters} placeholder={text("answerPlaceholder")} onChange={(event) => setFacts((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, answer: event.target.value } : item))} />
-                  </label>
-                  <button type="button" className="justify-self-start text-sm font-medium text-red-600 hover:underline" onClick={() => setFacts((current) => current.filter((_, itemIndex) => itemIndex !== index))}>{text("remove")}</button>
+              {groupFactsByLanguage(facts).map((group, _, allGroups) => (
+                <div key={group.language ?? ""} className="space-y-4">
+                  {allGroups.length > 1 && (
+                    <p className="text-xs font-semibold uppercase tracking-wide text-nexoraMuted">
+                      {group.language ?? text("allLanguages")}
+                    </p>
+                  )}
+                  {group.entries.map(({ fact, index }) => (
+                    <div key={index} className="grid gap-3 rounded-lg border border-nexoraBorder bg-white p-4">
+                      <label className="text-sm font-medium text-nexoraText">
+                        {text("question")}
+                        <input className="mt-1 block w-full rounded-lg border border-nexoraBorder p-2 text-sm" value={fact.question} maxLength={limits.maxQuestionCharacters} placeholder={text("questionPlaceholder")} onChange={(event) => setFacts((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, question: event.target.value } : item))} />
+                      </label>
+                      <label className="text-sm font-medium text-nexoraText">
+                        {text("answer")}
+                        <textarea className="mt-1 block w-full rounded-lg border border-nexoraBorder p-2 text-sm" rows={3} value={fact.answer} maxLength={limits.maxAnswerCharacters} placeholder={text("answerPlaceholder")} onChange={(event) => setFacts((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, answer: event.target.value } : item))} />
+                      </label>
+                      <button type="button" className="justify-self-start text-sm font-medium text-red-600 hover:underline" onClick={() => setFacts((current) => current.filter((_, itemIndex) => itemIndex !== index))}>{text("remove")}</button>
+                    </div>
+                  ))}
+                  {allGroups.length > 1 && (
+                    <button type="button" className={buttonClass} disabled={mutationPending || facts.length >= limits.maxFacts} onClick={() => setFacts((current) => [...current, { question: "", answer: "", ...(group.language ? { language: group.language } : {}) }])}>{text("add")}</button>
+                  )}
                 </div>
               ))}
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-xs text-nexoraMuted">{JSON.stringify({ facts }).length} / {limits.maxContentCharacters}</p>
                 <div className="flex flex-wrap gap-2">
-                  <button type="button" className={buttonClass} disabled={mutationPending || facts.length >= limits.maxFacts} onClick={() => setFacts((current) => [...current, { question: "", answer: "" }])}>{text("add")}</button>
+                  {groupFactsByLanguage(facts).length <= 1 && (
+                    <button type="button" className={buttonClass} disabled={mutationPending || facts.length >= limits.maxFacts} onClick={() => setFacts((current) => [...current, { question: "", answer: "", ...(current[0]?.language ? { language: current[0].language } : {}) }])}>{text("add")}</button>
+                  )}
                   <button type="button" className="rounded-lg bg-nexoraBrand px-3 py-2 text-sm font-semibold text-white disabled:opacity-50" disabled={mutationPending} onClick={onSave}>{text("save")}</button>
                   <button type="button" className={buttonClass} disabled={mutationPending} onClick={onCancel}>{text("cancel")}</button>
                 </div>

@@ -9,12 +9,14 @@ import type { VoiceKnowledgeLimits } from "@/data/repositories/voiceKnowledge";
 export const VOICE_KNOWLEDGE_FALLBACK_LIMITS: VoiceKnowledgeLimits = {
   maxDocuments: 5,
   maxFileSizeBytes: 5 * 1024 * 1024,
-  maxContentCharacters: 16000,
+  maxContentCharacters: 32000,
   maxTotalCharacters: 40000,
-  maxFacts: 80,
+  maxFacts: 160,
   maxQuestionCharacters: 300,
   maxAnswerCharacters: 1500,
   maxRegeneratesPerDay: 3,
+  maxFactsPerLanguage: 80,
+  maxContentCharactersPerLanguage: 16000,
 };
 
 export enum VoiceKnowledgeStatus {
