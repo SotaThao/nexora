@@ -32,6 +32,9 @@ export const POS_DISCOUNT_BEARERS_REQUIRING_COMMISSION = [
 
 export const MAX_DISCOUNT_PERCENT = 100
 
+/** Hard ceiling for Amount-type promotion discounts — keeps the banner preview readable. */
+export const MAX_DISCOUNT_AMOUNT = 99_999.99
+
 /**
  * Quick-pick values in the "Discount all services" panel. Fixed by the system rather than
  * configurable: the Custom box covers anything else, and the promotion catalog is where a salon

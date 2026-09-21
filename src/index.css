@@ -348,13 +348,14 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Global text-based input focus ring styling — skip marketing homepage */
-body:not(.homepage-active) input[type="text"]:focus,
+/* Global text-based input focus ring styling — skip marketing homepage.
+   `.promo-search-input` is excluded so the promo list search keeps a plain gray field chrome. */
+body:not(.homepage-active) input[type="text"]:not(.promo-search-input):focus,
 body:not(.homepage-active) input[type="email"]:focus,
 body:not(.homepage-active) input[type="password"]:focus,
 body:not(.homepage-active) input[type="tel"]:focus,
 body:not(.homepage-active) input[type="number"]:focus,
-body:not(.homepage-active) input[type="search"]:focus,
+body:not(.homepage-active) input[type="search"]:not(.promo-search-input):focus,
 body:not(.homepage-active) textarea:focus,
 body:not(.homepage-active) select:focus {
   outline: none !important;
@@ -446,6 +447,16 @@ body:not(.homepage-active):not(.public-booking-active) input.vlinkpay-address-in
     font-size: 12px !important;
     font-weight: 400;
   }
+
+  /* POS Promotions list chrome — keep compact vs HTML (not the 16px iOS floor). */
+  body:not(.homepage-active):not(.public-booking-active) .pos-promotions-page .promo-language select {
+    font-size: 11px !important;
+  }
+
+  body:not(.homepage-active):not(.public-booking-active) .pos-promotions-page .promo-search input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+  body:not(.homepage-active):not(.public-booking-active) .pos-promotions-page .promo-toolbar select {
+    font-size: 12px !important;
+  }
 }
 
 /* Prevent zoom on all other mobile browsers on narrow viewports */
@@ -467,6 +478,16 @@ body:not(.homepage-active):not(.public-booking-active) input.vlinkpay-address-in
   body:not(.homepage-active):not(.public-booking-active) .booking-hub-view .settings-service-dialog.is-overview textarea.settings-input {
     font-size: 12px !important;
     font-weight: 400;
+  }
+
+  /* POS Promotions list chrome — keep compact vs HTML (not the 16px iOS floor). */
+  body:not(.homepage-active):not(.public-booking-active) .pos-promotions-page .promo-language select {
+    font-size: 11px !important;
+  }
+
+  body:not(.homepage-active):not(.public-booking-active) .pos-promotions-page .promo-search input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+  body:not(.homepage-active):not(.public-booking-active) .pos-promotions-page .promo-toolbar select {
+    font-size: 12px !important;
   }
 }
 
@@ -1285,16 +1306,17 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 /* Print styles for QR Code Stand
    Scoped so other print surfaces (e.g. AI Voice setup guide) are not wiped blank. */
 @media print {
-  /* Hide all screen-only parts of the dashboard and other components */
-  body:not(.printing-ai-voice-guide) aside,
-  body:not(.printing-ai-voice-guide) .lg\:pl-72,
-  body:not(.printing-ai-voice-guide) main,
-  body:not(.printing-ai-voice-guide) header,
-  body:not(.printing-ai-voice-guide) footer,
-  body:not(.printing-ai-voice-guide) .no-print,
-  body:not(.printing-ai-voice-guide) button,
-  body:not(.printing-ai-voice-guide) a,
-  body:not(.printing-ai-voice-guide) .fixed.bottom-4 {
+  /* Hide all screen-only parts of the dashboard and other components.
+     Skip dedicated print body classes (invoice / report / promo poster / AI voice). */
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) aside,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) .lg\:pl-72,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) main,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) header,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) footer,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) .no-print,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) button,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) a,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) .fixed.bottom-4 {
     display: none !important;
   }
 
