@@ -1320,7 +1320,8 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
     color: #000000 !important;
   }
 
-  body.printing-pos-invoice .pos-receipt-ink-black .pos-receipt-line-discount {
+  body.printing-pos-invoice .pos-receipt-ink-black .pos-receipt-line-discount,
+  body.printing-pos-invoice .pos-receipt-ink-black .pos-receipt-discount {
     color: #f43f5e !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
