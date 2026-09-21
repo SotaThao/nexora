@@ -2969,6 +2969,10 @@
     "pos_service_line_not_startable": "Check the customer in before starting their service.",
     "pos_staff_service_line_edit_disabled": "This salon has technician edits turned off. Ask the front desk to change the ticket.",
     "pos_customer_verification_failed": "Those are not the last 4 digits of this customer's phone number.",
+    "pos_customer_import_file_type_not_allowed": "Please upload a valid .xlsx or .csv file.",
+    "pos_customer_import_file_too_large": "This file exceeds the 5 MB limit.",
+    "pos_customer_import_too_many_rows": "This file has too many rows. Maximum is 5,000 rows.",
+    "pos_operations_access_denied": "You do not have POS Operations access for this business.",
     "pos_custom_service_name_required": "Enter a name for this custom service.",
     "pos_custom_service_price_invalid": "Enter a price greater than $0 for this custom service.",
     "pos_custom_service_duration_invalid": "If you add a time, it must be between 1 and 10,000 minutes.",
@@ -4703,6 +4707,7 @@
           },
           "CustomerTab": {
             "editCustomer": "Edit Customer",
+            "importButton": "Import Excel / CSV",
             "searchLabel": "Search",
             "searchPlaceholder": "Search by name or phone…",
             "sortLabel": "Sort by created date",
@@ -6642,7 +6647,163 @@
             "close": "Close",
             "back": "Back",
             "cancel": "Cancel",
-            "save": "Save changes"
+            "save": "Save changes",
+            "import": {
+              "button": "Import Excel / CSV",
+              "buttonShort": "Import",
+              "kicker": "Customer Management",
+              "prototypeTag": "Interactive prototype",
+              "title": "Import customers from Excel / CSV",
+              "stepperAria": "Import progress",
+              "steps": {
+                "upload": {
+                  "label": "Upload",
+                  "note": "Upload an Excel or CSV file to start validating your data."
+                },
+                "mapping": {
+                  "label": "Mapping & Preview",
+                  "note": "Review source columns, adjust mappings, and preview sample rows."
+                },
+                "result": {
+                  "label": "Result",
+                  "note": "Review import results and download a report of skipped rows."
+                }
+              },
+              "actions": {
+                "close": "Close dialog",
+                "continue": "Continue",
+                "import": "Import customers",
+                "importing": "Importing…",
+                "done": "Done",
+                "back": "Back",
+                "importAnother": "Import another file"
+              },
+              "footer": {
+                "step1": "Step 1/3 · No customers created yet.",
+                "step2": "Step 2/3 · Phone Number is required.",
+                "step2Ready": "Step 2/3 · Ready to import.",
+                "step3": "Step 3/3 · {count} new customers were added.",
+                "step3None": "Step 3/3 · No new customers were added."
+              },
+              "upload": {
+                "heading": "Upload an Excel or CSV file",
+                "description": "Choose a .xlsx or .csv file. The system will inspect the file, detect the header row, and identify data columns.",
+                "chooseFile": "Choose file",
+                "removeFile": "Remove file",
+                "inspecting": "Checking file…"
+              },
+              "fileMeta": {
+                "xlsx": "{size} · {rows} rows · {sheets} sheets · Ready",
+                "csv": "{size} · {rows} rows · 1 data table · Ready",
+                "xlsxReady": "{size} · Ready",
+                "csvReady": "{size} · Ready"
+              },
+              "errors": {
+                "unsupportedType": "Could not read “{name}”. Please choose a .xlsx or .csv file.",
+                "tooLarge": "File “{name}” exceeds the 5 MB limit.",
+                "tooManyRows": "File “{name}” has {count} rows. Maximum allowed is {max} rows.",
+                "emptyFile": "File “{name}” has no data rows.",
+                "missingPhoneColumn": "File “{name}” must include at least one phone number column (for example Phone, Mobile, or Tel).",
+                "readFailed": "Could not read “{name}”. Please try another .xlsx or .csv file.",
+                "importFailed": "Could not import customers. Please try again."
+              },
+              "requirements": {
+                "title": "File requirements",
+                "format": "Microsoft Excel .xlsx or .csv format.",
+                "size": "Maximum size 5 MB and no more than 5,000 rows.",
+                "phone": "At least one column must contain a phone number.",
+                "sheet": "Excel lets you pick a sheet; CSV uses a single table. Both allow header-row selection and remapping.",
+                "unmapped": "Unmapped columns are skipped."
+              },
+              "privacy": {
+                "title": "Your data is protected",
+                "body": "The file is used only for this import. File contents and personal data are not written to logs."
+              },
+              "mapping": {
+                "sheet": "Sheet",
+                "headerRow": "Header row",
+                "headerRowOption": "Row {row}",
+                "reloaded": "✓ Preview reloaded",
+                "heading": "Field mapping",
+                "subXlsx": "Map Excel columns to customer fields.",
+                "subCsv": "Map CSV columns to customer fields.",
+                "fileMetaXlsx": "{rows} data rows · {sheets} sheets",
+                "fileMetaCsv": "{rows} data rows · single CSV table",
+                "fileMetaXlsxSimple": "{sheets} sheets",
+                "fileMetaCsvSimple": "CSV single table",
+                "unnamedColumn": "Column {index}",
+                "suggested": "{count}/6 suggested",
+                "hint": "Mappings are suggested from column names. Each source column can be used only once.",
+                "phoneRequired": "Map Phone Number to continue importing.",
+                "duplicateColumn": "Each Excel/CSV column can only map to one customer field."
+              },
+              "fields": {
+                "name": "Customer Name",
+                "phone": "Phone Number",
+                "email": "Email",
+                "dob": "Date of Birth",
+                "created": "Created",
+                "lastVisit": "Last Visit"
+              },
+              "skipColumn": "— Skip —",
+              "columns": {
+                "fullName": "Full Name",
+                "mobile": "Mobile",
+                "email": "Email Address",
+                "birthday": "Birthday",
+                "createdAt": "Created At",
+                "lastVisit": "Last Visit",
+                "notes": "Customer Notes"
+              },
+              "preview": {
+                "heading": "Data preview",
+                "subXlsx": "First 5 rows from sheet “{sheet}”, starting after header row {headerRow}.",
+                "subCsv": "First 5 rows from CSV, starting after header row {headerRow}.",
+                "count": "{shown} / {total} rows",
+                "empty": "No sample rows available for this sheet/header.",
+                "readable": "Readable data",
+                "maybeSkipped": "May be skipped on import"
+              },
+              "result": {
+                "heading": "Import complete",
+                "headingNone": "No customers imported",
+                "sub": "The customer list has been refreshed. Valid rows were added successfully.",
+                "subNone": "No valid rows could be added from this file.",
+                "subAllDuplicates": "Every row was skipped because the phone number already exists.",
+                "total": "Total rows",
+                "imported": "Imported",
+                "duplicates": "Duplicates",
+                "invalid": "Invalid"
+              },
+              "skipped": {
+                "heading": "{count} rows were skipped",
+                "sub": "Showing the first 5 rows. Download CSV for the full report.",
+                "download": "Download CSV report",
+                "toast": "CSV report downloaded.",
+                "colRow": "Row",
+                "colPhone": "Phone",
+                "colStatus": "Status",
+                "colReason": "Reason",
+                "status": {
+                  "duplicate": "Duplicate",
+                  "duplicateInFile": "Duplicate in file",
+                  "invalid": "Invalid"
+                },
+                "codes": {
+                  "ROW_DUPLICATE_IN_BUSINESS": "Duplicate",
+                  "ROW_DUPLICATE_IN_FILE": "Duplicate in file",
+                  "ROW_PHONE_MISSING": "Missing phone",
+                  "ROW_PHONE_INVALID": "Invalid phone"
+                },
+                "reasons": {
+                  "duplicateExisting": "Phone number already exists in this business.",
+                  "duplicateInFile": "Duplicate of an earlier valid row in the file.",
+                  "phoneRequired": "Required phone number is missing.",
+                  "invalidPhone": "Phone number format is invalid.",
+                  "invalidEmail": "Email format is invalid."
+                }
+              }
+            }
           },
           "callLog": {
             "headerTitle": "Call log",
