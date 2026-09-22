@@ -21,6 +21,16 @@ export const CommunityChatHubMethod = {
   SendMessage: 'SendMessage',
   StartTyping: 'StartTyping',
   StopTyping: 'StopTyping',
+  // Voice/video call signaling (US-03 backend, US-05 FE wiring) — invoked directly by
+  // src/calls/callState.ts, not through this file's helper functions (one-way dependency).
+  InitiateCall: 'InitiateCall',
+  AnswerCall: 'AnswerCall',
+  RejectCall: 'RejectCall',
+  CancelCall: 'CancelCall',
+  EndCall: 'EndCall',
+  SendSdpOffer: 'SendSdpOffer',
+  SendSdpAnswer: 'SendSdpAnswer',
+  SendIceCandidate: 'SendIceCandidate',
 } as const
 
 /** Server → Client hub event names. */
@@ -31,6 +41,25 @@ export const CommunityChatHubEvent = {
   UserStartedTyping: 'UserStartedTyping',
   UserStoppedTyping: 'UserStoppedTyping',
   MessageError: 'MessageError',
+  // Voice/video call signaling (US-03 backend, US-05 FE wiring) — handled by
+  // src/calls/callState.ts via connection.on(...), not by this file's connection factory.
+  IncomingCall: 'IncomingCall',
+  CallAnswered: 'CallAnswered',
+  CallAnsweredElsewhere: 'CallAnsweredElsewhere',
+  CallRejected: 'CallRejected',
+  CallCanceled: 'CallCanceled',
+  // NOTE: never actually sent by the Hub today — "busy" is signaled by InitiateCall's invoke()
+  // promise rejecting (HubException), not a connection.on() event. Kept as a named constant for
+  // forward-compat / documentation; do not register a handler expecting it to fire.
+  CallBusy: 'CallBusy',
+  CallEnded: 'CallEnded',
+  ReceiveSdpOffer: 'ReceiveSdpOffer',
+  ReceiveSdpAnswer: 'ReceiveSdpAnswer',
+  ReceiveIceCandidate: 'ReceiveIceCandidate',
+  // Real Hub event (Clients.Caller) for RejectCall/CancelCall/EndCall/SDP+ICE relay failures —
+  // not in the original US-05 AC list but required so those fire-and-forget Hub methods surface
+  // errors client-side at all.
+  CallError: 'CallError',
 } as const
 
 export function getCommunityChatHubUrl(): string {

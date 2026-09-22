@@ -86,6 +86,7 @@ const AUDIENCE_MEMBERS = [
   OneQrAudience.Customer,
   OneQrAudience.Staff,
   OneQrAudience.Owner,
+  OneQrAudience.AIVoice,
 ] as const
 
 const IDENTITY_POLICY_MEMBERS = [
@@ -174,7 +175,7 @@ function normalizeAudienceConfig(raw: Raw): OneQrRoleConfig {
 }
 
 /**
- * The backend seeds all three audiences at create time, but backfill anyway so
+ * The backend seeds every audience at create time, but backfill anyway so
  * the builder never renders a blank form for a role the server omitted.
  */
 function withAllAudiences(configs: OneQrRoleConfig[]): OneQrRoleConfig[] {

@@ -383,6 +383,38 @@ export default function PosCompletedOrdersPanel({
                     </div>
                   </div>
 
+                  {viewDetail.data.note || (viewDetail.data.notePhotoUrls && viewDetail.data.notePhotoUrls.length > 0) ? (
+                    <div>
+                      <h4 className="mb-2 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+                        {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailNoteTitle')}
+                      </h4>
+                      {viewDetail.data.note ? (
+                        <p className="whitespace-pre-wrap rounded-lg bg-nexoraCanvas p-2.5 text-xs text-nexoraText">
+                          {viewDetail.data.note}
+                        </p>
+                      ) : null}
+                      {viewDetail.data.notePhotoUrls && viewDetail.data.notePhotoUrls.length > 0 ? (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {viewDetail.data.notePhotoUrls.map((url) => (
+                            <a
+                              key={url}
+                              href={url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="h-14 w-14 overflow-hidden rounded-lg border border-nexoraBorder"
+                            >
+                              <img
+                                src={url}
+                                alt={t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailNotePhotoAlt')}
+                                className="h-full w-full object-cover"
+                              />
+                            </a>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+
                   {viewDetail.data.serviceLines.length > 0 ? (
                     <div>
                       <h4 className="mb-2 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">

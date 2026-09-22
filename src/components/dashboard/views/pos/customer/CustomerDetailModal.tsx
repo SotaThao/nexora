@@ -1,13 +1,14 @@
-// Read-only operational customer profile for the POS front desk.
-import type { ReactNode } from 'react'
+// Operational customer profile for the POS front desk.
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
-  CalendarClock,
   CalendarDays,
   Cake,
   Clock3,
+  Footprints,
   History,
   Mail,
   MapPin,
+  Pencil,
   Phone,
   ReceiptText,
   UserRound,
@@ -16,6 +17,13 @@ import {
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { usePagination } from '../../../../../hooks/usePagination'
 import { usePosCustomerDetail, usePosCustomerOrderHistory } from '../../../../../data/hooks/usePosCustomers'
+import { useMerchantVoiceTenantStatus, useUpdateMerchantVoiceCustomer } from '../../../../../data/hooks/useMerchantVoiceBookings'
+import { useSessionRole } from '../../../../../auth/useSessionRole'
+import {
+  normalizeMerchantVoiceCustomerStatus,
+  normalizeMerchantVoiceCustomerType,
+} from '../../../../../data/repositories/merchantVoice'
+import BookingCustomerModal from '../../BookingCustomerModal'
 import { SkeletonList } from '../../../../ui/skeleton'
 import Pagination from '../../../../ui/Pagination'
 import { formatPosDateTime } from '../posDateTime'
@@ -88,13 +96,26 @@ function DetailRow({ icon, label, value }: { icon: ReactNode; label: string; val
 export default function CustomerDetailModal({
   businessId,
   customerId,
+  initialEditing,
   onClose,
 }: {
   businessId: string
   customerId: string
+  initialEditing?: boolean
   onClose: () => void
 }) {
   const { t, currentLanguage } = useTranslation()
+  const { isOwner } = useSessionRole()
+  const { data: tenantStatus } = useMerchantVoiceTenantStatus({ enabled: isOwner })
+  const canEditCustomer = isOwner && tenantStatus?.hasVoiceTenant
+  const [isEditing, setIsEditing] = useState(initialEditing ?? false)
+  const dialogRef = useRef<HTMLElement>(null)
+  const editButtonRef = useRef<HTMLButtonElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const wasEditingRef = useRef(false)
+  /** True only when edit mode was entered via the pencil button below, while the detail view was on screen — that's the one case with a view to go "Back" to. */
+  const editedFromDetailViewRef = useRef(false)
+  const updateCustomer = useUpdateMerchantVoiceCustomer()
   const p = 'components.dashboard.views.pos.CustomerTab.'
   const formatDateTime = (iso: string | null | undefined) => formatPosDateTime(iso, currentLanguage)
   const { data: customer, isLoading: isDetailLoading } = usePosCustomerDetail(businessId, customerId)
@@ -104,6 +125,19 @@ export default function CustomerDetailModal({
     isLoading: isHistoryLoading,
     isFetching: isHistoryFetching,
   } = usePosCustomerOrderHistory(businessId, customerId, { pageNumber, pageSize })
+
+  useEffect(() => {
+    if (wasEditingRef.current && !isEditing) editButtonRef.current?.focus()
+    wasEditingRef.current = isEditing
+  }, [isEditing])
+
+  useEffect(() => {
+    const previous = document.activeElement
+    closeButtonRef.current?.focus()
+    return () => {
+      if (previous instanceof HTMLElement && previous.isConnected) previous.focus()
+    }
+  }, [])
 
   const historyItems = historyPage?.items ?? []
   const notProvided = t(p + 'viewDetailNotProvided')
@@ -121,12 +155,58 @@ export default function CustomerDetailModal({
     ? t(p + (CUSTOMER_SOURCE_LABEL_KEYS[customer.source] ?? 'customerSource.Manual'))
     : ''
 
+  if (isEditing && customer && canEditCustomer) {
+    return (
+      <BookingCustomerModal
+        customer={{
+          id: customer.id,
+          name: customer.name ?? null,
+          phoneNumber: customer.phoneE164 || (customer.phoneCountryCode
+            ? `${customer.phoneCountryCode}${customer.phone}`
+            : customer.phone),
+          email: customer.email ?? null,
+          address: customer.address ?? null,
+          dateOfBirth: customer.dateOfBirth ?? null,
+          type: normalizeMerchantVoiceCustomerType(customer.type),
+          status: normalizeMerchantVoiceCustomerStatus(customer.status),
+        }}
+        onClose={onClose}
+        onBack={editedFromDetailViewRef.current ? () => setIsEditing(false) : undefined}
+        onSave={(body) => updateCustomer.mutateAsync({ id: customer.id, body })}
+      />
+    )
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 backdrop-blur-[2px] sm:p-4">
       <section
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="customer-detail-dialog-title"
+        tabIndex={-1}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') {
+            event.preventDefault()
+            event.stopPropagation()
+            onClose()
+            return
+          }
+          if (event.key !== 'Tab') return
+          const controls = dialogRef.current?.querySelectorAll<HTMLElement>(
+            ':is(button, input, select, textarea, a[href], [tabindex]):not(:disabled):not([tabindex="-1"])',
+          )
+          if (!controls?.length) return
+          const first = controls[0]
+          const last = controls[controls.length - 1]
+          if (event.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.current)) {
+            event.preventDefault()
+            last.focus()
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault()
+            first.focus()
+          }
+        }}
         className="flex max-h-[calc(100dvh-1rem)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-nexoraBorder bg-white shadow-2xl sm:max-h-[calc(100dvh-2rem)]"
       >
         <header className="shrink-0 border-b border-nexoraBorder bg-gradient-to-br from-nexoraCanvas via-white to-nexoraLavender/20 p-4 sm:p-5">
@@ -144,7 +224,24 @@ export default function CustomerDetailModal({
                 </div>
               ) : (
                 <>
-                  <h2 className="pos-customer-name mt-1 truncate text-xl font-black text-nexoraText sm:text-2xl">{customerName}</h2>
+                  <div className="mt-1 flex min-w-0 items-center gap-2">
+                    <h2 className="pos-customer-name min-w-0 truncate text-xl font-black text-nexoraText sm:text-2xl">{customerName}</h2>
+                    {canEditCustomer ? (
+                      <button
+                        ref={editButtonRef}
+                        type="button"
+                        onClick={() => {
+                          editedFromDetailViewRef.current = true
+                          setIsEditing(true)
+                        }}
+                        aria-label={t(p + 'editCustomer')}
+                        className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-nexoraBrand/30 bg-white px-2.5 text-xs font-semibold text-nexoraBrand transition hover:border-nexoraBrand hover:bg-nexoraBrand/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand/40 focus-visible:ring-offset-2"
+                      >
+                        <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                        {t('components.dashboard.views.BookingHubView.customers.editAction')}
+                      </button>
+                    ) : null}
+                  </div>
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
                     <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-nexoraBrandDark ring-1 ring-inset ring-nexoraBrand/20">
                       {customerType}
@@ -167,6 +264,7 @@ export default function CustomerDetailModal({
             </div>
 
             <button
+              ref={closeButtonRef}
               type="button"
               onClick={onClose}
               aria-label={t(p + 'viewDetailCloseAria')}
@@ -189,92 +287,76 @@ export default function CustomerDetailModal({
               <section
                 role="region"
                 aria-label={t(p + 'viewDetailOverviewTitle')}
-                className="grid grid-cols-1 gap-3 sm:grid-cols-3"
               >
-                <div className="rounded-2xl border border-nexoraBorder bg-white p-3.5 shadow-sm">
-                  <div className="flex items-center gap-2 text-nexoraMuted">
-                    <UserRound className="h-4 w-4 text-nexoraBrand" aria-hidden="true" />
-                    <p className="text-[10px] font-black uppercase tracking-wide">
-                      {t(p + 'viewDetailTotalVisit')}
-                    </p>
+                <dl className="grid divide-y divide-nexoraBorder overflow-hidden rounded-xl border border-nexoraBorder bg-nexoraCanvas/40 sm:grid-cols-[0.7fr_1fr_1fr] sm:divide-x sm:divide-y-0">
+                  <div className="grid min-w-0 grid-cols-[1fr_1.5fr] items-center gap-x-3 px-3 py-2 sm:block">
+                    <dt className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
+                      <Footprints className="h-3.5 w-3.5 shrink-0 text-nexoraBrand" aria-hidden="true" />
+                      <span>{t(p + 'viewDetailTotalVisit')}</span>
+                    </dt>
+                    <dd className="text-right text-sm font-bold tabular-nums text-nexoraText sm:mt-1 sm:text-left">{customer.totalVisit}</dd>
                   </div>
-                  <p className="mt-2 text-2xl font-black tabular-nums text-nexoraText">{customer.totalVisit}</p>
-                </div>
 
-                <div className="rounded-2xl border border-nexoraBorder bg-white p-3.5 shadow-sm">
-                  <div className="flex items-center gap-2 text-nexoraMuted">
-                    <Clock3 className="h-4 w-4 text-nexoraBrand" aria-hidden="true" />
-                    <p className="text-[10px] font-black uppercase tracking-wide">
-                      {t(p + 'viewDetailLastVisit')}
-                    </p>
+                  <div className="grid min-w-0 grid-cols-[1fr_1.5fr] items-center gap-x-3 px-3 py-2 sm:block">
+                    <dt className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
+                      <Clock3 className="h-3.5 w-3.5 shrink-0 text-nexoraBrand" aria-hidden="true" />
+                      <span>{t(p + 'viewDetailLastVisit')}</span>
+                    </dt>
+                    <dd className="break-words text-right text-xs font-semibold leading-5 text-nexoraText sm:mt-1 sm:text-left">{formatDateTime(customer.lastVisit)}</dd>
                   </div>
-                  <p className="mt-2 text-sm font-bold text-nexoraText">{formatDateTime(customer.lastVisit)}</p>
-                </div>
 
-                <div className="rounded-2xl border border-nexoraBorder bg-white p-3.5 shadow-sm">
-                  <div className="flex items-center gap-2 text-nexoraMuted">
-                    <CalendarDays className="h-4 w-4 text-nexoraBrand" aria-hidden="true" />
-                    <p className="text-[10px] font-black uppercase tracking-wide">
-                      {t(p + 'viewDetailCustomerSince')}
-                    </p>
+                  <div className="grid min-w-0 grid-cols-[1fr_1.5fr] items-center gap-x-3 px-3 py-2 sm:block">
+                    <dt className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
+                      <CalendarDays className="h-3.5 w-3.5 shrink-0 text-nexoraBrand" aria-hidden="true" />
+                      <span>{t(p + 'viewDetailCustomerSince')}</span>
+                    </dt>
+                    <dd className="break-words text-right text-xs font-semibold leading-5 text-nexoraText sm:mt-1 sm:text-left">{formatDateTime(customer.createdAt)}</dd>
                   </div>
-                  <p className="mt-2 text-sm font-bold text-nexoraText">{formatDateTime(customer.createdAt)}</p>
-                </div>
+                </dl>
               </section>
 
-              <div className="grid gap-4 lg:grid-cols-2">
-                <section className="rounded-2xl border border-nexoraBorder bg-white p-4 shadow-sm">
-                  <h3 className="flex items-center gap-2 text-sm font-black text-nexoraText">
-                    <Mail className="h-4 w-4 text-nexoraBrand" aria-hidden="true" />
-                    {t(p + 'viewDetailContactTitle')}
-                  </h3>
-                  <div className="mt-3 space-y-2">
-                    <DetailRow
-                      icon={<Phone className="h-4 w-4" aria-hidden="true" />}
-                      label={t(p + 'viewDetailPhone')}
-                      value={customerPhone}
-                    />
-                    <DetailRow
-                      icon={<Mail className="h-4 w-4" aria-hidden="true" />}
-                      label={t(p + 'viewDetailEmail')}
-                      value={customer.email || notProvided}
-                    />
+              <section
+                aria-label={t(p + 'viewDetailProfileTitle')}
+                className="rounded-2xl border border-nexoraBorder bg-white p-4 shadow-sm"
+              >
+                <h3 className="flex items-center gap-2 text-sm font-black text-nexoraText">
+                  <UserRound className="h-4 w-4 text-nexoraBrand" aria-hidden="true" />
+                  {t(p + 'viewDetailProfileTitle')}
+                </h3>
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <DetailRow
+                    icon={<Phone className="h-4 w-4" aria-hidden="true" />}
+                    label={t(p + 'viewDetailPhone')}
+                    value={customerPhone}
+                  />
+                  <DetailRow
+                    icon={<Mail className="h-4 w-4" aria-hidden="true" />}
+                    label={t(p + 'viewDetailEmail')}
+                    value={customer.email || notProvided}
+                  />
+                  <DetailRow
+                    icon={<Cake className="h-4 w-4" aria-hidden="true" />}
+                    label={t(p + 'viewDetailDateOfBirth')}
+                    value={
+                      customer.dateOfBirth
+                        ? formatProfileDate(customer.dateOfBirth, currentLanguage)
+                        : notProvided
+                    }
+                  />
+                  <DetailRow
+                    icon={<ReceiptText className="h-4 w-4" aria-hidden="true" />}
+                    label={t(p + 'viewDetailSource')}
+                    value={customerSource}
+                  />
+                  <div className="sm:col-span-2">
                     <DetailRow
                       icon={<MapPin className="h-4 w-4" aria-hidden="true" />}
                       label={t(p + 'viewDetailAddress')}
                       value={customer.address || notProvided}
                     />
                   </div>
-                </section>
-
-                <section className="rounded-2xl border border-nexoraBorder bg-white p-4 shadow-sm">
-                  <h3 className="flex items-center gap-2 text-sm font-black text-nexoraText">
-                    <UserRound className="h-4 w-4 text-nexoraBrand" aria-hidden="true" />
-                    {t(p + 'viewDetailProfileTitle')}
-                  </h3>
-                  <div className="mt-3 space-y-2">
-                    <DetailRow
-                      icon={<Cake className="h-4 w-4" aria-hidden="true" />}
-                      label={t(p + 'viewDetailDateOfBirth')}
-                      value={
-                        customer.dateOfBirth
-                          ? formatProfileDate(customer.dateOfBirth, currentLanguage)
-                          : notProvided
-                      }
-                    />
-                    <DetailRow
-                      icon={<CalendarClock className="h-4 w-4" aria-hidden="true" />}
-                      label={t(p + 'viewDetailCreatedAt')}
-                      value={formatDateTime(customer.createdAt)}
-                    />
-                    <DetailRow
-                      icon={<ReceiptText className="h-4 w-4" aria-hidden="true" />}
-                      label={t(p + 'viewDetailSource')}
-                      value={customerSource}
-                    />
-                  </div>
-                </section>
-              </div>
+                </div>
+              </section>
             </>
           )}
 

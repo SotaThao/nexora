@@ -1,6 +1,7 @@
 import { CommunityChatMessageType, CommunityChatType } from '../../constants/communityChat'
 import {
   formatCommunityChatLastMessagePreview,
+  getOneOnOnePeerParticipant,
   isSameCommunityChatProfileId,
   resolveCommunityChatPeerDisplayName,
   type ResolveCommunityChatSessionTitleOptions,
@@ -77,6 +78,9 @@ export function mapCommunityChatSessionToConversation(
     session.lastMessagePreview,
     session.lastMessageType,
   )
+  // Only needed for the voice-call "start call" button (US-06) — not set by the pending/staff-roster
+  // path since that one already carries peerUserProfileId/avatar directly from the roster entry.
+  const peer = getOneOnOnePeerParticipant(session, currentUserProfileId)
 
   return {
     id: session.id,
@@ -90,6 +94,8 @@ export function mapCommunityChatSessionToConversation(
     updatedAt: session.lastMessageAt ?? '',
     unreadCount: session.unreadCount,
     businessId: String(session.businessId ?? '').trim() || null,
+    peerUserProfileId: peer?.userProfileId?.trim() || null,
+    peerAvatarUrl: peer?.avatarUrl ?? null,
   }
 }
 
@@ -100,15 +106,20 @@ export function mapCommunityChatMessageToThreadMessage(
   const isOutgoing = isSameCommunityChatProfileId(message.senderId, currentUserProfileId)
   const isImage = message.messageType === CommunityChatMessageType.Image
 
+  const isCall = message.messageType === CommunityChatMessageType.Call
+
   return {
     id: message.id,
     direction: isOutgoing
       ? HeaderChatMessageDirection.Outgoing
       : HeaderChatMessageDirection.Incoming,
-    bodyText: isImage ? undefined : message.content,
+    // Call messages never use the raw `content` fallback (English text from the backend) — the
+    // bubble renders a localized label from `callMeta` instead (US-06).
+    bodyText: isImage || isCall ? undefined : message.content,
     imageUrl: isImage ? message.content : undefined,
     sentAt: message.sentAt,
     isDeleted: message.isDeleted,
+    callMeta: isCall ? (message.metadata ?? null) : undefined,
   }
 }
 

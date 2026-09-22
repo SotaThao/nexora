@@ -63,6 +63,8 @@ export default function CategoryGroupedCatalogPicker({
   allCategoryLabel,
   uncategorizedLabel,
   searchPlaceholder,
+  title,
+  hideTitleText = false,
   variant = 'list',
   selectedItemIds,
   allowRepeatedItems = false,
@@ -72,6 +74,8 @@ export default function CategoryGroupedCatalogPicker({
   showDuration = false,
   missingPriceLabel = '—',
   scrollInParentOnTablet = false,
+  scrollInParent = false,
+  scrollInParentOnPhone = false,
 }: {
   items: CatalogPickerItem[]
   onAdd: (itemId: string) => void
@@ -83,6 +87,11 @@ export default function CategoryGroupedCatalogPicker({
   // an item with no PosCategory link would never appear in any grouped section.
   uncategorizedLabel: string
   searchPlaceholder?: string
+  title?: string
+  // Keeps the title's layout (row spacing, pill gap, search bar size) while hiding the visible
+  // heading text — for a caller whose own surrounding chrome (e.g. a modal header) already names
+  // this section, so the label is not shown twice.
+  hideTitleText?: boolean
   variant?: 'list' | 'grid'
   // Check-in Step 2's technician-first flow (grid variant only) — when provided, this
   // switches on the whole "enhanced service card" treatment (top-right toggle circle,
@@ -105,6 +114,13 @@ export default function CategoryGroupedCatalogPicker({
   missingPriceLabel?: string
   // Estimate caps the whole card on tablet; avoid a second scroll area inside it.
   scrollInParentOnTablet?: boolean
+  // Same idea at every width, phone included — for a caller that already wraps this picker in
+  // its own scrollable region (e.g. a modal body), so two nested scroll areas never stack.
+  scrollInParent?: boolean
+  // The opposite width split from scrollInParentOnTablet: below md: the page itself is the only
+  // scroll region, so the bounded height is dropped there; from md: up the own max-h + scroll is
+  // restored.
+  scrollInParentOnPhone?: boolean
 }) {
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
@@ -153,6 +169,9 @@ export default function CategoryGroupedCatalogPicker({
   }, [items, searchQuery])
 
   const isGrid = variant === 'grid'
+  const serviceGridClassName = title
+    ? 'grid grid-cols-[repeat(auto-fit,minmax(min(100%,15rem),1fr))] gap-2'
+    : 'grid grid-cols-1 gap-2 sm:grid-cols-2'
 
   const renderItemRow = (item: CatalogPickerItem) => (
     <div
@@ -312,27 +331,51 @@ export default function CategoryGroupedCatalogPicker({
 
   const flatItems = selectedCategoryId === '' ? searchedItems : itemsForCategory(selectedCategoryId)
   const isEmpty = selectedCategoryId === '' ? (groupedSections?.length ?? 0) === 0 : flatItems.length === 0
+  // Mutually exclusive with the bounded max-h below: scrollInParent drops it at every width,
+  // scrollInParentOnTablet only from lg: up, scrollInParentOnPhone only below md:. Never combine
+  // max-h-[...] with max-h-none in one className string — same specificity, so which one wins
+  // depends on Tailwind's build-wide class order, not on the order written here.
+  const gridScrollClass = scrollInParent
+    ? 'overflow-visible'
+    : scrollInParentOnPhone
+      ? 'overflow-visible md:max-h-[min(70dvh,744px)] md:overflow-y-auto'
+      : `max-h-[min(70dvh,744px)] overflow-y-auto${scrollInParentOnTablet ? ' lg:max-h-none lg:overflow-visible' : ''}`
 
-  return (
-    <div className="space-y-2">
-      <div className="relative">
-        <Search
-          className={`pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${
-            isGrid ? 'text-nexoraMuted' : 'text-nexoraMuted'
-          }`}
-        />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder={searchPlaceholder}
-          className={
-            isGrid
+  const searchInput = (
+    <div className={title ? 'relative min-w-0 max-w-md flex-1' : 'relative'}>
+      <Search
+        className={`pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${
+          isGrid ? 'text-nexoraMuted' : 'text-nexoraMuted'
+        }`}
+      />
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        placeholder={searchPlaceholder}
+        className={
+          title
+            ? 'h-9 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas/70 pl-8 pr-3 text-xs text-nexoraText outline-none transition-colors placeholder:text-nexoraMuted/65 focus:border-nexoraBrand focus:bg-nexoraSurface focus:ring-2 focus:ring-nexoraBrand/10'
+            : isGrid
               ? `${isCheckinServiceMode ? 'h-9 text-xs' : 'h-11 text-xs'} w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas pl-8 pr-2.5 text-nexoraText outline-none focus:border-nexoraBrand`
               : 'h-8 w-full rounded-lg border border-nexoraBorder bg-white pl-8 pr-2.5 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand'
-          }
-        />
-      </div>
+        }
+      />
+    </div>
+  )
+
+  return (
+    <div className={title ? 'space-y-3' : 'space-y-2'}>
+      {title ? (
+        <div className="flex items-center justify-between gap-3">
+          {hideTitleText ? null : (
+            <h3 className="shrink-0 text-xs font-black uppercase tracking-wider text-nexoraMuted">
+              {title}
+            </h3>
+          )}
+          {searchInput}
+        </div>
+      ) : searchInput}
 
       {isCheckinServiceMode ? (
         categories.length === 0 ? (
@@ -399,7 +442,7 @@ export default function CategoryGroupedCatalogPicker({
       ) : (
         <>
           {categories.length > 0 ? (
-            <div className="flex flex-wrap gap-1.5">
+            <div className={title ? 'flex flex-wrap gap-2' : 'flex flex-wrap gap-1.5'}>
               <button
                 type="button"
                 onClick={() => setSelectedCategoryId('')}
@@ -450,13 +493,13 @@ export default function CategoryGroupedCatalogPicker({
             <p className={isGrid ? 'text-xs text-nexoraMuted' : 'text-[11px] text-nexoraMuted'}>{emptyLabel}</p>
           ) : selectedCategoryId === '' ? (
             isGrid ? (
-              <div className={`max-h-[min(70dvh,744px)] space-y-4 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable] ${scrollInParentOnTablet ? 'md:max-h-none md:overflow-visible' : ''}`}>
+              <div className={`${gridScrollClass} space-y-4 ${title ? 'overscroll-auto' : 'overscroll-contain'} pr-1 [scrollbar-gutter:stable]`}>
                 {groupedSections!.map((section) => (
                   <div key={section.category.id}>
                     <h4 className="sticky top-0 z-[1] mb-2 rounded-md bg-nexoraCanvas px-3 py-2 text-[10px] font-black uppercase text-nexoraMuted">
                       {section.category.name}
                     </h4>
-                    {renderServices(section.items, "grid grid-cols-1 gap-2 sm:grid-cols-2")}
+                    {renderServices(section.items, serviceGridClassName)}
                   </div>
                 ))}
               </div>
@@ -473,11 +516,11 @@ export default function CategoryGroupedCatalogPicker({
               </div>
             )
           ) : isGrid ? (
-            <div className={`max-h-[min(70dvh,744px)] overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable] ${scrollInParentOnTablet ? 'md:max-h-none md:overflow-visible' : ''}`}>
+            <div className={`${gridScrollClass} ${title ? 'overscroll-auto' : 'overscroll-contain'} pr-1 [scrollbar-gutter:stable]`}>
               <h4 className="sticky top-0 z-[1] mb-2 rounded-md bg-nexoraCanvas px-3 py-2 text-[10px] font-black uppercase text-nexoraMuted">
                 {categories.find(category => category.id === selectedCategoryId)?.name}
               </h4>
-              {renderServices(flatItems, "grid grid-cols-1 gap-2 sm:grid-cols-2")}
+              {renderServices(flatItems, serviceGridClassName)}
             </div>
           ) : (
             <div className="max-h-72 space-y-1 overflow-y-auto rounded-lg border border-nexoraBorder p-1.5 pr-3">

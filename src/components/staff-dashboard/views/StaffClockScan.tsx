@@ -17,6 +17,7 @@ import { formatPosTime } from '../../dashboard/views/pos/posDateTime'
 import { formatHours } from '../../dashboard/views/pos/timeclock/timeClockDay'
 import { SkeletonList } from '../../ui/skeleton'
 import { tk } from '../../dashboard/views/pos/timeclock/timeClockI18n'
+import { setStaffClockedInSalonId } from '../work-orders/myTicketsSalonPreference'
 
 /** Resolve to an i18n key (not translated text) so language switches re-render correctly. */
 function staffClockScanErrorKey(err: unknown): string {
@@ -43,6 +44,11 @@ export default function StaffClockScan() {
     setActionErrorKey(null)
     try {
       const response = await scan.mutateAsync({ businessId, token })
+      if (response.action === ScanClockAction.ClockedIn) {
+        setStaffClockedInSalonId(businessId)
+      } else if (response.action === ScanClockAction.ClockedOut) {
+        setStaffClockedInSalonId(null)
+      }
       setResult({ action: response.action, hours: response.hours, occurredAt: response.occurredAt })
     } catch (err: unknown) {
       setActionErrorKey(staffClockScanErrorKey(err))

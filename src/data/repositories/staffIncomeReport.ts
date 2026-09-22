@@ -29,6 +29,8 @@ export interface StaffIncomeReportSummary {
   isEstimatedPay: boolean
   turns: number | null
   service: number | null
+  discountBorne: number | null
+  supplyFeeBorne: number | null
   commission: number | null
   commissionPercent: number | null
   techTakes: number | null
@@ -43,15 +45,27 @@ export interface StaffIncomeReportSources {
   selfReportedIncome: number
 }
 
-export interface StaffIncomeReportBreakdownItem extends Record<string, unknown> {
+export interface StaffIncomeReportBreakdownItem {
+  date: string
+  income: number
+  pay: number
+  tip: number
+  otherIncome: number
+  paidAmount: number
+  totalHours: number
   turns: number | null
   service: number | null
+  discountBorne: number | null
+  supplyFeeBorne: number | null
   commission: number | null
   commissionPercent: number | null
   techTakes: number | null
 }
 
-export interface StaffIncomeBusinessBreakdownItem extends Record<string, unknown> {
+export interface StaffIncomeBusinessBreakdownItem {
+  businessId: string | null
+  businessName: string
+  isIndependent: boolean
   summary: StaffIncomeReportSummary
   sources: StaffIncomeReportSources
 }
@@ -62,6 +76,34 @@ export interface StaffIncomeReportResponse {
   sources: StaffIncomeReportSources
   breakdown: StaffIncomeReportBreakdownItem[]
   businessBreakdown: StaffIncomeBusinessBreakdownItem[]
+}
+
+export interface StaffIncomeReportTicket {
+  orderId: string
+  orderNumber: string
+  completedAt: string
+  services: string[]
+  amount: number
+  tips: number
+  ownerDiscount: number
+  totalDiscount: number
+  collectedAmount: number
+  paymentMethod: string | null
+}
+
+export interface StaffIncomeReportTicketsResponse {
+  businessId: string
+  date: string
+  tickets: StaffIncomeReportTicket[]
+  totalAmount: number
+  totalTips: number
+  totalDiscount: number
+  totalCollected: number
+}
+
+export interface StaffIncomeReportTicketsParams {
+  businessId: string
+  date: string
 }
 
 function buildIncomeReportQuery(params: StaffIncomeReportParams): string {
@@ -98,6 +140,14 @@ export function createStaffIncomeReportRepository(client: HttpClient = httpClien
     async getIncomeReport(params: StaffIncomeReportParams): Promise<StaffIncomeReportResponse> {
       return client.get<StaffIncomeReportResponse>(
         `/api/v1/staff/reports/income?${buildIncomeReportQuery(params)}`,
+      )
+    },
+    async getIncomeReportTickets(
+      params: StaffIncomeReportTicketsParams,
+    ): Promise<StaffIncomeReportTicketsResponse> {
+      const query = new URLSearchParams({ businessId: params.businessId, date: params.date })
+      return client.get<StaffIncomeReportTicketsResponse>(
+        `/api/v1/staff/reports/income/tickets?${query.toString()}`,
       )
     },
   }

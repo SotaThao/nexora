@@ -18,6 +18,8 @@ import {
   resolveStaffBusinessLinkStatusLabel,
 } from '../../../utils/staffBusinessLinkStatus'
 import { sortSalonBusinesses } from '../utils/staffSalonDisplay'
+import StaffDailyIncomeDetailModal from './StaffDailyIncomeDetailModal'
+import StaffWeeklyIncomeDetailModal from './StaffWeeklyIncomeDetailModal'
 
 import './staffSalonReport.css'
 
@@ -175,6 +177,64 @@ export default function StaffSalonReport() {
   const reportQuery = useStaffIncomeReport(reportParams, { enabled: shouldLoadReport })
   const summary = reportQuery.data?.summary
   const sources = reportQuery.data?.sources
+  const breakdown = reportQuery.data?.breakdown
+  const [showWeeklyDetail, setShowWeeklyDetail] = useState(false)
+  const [showDailyDetail, setShowDailyDetail] = useState(false)
+  const isBusinessScope = selectedSourceValue !== ALL_SOURCES_VALUE
+    && selectedSourceValue !== INDEPENDENT_SOURCE_VALUE
+  const weekRangeStart = useMemo(
+    () => getIsoWeekStart(Number(selectedWeekYear), Number(selectedWeek)),
+    [selectedWeekYear, selectedWeek],
+  )
+  const weeklyDetailRows = useMemo(() => {
+    const startDate = new Date(`${weekRangeStart}T12:00:00`)
+    return Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(startDate)
+      date.setDate(date.getDate() + index)
+      const isoDate = toLocalIsoDate(date)
+      const match = breakdown?.find((item) => item.date === isoDate)
+      return {
+        date: isoDate,
+        amount: match?.service ?? 0,
+        tips: match?.tip ?? 0,
+      }
+    })
+  }, [weekRangeStart, breakdown])
+  const weeklyDetailTotals = useMemo(() => {
+    const amount = summary?.service ?? 0
+    const discount = summary?.discountBorne ?? 0
+    const commission = summary?.commission ?? 0
+    return {
+      amount,
+      tips: summary?.tip ?? 0,
+      discount,
+      commission,
+      cashCollected: amount - discount - commission,
+    }
+  }, [summary])
+  const weeklyPeriodLabel = useMemo(() => {
+    const startDate = new Date(`${weekRangeStart}T12:00:00`)
+    const endDate = new Date(startDate)
+    endDate.setDate(endDate.getDate() + 6)
+    const rangeFormatter = new Intl.DateTimeFormat(currentLanguage === 'vi' ? 'vi-VN' : 'en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
+    return `${rangeFormatter.format(startDate)} – ${rangeFormatter.format(endDate)}`
+  }, [weekRangeStart, currentLanguage])
+  const dailyPeriodLabel = useMemo(() => {
+    const dayFormatter = new Intl.DateTimeFormat(currentLanguage === 'vi' ? 'vi-VN' : 'en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
+    return dayFormatter.format(new Date(`${selectedDate}T12:00:00`))
+  }, [selectedDate, currentLanguage])
+  const selectedBusinessDisplayName = useMemo(() => {
+    const business = activeBusinesses.find((item) => item.businessId === selectedSourceValue)
+    return business?.nicknameAtBusiness || business?.businessName || ''
+  }, [activeBusinesses, selectedSourceValue])
   const metrics: ReportMetric[] = selectedSourceValue === ALL_SOURCES_VALUE
     ? [
         { key: 'income', value: summary?.income ?? null, format: 'currency' },
@@ -268,8 +328,8 @@ export default function StaffSalonReport() {
     options = years,
     isFullWidth = false,
   ) => (
-    <label className={`relative flex min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted ${
-      isFullWidth ? 'w-full' : 'w-[80px] shrink-0'
+    <label className={`relative flex min-w-0 flex-none flex-col gap-1.5 text-xs font-bold text-nexoraMuted ${
+      isFullWidth ? 'w-[150px]' : 'w-[80px]'
     }`}>
       <span className="sr-only">{t('staff_salon_report.year')}</span>
       <select
@@ -390,14 +450,14 @@ export default function StaffSalonReport() {
               >
                 <ChevronLeft className="h-4 w-4" aria-hidden="true" />
               </button>
-              <div className="relative min-w-0 flex-1">
+              <div className="relative min-w-0 flex-none">
                 <CalendarDays
                   className={`pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-nexoraBrand ${activeTab === 'monthly' ? 'hidden' : activeTab === 'weekly' ? 'hidden sm:block' : ''}`}
                   aria-hidden="true"
                 />
                 <div className="flex w-full min-w-0 flex-nowrap gap-2">
                   {activeTab === 'daily' && (
-                    <label className="flex w-full min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
+                    <label className="flex w-[190px] min-w-0 flex-none flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
                       <span className="sr-only">{t('staff_salon_report.date')}</span>
                       <input
                         type="date"
@@ -414,7 +474,7 @@ export default function StaffSalonReport() {
 
                   {activeTab === 'weekly' && (
                     <>
-                      <label className="relative flex min-w-0 flex-1 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
+                      <label className="relative flex w-[130px] min-w-0 flex-none flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
                         <span className="sr-only">{t('staff_salon_report.week')}</span>
                         <select
                           aria-label={t('staff_salon_report.week')}
@@ -436,7 +496,7 @@ export default function StaffSalonReport() {
 
                   {activeTab === 'monthly' && (
                     <>
-                      <label className="relative flex min-w-0 flex-1 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
+                      <label className="relative flex w-[120px] min-w-0 flex-none flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
                         <span className="sr-only">{t('staff_salon_report.month')}</span>
                         <select
                           aria-label={t('staff_salon_report.month')}
@@ -606,10 +666,45 @@ export default function StaffSalonReport() {
                   )
                 })}
               </dl>
+
+              {(activeTab === 'weekly' || activeTab === 'daily') && isBusinessScope && (
+                <div className="mt-3.5 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => (activeTab === 'weekly' ? setShowWeeklyDetail(true) : setShowDailyDetail(true))}
+                    className="inline-flex h-10 items-center justify-center rounded-lg border border-nexoraBrand/25 bg-white px-4 text-xs font-semibold text-nexoraBrand transition hover:bg-nexoraBrandSoft"
+                  >
+                    {t('staff_salon_report.detail.action')}
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
       </section>
+
+      {showWeeklyDetail && (
+        <StaffWeeklyIncomeDetailModal
+          periodLabel={weeklyPeriodLabel}
+          rows={weeklyDetailRows}
+          totals={weeklyDetailTotals}
+          currencyFormatter={currencyFormatter}
+          onClose={() => setShowWeeklyDetail(false)}
+        />
+      )}
+
+      {showDailyDetail && isBusinessScope && (
+        <StaffDailyIncomeDetailModal
+          businessId={selectedSourceValue}
+          date={selectedDate}
+          name={selectedBusinessDisplayName}
+          periodLabel={dailyPeriodLabel}
+          currencyFormatter={currencyFormatter}
+          totalSupplyFee={summary?.supplyFeeBorne ?? 0}
+          totalCommission={summary?.commission ?? 0}
+          onClose={() => setShowDailyDetail(false)}
+        />
+      )}
     </div>
   )
 }

@@ -579,6 +579,70 @@ export interface PosCustomerOrderHistoryPage {
   hasPreviousPage: boolean
 }
 
+/** US-112 — POS Customer Excel/CSV import. */
+export type PosCustomerImportSkipCode =
+  | 'ROW_PHONE_MISSING'
+  | 'ROW_PHONE_INVALID'
+  | 'ROW_DUPLICATE_IN_FILE'
+  | 'ROW_DUPLICATE_IN_BUSINESS'
+  | string
+
+export interface PosCustomerImportColumnDto {
+  index: number
+  header: string
+  sampleValues: string[]
+}
+
+export interface PosCustomerImportSuggestedMappingDto {
+  customerNameColumnIndex?: number | null
+  phoneNumberColumnIndex?: number | null
+  emailColumnIndex?: number | null
+  dateOfBirthColumnIndex?: number | null
+  regisDateColumnIndex?: number | null
+  lastVisitColumnIndex?: number | null
+}
+
+export interface PosCustomerImportPreviewDto {
+  sheetNames: string[]
+  selectedSheetName: string
+  headerRow: number
+  columns: PosCustomerImportColumnDto[]
+  suggestedMapping: PosCustomerImportSuggestedMappingDto
+}
+
+export interface PosCustomerImportSkippedRowDto {
+  rowNumber: number
+  phone?: string | null
+  code: PosCustomerImportSkipCode
+  message: string
+}
+
+export interface PosCustomerImportResultDto {
+  totalRows: number
+  importedCount: number
+  skippedDuplicateCount: number
+  skippedInvalidCount: number
+  skippedRows: PosCustomerImportSkippedRowDto[]
+}
+
+export interface PosCustomerImportPreviewRequest {
+  file: File
+  sheetName?: string
+  headerRow?: number
+}
+
+export interface PosCustomerImportRequest {
+  file: File
+  sheetName: string
+  headerRow: number
+  phoneNumberColumnIndex: number
+  customerNameColumnIndex?: number | null
+  emailColumnIndex?: number | null
+  dateOfBirthColumnIndex?: number | null
+  regisDateColumnIndex?: number | null
+  lastVisitColumnIndex?: number | null
+}
+
 export interface CheckInOverviewSummaryApiDto {
   totalCheckIns: number
   newGuests: number
@@ -1062,25 +1126,87 @@ export interface EligiblePromotionApiDto {
   endTime: string
 }
 
+/** One banner slot on a promotion detail (studio cover + extras). */
+export interface PosPromotionBannerApiDto {
+  colorHex?: string | null
+  imageUrl?: string | null
+  sortOrder: number
+}
+
+/** Multipart banner entry on create/update — exactly one of colorHex / image (or imageUrl to re-fetch). */
+export interface PosPromotionBannerPayload {
+  colorHex?: string | null
+  image?: File | null
+  /** Existing remote image — repository re-fetches and re-uploads on full-replace update. */
+  imageUrl?: string | null
+}
+
+/**
+ * List row from GET /merchant/pos/{businessId}/promotions (PosPromotionDto).
+ * `photoUrl` remains as a legacy mirror of the primary banner image when present.
+ */
 export interface PosPromotionApiDto extends EligiblePromotionApiDto {
   isActive: boolean
+  /** OneQR hero placement — show this promotion’s banners on OneQR. */
+  showOnOneQrHero?: boolean
+  /** Search Deals listing request (review happens outside this API). */
+  submitToSearchDeals?: boolean
   /** False once a visit has used the promotion — it can only be deactivated from then on. */
   canDelete: boolean
   description?: string | null
+  /** Studio template id when the offer was started from a template. */
+  templateCode?: string | null
+  /** Cover banner solid/tint color (e.g. `#4648D8`). */
+  primaryBannerColorHex?: string | null
+  /** Cover banner image URL when the primary banner is an upload. */
+  primaryBannerImageUrl?: string | null
+  /** Legacy alias of the primary banner image — prefer `primaryBannerImageUrl`. */
   photoUrl?: string | null
+}
+
+/** GET /merchant/pos/{businessId}/promotions/{id} — includes the full banner list. */
+export interface PosPromotionDetailApiDto extends Omit<
+  PosPromotionApiDto,
+  'primaryBannerColorHex' | 'primaryBannerImageUrl' | 'photoUrl'
+> {
+  banners: PosPromotionBannerApiDto[]
+}
+
+/** One starter from GET /merchant/pos/promotion-templates. */
+export interface PosPromotionTemplateApiDto {
+  code: string
+  name: string
+  badgeLabel: string
+  description: string
+  discountType: string
+  discountValue: number
+  daysOfWeek: string[]
+  startTime: string
+  endTime: string
+}
+
+export interface PosPromotionStudioMetadataApiDto {
+  templates: PosPromotionTemplateApiDto[]
 }
 
 export interface PosPromotionPayload {
   name: string
   badgeLabel: string | null
   description?: string | null
+  /** Optional studio template code (e.g. from promotion-templates). */
+  templateCode?: string | null
+  /** Legacy single photo field — still accepted by the API alongside banners. */
   photo?: File | null
+  /** Banner slots; index 0 is the cover used for list primaryBanner*. */
+  banners?: PosPromotionBannerPayload[]
   discountType: string
   discountValue: number
   daysOfWeek: string[]
   startTime: string
   endTime: string
   isActive: boolean
+  showOnOneQrHero?: boolean
+  submitToSearchDeals?: boolean
 }
 
 export interface AddOrderCustomServiceLinePayload {
@@ -1163,6 +1289,7 @@ export interface OrderDetailApiDto {
   receiptPhone?: string | null
   completedAt?: string | null
   note?: string | null
+  notePhotoUrls?: string[] | null
 }
 
 /** One option in the "+ Add-On" picker, scoped to the service line it was opened from. */

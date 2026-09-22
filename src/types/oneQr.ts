@@ -59,7 +59,7 @@ export interface OneQrModuleCatalogItem {
   defaultIcon: string | null
   /** Admin-configured router with placeholders intact; null for CustomLink. */
   urlTemplate: string | null
-  /** Open by design — every module is assignable to all three audiences. */
+  /** Open by design — every module is assignable to every audience. */
   allowedAudiences: OneQrAudience[]
   /** TipAndPay and Review both need an active TouchPoint to point at. */
   requiresTouchPoint: boolean
@@ -81,7 +81,7 @@ export interface OneQr {
   createdAt: string | null
   /** Backend-computed: drives the TipAndPay warning without a second request. */
   hasActiveTouchPoint: boolean
-  /** Always three entries, in Customer / Staff / Owner order. */
+  /** Always four entries, in Customer / Staff / Owner / AIVoice order. */
   audiences: OneQrRoleConfig[]
   /** Registry catalog, shipped inline with the config. */
   catalog: OneQrModuleCatalogItem[]
