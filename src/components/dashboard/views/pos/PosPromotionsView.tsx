@@ -234,6 +234,8 @@ export default function PosPromotionsView({ businessId }: { businessId?: string 
         endTime: promotion.endTime.slice(0, 5),
         // Duplicate starts off so Owner can review before enabling.
         isActive: false,
+        showOnOneQrHero: Boolean(detail.showOnOneQrHero),
+        submitToSearchDeals: Boolean(detail.submitToSearchDeals),
         banners: bannersPayloadFromPromotion(detail),
       })
       showToast(t(`${K}.createSuccess`), 'success', TOAST_SNACK_DURATION_MS)
@@ -265,6 +267,10 @@ export default function PosPromotionsView({ businessId }: { businessId?: string 
             startTime: promotion.startTime,
             endTime: promotion.endTime,
             isActive: nextActive,
+            showOnOneQrHero: Boolean(promotion.showOnOneQrHero ?? detail.showOnOneQrHero),
+            submitToSearchDeals: Boolean(
+              promotion.submitToSearchDeals ?? detail.submitToSearchDeals,
+            ),
             banners: bannersPayloadFromPromotion(detail),
           },
         },
@@ -526,7 +532,7 @@ export default function PosPromotionsView({ businessId }: { businessId?: string 
                         {promotion.isActive ? (
                           <span className="promo-chip">{t(`${K}.chipCheckout`)}</span>
                         ) : null}
-                        {imageUrl ? (
+                        {promotion.showOnOneQrHero ? (
                           <span className="promo-chip">{t(`${K}.chipHero`)}</span>
                         ) : null}
                         <span className="promo-chip">{bannerLabel}</span>
