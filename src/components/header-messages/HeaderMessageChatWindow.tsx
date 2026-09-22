@@ -10,6 +10,7 @@ import {
   Send,
   Sparkles,
   User,
+  Users,
   Video,
   X,
 } from 'lucide-react'
@@ -228,6 +229,7 @@ function NewDirectChatWelcome({
   onPickStarter: (text: string) => void
 }) {
   const nameVars = { name: conversation.name }
+  const isGroupChat = conversation.chatType === CommunityChatType.Group
 
   return (
     <div className="header-message-chat-new-welcome" role="status">
@@ -239,12 +241,16 @@ function NewDirectChatWelcome({
         {t(`${chatTk}.newChatWelcomeTitle`, nameVars)}
       </p>
       <p className="header-message-chat-new-subtitle">
-        {t(`${chatTk}.newChatWelcomeSubtitle`)}
+        {t(`${chatTk}.${isGroupChat ? 'newChatWelcomeSubtitleGroup' : 'newChatWelcomeSubtitle'}`)}
       </p>
 
       <div className="header-message-chat-new-badge">
-        <User className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-        <span>{t(`${chatTk}.directChatSubtitle`)}</span>
+        {isGroupChat ? (
+          <Users className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        ) : (
+          <User className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        )}
+        <span>{t(`${chatTk}.${isGroupChat ? 'groupChatSubtitle' : 'directChatSubtitle'}`)}</span>
       </div>
 
       <p className="header-message-chat-new-hint">
@@ -272,7 +278,7 @@ function NewDirectChatWelcome({
 
       <p className="header-message-chat-new-privacy">
         <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-        <span>{t(`${chatTk}.newChatPrivacy`, nameVars)}</span>
+        <span>{t(`${chatTk}.${isGroupChat ? 'newChatPrivacyGroup' : 'newChatPrivacy'}`, nameVars)}</span>
       </p>
     </div>
   )
