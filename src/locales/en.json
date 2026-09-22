@@ -4682,6 +4682,8 @@
             "viewDetailCompletedAt": "Completed",
             "viewDetailStatus": "Status",
             "viewDetailPaymentMethod": "Payment Method",
+            "viewDetailNoteTitle": "Note",
+            "viewDetailNotePhotoAlt": "Ticket note photo",
             "viewDetailServicesTitle": "Services",
             "viewDetailProductsTitle": "Products",
             "viewDetailUnassigned": "Unassigned",
