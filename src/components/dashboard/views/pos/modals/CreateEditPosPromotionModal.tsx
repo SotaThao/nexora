@@ -1,6 +1,6 @@
 // CreateEditPosPromotionModal — studio layout matching the reward-promotions HTML prototype:
 // details, discount & schedule, placements, and a multi-banner / poster preview column.
-import { useEffect, useId, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   ArrowDown,
@@ -136,6 +136,8 @@ export default function CreateEditPosPromotionModal({
   const { t } = useTranslation()
   const uploadInputId = useId()
   const detailQuery = usePosPromotionDetail(businessId, promotion?.id)
+  /** Seed banners from detail once per promotion — refetch must not wipe in-progress uploads. */
+  const detailSeededForIdRef = useRef<string | null>(null)
 
   const [name, setName] = useState('')
   const [badgeLabel, setBadgeLabel] = useState('')
@@ -166,6 +168,7 @@ export default function CreateEditPosPromotionModal({
   }
 
   useEffect(() => {
+    detailSeededForIdRef.current = null
     if (promotion) {
       setName(promotion.name ?? '')
       setBadgeLabel(promotion.badgeLabel ?? '')
@@ -197,8 +200,8 @@ export default function CreateEditPosPromotionModal({
       setStartTime(toInputTime(promotion.startTime))
       setEndTime(toInputTime(promotion.endTime))
       setIsActive(promotion.isActive)
-      setShowHero(Boolean(seedImage))
-      setSubmitPublic(false)
+      setShowHero(Boolean(promotion.showOnOneQrHero))
+      setSubmitPublic(Boolean(promotion.submitToSearchDeals))
     } else if (draft) {
       setName(draft.name)
       setBadgeLabel(draft.badgeLabel)
@@ -213,7 +216,7 @@ export default function CreateEditPosPromotionModal({
       setStartTime(draft.startTime)
       setEndTime(draft.endTime)
       setIsActive(false)
-      setShowHero(true)
+      setShowHero(false)
       setSubmitPublic(false)
     } else {
       setName('')
@@ -240,6 +243,8 @@ export default function CreateEditPosPromotionModal({
   useEffect(() => {
     const detail = detailQuery.data
     if (!promotion || !detail?.banners?.length) return
+    // Only hydrate once — later refetches must not clobber a freshly chosen local file.
+    if (detailSeededForIdRef.current === promotion.id) return
 
     const next = [...detail.banners]
       .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -256,9 +261,12 @@ export default function CreateEditPosPromotionModal({
       })
 
     if (next.length === 0) return
+    detailSeededForIdRef.current = promotion.id
     replaceBanners(next)
     setSelectedBannerIndex(0)
     setAddTheme(next[0].theme)
+    setShowHero(Boolean(detail.showOnOneQrHero))
+    setSubmitPublic(Boolean(detail.submitToSearchDeals))
   }, [detailQuery.data, promotion, t])
 
   useEffect(() => {
@@ -380,7 +388,7 @@ export default function CreateEditPosPromotionModal({
   }
 
   const handleUpload = (file: File | null) => {
-    if (!file || atBannerLimit) return
+    if (!file) return
     const normalized = normalizeAllowedImageFile(file)
     if (!normalized) {
       setFieldErrors((prev) => ({
@@ -390,7 +398,7 @@ export default function CreateEditPosPromotionModal({
       return
     }
     const objectUrl = URL.createObjectURL(normalized)
-    const next: EditorBanner = {
+    const imageBanner: EditorBanner = {
       key: newBannerKey(),
       theme: addTheme,
       imageUrl: objectUrl,
@@ -398,8 +406,29 @@ export default function CreateEditPosPromotionModal({
       imageName: normalized.name,
       localObjectUrl: true,
     }
-    setBanners((prev) => [...prev, next])
-    setSelectedBannerIndex(banners.length)
+
+    // Uploaded art becomes the cover (index 0). A lone default theme banner is replaced;
+    // otherwise the selected slot is converted / replaced, then moved to front.
+    setBanners((prev) => {
+      if (prev.length === 0) return [imageBanner]
+
+      const onlyDefaultTheme = prev.length === 1 && !bannerHasImage(prev[0])
+      if (onlyDefaultTheme) {
+        revokeLocalUrl(prev[0])
+        return [imageBanner]
+      }
+
+      const idx = Math.min(Math.max(selectedBannerIndex, 0), prev.length - 1)
+      const copy = [...prev]
+      revokeLocalUrl(copy[idx])
+      copy[idx] = { ...imageBanner, key: copy[idx].key }
+      if (idx !== 0) {
+        const [picked] = copy.splice(idx, 1)
+        copy.unshift(picked)
+      }
+      return copy
+    })
+    setSelectedBannerIndex(0)
     clearFieldError(PromotionField.Banners)
   }
 
@@ -436,28 +465,46 @@ export default function CreateEditPosPromotionModal({
     setFieldErrors(errors)
     if (Object.keys(errors).length > 0) return
 
+    const bannerPayloads = banners.map((banner) => {
+      if (banner.imageFile) {
+        return { colorHex: null, image: banner.imageFile as File, imageUrl: null as string | null }
+      }
+      if (banner.imageUrl && !banner.localObjectUrl) {
+        return { colorHex: null, image: null as File | null, imageUrl: banner.imageUrl }
+      }
+      return {
+        colorHex: colorHexFromTheme(banner.theme),
+        image: null as File | null,
+        imageUrl: null as string | null,
+      }
+    })
+
+    // Cover must be an uploaded/remote image when one exists — list uses banners[0].
+    const coverIndex = bannerPayloads.findIndex((banner) => banner.image || banner.imageUrl)
+    if (coverIndex > 0) {
+      const [cover] = bannerPayloads.splice(coverIndex, 1)
+      bannerPayloads.unshift(cover)
+    }
+
+    const coverImage = bannerPayloads.find((banner) => banner.image)?.image ?? null
+
     onSubmit({
       name: name.trim(),
       badgeLabel: badgeLabel.trim() || null,
       description: description.trim() || null,
       templateCode: templateCode || null,
-      // New studio integrations send Banners[] only — Photo is legacy.
-      photo: null,
-      banners: banners.map((banner) => {
-        if (banner.imageFile) {
-          return { colorHex: null, image: banner.imageFile }
-        }
-        if (banner.imageUrl && !banner.localObjectUrl) {
-          return { colorHex: null, image: null, imageUrl: banner.imageUrl }
-        }
-        return { colorHex: colorHexFromTheme(banner.theme), image: null }
-      }),
+      // Legacy Photo mirrors the cover image so create still works if nested banner file
+      // binding drops Banners[i].Image on the wire.
+      photo: coverImage,
+      banners: bannerPayloads,
       discountType,
       discountValue: parsedValue,
       daysOfWeek: days,
       startTime: toApiTime(startTime),
       endTime: toApiTime(endTime),
       isActive,
+      showOnOneQrHero: showHero,
+      submitToSearchDeals: submitPublic,
     })
   }
 
@@ -860,7 +907,6 @@ export default function CreateEditPosPromotionModal({
                 id={uploadInputId}
                 type="file"
                 accept="image/png,image/jpeg,image/jpg,image/webp,.png,.jpg,.jpeg,.webp"
-                disabled={atBannerLimit}
                 onChange={(e) => {
                   handleUpload(e.target.files?.[0] ?? null)
                   e.target.value = ''

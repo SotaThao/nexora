@@ -1147,6 +1147,10 @@ export interface PosPromotionBannerPayload {
  */
 export interface PosPromotionApiDto extends EligiblePromotionApiDto {
   isActive: boolean
+  /** OneQR hero placement — show this promotion’s banners on OneQR. */
+  showOnOneQrHero?: boolean
+  /** Search Deals listing request (review happens outside this API). */
+  submitToSearchDeals?: boolean
   /** False once a visit has used the promotion — it can only be deactivated from then on. */
   canDelete: boolean
   description?: string | null
@@ -1201,6 +1205,8 @@ export interface PosPromotionPayload {
   startTime: string
   endTime: string
   isActive: boolean
+  showOnOneQrHero?: boolean
+  submitToSearchDeals?: boolean
 }
 
 export interface AddOrderCustomServiceLinePayload {

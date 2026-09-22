@@ -139,6 +139,16 @@ export function normalizePosPromotion(value: unknown): PosPromotionApiDto {
     startTime: String(raw.startTime ?? raw.StartTime ?? ''),
     endTime: String(raw.endTime ?? raw.EndTime ?? ''),
     isActive: readBoolean(raw, 'isActive', readBoolean(raw, 'IsActive', false)),
+    showOnOneQrHero: readBoolean(
+      raw,
+      'showOnOneQrHero',
+      readBoolean(raw, 'ShowOnOneQrHero', false),
+    ),
+    submitToSearchDeals: readBoolean(
+      raw,
+      'submitToSearchDeals',
+      readBoolean(raw, 'SubmitToSearchDeals', false),
+    ),
     canDelete: readBoolean(raw, 'canDelete', readBoolean(raw, 'CanDelete', false)),
   }
 }
@@ -163,6 +173,8 @@ export function normalizePosPromotionDetail(value: unknown): PosPromotionDetailA
     startTime: list.startTime,
     endTime: list.endTime,
     isActive: list.isActive,
+    showOnOneQrHero: list.showOnOneQrHero,
+    submitToSearchDeals: list.submitToSearchDeals,
     canDelete: list.canDelete,
     banners,
   }
@@ -183,7 +195,7 @@ function normalizeTemplate(value: unknown): PosPromotionTemplateApiDto {
   }
 }
 
-/** Re-upload an existing banner image on full-replace update (API only accepts ColorHex | Image file). */
+/** Fetch a remote banner so create/duplicate can re-upload it as a new file. */
 async function fileFromImageUrl(url: string): Promise<File> {
   const response = await fetch(url)
   if (!response.ok) {
@@ -206,7 +218,8 @@ async function fileFromImageUrl(url: string): Promise<File> {
 
 async function resolveBanners(
   banners: PosPromotionBannerPayload[],
-): Promise<Array<{ colorHex: string | null; image: File | null }>> {
+  keepRemoteImages: boolean,
+): Promise<Array<{ colorHex: string | null; image: File | null; imageUrl: string | null }>> {
   return Promise.all(
     banners.map(async (banner) => {
       if (banner.image) {
@@ -216,32 +229,44 @@ async function resolveBanners(
             errorCode: 'POS_PROMOTION_BANNER_IMAGE_INVALID_TYPE',
           })
         }
-        return { colorHex: null, image: normalized }
+        return { colorHex: null, image: normalized, imageUrl: null }
       }
       if (banner.imageUrl) {
-        return { colorHex: null, image: await fileFromImageUrl(banner.imageUrl) }
+        if (keepRemoteImages) {
+          // Update full-replace: keep the existing URL without re-download.
+          return { colorHex: null, image: null, imageUrl: banner.imageUrl }
+        }
+        // Create/duplicate: re-upload so the new promotion owns its own file.
+        return { colorHex: null, image: await fileFromImageUrl(banner.imageUrl), imageUrl: null }
       }
       const colorHex = banner.colorHex?.trim() || null
-      return { colorHex, image: null }
+      return { colorHex, image: null, imageUrl: null }
     }),
   )
 }
 
 /**
  * Multipart body per studio API guide — PascalCase keys, DiscountType 0|1, DaysOfWeek 0–6.
- * Each banner sends exactly one of ColorHex / Image (never both).
+ * Each banner sends exactly one of ColorHex / Image / ImageUrl (never more than one).
  */
-async function buildFormData(payload: PosPromotionPayload): Promise<FormData> {
+async function buildFormData(
+  payload: PosPromotionPayload,
+  options: { keepRemoteImages?: boolean } = {},
+): Promise<FormData> {
   const formData = new FormData()
   formData.append('Name', payload.name)
   if (payload.badgeLabel) formData.append('BadgeLabel', payload.badgeLabel)
   if (payload.description) formData.append('Description', payload.description)
   if (payload.templateCode) formData.append('TemplateCode', payload.templateCode)
 
-  const resolved = await resolveBanners(payload.banners ?? [])
-  if (resolved.length === 0 && payload.photo) {
-    const photo = normalizeAllowedImageFile(payload.photo)
-    if (photo) formData.append('Photo', photo, photo.name)
+  const resolved = await resolveBanners(payload.banners ?? [], Boolean(options.keepRemoteImages))
+  const primaryImage =
+    resolved.find((banner) => banner.image)?.image ??
+    (payload.photo ? normalizeAllowedImageFile(payload.photo) : null)
+
+  // Legacy Photo: used when Banners is empty OR as a safety net for cover-image create.
+  if (primaryImage) {
+    formData.append('Photo', primaryImage, primaryImage.name)
   }
 
   resolved.forEach((banner, index) => {
@@ -250,10 +275,21 @@ async function buildFormData(payload: PosPromotionPayload): Promise<FormData> {
       formData.append(`Banners[${index}].Image`, banner.image, banner.image.name)
       return
     }
+    if (banner.imageUrl) {
+      formData.append(`Banners[${index}].ImageUrl`, banner.imageUrl)
+      return
+    }
     if (banner.colorHex) {
       formData.append(`Banners[${index}].ColorHex`, banner.colorHex)
     }
   })
+
+  // If nested banner files were the only content and somehow produced an empty list, Photo alone
+  // still creates one image banner via the create/update handlers.
+  if (resolved.length === 0 && payload.photo && !primaryImage) {
+    const photo = normalizeAllowedImageFile(payload.photo)
+    if (photo) formData.append('Photo', photo, photo.name)
+  }
 
   formData.append('DiscountType', String(discountTypeToApi(payload.discountType)))
   formData.append('DiscountValue', String(payload.discountValue))
@@ -261,6 +297,8 @@ async function buildFormData(payload: PosPromotionPayload): Promise<FormData> {
   formData.append('StartTime', payload.startTime)
   formData.append('EndTime', payload.endTime)
   formData.append('IsActive', String(payload.isActive))
+  formData.append('ShowOnOneQrHero', String(Boolean(payload.showOnOneQrHero)))
+  formData.append('SubmitToSearchDeals', String(Boolean(payload.submitToSearchDeals)))
   return formData
 }
 
@@ -319,7 +357,7 @@ export function createPosPromotionsRepository(client: HttpClient = httpClient) {
     async createPosPromotion(businessId: string, payload: PosPromotionPayload): Promise<string> {
       return await client.upload<string>(
         `/api/v1/merchant/pos/${businessId}/promotions`,
-        await buildFormData(payload),
+        await buildFormData(payload, { keepRemoteImages: false }),
         'POST',
       )
     },
@@ -331,7 +369,7 @@ export function createPosPromotionsRepository(client: HttpClient = httpClient) {
     ): Promise<boolean> {
       return await client.upload<boolean>(
         `/api/v1/merchant/pos/${businessId}/promotions/${promotionId}`,
-        await buildFormData(payload),
+        await buildFormData(payload, { keepRemoteImages: true }),
         'PUT',
       )
     },
