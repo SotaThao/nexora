@@ -4,6 +4,8 @@ import type { PosTurnTierApiDto } from '../../../../types/repositories'
 
 export const MAX_TURN_CREDIT = 100
 
+export const MAX_TURN_TIER_UP_TO = 1_000_000
+
 const currency = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',

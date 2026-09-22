@@ -328,8 +328,8 @@ export default function StaffSalonReport() {
     options = years,
     isFullWidth = false,
   ) => (
-    <label className={`relative flex min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted ${
-      isFullWidth ? 'w-full' : 'w-[80px] shrink-0'
+    <label className={`relative flex min-w-0 flex-none flex-col gap-1.5 text-xs font-bold text-nexoraMuted ${
+      isFullWidth ? 'w-[150px]' : 'w-[80px]'
     }`}>
       <span className="sr-only">{t('staff_salon_report.year')}</span>
       <select
@@ -450,14 +450,14 @@ export default function StaffSalonReport() {
               >
                 <ChevronLeft className="h-4 w-4" aria-hidden="true" />
               </button>
-              <div className="relative min-w-0 flex-1">
+              <div className="relative min-w-0 flex-none">
                 <CalendarDays
                   className={`pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-nexoraBrand ${activeTab === 'monthly' ? 'hidden' : activeTab === 'weekly' ? 'hidden sm:block' : ''}`}
                   aria-hidden="true"
                 />
                 <div className="flex w-full min-w-0 flex-nowrap gap-2">
                   {activeTab === 'daily' && (
-                    <label className="flex w-full min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
+                    <label className="flex w-[190px] min-w-0 flex-none flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
                       <span className="sr-only">{t('staff_salon_report.date')}</span>
                       <input
                         type="date"
@@ -474,7 +474,7 @@ export default function StaffSalonReport() {
 
                   {activeTab === 'weekly' && (
                     <>
-                      <label className="relative flex min-w-0 flex-1 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
+                      <label className="relative flex w-[130px] min-w-0 flex-none flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
                         <span className="sr-only">{t('staff_salon_report.week')}</span>
                         <select
                           aria-label={t('staff_salon_report.week')}
@@ -496,7 +496,7 @@ export default function StaffSalonReport() {
 
                   {activeTab === 'monthly' && (
                     <>
-                      <label className="relative flex min-w-0 flex-1 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
+                      <label className="relative flex w-[120px] min-w-0 flex-none flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
                         <span className="sr-only">{t('staff_salon_report.month')}</span>
                         <select
                           aria-label={t('staff_salon_report.month')}
@@ -700,6 +700,8 @@ export default function StaffSalonReport() {
           name={selectedBusinessDisplayName}
           periodLabel={dailyPeriodLabel}
           currencyFormatter={currencyFormatter}
+          totalSupplyFee={summary?.supplyFeeBorne ?? 0}
+          totalCommission={summary?.commission ?? 0}
           onClose={() => setShowDailyDetail(false)}
         />
       )}

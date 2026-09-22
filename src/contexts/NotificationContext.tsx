@@ -172,10 +172,10 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     <NotificationContext.Provider value={{ showToast, showConfirm }}>
       {children}
 
-      {/* Snacks clear the 64px sticky dashboard header — at top-3 the card sat on the
-          notification/account buttons and swallowed their clicks while visible. */}
+      {/* Top-right corner snack — container is pointer-events-none so it does not block
+          header clicks around the toast itself. */}
       {snacks.length > 0 ? (
-        <div className="pointer-events-none fixed right-3 top-[4.75rem] z-[99999] flex w-[min(22rem,calc(100%-1.5rem))] flex-col gap-2 sm:right-5">
+        <div className="pointer-events-none fixed right-3 top-3 z-[99999] flex w-[min(22rem,calc(100%-1.5rem))] flex-col gap-2 sm:right-5 sm:top-4">
           {snacks.map((snack) => {
             const SnackIcon =
               {

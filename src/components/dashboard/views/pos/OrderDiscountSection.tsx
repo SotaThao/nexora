@@ -1,5 +1,6 @@
 // Order-level discount entry and eligible promotions stay together behind one compact action.
 import { useMemo, useState } from 'react'
+import { BadgePercent } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { POS_DISCOUNT_BEARER_OPTIONS, PosDiscountBearer } from '../../../../constants/posDiscount'
 import { resolveOrderDiscountStaffShare } from '../../../../utils/posOrderDiscount'
@@ -118,8 +119,9 @@ export default function OrderDiscountSection({
         type="button"
         onClick={handleOpen}
         disabled={isSaving}
-        className="inline-flex h-7 items-center rounded-lg border border-amber-200 bg-amber-50/60 px-2.5 text-[10px] font-bold text-amber-700 transition-colors hover:bg-amber-100/70 disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex h-7 items-center gap-1 rounded-lg border border-amber-200 bg-amber-50/60 px-2.5 text-[10px] font-bold text-amber-700 transition-colors hover:bg-amber-100/70 disabled:cursor-not-allowed disabled:opacity-60"
       >
+        <BadgePercent aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
         {t(`${K}.button`)}
       </button>
 

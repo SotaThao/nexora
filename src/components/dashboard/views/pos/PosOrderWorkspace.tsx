@@ -11,7 +11,7 @@
 // page (PosCheckInTab / CheckInSurface), the same one the customer kiosk runs.
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowLeft, Loader2, Package, UserRound, Plus, X, Printer, ClipboardCheck, Camera, FolderOpen, Phone } from 'lucide-react'
+import { ArrowLeft, Loader2, Package, UserRound, X, Printer, ClipboardCheck, Camera, Image as ImageIcon, Phone, DollarSign, ChevronDown } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import type { TechnicianOption } from '../../../checkin/parts/TechnicianPickerGrid'
 import { useNotification } from '../../../../contexts/NotificationContext'
@@ -93,6 +93,8 @@ import ChangeServiceModal from './modals/ChangeServiceModal'
 import CustomServiceModal from './modals/CustomServiceModal'
 import type { CustomServiceSubmit, CustomServiceTarget } from './modals/CustomServiceModal'
 import ServiceAddOnPickerModal from './modals/ServiceAddOnPickerModal'
+import ServiceCatalogPickerModal from './modals/ServiceCatalogPickerModal'
+import TipModal from './modals/TipModal'
 import OrderDiscountSection from './OrderDiscountSection'
 import { sortTicketServiceLines } from './posTicketLineOrder'
 import ServiceDiscountModal, {
@@ -137,7 +139,10 @@ import { selectNextTurnStation } from './posNextTurn'
 import type { PosReceiptMode } from './posWorkspaceUrl'
 import { todayIso as reportTodayIso } from './report/posReportPeriod'
 
-type TipMode = 'noTip' | 'fixed10' | 'fixed15' | 'pct10' | 'pct20' | 'custom'
+export type TipMode = 'noTip' | 'fixed10' | 'fixed15' | 'pct10' | 'pct20' | 'custom'
+// Which of the three Tip modal options is active: no tip, one amount split evenly across the
+// ticket's technicians, or an amount picked separately per technician.
+export type TipPanelMode = 'noTip' | 'even' | 'perStaff'
 export type PosOrderWorkspaceMode = 'edit' | 'checkout' | 'success'
 
 // Percentage-based tip modes are a live % of servicesSubtotal, not a one-time snapshot —
@@ -547,6 +552,13 @@ export default function PosOrderWorkspace({
   } | null>(null)
   // Open when a custom (off-menu) service is being added (no serviceLineId) or corrected.
   const [customServiceTarget, setCustomServiceTarget] = useState<CustomServiceTarget | null>(null)
+  // Open when picking from the full service catalog on the checkout screen — the catalog moved
+  // into this modal once the left column started showing Tip/Payment/Summary/Pay instead.
+  const [isServicePickerOpen, setIsServicePickerOpen] = useState(false)
+  // Ticket Detail now renders above the catalog/payment column on phone (<768px), so it can push
+  // that column below the fold. Letting it collapse there gives the line items room without
+  // affecting the tablet/desktop layout, where it always stays expanded.
+  const [isTicketDetailCollapsed, setIsTicketDetailCollapsed] = useState(false)
   // The line whose "+ Add-On" picker is open. Held as id + name so the picker can title itself and
   // scope its own query without reaching back into the list.
   const [addOnTarget, setAddOnTarget] = useState<{ serviceLineId: string; serviceName: string } | null>(null)
@@ -554,7 +566,11 @@ export default function PosOrderWorkspace({
   // never has to reach back into the list while the order refetches underneath it.
   const [discountTarget, setDiscountTarget] = useState<ServiceDiscountTarget | null>(null)
   const [tipMode, setTipMode] = useState<TipMode>('noTip')
-  const [customTipInput, setCustomTipInput] = useState('')
+  // The Tip row on the checkout screen is one compact button; the three ways to set a tip live in
+  // the modal it opens, so which of them is showing has to be tracked here rather than derived from
+  // the button itself.
+  const [isTipModalOpen, setIsTipModalOpen] = useState(false)
+  const [tipPanelMode, setTipPanelMode] = useState<TipPanelMode>('noTip')
   const [noteInput, setNoteInput] = useState('')
   const [isUploadingNotePhoto, setIsUploadingNotePhoto] = useState(false)
   const [isNoteCameraOpen, setIsNoteCameraOpen] = useState(false)
@@ -569,11 +585,6 @@ export default function PosOrderWorkspace({
   const [cashReceived, setCashReceived] = useState('')
   const cashReceivedWasEditedRef = useRef(false)
   const [completedPayment, setCompletedPayment] = useState<CompleteOrderResultApiDto | null>(null)
-  // POS iPad redesign, Ticket 6 — "Turn to Customer": front desk flips the iPad around so
-  // the customer picks their own tip in private. Deliberately does NOT auto-return after
-  // the customer confirms — front desk must explicitly tap "Back to Staff" once they have
-  // the device back (brainstorm decision: avoid stray taps landing on the next screen).
-  const [customerFacingMode, setCustomerFacingMode] = useState(false)
   // POS iPad redesign, Ticket 6 — receipt delivery is a single choice: Send SMS (using the phone
   // already on file — mandatory since Ticket 2), Print, or No Receipt. Email is intentionally
   // omitted; Print Preview remains a separate action so previewing never changes the selection.
@@ -691,6 +702,18 @@ export default function PosOrderWorkspace({
     )
     return { posStaffProfileId, technicianName: line?.technicianName ?? null }
   }, [assignedTechnicianIds, visibleLines])
+  // Who the Tip modal can split a tip between. Read off the ticket's own lines rather than
+  // order.staffTipShares — that array only carries technicians the backend has already resolved a
+  // tip share for, so a ticket nobody has tipped yet (or just reassigned) can list fewer people
+  // than are actually working it, right when the cashier needs to see all of them.
+  const ticketTechnicians = useMemo(() => {
+    const names = new Map<string, string>()
+    for (const line of visibleLines) {
+      if (line.itemType !== 'Service' || !line.posStaffProfileId || !line.technicianName) continue
+      names.set(line.posStaffProfileId, line.technicianName)
+    }
+    return Array.from(names, ([posStaffProfileId, technicianName]) => ({ posStaffProfileId, technicianName }))
+  }, [visibleLines])
   const isTechnicianRosterLoading = areTechniciansPending || areTechniciansFetching
   // Ticket Detail placeholder and catalog pending share `isAddingLine` so one panel cannot
   // finish while the other is still locked. Initial sole-technician skill load uses pending
@@ -763,6 +786,7 @@ export default function PosOrderWorkspace({
 
     if (order.tipAmount === 0) {
       setTipMode('noTip')
+      setTipPanelMode('noTip')
     } else {
       const subtotal = order.servicesSubtotal
       const pct10 = subtotal > 0 ? round2(subtotal * TIP_PERCENT_BY_MODE.pct10!) : -1
@@ -772,7 +796,14 @@ export default function PosOrderWorkspace({
       else if (order.tipAmount === pct10) setTipMode('pct10')
       else if (order.tipAmount === pct20) setTipMode('pct20')
       else setTipMode('custom')
-      setCustomTipInput(formatUsdInputAmount(order.tipAmount))
+
+      // Guessed rather than tracked server-side: an equal split across every technician on the
+      // ticket opens back into "Chia đều", anything else (a prior custom save) opens into
+      // "Tip riêng từng thợ" with those amounts already in place.
+      const shares = order.staffTipShares
+      const evenShare = shares.length > 0 ? round2(order.tipAmount / shares.length) : 0
+      const isEvenSplit = shares.every((share) => Math.abs(share.tipAmount - evenShare) < 0.01)
+      setTipPanelMode(isEvenSplit ? 'even' : 'perStaff')
     }
   }, [order, mode, isPaid, initialTicketNote])
 
@@ -1528,12 +1559,6 @@ export default function PosOrderWorkspace({
     )
   }
 
-  const handleCustomTipCommit = () => {
-    const parsed = parseDirectPaymentAmountInput(customTipInput)
-    if (!Number.isFinite(parsed) || parsed < 0) return
-    applyTip('custom', round2(parsed))
-  }
-
   const handleNoteCommit = () => {
     if (setNote.isPending) return
     const trimmed = noteInput.trim()
@@ -1587,25 +1612,48 @@ export default function PosOrderWorkspace({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [order?.servicesSubtotal, tipMode, orderId, isBusy])
 
-  const tipSplitTotal = Object.values(tipSplitInputs).reduce(
-    (sum, value) => sum + parseDirectPaymentAmountInput(value),
+  // Summed over the ticket's own technician list, not Object.values(tipSplitInputs) — that map can
+  // carry a stale entry for someone no longer on the ticket (reassigned mid-checkout), which would
+  // otherwise silently inflate the total the cashier never sees a row for.
+  const tipSplitTotal = ticketTechnicians.reduce(
+    (sum, { posStaffProfileId }) => sum + parseDirectPaymentAmountInput(tipSplitInputs[posStaffProfileId] ?? ''),
     0,
   )
-  const isTipSplitBalanced = order ? Math.abs(round2(tipSplitTotal) - order.tipAmount) < 0.01 : false
 
-  const handleSaveTipSplit = () => {
-    if (!order || !isTipSplitBalanced || !startTicketAction(TicketBusySurface.Tip)) return
-    setStaffTipSplit.mutate(
+  // "Tip riêng từng thợ" builds the order's tip bottom-up from what's picked per technician —
+  // there is no separate total to agree on first. Saving treats that sum as the order's new tip:
+  // the order is updated to it first (the split write requires the two to already match), and the
+  // split itself only fires once that settles.
+  const handleSavePerStaffTip = () => {
+    if (!order || !startTicketAction(TicketBusySurface.Tip)) return
+    const total = round2(tipSplitTotal)
+    // Every technician on the ticket gets an explicit share, defaulting to 0 — one who was never
+    // clicked (still showing their empty default) must still land in the payload as $0, not be
+    // silently left out of it.
+    const shares = ticketTechnicians.map(({ posStaffProfileId }) => ({
+      posStaffProfileId,
+      tipAmount: round2(parseDirectPaymentAmountInput(tipSplitInputs[posStaffProfileId] ?? '')),
+    }))
+    const saveShares = () => {
+      setStaffTipSplit.mutate(
+        { orderId, payload: { shares } },
+        { onError: reportError, onSettled: endTicketAction },
+      )
+    }
+    if (Math.abs(order.tipAmount - total) < 0.005) {
+      saveShares()
+      return
+    }
+    setTipMode('custom')
+    setTip.mutate(
+      { orderId, tipAmount: total },
       {
-        orderId,
-        payload: {
-          shares: Object.entries(tipSplitInputs).map(([posStaffProfileId, amount]) => ({
-            posStaffProfileId,
-            tipAmount: round2(parseDirectPaymentAmountInput(amount)),
-          })),
+        onError: (err) => {
+          reportError(err)
+          endTicketAction()
         },
+        onSuccess: saveShares,
       },
-      { onError: reportError, onSettled: endTicketAction },
     )
   }
 
@@ -1719,6 +1767,7 @@ export default function PosOrderWorkspace({
     <PosServiceCatalogPanel
       items={serviceCatalog}
       isPending={isServiceCatalogPending}
+      scrollInParentOnPhone
       onAdd={(itemId) => {
         const service = serviceCatalog.find((s) => s.id === itemId)
         if (service) handleCatalogServiceClick(service)
@@ -1771,47 +1820,81 @@ export default function PosOrderWorkspace({
               aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.orderDetailTitle')}
               className="space-y-3 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4"
             >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h3 className="text-[10px] font-black tracking-wider text-nexoraMuted">
-                  <span className="uppercase">
-                    {t('components.dashboard.views.pos.PosOrderWorkspace.orderDetailTitle')}
-                  </span>{' '}
-                  <span className="normal-case">
-                    {t(
+              <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex items-center justify-between gap-2 lg:justify-start">
+                  <h3 className="min-w-0 text-[10px] font-black tracking-wider text-nexoraMuted">
+                    <span className="uppercase">
+                      {t('components.dashboard.views.pos.PosOrderWorkspace.orderDetailTitle')}
+                    </span>{' '}
+                    <span className="normal-case">
+                      {t(
+                        `components.dashboard.views.pos.PosOrderWorkspace.${
+                          serviceLineCount === 1 ? 'orderDetailServiceCountOne' : 'orderDetailServiceCount'
+                        }`,
+                        { count: serviceLineCount },
+                      )}
+                    </span>
+                  </h3>
+                  {/* Ticket Detail sits above the catalog/payment column on phone, so letting it
+                      collapse there keeps the rest of checkout reachable without scrolling past it.
+                      Hidden from md: up, where the two-column layout has room for it expanded. */}
+                  <IconButton
+                    className="shrink-0 md:hidden"
+                    label={t(
                       `components.dashboard.views.pos.PosOrderWorkspace.${
-                        serviceLineCount === 1 ? 'orderDetailServiceCountOne' : 'orderDetailServiceCount'
+                        isTicketDetailCollapsed ? 'ticketDetailExpand' : 'ticketDetailCollapse'
                       }`,
-                      { count: serviceLineCount },
                     )}
-                  </span>
-                </h3>
-                {canEditLines ? (
-                  <button
-                    type="button"
-                    data-testid="add-custom-service"
-                    onClick={() =>
-                      setCustomServiceTarget({
-                        posStaffProfileId: soleTicketTechnician?.posStaffProfileId ?? null,
-                        technicianName: soleTicketTechnician?.technicianName ?? null,
-                      })
-                    }
-                    disabled={isBusy}
-                    className="inline-flex h-7 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-nexoraBrand bg-nexoraBrandSoft/50 px-3 text-[11px] font-bold text-nexoraBrandDark transition-colors hover:bg-nexoraBrandSoft disabled:cursor-not-allowed disabled:opacity-60"
+                    onClick={() => setIsTicketDetailCollapsed((prev) => !prev)}
                   >
-                    <Plus aria-hidden="true" className="h-4 w-4 shrink-0" />
-                    {t('components.dashboard.views.pos.PosOrderWorkspace.addCustomServiceButton')}
-                  </button>
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform ${isTicketDetailCollapsed ? '' : 'rotate-180'}`}
+                      aria-hidden="true"
+                    />
+                  </IconButton>
+                </div>
+                {canEditLines ? (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {/* In edit mode the full catalog already sits inline in the other column, so
+                        this shortcut is only worth showing on phone, where Ticket Detail renders
+                        above that column and reaching it means scrolling past everything here. */}
+                    <button
+                      type="button"
+                      data-testid="add-services"
+                      onClick={() => setIsServicePickerOpen(true)}
+                      disabled={isBusy}
+                      className={`inline-flex h-7 shrink-0 items-center justify-center rounded-lg border border-nexoraBrand/40 bg-nexoraBrandSoft/40 px-3 text-[11px] font-bold text-nexoraBrandDark transition-colors hover:bg-nexoraBrandSoft disabled:cursor-not-allowed disabled:opacity-60${showPaymentSection ? '' : ' md:hidden'}`}
+                    >
+                      {t('components.dashboard.views.pos.PosOrderWorkspace.addServicesButton')}
+                    </button>
+                    <button
+                      type="button"
+                      data-testid="add-custom-service"
+                      onClick={() =>
+                        setCustomServiceTarget({
+                          posStaffProfileId: soleTicketTechnician?.posStaffProfileId ?? null,
+                          technicianName: soleTicketTechnician?.technicianName ?? null,
+                        })
+                      }
+                      disabled={isBusy}
+                      className="inline-flex h-7 shrink-0 items-center justify-center rounded-lg border border-violet-200 bg-violet-50/50 px-3 text-[11px] font-bold text-violet-700 transition-colors hover:bg-violet-100/70 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {t('components.dashboard.views.pos.PosOrderWorkspace.addCustomServiceButton')}
+                    </button>
+                  </div>
                 ) : null}
               </div>
 
+              <div className={isTicketDetailCollapsed ? 'hidden md:block' : 'space-y-3'}>
               {visibleLines.length === 0 && !showAddLinePlaceholder ? (
                 <p className="text-[11px] text-nexoraMuted">
                   {t('components.dashboard.views.pos.PosOrderWorkspace.noLines')}
                 </p>
               ) : (
-                // Bounded height + internal scroll: a long order scrolls its line items in
-                // place, keeping Note/Estimated Total/Start Service/Checkout below always visible.
-                <div className="max-h-[320px] space-y-2 overflow-y-auto pr-1">
+                // Bounded height + internal scroll only from sm: up. On phone the page itself is
+                // the only scroll region — a second one nested inside it means two scroll
+                // gestures stacked on the same touch area, which reads as broken, not helpful.
+                <div className="space-y-2 pr-1 sm:max-h-[320px] sm:overflow-y-auto">
                   {visibleLines.map((line, index) => (
                     <Fragment key={line.key}>
                       {index > 0 && !technicianHeadingByLineKey.has(line.key) ? (
@@ -2205,6 +2288,7 @@ export default function PosOrderWorkspace({
                   )}
                 </div>
               ) : null}
+              </div>
             </div>
 
             <div className="space-y-2 rounded-xl border border-nexoraBorder/70 bg-nexoraSurface p-3 shadow-sm">
@@ -2231,19 +2315,21 @@ export default function PosOrderWorkspace({
                     onClick={() => setIsNoteCameraOpen(true)}
                     disabled={notePhotoControlsDisabled}
                     aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteTakePhoto')}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-nexoraBorder bg-white text-nexoraMuted transition-colors hover:border-nexoraBrand/30 hover:text-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2.5 text-[11px] font-semibold text-nexoraMuted transition-colors hover:border-nexoraBrand/30 hover:text-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Camera className="h-4 w-4" />
+                    {t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteTakePhoto')}
                   </button>
                   <ImageFileInput
                     as="label"
                     onPickFile={handleAddNotePhoto}
                     disabled={notePhotoControlsDisabled}
                     accept="image/jpeg,image/png,image/webp"
-                    inputAriaLabel={t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteChooseFile')}
-                    className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border border-nexoraBorder bg-white text-nexoraMuted transition-colors ${notePhotoControlsDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:border-nexoraBrand/30 hover:text-nexoraBrandDark'}`}
+                    inputAriaLabel={t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteUploadImage')}
+                    className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2.5 text-[11px] font-semibold text-nexoraMuted transition-colors ${notePhotoControlsDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:border-nexoraBrand/30 hover:text-nexoraBrandDark'}`}
                   >
-                    <FolderOpen className="h-4 w-4" />
+                    <ImageIcon className="h-4 w-4" />
+                    {t('components.dashboard.views.pos.PosOrderWorkspace.ticketNoteUploadImage')}
                   </ImageFileInput>
                   {isUploadingNotePhoto ? <Loader2 className="h-4 w-4 animate-spin text-nexoraMuted" /> : null}
                 </div>
@@ -2362,169 +2448,11 @@ export default function PosOrderWorkspace({
               </div>
             ) : null}
 
-            {showPaymentSection && order ? (
-              <>
-                <div className="relative space-y-3 rounded-xl border border-nexoraBorder/70 bg-nexoraSurface p-3 shadow-sm">
-                  <TicketActionSkeletonOverlay
-                    visible={isTipBusy}
-                    label={mutationSkeletonLabel}
-                    count={TICKET_SKELETON_ROW_COUNT.tip}
-                  />
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
-                      {t('components.dashboard.views.pos.PosOrderWorkspace.tipTitle')}
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={() => setCustomerFacingMode(true)}
-                      className="rounded-lg border border-nexoraBrand/40 bg-nexoraBrandSoft/40 px-2.5 py-1 text-[10px] font-semibold text-nexoraBrandDark transition-colors hover:bg-nexoraBrandSoft"
-                    >
-                      {t('components.dashboard.views.pos.PosOrderWorkspace.turnToCustomerButton')}
-                    </button>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => applyTip('noTip', 0)}
-                      className={`inline-flex min-w-[84px] flex-[1_1_auto] items-center justify-center whitespace-nowrap h-8 rounded-lg border text-[11px] font-semibold transition-colors ${
-                        tipMode === 'noTip'
-                          ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
-                          : 'border-nexoraBorder/70 bg-white text-nexoraText hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft/40'
-                      }`}
-                    >
-                      {t('components.dashboard.views.pos.PosOrderWorkspace.noTipButton')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => applyTip('fixed10', 10)}
-                      className={`inline-flex min-w-[72px] flex-[1_1_auto] items-center justify-center whitespace-nowrap h-8 rounded-lg border text-[11px] font-semibold transition-colors ${
-                        tipMode === 'fixed10'
-                          ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
-                          : 'border-nexoraBorder/70 bg-white text-nexoraText hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft/40'
-                      }`}
-                    >
-                      $10
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => applyTip('fixed15', 15)}
-                      className={`inline-flex min-w-[72px] flex-[1_1_auto] items-center justify-center whitespace-nowrap h-8 rounded-lg border text-[11px] font-semibold transition-colors ${
-                        tipMode === 'fixed15'
-                          ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
-                          : 'border-nexoraBorder/70 bg-white text-nexoraText hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft/40'
-                      }`}
-                    >
-                      $15
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => applyTip('pct10', round2(order.servicesSubtotal * TIP_PERCENT_BY_MODE.pct10!))}
-                      className={`inline-flex min-w-[72px] flex-[1_1_auto] items-center justify-center whitespace-nowrap h-8 rounded-lg border text-[11px] font-semibold transition-colors ${
-                        tipMode === 'pct10'
-                          ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
-                          : 'border-nexoraBorder/70 bg-white text-nexoraText hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft/40'
-                      }`}
-                    >
-                      10%
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => applyTip('pct20', round2(order.servicesSubtotal * TIP_PERCENT_BY_MODE.pct20!))}
-                      className={`inline-flex min-w-[72px] flex-[1_1_auto] items-center justify-center whitespace-nowrap h-8 rounded-lg border text-[11px] font-semibold transition-colors ${
-                        tipMode === 'pct20'
-                          ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
-                          : 'border-nexoraBorder/70 bg-white text-nexoraText hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft/40'
-                      }`}
-                    >
-                      20%
-                    </button>
-                    <div className="min-w-[180px] flex-[2_1_180px]">
-                      <div className="relative">
-                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs font-medium text-nexoraMuted">
-                          $
-                        </span>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={customTipInput}
-                          onChange={(e) => setCustomTipInput(
-                            sanitizeDirectPaymentAmountInput(e.target.value, Number.MAX_SAFE_INTEGER),
-                          )}
-                          onFocus={() => setTipMode('custom')}
-                          onBlur={handleCustomTipCommit}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault()
-                              handleCustomTipCommit()
-                            }
-                          }}
-                          placeholder={t('components.dashboard.views.pos.PosOrderWorkspace.customTipPlaceholder')}
-                          className={`h-9 w-full min-w-0 rounded-lg border bg-nexoraCanvas/30 pl-7 pr-3 text-xs text-nexoraText outline-none transition-colors ${
-                            tipMode === 'custom' ? 'border-nexoraBrand/60 bg-nexoraBrandSoft/20' : 'border-nexoraBorder/70'
-                          }`}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+          </div>
+  )
 
-                {order.staffTipShares.length > 1 ? (
-                  <div className="relative space-y-2 rounded-xl border border-nexoraBorder/70 bg-nexoraSurface p-3 shadow-sm">
-                    <TicketActionSkeletonOverlay
-                      visible={isTipBusy}
-                      label={mutationSkeletonLabel}
-                      count={TICKET_SKELETON_ROW_COUNT.tip}
-                    />
-                    <h3 className="text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
-                      {t('components.dashboard.views.pos.PosOrderWorkspace.tipSplitTitle')}
-                    </h3>
-                    {order.staffTipShares.map((share) => (
-                      <div key={share.posStaffProfileId} className="flex items-center gap-2 text-xs">
-                        <span className="flex-1 truncate font-semibold text-nexoraText">{share.technicianName}</span>
-                        <div className="relative w-24">
-                          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs font-medium text-nexoraMuted">
-                            $
-                          </span>
-                          <input
-                            type="text"
-                            inputMode="decimal"
-                            value={tipSplitInputs[share.posStaffProfileId] ?? ''}
-                            onChange={(e) =>
-                              setTipSplitInputs((prev) => ({
-                                ...prev,
-                                [share.posStaffProfileId]: sanitizeDirectPaymentAmountInput(
-                                  e.target.value,
-                                  Number.MAX_SAFE_INTEGER,
-                                ),
-                              }))
-                            }
-                            className="h-8 w-full rounded-lg border border-nexoraBorder/70 bg-nexoraCanvas/30 pl-7 pr-2 text-xs text-nexoraText outline-none transition-colors focus:border-nexoraBrand/60 focus:bg-white"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                    <div className="flex items-center justify-between gap-2">
-                      {!isTipSplitBalanced ? (
-                        <p className="text-[10px] font-bold text-rose-600">
-                          {t('components.dashboard.views.pos.PosOrderWorkspace.tipSplitMismatch', {
-                            total: round2(tipSplitTotal).toFixed(2),
-                            expected: order.tipAmount.toFixed(2),
-                          })}
-                        </p>
-                      ) : (
-                        <span />
-                      )}
-                      <button
-                        type="button"
-                        onClick={handleSaveTipSplit}
-                        disabled={!isTipSplitBalanced || isBusy}
-                        className="rounded-lg border border-nexoraBorder/70 px-3 py-1.5 text-[10px] font-semibold text-nexoraText transition-colors hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft/40 disabled:opacity-60"
-                      >
-                        {t('components.dashboard.views.pos.PosOrderWorkspace.saveTipSplitButton')}
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
+  const paymentPanel = showPaymentSection && order ? (
+              <div className="space-y-4">
 
                 <div className="space-y-3 rounded-xl border border-nexoraBorder/70 bg-nexoraSurface p-3 shadow-sm">
                   {isQuickSplitOpen && order ? (
@@ -2688,12 +2616,23 @@ export default function PosOrderWorkspace({
                     <h3 className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
                       {t('components.dashboard.views.pos.PosOrderWorkspace.summaryTitle')}
                     </h3>
-                    <OrderDiscountSection
-                      order={order}
-                      promotions={eligiblePromotions}
-                      isSaving={setOrderDiscount.isPending}
-                      onApply={handleApplyOrderDiscount}
-                    />
+                    <div className="flex shrink-0 items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsTipModalOpen(true)}
+                        disabled={isBusy}
+                        className="inline-flex h-7 shrink-0 items-center gap-1 justify-center rounded-lg border border-nexoraBrand/40 bg-nexoraBrandSoft/40 px-2.5 text-[10px] font-bold text-nexoraBrandDark transition-colors hover:bg-nexoraBrandSoft disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        <DollarSign aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                        {t('components.dashboard.views.pos.PosOrderWorkspace.addTipButton')}
+                      </button>
+                      <OrderDiscountSection
+                        order={order}
+                        promotions={eligiblePromotions}
+                        isSaving={setOrderDiscount.isPending}
+                        onApply={handleApplyOrderDiscount}
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
@@ -2815,10 +2754,8 @@ export default function PosOrderWorkspace({
                     })
                   )}
                 </button>
-              </>
-            ) : null}
-          </div>
-  )
+              </div>
+  ) : null
 
   const completedReceiptItems: PosCheckoutReceiptItem[] = visibleLines.flatMap((line) => {
     if (line.itemType === 'Product') {
@@ -3083,8 +3020,13 @@ export default function PosOrderWorkspace({
           className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
           aria-busy={isBusy}
         >
-          {catalogPanel}
-          {orderPanel}
+          {/* Edit mode's inline catalog is redundant on phone now that Ticket Detail has its own
+              "Add services" button opening the same picker in a modal — hidden below md: there,
+              shown from md: up where it is the only way to add a service. */}
+          <div className={`order-2 md:order-1${showPaymentSection ? '' : ' hidden md:block'}`}>
+            {showPaymentSection ? paymentPanel : catalogPanel}
+          </div>
+          <div className="order-1 md:order-2">{orderPanel}</div>
         </div>
       )}
 
@@ -3156,6 +3098,37 @@ export default function PosOrderWorkspace({
         }}
       />
 
+      <ServiceCatalogPickerModal
+        open={isServicePickerOpen}
+        services={serviceCatalog}
+        isPending={isBusy || isServiceCatalogPending}
+        onAdd={(itemId) => {
+          const service = serviceCatalog.find((s) => s.id === itemId)
+          if (service) handleCatalogServiceClick(service)
+        }}
+        onClose={() => setIsServicePickerOpen(false)}
+      />
+
+      {order ? (
+        <TipModal
+          open={isTipModalOpen}
+          onClose={() => setIsTipModalOpen(false)}
+          panelMode={tipPanelMode}
+          onSelectPanelMode={setTipPanelMode}
+          technicians={ticketTechnicians}
+          servicesSubtotal={order.servicesSubtotal}
+          orderTipAmount={order.tipAmount}
+          onApplyTip={applyTip}
+          tipSplitInputs={tipSplitInputs}
+          onTipSplitInputChange={(posStaffProfileId, value) =>
+            setTipSplitInputs((prev) => ({ ...prev, [posStaffProfileId]: value }))
+          }
+          tipSplitTotal={tipSplitTotal}
+          onSavePerStaffTip={handleSavePerStaffTip}
+          isBusy={isBusy}
+        />
+      ) : null}
+
       <ServiceDiscountModal
         target={discountTarget}
         isSaving={isBusy}
@@ -3167,117 +3140,6 @@ export default function PosOrderWorkspace({
         }}
       />
 
-      {customerFacingMode && order ? (
-        <div className="fixed inset-0 z-[70] flex flex-col bg-nexoraSurface p-6">
-          <div className="relative flex-1 space-y-6 overflow-y-auto text-center">
-            <p className="text-lg font-bold text-nexoraText">
-              {t('components.dashboard.views.pos.PosOrderWorkspace.customerFacingTitle')}
-            </p>
-            <p className="text-sm text-nexoraMuted">
-              {t('components.dashboard.views.pos.PosOrderWorkspace.customerFacingSubtitle')}
-            </p>
-            <div className="relative mx-auto flex max-w-md flex-wrap justify-center gap-4">
-              <TicketActionSkeletonOverlay
-                visible={isTipBusy}
-                label={mutationSkeletonLabel}
-                count={TICKET_SKELETON_ROW_COUNT.tip}
-              />
-              <button
-                type="button"
-                onClick={() => applyTip('noTip', 0)}
-                disabled={isBusy}
-                className={`inline-flex h-20 min-w-[132px] flex-[1_1_132px] items-center justify-center whitespace-nowrap rounded-2xl border-2 text-lg font-black disabled:cursor-not-allowed disabled:opacity-60 ${
-                  tipMode === 'noTip'
-                    ? 'border-nexoraBrand bg-nexoraBrand text-white'
-                    : 'border-nexoraBorder text-nexoraText'
-                }`}
-              >
-                {t('components.dashboard.views.pos.PosOrderWorkspace.noTipButton')}
-              </button>
-              <button
-                type="button"
-                onClick={() => applyTip('fixed10', 10)}
-                disabled={isBusy}
-                className={`inline-flex h-20 min-w-[120px] flex-[1_1_120px] items-center justify-center whitespace-nowrap rounded-2xl border-2 text-2xl font-black disabled:cursor-not-allowed disabled:opacity-60 ${
-                  tipMode === 'fixed10'
-                    ? 'border-nexoraBrand bg-nexoraBrand text-white'
-                    : 'border-nexoraBorder text-nexoraText'
-                }`}
-              >
-                $10
-              </button>
-              <button
-                type="button"
-                onClick={() => applyTip('fixed15', 15)}
-                disabled={isBusy}
-                className={`inline-flex h-20 min-w-[120px] flex-[1_1_120px] items-center justify-center whitespace-nowrap rounded-2xl border-2 text-2xl font-black disabled:cursor-not-allowed disabled:opacity-60 ${
-                  tipMode === 'fixed15'
-                    ? 'border-nexoraBrand bg-nexoraBrand text-white'
-                    : 'border-nexoraBorder text-nexoraText'
-                }`}
-              >
-                $15
-              </button>
-              <button
-                type="button"
-                onClick={() => applyTip('pct10', round2(order.servicesSubtotal * TIP_PERCENT_BY_MODE.pct10!))}
-                disabled={isBusy}
-                className={`inline-flex h-20 min-w-[120px] flex-[1_1_120px] items-center justify-center whitespace-nowrap rounded-2xl border-2 text-2xl font-black disabled:cursor-not-allowed disabled:opacity-60 ${
-                  tipMode === 'pct10'
-                    ? 'border-nexoraBrand bg-nexoraBrand text-white'
-                    : 'border-nexoraBorder text-nexoraText'
-                }`}
-              >
-                10%
-              </button>
-              <button
-                type="button"
-                onClick={() => applyTip('pct20', round2(order.servicesSubtotal * TIP_PERCENT_BY_MODE.pct20!))}
-                disabled={isBusy}
-                className={`inline-flex h-20 min-w-[120px] flex-[1_1_120px] items-center justify-center whitespace-nowrap rounded-2xl border-2 text-2xl font-black disabled:cursor-not-allowed disabled:opacity-60 ${
-                  tipMode === 'pct20'
-                    ? 'border-nexoraBrand bg-nexoraBrand text-white'
-                    : 'border-nexoraBorder text-nexoraText'
-                }`}
-              >
-                20%
-              </button>
-            </div>
-            <div className="mx-auto max-w-md">
-              <div className="relative">
-                <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-lg font-medium text-nexoraMuted">
-                  $
-                </span>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={customTipInput}
-                  onChange={(e) => setCustomTipInput(
-                    sanitizeDirectPaymentAmountInput(e.target.value, Number.MAX_SAFE_INTEGER),
-                  )}
-                  onFocus={() => setTipMode('custom')}
-                  onBlur={handleCustomTipCommit}
-                  disabled={isBusy}
-                  placeholder={t('components.dashboard.views.pos.PosOrderWorkspace.customTipPlaceholder')}
-                  className={`h-14 w-full rounded-2xl border-2 pl-10 pr-4 text-xl text-nexoraText outline-none ${
-                    tipMode === 'custom' ? 'border-nexoraBrand' : 'border-nexoraBorder'
-                  }`}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Deliberately no auto-return here (brainstorm decision) — front desk must
-              explicitly tap this once they have the iPad back from the customer. */}
-          <button
-            type="button"
-            onClick={() => setCustomerFacingMode(false)}
-            className="h-14 w-full shrink-0 rounded-xl border-2 border-nexoraBorder text-base font-bold text-nexoraText"
-          >
-            {t('components.dashboard.views.pos.PosOrderWorkspace.backToStaffButton')}
-          </button>
-        </div>
-      ) : null}
     </div>
     {mismatchWarning ? (
       <ServiceLineMismatchWarningModal

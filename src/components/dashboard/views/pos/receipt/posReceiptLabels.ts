@@ -26,8 +26,7 @@ export function resolvePosReceiptLabels(t: TFunction): PosReceiptLabels {
 export function resolvePosReceiptTotalsLabels(t: TFunction) {
   return {
     subtotal: t(`${K}.summarySubtotal`),
-    discount: t(`${K}.summaryDiscount`),
-    orderDiscount: t(`${K}.summaryOrderDiscount`),
+    totalDiscount: t(`${K}.summaryTotalDiscount`),
     salesTax: t(`${K}.summarySalesTax`),
     tip: t(`${K}.summaryTip`),
     total: t(`${K}.summaryTotal`),
