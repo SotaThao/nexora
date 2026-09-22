@@ -4682,6 +4682,8 @@
             "viewDetailCompletedAt": "Hoàn tất lúc",
             "viewDetailStatus": "Trạng thái",
             "viewDetailPaymentMethod": "Phương thức thanh toán",
+            "viewDetailNoteTitle": "Ghi chú",
+            "viewDetailNotePhotoAlt": "Ảnh ghi chú của phiếu",
             "viewDetailServicesTitle": "Dịch vụ",
             "viewDetailProductsTitle": "Sản phẩm",
             "viewDetailUnassigned": "Chưa gán",
