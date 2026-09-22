@@ -20,11 +20,16 @@ import { posCheckoutRepository } from '../../../../data/repositories/posCheckout
 import CameraCaptureModal from '../../../ui/CameraCaptureModal'
 import ImageFileInput from '../../../ui/ImageFileInput'
 import IconButton from '../../../ui/IconButton'
+import VlinkPayCheckoutFrame from '../../../posDevice/VlinkPayCheckoutFrame'
+import { VlinkPayPaymentPage } from '../../../../types/repositories'
+
 import {
   useAddOrderCustomServiceLine,
   useAddOrderServiceLine,
   useCheckoutServiceCatalog,
   useCompleteOrder,
+  useVlinkPayPaymentStatus,
+  useVlinkPayPaymentUrl,
   useOrderDetail,
   useRemoveOrderProductLine,
   useRemoveOrderServiceLine,
@@ -467,6 +472,12 @@ export default function PosOrderWorkspace({
   const setStaffTipSplit = useSetOrderStaffTipSplit(businessId)
   const setPaymentAllocations = useSetOrderPaymentAllocations(businessId)
   const completeOrder = useCompleteOrder(businessId)
+  const vlinkPayPaymentUrl = useVlinkPayPaymentUrl(businessId)
+  const vlinkPayPaymentStatus = useVlinkPayPaymentStatus(businessId)
+
+  // Gift Card is collected through VlinkPay: the cashier opens the VlinkPay page in a frame and
+  // the order is only completed once VlinkPay confirms the money moved.
+  const [vlinkPayFrameUrl, setVlinkPayFrameUrl] = useState<string | null>(null)
 
   // Sync lock so a second tap in the same tick cannot queue another call. Mutation
   // `isPending` is the visual source of truth; the ref covers the gap before React
@@ -1673,7 +1684,70 @@ export default function PosOrderWorkspace({
     confirmMismatch('checkout', unfinishedLineLabels, unfinishedLineLabels.length > 0, runComplete)
   }
 
+  // Gift Card money is taken through VlinkPay, so the ticket cannot be closed on the cashier's
+  // word alone: the frame is opened first, and the order is settled only after VlinkPay confirms.
   const runComplete = () => {
+    if (!order) return
+
+    if (paymentMethod === PosCheckoutPaymentMethod.GiftCard) {
+      openVlinkPayGiftCardFrame()
+      return
+    }
+
+    settleOrder()
+  }
+
+  const openVlinkPayGiftCardFrame = () => {
+    if (!order) return
+    vlinkPayPaymentUrl.mutate(
+      {
+        orderId,
+        payload: {
+          page: VlinkPayPaymentPage.GiftCard,
+          callbackOrigin: window.location.origin,
+          // Pre-filled and locked on the VlinkPay side, so the amount charged is the amount owed.
+          amount: order.total,
+        },
+      },
+      {
+        onSuccess: (result) => setVlinkPayFrameUrl(result.iframeUrl),
+        onError: reportError,
+      },
+    )
+  }
+
+  // Never settles on the frame's message alone. That message is a browser event and can be
+  // forged or replayed, so the payment is re-read from VlinkPay before the ticket is closed.
+  const confirmVlinkPayThenSettle = () => {
+    setVlinkPayFrameUrl(null)
+    vlinkPayPaymentStatus.mutate(
+      { orderId },
+      {
+        onSuccess: (status) => {
+          if (!status.found) {
+            showToast(
+              t('components.dashboard.views.pos.PosOrderWorkspace.vlinkPayNotConfirmed'),
+              'error',
+            )
+            return
+          }
+          settleOrder()
+        },
+        onError: reportError,
+      },
+    )
+  }
+
+  // Closed without a result. The customer may still have paid, so the cashier is told to check
+  // rather than shown a clean slate that invites collecting a second time.
+  const handleVlinkPayUnresolved = () => {
+    showToast(
+      t('components.dashboard.views.pos.PosOrderWorkspace.vlinkPayUnresolved'),
+      'error',
+    )
+  }
+
+  const settleOrder = () => {
     if (!order) return
     if (!startTicketAction(TicketBusySurface.Complete)) return
     // Complete carries the method itself and closes the order to edits, so a queued write landing
@@ -3140,6 +3214,117 @@ export default function PosOrderWorkspace({
         }}
       />
 
+      {customerFacingMode && order ? (
+        <div className="fixed inset-0 z-[70] flex flex-col bg-nexoraSurface p-6">
+          <div className="relative flex-1 space-y-6 overflow-y-auto text-center">
+            <p className="text-lg font-bold text-nexoraText">
+              {t('components.dashboard.views.pos.PosOrderWorkspace.customerFacingTitle')}
+            </p>
+            <p className="text-sm text-nexoraMuted">
+              {t('components.dashboard.views.pos.PosOrderWorkspace.customerFacingSubtitle')}
+            </p>
+            <div className="relative mx-auto flex max-w-md flex-wrap justify-center gap-4">
+              <TicketActionSkeletonOverlay
+                visible={isTipBusy}
+                label={mutationSkeletonLabel}
+                count={TICKET_SKELETON_ROW_COUNT.tip}
+              />
+              <button
+                type="button"
+                onClick={() => applyTip('noTip', 0)}
+                disabled={isBusy}
+                className={`inline-flex h-20 min-w-[132px] flex-[1_1_132px] items-center justify-center whitespace-nowrap rounded-2xl border-2 text-lg font-black disabled:cursor-not-allowed disabled:opacity-60 ${
+                  tipMode === 'noTip'
+                    ? 'border-nexoraBrand bg-nexoraBrand text-white'
+                    : 'border-nexoraBorder text-nexoraText'
+                }`}
+              >
+                {t('components.dashboard.views.pos.PosOrderWorkspace.noTipButton')}
+              </button>
+              <button
+                type="button"
+                onClick={() => applyTip('fixed10', 10)}
+                disabled={isBusy}
+                className={`inline-flex h-20 min-w-[120px] flex-[1_1_120px] items-center justify-center whitespace-nowrap rounded-2xl border-2 text-2xl font-black disabled:cursor-not-allowed disabled:opacity-60 ${
+                  tipMode === 'fixed10'
+                    ? 'border-nexoraBrand bg-nexoraBrand text-white'
+                    : 'border-nexoraBorder text-nexoraText'
+                }`}
+              >
+                $10
+              </button>
+              <button
+                type="button"
+                onClick={() => applyTip('fixed15', 15)}
+                disabled={isBusy}
+                className={`inline-flex h-20 min-w-[120px] flex-[1_1_120px] items-center justify-center whitespace-nowrap rounded-2xl border-2 text-2xl font-black disabled:cursor-not-allowed disabled:opacity-60 ${
+                  tipMode === 'fixed15'
+                    ? 'border-nexoraBrand bg-nexoraBrand text-white'
+                    : 'border-nexoraBorder text-nexoraText'
+                }`}
+              >
+                $15
+              </button>
+              <button
+                type="button"
+                onClick={() => applyTip('pct10', round2(order.servicesSubtotal * TIP_PERCENT_BY_MODE.pct10!))}
+                disabled={isBusy}
+                className={`inline-flex h-20 min-w-[120px] flex-[1_1_120px] items-center justify-center whitespace-nowrap rounded-2xl border-2 text-2xl font-black disabled:cursor-not-allowed disabled:opacity-60 ${
+                  tipMode === 'pct10'
+                    ? 'border-nexoraBrand bg-nexoraBrand text-white'
+                    : 'border-nexoraBorder text-nexoraText'
+                }`}
+              >
+                10%
+              </button>
+              <button
+                type="button"
+                onClick={() => applyTip('pct20', round2(order.servicesSubtotal * TIP_PERCENT_BY_MODE.pct20!))}
+                disabled={isBusy}
+                className={`inline-flex h-20 min-w-[120px] flex-[1_1_120px] items-center justify-center whitespace-nowrap rounded-2xl border-2 text-2xl font-black disabled:cursor-not-allowed disabled:opacity-60 ${
+                  tipMode === 'pct20'
+                    ? 'border-nexoraBrand bg-nexoraBrand text-white'
+                    : 'border-nexoraBorder text-nexoraText'
+                }`}
+              >
+                20%
+              </button>
+            </div>
+            <div className="mx-auto max-w-md">
+              <div className="relative">
+                <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-lg font-medium text-nexoraMuted">
+                  $
+                </span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={customTipInput}
+                  onChange={(e) => setCustomTipInput(
+                    sanitizeDirectPaymentAmountInput(e.target.value, Number.MAX_SAFE_INTEGER),
+                  )}
+                  onFocus={() => setTipMode('custom')}
+                  onBlur={handleCustomTipCommit}
+                  disabled={isBusy}
+                  placeholder={t('components.dashboard.views.pos.PosOrderWorkspace.customTipPlaceholder')}
+                  className={`h-14 w-full rounded-2xl border-2 pl-10 pr-4 text-xl text-nexoraText outline-none ${
+                    tipMode === 'custom' ? 'border-nexoraBrand' : 'border-nexoraBorder'
+                  }`}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Deliberately no auto-return here (brainstorm decision) — front desk must
+              explicitly tap this once they have the iPad back from the customer. */}
+          <button
+            type="button"
+            onClick={() => setCustomerFacingMode(false)}
+            className="h-14 w-full shrink-0 rounded-xl border-2 border-nexoraBorder text-base font-bold text-nexoraText"
+          >
+            {t('components.dashboard.views.pos.PosOrderWorkspace.backToStaffButton')}
+          </button>
+        </div>
+      ) : null}
     </div>
     {mismatchWarning ? (
       <ServiceLineMismatchWarningModal
@@ -3152,6 +3337,17 @@ export default function PosOrderWorkspace({
           setMismatchWarning(null)
           run()
         }}
+      />
+    ) : null}
+    {vlinkPayFrameUrl ? (
+      <VlinkPayCheckoutFrame
+        iframeUrl={vlinkPayFrameUrl}
+        orderId={orderId}
+        onSuccess={confirmVlinkPayThenSettle}
+        onFailed={() => setVlinkPayFrameUrl(null)}
+        onCancelled={() => setVlinkPayFrameUrl(null)}
+        onUnresolved={handleVlinkPayUnresolved}
+        onClose={() => setVlinkPayFrameUrl(null)}
       />
     ) : null}
     {printableReceipt}

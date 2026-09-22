@@ -4567,6 +4567,8 @@
             "totalPaid": "Tổng đã thanh toán",
             "assignTechnicianFirst": "Cần gán thợ cho tất cả dịch vụ trước.",
             "addLineFirst": "Cần thêm ít nhất một dịch vụ hoặc sản phẩm trước khi thanh toán.",
+            "vlinkPayNotConfirmed": "VlinkPay chưa xác nhận khoản thanh toán này. Đơn chưa được chốt.",
+            "vlinkPayUnresolved": "Cửa sổ thanh toán đóng trước khi xác nhận. Hãy kiểm tra VlinkPay trước khi thu lại — khách có thể đã trả tiền rồi.",
             "addDiscount": "Giảm giá",
             "editDiscount": "Giảm giá ✓",
             "discountModalTitle": "Giảm giá — {{serviceName}}",
