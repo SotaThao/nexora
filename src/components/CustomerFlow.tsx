@@ -45,8 +45,6 @@ export default function CustomerFlow() {
     handleTrackExternalReview,
     canSelectMultipleStaff,
     isPaymentFlow,
-    isReviewFlow,
-    handleStaffSelectionNext,
     paymentCopyScope,
     handleCreateVlinkpayTip,
     handleResetVlinkpayTip,
@@ -144,13 +142,12 @@ export default function CustomerFlow() {
                   filteredStaff={filteredStaff}
                   selectedStaffMembers={selectedStaffMembers}
                   handleToggleStaff={handleToggleStaff}
-                  onNext={handleStaffSelectionNext}
+                  setStep={setStep}
                   selectedTips={selectedTips}
                   setSelectedTips={setSelectedTips}
                   customTips={customTips}
                   setCustomTips={setCustomTips}
                   canSelectMultipleStaff={canSelectMultipleStaff}
-                  isReviewFlow={isReviewFlow}
                 />
               )}
 

@@ -25,7 +25,7 @@ import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
 import type { PaymentMethodDto, ReviewLinks } from '../../../types/domain'
 import {
   isTouchPaymentIntent,
-  isTouchReviewIntent,
+  isTouchReviewMode,
   resolvePaymentCopyScope,
   resolveTouchpointRedirectUrl,
 } from '../../../utils/customerFlowKind'
@@ -250,7 +250,7 @@ export default function useCustomerFlow() {
   )
 
   const isReviewFlow = useMemo(
-    () => isTouchReviewIntent(touchSearchParams),
+    () => isTouchReviewMode(touchSearchParams),
     [touchSearchParams],
   )
 
@@ -316,7 +316,7 @@ export default function useCustomerFlow() {
 
   // ── Local state ──
   const [selectedStaffMembers, setSelectedStaffMembers] = useState<any[]>([])
-  const [step, setStep] = useState('select_staff')
+  const [step, setStep] = useState(() => (isReviewFlow ? 'leave_review' : 'select_staff'))
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTips, setSelectedTips] = useState<LooseObject>({})
   const [customTips, setCustomTips] = useState<LooseObject>({})
@@ -357,12 +357,16 @@ export default function useCustomerFlow() {
 
     didApplyStaffPreselect.current = true
     setSelectedStaffMembers([match])
+    if (isReviewFlow) {
+      setStep('leave_review')
+      return
+    }
     setSelectedTips((prev) => ({
       ...prev,
       [match.id]: prev[match.id] !== undefined ? prev[match.id] : 15,
     }))
     setStep('tip_amount')
-  }, [preselectedStaffProfileId, activeStaffList, touchPageData])
+  }, [preselectedStaffProfileId, activeStaffList, touchPageData, isReviewFlow])
 
   // ── Payment accounts ──
   const touchBusinessId = useMemo(
@@ -840,14 +844,6 @@ export default function useCustomerFlow() {
     setStep('leave_review')
   }
 
-  const handleStaffSelectionNext = () => {
-    if (isReviewFlow) {
-      handleSkipTip()
-      return
-    }
-    setStep('tip_amount')
-  }
-
   /** Submits customer feedback review. */
   const handleSubmitFeedback = async () => {
     if (createReviewMutationApi.isPending) return
@@ -856,7 +852,7 @@ export default function useCustomerFlow() {
       const member = selectedStaffMembers[0]
       const result = await createReviewMutationApi.mutateAsync({
         touchPointId: touchPageData?.touchPoint?.id, tipId: currentTipId || undefined,
-        staffProfileId: member.id, rating,
+        staffProfileId: member?.id, rating,
         comment: cleanComment || (rating >= 4 ? 'Good service' : 'Needs improvement'),
       })
       setCurrentReviewId(result?.id || result?.reviewId)
@@ -909,7 +905,6 @@ export default function useCustomerFlow() {
     canSelectMultipleStaff,
     isPaymentFlow,
     isReviewFlow,
-    handleStaffSelectionNext,
     paymentCopyScope,
     handleCreateVlinkpayTip,
     handleResetVlinkpayTip,
