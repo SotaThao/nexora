@@ -10,12 +10,13 @@ export default function SelectStaff({
   filteredStaff,
   selectedStaffMembers,
   handleToggleStaff,
-  setStep,
+  onNext,
   selectedTips,
   setSelectedTips,
   customTips,
   setCustomTips,
   canSelectMultipleStaff,
+  isReviewFlow = false,
 }) {
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -24,7 +25,7 @@ export default function SelectStaff({
           {t('customer.select_staff_title')}
         </h2>
         <p className="text-xs text-nexoraSubtle font-medium">
-          {t('customer.select_staff_subtitle')}
+          {t(isReviewFlow ? 'customer.select_staff_subtitle_review' : 'customer.select_staff_subtitle')}
         </p>
       </div>
 
@@ -101,7 +102,7 @@ export default function SelectStaff({
                   )}
                 </button>
 
-                {isSelected && (
+                {isSelected && !isReviewFlow && (
                   <div className="px-2 pb-1 animate-fadeIn">
                     <p className="text-[10px] font-bold text-nexoraSubtle uppercase tracking-wider mb-1.5">
                       {t('customer.inline_tip_label')}
@@ -173,7 +174,7 @@ export default function SelectStaff({
         <button
           type="button"
           disabled={selectedStaffMembers.length === 0}
-          onClick={() => setStep('tip_amount')}
+          onClick={onNext}
           className={`w-full py-3.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 transition text-white font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 shadow-lg shadow-nexoraElectric/25 ${
             selectedStaffMembers.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
           }`}

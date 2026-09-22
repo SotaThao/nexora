@@ -1,4 +1,5 @@
 const PAYMENT_INTENT_VALUES = new Set(['payment', 'direct_payment', 'pay'])
+const REVIEW_INTENT_VALUES = new Set(['review', 'leave_review'])
 
 function normalizeIntent(value: unknown): string {
   return String(value ?? '').trim().toLowerCase()
@@ -20,6 +21,11 @@ export function isTouchPaymentIntent(
   )
   const normalizedPurpose = purpose.replace(/[_-]/g, '')
   return normalizedPurpose === 'payment' || normalizedPurpose === 'directpayment'
+}
+
+export function isTouchReviewIntent(searchParams: URLSearchParams | null | undefined): boolean {
+  const intent = normalizeIntent(searchParams?.get('intent') ?? searchParams?.get('flow'))
+  return REVIEW_INTENT_VALUES.has(intent)
 }
 
 /** Touch context forwarded onto /pay so the payment page can load tippable staff. */

@@ -1,5 +1,6 @@
 {
   "oneqr": {
+    "backToMenuButton": "Quay về menu OneQR",
     "artwork": {
       "png": "Tải PNG",
       "showHours": "Hiện giờ làm việc",
@@ -2070,6 +2071,7 @@
     "header_subtitle": "Cổng Kết Nối Thanh Toán An Toàn Nexora",
     "select_staff_title": "Ai đã phục vụ bạn hôm nay?",
     "select_staff_subtitle": "Chọn nhân viên bạn muốn gửi tips.",
+    "select_staff_subtitle_review": "Chọn nhân viên bạn muốn đánh giá.",
     "search_staff_placeholder": "Tìm nhân viên...",
     "no_staff_found": "Không tìm thấy nhân viên.",
     "step_form_title": "Thêm Tiền Típ cho {name}",

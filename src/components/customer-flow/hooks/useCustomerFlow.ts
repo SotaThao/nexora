@@ -25,6 +25,7 @@ import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
 import type { PaymentMethodDto, ReviewLinks } from '../../../types/domain'
 import {
   isTouchPaymentIntent,
+  isTouchReviewIntent,
   resolvePaymentCopyScope,
   resolveTouchpointRedirectUrl,
 } from '../../../utils/customerFlowKind'
@@ -246,6 +247,11 @@ export default function useCustomerFlow() {
   const isPaymentFlow = useMemo(
     () => isTouchPaymentIntent(touchSearchParams, touchPageData),
     [touchSearchParams, touchPageData],
+  )
+
+  const isReviewFlow = useMemo(
+    () => isTouchReviewIntent(touchSearchParams),
+    [touchSearchParams],
   )
 
   useEffect(() => {
@@ -834,6 +840,14 @@ export default function useCustomerFlow() {
     setStep('leave_review')
   }
 
+  const handleStaffSelectionNext = () => {
+    if (isReviewFlow) {
+      handleSkipTip()
+      return
+    }
+    setStep('tip_amount')
+  }
+
   /** Submits customer feedback review. */
   const handleSubmitFeedback = async () => {
     if (createReviewMutationApi.isPending) return
@@ -873,6 +887,7 @@ export default function useCustomerFlow() {
   return {
     currentLanguage, setLanguage, t, showToast,
     isApiMode: true, touchPageQuery,
+    businessSlug: touchRoute?.businessSlug ?? null,
     bizName, activeStaffList,
     initialStaffMember, reviewLinks, businessPaymentAccounts,
     businessVlinkpayCryptoAddresses,
@@ -893,6 +908,8 @@ export default function useCustomerFlow() {
     scannedTouchpoint: null,
     canSelectMultipleStaff,
     isPaymentFlow,
+    isReviewFlow,
+    handleStaffSelectionNext,
     paymentCopyScope,
     handleCreateVlinkpayTip,
     handleResetVlinkpayTip,
