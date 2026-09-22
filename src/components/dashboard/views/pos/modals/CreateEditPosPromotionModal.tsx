@@ -27,7 +27,7 @@ import { sanitizeDecimalInput } from '../../../../../utils/currencyInput'
 import { normalizeAllowedImageFile } from '../../../../../utils/imageFile'
 import { usePosPromotionDetail } from '../../../../../data/hooks/usePosPromotions'
 import type { PosPromotionApiDto, PosPromotionPayload } from '../../../../../types/repositories'
-import { POS_WEEK_DAYS, formatPromotionArtSaving } from '../posPromotionDisplay'
+import { POS_WEEK_DAYS, formatPromotionArtSaving, formatPromotionStudioSchedule } from '../posPromotionDisplay'
 import type { PosPromotionDraft, PromoArtTheme } from '../posPromotionTemplates'
 import {
   colorHexFromTheme,
@@ -133,7 +133,7 @@ export default function CreateEditPosPromotionModal({
   onSubmit: (payload: PosPromotionPayload) => void
   onClose: () => void
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const uploadInputId = useId()
   const detailQuery = usePosPromotionDetail(businessId, promotion?.id)
   /** Seed banners from detail once per promotion — refetch must not wipe in-progress uploads. */
@@ -443,6 +443,22 @@ export default function CreateEditPosPromotionModal({
     setSelectedBannerIndex(nextIndex)
   }
 
+  /** Clicking a banner both previews it and makes it the cover (sort order 0). */
+  const selectBannerAsCover = (index: number) => {
+    if (index < 0 || index >= banners.length) return
+    if (index === 0) {
+      setSelectedBannerIndex(0)
+      return
+    }
+    setBanners((prev) => {
+      const copy = [...prev]
+      const [picked] = copy.splice(index, 1)
+      copy.unshift(picked)
+      return copy
+    })
+    setSelectedBannerIndex(0)
+  }
+
   const removeBanner = (index: number) => {
     if (banners.length <= 1) return
     setBanners((prev) => {
@@ -479,14 +495,9 @@ export default function CreateEditPosPromotionModal({
       }
     })
 
-    // Cover must be an uploaded/remote image when one exists — list uses banners[0].
-    const coverIndex = bannerPayloads.findIndex((banner) => banner.image || banner.imageUrl)
-    if (coverIndex > 0) {
-      const [cover] = bannerPayloads.splice(coverIndex, 1)
-      bannerPayloads.unshift(cover)
-    }
-
-    const coverImage = bannerPayloads.find((banner) => banner.image)?.image ?? null
+    // Cover is banners[0] — kept in sync when the Owner clicks a row (selectBannerAsCover)
+    // or uses move up/down. Do not reorder here.
+    const coverImage = bannerPayloads[0]?.image ?? null
 
     onSubmit({
       name: name.trim(),
@@ -552,16 +563,17 @@ export default function CreateEditPosPromotionModal({
     )
   }
 
-  const schedulePreview = useMemo(() => {
-    const dayPart = days.length
-      ? days
-          .map((day) =>
-            t(`components.dashboard.views.pos.OrderDiscountSection.dayShort.${day}`),
-          )
-          .join(' · ')
-      : '—'
-    return `${dayPart} / ${startTime || '—'}–${endTime || '—'}`
-  }, [days, startTime, endTime, t])
+  const schedulePreview = useMemo(
+    () =>
+      formatPromotionStudioSchedule(
+        days,
+        startTime,
+        endTime,
+        currentLanguage,
+        (day) => t(`components.dashboard.views.pos.OrderDiscountSection.dayShort.${day}`),
+      ),
+    [days, startTime, endTime, currentLanguage, t],
+  )
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0c1b3b59] p-4 backdrop-blur-[2px]">
@@ -803,11 +815,11 @@ export default function CreateEditPosPromotionModal({
                     aria-selected={selected}
                     aria-current={selected ? 'true' : undefined}
                     className={`banner-row${selected ? ' is-selected' : ''}`}
-                    onClick={() => setSelectedBannerIndex(index)}
+                    onClick={() => selectBannerAsCover(index)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault()
-                        setSelectedBannerIndex(index)
+                        selectBannerAsCover(index)
                       }
                     }}
                   >
