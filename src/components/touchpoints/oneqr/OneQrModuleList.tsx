@@ -21,6 +21,7 @@ import { OneQrModuleKey } from '../../../constants/oneQr'
 import type { OneQrModuleCatalogItem } from '../../../types/oneQr'
 import {
   resolveModuleIcon,
+  resolveModuleIconUrl,
   resolveModuleLabel,
   type DraftModule,
 } from './oneQrDraft'
@@ -121,6 +122,7 @@ function SortableModuleRow({
 
   const label = resolveModuleLabel(module, catalog, t)
   const icon = resolveModuleIcon(module, catalog)
+  const iconUrl = resolveModuleIconUrl(module)
   const isCustomLink = module.moduleKey === OneQrModuleKey.CustomLink
   // `OneQrModuleConfigDto.isComingSoon` is non-nullable and comes from the same
   // response as the catalog, so it is the whole answer. Previously this OR-ed in
@@ -154,7 +156,7 @@ function SortableModuleRow({
       </button>
 
       <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-nexoraSurfaceMuted text-nexoraBrand sm:h-9 sm:w-9">
-        <OneQrModuleIcon name={icon} />
+        <OneQrModuleIcon name={icon} iconUrl={iconUrl} />
       </span>
 
       <div className="min-w-0 flex-1">

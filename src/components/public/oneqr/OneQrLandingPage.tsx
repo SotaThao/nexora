@@ -340,7 +340,7 @@ function ModuleTile({
     >
       <span className="flex w-full items-start justify-between gap-2">
         <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${iconColor}`}>
-          <OneQrModuleIcon name={module.icon} className="h-4 w-4" />
+          <OneQrModuleIcon name={module.icon} iconUrl={module.iconUrl} className="h-4 w-4" />
         </span>
         <ArrowUpRight className="mt-1 h-4 w-4 text-nexoraSubtle transition group-hover:text-nexoraBrand motion-reduce:transition-none" aria-hidden />
       </span>

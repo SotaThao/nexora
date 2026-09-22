@@ -144,11 +144,24 @@ export function resolveOneQrIcon(name?: string | null): LucideIcon {
 
 export default function OneQrModuleIcon({
   name,
+  iconUrl,
   className = 'h-4 w-4',
 }: {
   name?: string | null
+  /** Merchant-uploaded icon image. Renders in place of `name` when set. */
+  iconUrl?: string | null
   className?: string
 }) {
+  if (iconUrl) {
+    return (
+      <img
+        src={iconUrl}
+        alt=""
+        aria-hidden
+        className={`${className} rounded object-cover`}
+      />
+    )
+  }
   const Icon = resolveOneQrIcon(name)
   return <Icon className={className} aria-hidden />
 }

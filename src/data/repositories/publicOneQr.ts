@@ -75,6 +75,7 @@ function normalizeModule(raw: Raw): OneQrLandingModule {
     moduleKey: toOneQrModuleKey(raw.moduleKey),
     label: str(raw.label),
     icon: nullableStr(raw.icon),
+    iconUrl: nullableStr(raw.iconUrl),
     url: str(raw.url),
   }
 }
