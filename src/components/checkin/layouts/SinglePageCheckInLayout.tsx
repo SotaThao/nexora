@@ -13,6 +13,7 @@ import CustomerIdentityCard from '../parts/CustomerIdentityCard'
 import CheckInSectionCard from '../parts/CheckInSectionCard'
 import FrontDeskNoteCard from '../parts/FrontDeskNoteCard'
 import SelectedServicesSummary from '../parts/SelectedServicesSummary'
+import CheckInActivePromotionsSection from '../parts/CheckInActivePromotionsSection'
 import ServiceCatalogSection from '../parts/ServiceCatalogSection'
 import TechnicianPickerGrid from '../parts/TechnicianPickerGrid'
 import type { CheckInSession } from '../useCheckInSession'
@@ -24,11 +25,14 @@ export default function SinglePageCheckInLayout({
   businessName,
   onCancel,
   compactTechnicianCards = false,
+  businessId,
 }: {
   session: CheckInSession
   businessName: string
   onCancel: () => void
   compactTechnicianCards?: boolean
+  /** Front desk only — loads active promotions under the service catalog. */
+  businessId?: string
 }) {
   const { t } = useTranslation()
 
@@ -92,6 +96,10 @@ export default function SinglePageCheckInLayout({
             onAdd={session.addService}
             isSubmitting={session.isSubmitting}
           />
+
+          {businessId ? (
+            <CheckInActivePromotionsSection source="merchant" businessId={businessId} />
+          ) : null}
         </div>
 
         <aside className="min-w-0 space-y-4 lg:sticky lg:top-4 lg:self-start">

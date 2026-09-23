@@ -8,13 +8,16 @@
  * which the client turns into `null` — callers treat that as "new customer".
  */
 import posDeviceHttpClient from '../../lib/posDeviceHttpClient'
+import { normalizePosPromotion } from './posPromotions'
 import type {
+  PosPromotionApiDto,
   SelfCheckInBookingApiDto,
   SelfCheckInContextApiDto,
   SelfCheckInOrderResultApiDto,
   SelfCheckInServiceApiDto,
   SelfCheckInTechnicianApiDto,
 } from '../../types/repositories'
+import type { ApiError } from '../../types/api'
 
 type Client = typeof posDeviceHttpClient
 
@@ -74,6 +77,23 @@ export function createPosSelfCheckInRepository(client: Client = posDeviceHttpCli
     // asks what you want, so there is no service to filter by at that point.
     async getTechnicians(): Promise<SelfCheckInTechnicianApiDto[]> {
       return (await client.get<SelfCheckInTechnicianApiDto[]>(`${BASE}/technicians`)) ?? []
+    },
+
+    /**
+     * Active promotions for the keypad banner (ticket #1724).
+     * Contract expected: GET …/self-checkin/promotions → PosPromotionDto[] (device token).
+     * Live swagger does not list it yet — 404 returns [] so the strip stays quiet until BE ships.
+     */
+    async getPromotions(): Promise<PosPromotionApiDto[]> {
+      try {
+        const raw = await client.get<unknown>(`${BASE}/promotions`)
+        if (!Array.isArray(raw)) return []
+        return raw.map(normalizePosPromotion).filter((item) => item.id)
+      } catch (err) {
+        const status = (err as ApiError | undefined)?.status
+        if (status === 404) return []
+        throw err
+      }
     },
 
     async createOrder(payload: CreateSelfCheckInOrderPayload): Promise<SelfCheckInOrderResultApiDto> {

@@ -92,3 +92,44 @@ export function formatPromotionArtSaving(discountType: string, discountValue: nu
   }
   return `$${formatPromotionMoneyAmount(discountValue)} off`
 }
+
+/** Minutes since midnight from API `HH:mm` / `HH:mm:ss`. Invalid → null. */
+function clockToMinutes(hhmm: string | null | undefined): number | null {
+  if (!hhmm) return null
+  const match = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(hhmm.trim())
+  if (!match) return null
+  const hours = Number(match[1])
+  const minutes = Number(match[2])
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes) || hours > 23 || minutes > 59) {
+    return null
+  }
+  return hours * 60 + minutes
+}
+
+/**
+ * Whether an enabled promotion's day/time window covers `now` (device-local clock).
+ * Empty `daysOfWeek` means every day. Missing/invalid times mean the whole day.
+ */
+export function isPromotionInScheduleNow(
+  promotion: {
+    daysOfWeek?: string[] | null
+    startTime?: string | null
+    endTime?: string | null
+  },
+  now: Date = new Date(),
+): boolean {
+  const days = promotion.daysOfWeek ?? []
+  if (days.length > 0) {
+    const today = WEEK_ORDER[now.getDay()]
+    if (!days.includes(today)) return false
+  }
+
+  const start = clockToMinutes(promotion.startTime)
+  const end = clockToMinutes(promotion.endTime)
+  if (start == null || end == null) return true
+
+  const current = now.getHours() * 60 + now.getMinutes()
+  // Overnight window (e.g. 22:00–02:00): wrap past midnight.
+  if (end <= start) return current >= start || current < end
+  return current >= start && current < end
+}

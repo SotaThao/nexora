@@ -260,6 +260,7 @@ export const qk = {
   posSelfCheckInActiveVisit: (phone?: string) => ['posSelfCheckIn', 'activeVisit', phone ?? ''],
   posSelfCheckInBooking: (phone?: string) => ['posSelfCheckIn', 'booking', phone ?? ''],
   posSelfCheckInTechnicians: () => ['posSelfCheckIn', 'technicians'],
+  posSelfCheckInPromotions: () => ['posSelfCheckIn', 'promotions'],
   merchantPosCheckInTechnicians: (businessId?: string) => ['merchantSettings', 'posCheckInTechnicians', businessId ?? ''],
   merchantPosCheckInActiveVisit: (businessId?: string, phone?: string) => [
     'merchantSettings', 'posCheckInActiveVisit', businessId ?? '', phone ?? '',

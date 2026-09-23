@@ -13,6 +13,7 @@ import { Skeleton, SkeletonText } from '../ui/skeleton'
 import SinglePageCheckInLayout from './layouts/SinglePageCheckInLayout'
 import WizardCheckInLayout from './layouts/WizardCheckInLayout'
 import ActiveVisitInterstitial from './parts/ActiveVisitInterstitial'
+import CheckInActivePromotionsSection from './parts/CheckInActivePromotionsSection'
 import ThankYouScreen from './parts/ThankYouScreen'
 import useCheckInSession from './useCheckInSession'
 import type { CheckInSourceHook, CheckInSubmitResult } from './types'
@@ -32,6 +33,8 @@ export default function CheckInSurface({
   compactTechnicianCards = false,
   doneSlot,
   appearance = 'default',
+  businessId,
+  showKioskPromotions = false,
 }: {
   useSource: CheckInSourceHook
   layout: PosCheckInLayout
@@ -61,6 +64,10 @@ export default function CheckInSurface({
   // Public door-QR landing uses the dark glass keypad; kiosk and front desk stay on the
   // default light card. Later steps keep the shared layouts either way.
   appearance?: 'default' | 'public'
+  // Front desk: promotions on the keypad strip + under services (merchant JWT + businessId).
+  businessId?: string
+  // Kiosk only: promotions carousel above the phone keypad (device-token API).
+  showKioskPromotions?: boolean
 }) {
   const { t } = useTranslation()
 
@@ -103,6 +110,15 @@ export default function CheckInSurface({
   if (session.phase === 'phone') {
     return (
       <div className={appearance === 'public' ? 'flex w-full justify-center' : 'w-full space-y-4'}>
+        {showKioskPromotions ? (
+          <CheckInActivePromotionsSection source="kiosk" variant="strip" />
+        ) : businessId ? (
+          <CheckInActivePromotionsSection
+            source="merchant"
+            businessId={businessId}
+            variant="strip"
+          />
+        ) : null}
         {idleSlot}
         <PhoneCheckInStep
           appearance={appearance}
@@ -179,7 +195,7 @@ export default function CheckInSurface({
     )
   }
 
-  return layout === 'Wizard' ? (
+return layout === 'Wizard' ? (
     <WizardCheckInLayout
       session={session}
       businessName={businessName}
@@ -192,6 +208,7 @@ export default function CheckInSurface({
       businessName={businessName}
       onCancel={abandon}
       compactTechnicianCards={compactTechnicianCards}
+      businessId={businessId}
     />
   )
 }

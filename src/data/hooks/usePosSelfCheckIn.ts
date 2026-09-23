@@ -15,6 +15,7 @@ import posSelfCheckInRepository, {
   type CreateSelfCheckInOrderPayload,
 } from '../repositories/posSelfCheckIn'
 import type {
+  PosPromotionApiDto,
   SelfCheckInBookingApiDto,
   SelfCheckInOrderResultApiDto,
   SelfCheckInServiceApiDto,
@@ -78,6 +79,17 @@ export function useSelfCheckInTechnicians(enabled = true) {
     // Who is clocked in changes through the day, and a customer must not be offered someone who
     // went home an hour ago.
     staleTime: 0,
+  })
+}
+
+/** Keypad promo banners — soft-empty when BE has not shipped the endpoint yet (404 → []). */
+export function useKioskPromotions(enabled = true) {
+  return useQuery<PosPromotionApiDto[]>({
+    queryKey: qk.posSelfCheckInPromotions(),
+    queryFn: () => posSelfCheckInRepository.getPromotions(),
+    enabled,
+    retry: false,
+    staleTime: CATALOG_STALE_MS,
   })
 }
 

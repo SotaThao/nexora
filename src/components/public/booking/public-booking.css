@@ -166,6 +166,22 @@ body.public-booking-active #root {
   gap: 10px;
 }
 
+.public-booking-root .promotion-banner-slide {
+  display: grid;
+  min-width: 0;
+  flex: 0 0 100%;
+  gap: 6px;
+}
+
+.public-booking-root .promotion-banner-schedule {
+  margin: 0;
+  padding: 0 2px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #6b7280;
+}
+
 .public-booking-root .promotion-card {
   display: grid;
   min-width: 0;
@@ -1874,6 +1890,10 @@ body.public-booking-active #root {
   }
 
   .public-booking-root .promotion-card {
+    flex: 0 0 calc(50% - 5px);
+  }
+
+  .public-booking-root .promotion-banner-slide {
     flex: 0 0 calc(50% - 5px);
   }
 
