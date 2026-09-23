@@ -163,7 +163,8 @@ export default function TurnGridView({
                   return (
                     <td
                       key={index}
-                      className={`${cellClass} pos-turn-grid-cell-filled relative overflow-hidden${turn.isRecorded ? '' : ' border-dashed'}`}
+                      // Keep the text above its diagonal fill without overlapping the sticky technician column.
+                      className={`${cellClass} pos-turn-grid-cell-filled relative isolate overflow-hidden${turn.isRecorded ? '' : ' border-dashed'}`}
                     >
                       {index === turns.length - 1 && turn.credit < 1 - TURN_EPSILON ? (
                         <svg
