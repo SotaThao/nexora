@@ -73,7 +73,7 @@ import type {
   TurnBoardStationApiDto,
 } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
-import { EMPTY_VALUE, getInitials, joinOrEmpty } from './posDisplay'
+import { EMPTY_VALUE, formatStaffLevelLabel, getInitials, joinOrEmpty } from './posDisplay'
 import { formatCustomerPhone } from './customer/customerFormatters'
 import CustomerVisitTag from './CustomerVisitTag'
 import PosOrderWorkspace from './PosOrderWorkspace'
@@ -1123,7 +1123,7 @@ export default function PosFrontDeskView({
             <p className={`truncate font-bold ${isNextTurn ? 'text-base text-violet-950' : 'text-sm text-nexoraText'}`}>
               {station.displayName}
               <span className="ml-1 font-normal text-nexoraMuted">
-                · {t(tk('stationLevelLabel'))} {staffLevelByStaffId.get(station.posStaffProfileId) ?? EMPTY_VALUE}
+                · {formatStaffLevelLabel(staffLevelByStaffId.get(station.posStaffProfileId), t(tk('stationLevelLabel')))}
               </span>
             </p>
             <div className="mt-1 flex flex-wrap items-center gap-1.5">

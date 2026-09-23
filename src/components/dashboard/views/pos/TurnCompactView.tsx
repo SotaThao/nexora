@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import TurnStationDetails, { TurnStationStatus } from './TurnStationDetails'
 import { formatHours } from './timeclock/timeClockDay'
-import { EMPTY_VALUE, getInitials } from './posDisplay'
+import { EMPTY_VALUE, formatStaffLevelLabel, getInitials } from './posDisplay'
 import StationBeepButton from './StationBeepButton'
 import { formatServiceTotal, formatTurnCredit } from './TurnGridView'
 import {
@@ -107,7 +107,7 @@ export default function TurnCompactView({
                         ) : null}
                       </div>
                       <span className="mt-0.5 block text-[10px] font-bold text-nexoraMuted">
-                        {t(TK + 'stationLevelLabel')} {staffLevelByStaffId.get(station.posStaffProfileId) ?? EMPTY_VALUE}
+                        {formatStaffLevelLabel(staffLevelByStaffId.get(station.posStaffProfileId), t(TK + 'stationLevelLabel'))}
                       </span>
                       {workingHoursByStaffId.has(station.posStaffProfileId) ? (
                         <span className="mt-0.5 block text-[10px] tabular-nums text-nexoraMuted">
