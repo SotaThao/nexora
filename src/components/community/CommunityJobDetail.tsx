@@ -1,10 +1,19 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { Check, ImagePlus, MapPin, Search, Send, Trash2, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { Check, ChevronDown, ChevronLeft, ImagePlus, MapPin, MessageCircle, Search, Send, Trash2, X } from 'lucide-react'
 
 import { DEFAULT_JOB_IMAGE, demoJobs, JOB_LOCATIONS } from './communityDemoContent'
 import { COMMUNITY_DEMO_PERSONAS, useCommunityAuth } from './CommunityAuth'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
+import Pagination from '../ui/Pagination'
+import { DEFAULT_PAGE_SIZE } from '../../constants/pagination'
+import {
+  communityJobsReducer,
+  createInitialPanelState,
+  DEFAULT_LOCATION_FILTER,
+} from './communityJobsReducer'
 
 import type { DemoJob } from './communityDemoContent'
+import type { PanelAction, PanelState } from './communityJobsReducer'
 
 // DEMO ONLY — mirrors communityDemoContent.ts's own rule: Jobs has no backend yet.
 // This panel never calls an API or the real CommunityChatDock/useCommunityChat
@@ -29,18 +38,6 @@ const JOB_IMAGE_OPTIONS = [
 
 const OWNER_SUPPORT_OPTIONS = ['Lịch linh hoạt', 'Đào tạo thêm', 'Hỗ trợ chỗ ở'] as const
 
-function initials(name?: string | null) {
-  return (name || 'N').split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase()
-}
-
-function Avatar({ name, className = 'h-9 w-9' }: { name?: string | null; className?: string }) {
-  return (
-    <span aria-hidden="true" className={`grid shrink-0 place-items-center rounded-full ${gradientClass} text-xs font-extrabold text-white ${className}`}>
-      {initials(name)}
-    </span>
-  )
-}
-
 function postKindLabel(kind: PostKind) {
   return kind === 'hiring' ? 'Tuyển thợ' : 'Tìm việc'
 }
@@ -62,6 +59,55 @@ function statusLabel(status: DemoJob['status'], postKind: PostKind) {
   return postKind === 'hiring' ? 'Đang tuyển' : 'Đang tìm việc'
 }
 
+// Filtering/pagination live in the component (not the reducer) because they need
+// the actual `jobs` array, which the reducer never sees — see
+// communityJobsReducer.ts's header comment and the plan's reducer-signature note.
+function filterJobsForState(jobs: DemoJob[], state: PanelState, persona: { id: string } | null): DemoJob[] {
+  return jobs.filter((job) => {
+    if (state.viewTab === 'mine') {
+      if (!persona || job.ownerPersonaId !== persona.id) return false
+    }
+    if (state.kindFilter !== 'all' && job.postKind !== state.kindFilter) return false
+    if (state.locationFilter !== DEFAULT_LOCATION_FILTER && job.location !== state.locationFilter) return false
+    if (state.statusFilter === 'open' && job.status !== 'open') return false
+    if (state.query.trim()) {
+      const haystack = `${job.title} ${job.salon ?? ''} ${job.location} ${job.description}`.toLowerCase()
+      if (!haystack.includes(state.query.trim().toLowerCase())) return false
+    }
+    return true
+  })
+}
+
+function paginate(filteredJobs: DemoJob[], pageNumber: number) {
+  const totalPages = Math.max(1, Math.ceil(filteredJobs.length / DEFAULT_PAGE_SIZE))
+  const safePageNumber = Math.min(Math.max(pageNumber, 1), totalPages)
+  const start = (safePageNumber - 1) * DEFAULT_PAGE_SIZE
+  const pageJobs = filteredJobs.slice(start, start + DEFAULT_PAGE_SIZE)
+  return { totalPages, safePageNumber, pageJobs }
+}
+
+// Mirrors, for the subset of actions that change which jobs are visible, what the
+// reducer itself is about to do to `state` — used only to compute `visibleJobIds`
+// (the reducer's 3rd param) before dispatching, from the component's own `jobs`.
+function projectFilterState(state: PanelState, action: PanelAction): PanelState {
+  switch (action.type) {
+    case 'SET_QUERY':
+      return { ...state, query: action.query }
+    case 'SET_KIND_FILTER':
+      return { ...state, kindFilter: action.kind }
+    case 'SET_LOCATION_FILTER':
+      return { ...state, locationFilter: action.location }
+    case 'SET_STATUS_FILTER':
+      return { ...state, statusFilter: action.status }
+    case 'SET_VIEW_TAB':
+      return { ...state, viewTab: action.tab, pageNumber: 1 }
+    case 'SET_PAGE':
+      return { ...state, pageNumber: action.page }
+    default:
+      return state
+  }
+}
+
 function useCurrentPersona() {
   const { user, isAnonymous } = useCommunityAuth()
   return useMemo(() => {
@@ -80,121 +126,6 @@ function seedConversation(job: DemoJob): DemoBubble[] {
     { id: `${job.id}-1`, from: 'me', body: `Chào ${job.posterName.split(' ')[0]}, mình thấy tin "${job.title}" — vị trí này còn nhận không?` },
     { id: `${job.id}-2`, from: 'them', body: 'Còn bạn ơi, bên mình đang cần gấp. Bạn có kinh nghiệm bao lâu rồi?' },
   ]
-}
-
-function JobChatDock({ job, onClose }: { job: DemoJob; onClose: () => void }) {
-  const [messages, setMessages] = useState<DemoBubble[]>(() => seedConversation(job))
-  const [body, setBody] = useState('')
-
-  const submit = (event: FormEvent) => {
-    event.preventDefault()
-    const text = body.trim()
-    if (!text) return
-    setMessages((current) => [...current, { id: `local-${current.length}`, from: 'me', body: text }])
-    setBody('')
-  }
-
-  return (
-    <div
-      role="dialog"
-      aria-label={`Cuộc trò chuyện demo với ${job.posterName}`}
-      className="fixed inset-0 z-[145] flex w-full flex-col overflow-hidden bg-nexoraSurface shadow-2xl lg:inset-auto lg:bottom-4 lg:right-[calc(min(560px,100vw)+16px)] lg:h-[min(430px,calc(100dvh-32px))] lg:w-[340px] lg:max-w-[calc(100vw-32px)] lg:rounded-2xl lg:border lg:border-nexoraBorder"
-    >
-      <header className="flex shrink-0 items-center gap-2.5 border-b border-nexoraBorder px-3.5 py-3">
-        <Avatar name={job.posterName} className="h-9 w-9 text-xs" />
-        <div className="min-w-0 flex-1">
-          <b className="block truncate text-sm text-nexoraText">{job.posterName}</b>
-          <p className="truncate text-[11px] text-nexoraMuted">{job.posterRole}{job.salon ? ` · ${job.salon}` : ''}</p>
-        </div>
-        <button type="button" onClick={onClose} aria-label="Đóng cuộc trò chuyện" className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted">
-          <X className="h-4 w-4" aria-hidden="true" />
-        </button>
-      </header>
-      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto bg-nexoraCanvas px-3 py-3">
-        <p className="rounded-lg bg-nexoraBrandSoft px-2.5 py-1.5 text-center text-[11px] text-nexoraBrand">Cuộc trò chuyện demo · Tin nhắn không được lưu hoặc gửi thật.</p>
-        {messages.map((message) => (
-          <p key={message.id} className={`max-w-[85%] rounded-2xl px-3 py-1.5 text-[12.5px] leading-snug ${message.from === 'me' ? 'ml-auto bg-nexoraBrand text-white' : 'bg-nexoraSurfaceMuted text-nexoraText'}`}>
-            {message.body}
-          </p>
-        ))}
-      </div>
-      <form onSubmit={submit} className="flex shrink-0 items-center gap-1.5 border-t border-nexoraBorder p-2">
-        <input
-          value={body}
-          onChange={(event) => setBody(event.target.value)}
-          maxLength={500}
-          placeholder="Nhắn tin…"
-          aria-label={`Nhắn tin cho ${job.posterName}`}
-          className="min-h-9 min-w-0 flex-1 rounded-full border border-nexoraBorder bg-nexoraSurfaceMuted px-3 text-xs text-nexoraText outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand"
-        />
-        <button type="submit" disabled={!body.trim()} aria-label="Gửi tin nhắn" className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-white ${gradientClass} disabled:cursor-not-allowed disabled:opacity-50`}>
-          <Send className="h-3.5 w-3.5" aria-hidden="true" />
-        </button>
-      </form>
-    </div>
-  )
-}
-
-function JobDetailDrawer({
-  job,
-  isOwn,
-  onClose,
-  onMessage,
-  onManage,
-}: {
-  job: DemoJob | null
-  isOwn: boolean
-  onClose: () => void
-  onMessage: (job: DemoJob) => void
-  onManage: (job: DemoJob, action: 'edit' | 'delete' | 'cycle-status') => void
-}) {
-  if (!job) return null
-  return (
-    <aside role="dialog" aria-label="Chi tiết tin tuyển dụng" className="fixed inset-y-0 right-0 z-[140] flex w-full flex-col bg-nexoraSurface shadow-2xl sm:w-[560px]">
-      <header className="flex shrink-0 items-center justify-between border-b border-nexoraRule px-5 py-4">
-        <b className="text-sm text-nexoraText">Tin tuyển dụng</b>
-        <button type="button" onClick={onClose} aria-label="Đóng chi tiết" className="grid h-9 w-9 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted">
-          <X className="h-4 w-4" aria-hidden="true" />
-        </button>
-      </header>
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
-        <img src={job.image} alt="Không gian salon minh hoạ cho tin tuyển dụng" className="h-56 w-full rounded-xl object-cover" />
-        <div className="mt-4 flex items-center gap-2">
-          <span className="inline-flex items-center rounded-full bg-nexoraWarning/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#8a5a00] border border-nexoraWarning/40">Nội dung mẫu</span>
-          <span className="rounded-full bg-nexoraBrandSoft px-2 py-0.5 text-xs font-bold text-nexoraBrand">{postKindLabel(job.postKind)}</span>
-          {job.urgent ? <span className="shrink-0 rounded bg-nexoraWarning px-1.5 py-1 text-[10px] font-extrabold text-white">Cần gấp</span> : null}
-          <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${job.status === 'open' ? 'bg-nexoraSuccess/15 text-nexoraSuccess' : 'bg-nexoraSubtle/15 text-nexoraSubtle'}`}>{statusLabel(job.status, job.postKind)}</span>
-          {isOwn ? <span className="ml-auto rounded-full bg-nexoraSurfaceMuted px-2 py-0.5 text-xs font-bold text-nexoraText">Bài của bạn</span> : null}
-        </div>
-        <h2 className="mt-2 text-xl font-extrabold text-nexoraText">{job.title}</h2>
-        <p className="mt-1 flex items-center gap-1 text-sm text-nexoraMuted"><MapPin className="h-3.5 w-3.5" aria-hidden="true" />Đăng bởi <b className="font-bold text-nexoraText">{job.posterName}</b> · {job.location} · {job.posted}</p>
-        <p className="mt-1.5 text-sm font-bold text-nexoraText">{job.salary} · {job.experience}</p>
-        {job.skills?.length ? <p className="mt-1 text-sm text-nexoraMuted">{job.skills.join(' · ')} · {job.availability}</p> : null}
-        <p className="mt-4 text-sm leading-relaxed text-nexoraMuted">{job.description}</p>
-        <div className="mt-4 grid grid-cols-2 gap-2.5">
-          <div className="rounded-lg bg-nexoraSurfaceMuted p-2.5"><span className="block text-[11px] font-bold text-nexoraSubtle">Mức lương</span><b className="mt-0.5 block text-sm text-nexoraText">{job.salary}</b></div>
-          <div className="rounded-lg bg-nexoraSurfaceMuted p-2.5"><span className="block text-[11px] font-bold text-nexoraSubtle">Kinh nghiệm</span><b className="mt-0.5 block text-sm text-nexoraText">{job.experience}</b></div>
-          <div className="rounded-lg bg-nexoraSurfaceMuted p-2.5"><span className="block text-[11px] font-bold text-nexoraSubtle">Hình thức</span><b className="mt-0.5 block text-sm text-nexoraText">{job.employmentType}</b></div>
-          <div className="rounded-lg bg-nexoraSurfaceMuted p-2.5"><span className="block text-[11px] font-bold text-nexoraSubtle">Trạng thái</span><b className="mt-0.5 block text-sm text-nexoraText">{statusLabel(job.status, job.postKind)}</b></div>
-          {job.payModel ? <div className="rounded-lg bg-nexoraSurfaceMuted p-2.5"><span className="block text-[11px] font-bold text-nexoraSubtle">Thu nhập</span><b className="mt-0.5 block text-sm text-nexoraText">{job.payModel}</b></div> : null}
-          {job.support?.length ? <div className="rounded-lg bg-nexoraSurfaceMuted p-2.5"><span className="block text-[11px] font-bold text-nexoraSubtle">Tiệm hỗ trợ</span><b className="mt-0.5 block text-sm text-nexoraText">{job.support.join(' · ')}</b></div> : null}
-        </div>
-        <p className="mt-4 rounded-lg bg-nexoraBrandSoft px-3 py-2 text-xs text-nexoraBrand">Dữ liệu mẫu cho mục đích trình bày. Tin tuyển dụng và cuộc trò chuyện không được lưu hoặc gửi thật.</p>
-      </div>
-      <footer className="flex shrink-0 gap-2.5 border-t border-nexoraRule px-5 py-4">
-        <button type="button" onClick={onClose} className="min-h-11 flex-1 rounded-xl border border-nexoraBorder text-sm font-bold text-nexoraText">Quay lại</button>
-        {isOwn ? (
-          <>
-            <button type="button" onClick={() => onManage(job, 'edit')} className="min-h-11 flex-1 rounded-xl border border-nexoraBorder text-sm font-bold text-nexoraText">Sửa</button>
-            <button type="button" onClick={() => onManage(job, 'cycle-status')} className="min-h-11 flex-1 rounded-xl border border-nexoraBorder text-sm font-bold text-nexoraText">Đổi trạng thái</button>
-            <button type="button" onClick={() => onManage(job, 'delete')} className="min-h-11 flex-1 rounded-xl bg-nexoraDanger text-sm font-extrabold text-white">Xoá</button>
-          </>
-        ) : (
-          <button type="button" onClick={() => onMessage(job)} className={`min-h-11 flex-1 rounded-xl text-sm font-extrabold text-white ${gradientClass}`}>Nhắn tin cho {job.posterName.split(' ')[0]}</button>
-        )}
-      </footer>
-    </aside>
-  )
 }
 
 interface DraftJob extends Pick<DemoJob, 'title' | 'location' | 'salary' | 'employmentType' | 'experience' | 'description' | 'image'> {
@@ -505,60 +436,570 @@ function PostJobModal({
   )
 }
 
-export function CommunityJobsPanel() {
+// ---- Card grid + full-width detail view (JobDetailView) ------------------------
+// History: this went through split-view (Variant A) -> card-grid-plus-docking-panel
+// (Variant B) -> a full-width JobDetailView per direct user request, applied at
+// ALL widths (2026-09-23 decision) — the old `<1280px` overlay drawer and the
+// `>=1280px` docking panel are both fully deleted now, not "kept untouched."
+// There is exactly one grid rendering path and one detail view, used everywhere.
+
+// `dimmed` defaults to false so a caller that never dims still renders the
+// plain, unmodified card. (`selected` was removed here in P3 cleanup round 4:
+// the grid is hidden — via the `visibleSelectedJob ? 'hidden' : ...` wrapper in
+// CommunityJobsPanel — for every state where a card could legitimately render
+// `selected`, and the one technical edge case where it isn't (the create/edit
+// modal open, which forces `visibleSelectedJob` to null while
+// `panelState.selectedJobId` stays set) is still 100% visually covered by that
+// modal's full-screen overlay. Verified via grep that no other call site passed
+// `selected` before removing it.)
+function JobCard({
+  job,
+  dimmed = false,
+  onSelect,
+}: {
+  job: DemoJob
+  dimmed?: boolean
+  onSelect: () => void
+}) {
+  return (
+    <article
+      role="button"
+      tabIndex={0}
+      aria-label={`Mở chi tiết tin: ${job.title}`}
+      onClick={onSelect}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onSelect()
+        }
+      }}
+      // `dimmed`: opacity-90 (not the visually-stronger opacity-60 an earlier
+      // draft used) — opacity-60 measured at ~2.8:1 contrast for nexoraMuted
+      // (#4D5870) text against nexoraSurface (#FFFFFF), well under the 4.5:1 AA
+      // minimum for normal text (blended color ≈ rgb(148,155,169), luminance
+      // ≈0.326). opacity-90 blends to ≈rgb(95,105,126), luminance ≈0.140,
+      // giving ≈5.5:1 — verified by hand, not eyeballed (P3 fix).
+      className={`cursor-pointer rounded-xl border border-nexoraBorder bg-nexoraSurface p-2.5 text-left shadow-nexora-card transition-colors hover:border-nexoraBrand hover:bg-nexoraBrandSoft/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2 ${dimmed ? 'opacity-90 saturate-[0.6]' : ''}`}
+    >
+      <div className="flex items-start gap-2.5">
+        <img src={job.image} alt="" className="h-14 w-14 shrink-0 rounded-xl object-cover" loading="lazy" />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              {job.urgent ? <span className="shrink-0 rounded bg-nexoraDanger px-1.5 py-1 text-[10px] font-extrabold text-white">Cần gấp</span> : null}
+              <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-extrabold ${postKindBadgeClassName(job.postKind)}`}>{postKindLabel(job.postKind)}</span>
+            </div>
+            {displayableSalary(job.salary) ? (
+              <span
+                className="shrink-0 max-w-[144px] truncate rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-black leading-tight text-blue-700"
+                title={job.salary}
+              >
+                {job.salary}
+              </span>
+            ) : null}
+          </div>
+          <h3 className="mt-1 line-clamp-2 text-sm font-extrabold leading-snug text-nexoraText">{job.title}</h3>
+        </div>
+      </div>
+      <p className="mt-1 flex min-w-0 items-center gap-1 truncate text-xs text-nexoraMuted">
+        <span className="min-w-0 truncate font-semibold text-nexoraBrand">{job.salon || job.posterName}</span>
+        <span aria-hidden="true">·</span>
+        <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
+        <span className="truncate">{job.location}</span>
+      </p>
+      <p className="mt-2 min-h-[63px] line-clamp-3 text-sm leading-relaxed text-nexoraMuted">{job.description}</p>
+    </article>
+  )
+}
+
+function InlineChatSection({
+  job,
+  expanded,
+  onToggle,
+  prefersReducedMotion,
+  label = 'Nhắn tin',
+}: {
+  job: DemoJob
+  expanded: boolean
+  onToggle: () => void
+  prefersReducedMotion: boolean
+  label?: string
+}) {
+  const [messages, setMessages] = useState<DemoBubble[]>(() => seedConversation(job))
+  const [body, setBody] = useState('')
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault()
+    const text = body.trim()
+    if (!text) return
+    setMessages((current) => [...current, { id: `local-${current.length}`, from: 'me', body: text }])
+    setBody('')
+  }
+
+  const rowsTransitionClass = prefersReducedMotion ? '' : 'transition-[grid-template-rows] duration-[180ms] ease-out'
+  const chevronTransitionClass = prefersReducedMotion ? '' : 'transition-transform duration-150'
+
+  return (
+    <div className="border-t border-nexoraRule">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        aria-controls={`community-job-chat-${job.id}`}
+        className="flex min-h-11 w-full items-center gap-2 px-5 py-3 text-left text-sm font-bold text-nexoraText hover:bg-nexoraSurfaceMuted"
+      >
+        <MessageCircle className="h-4 w-4 text-nexoraBrand" aria-hidden="true" />
+        {label}
+        <ChevronDown className={`ml-auto h-4 w-4 text-nexoraSubtle ${expanded ? 'rotate-180' : ''} ${chevronTransitionClass}`} aria-hidden="true" />
+      </button>
+      <div
+        id={`community-job-chat-${job.id}`}
+        className={`grid overflow-hidden ${rowsTransitionClass}`}
+        style={{ gridTemplateRows: expanded ? '1fr' : '0fr' }}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="max-h-64 space-y-2 overflow-y-auto bg-nexoraCanvas px-4 py-3">
+            <p className="rounded-lg bg-nexoraBrandSoft px-2.5 py-1.5 text-center text-[11px] text-nexoraBrand">Cuộc trò chuyện demo · Tin nhắn không được lưu hoặc gửi thật.</p>
+            {messages.map((message) => (
+              <p key={message.id} className={`max-w-[85%] rounded-2xl px-3 py-1.5 text-[12.5px] leading-snug ${message.from === 'me' ? 'ml-auto bg-nexoraBrand text-white' : 'bg-nexoraSurfaceMuted text-nexoraText'}`}>
+                {message.body}
+              </p>
+            ))}
+          </div>
+          <form onSubmit={submit} className="flex items-center gap-1.5 border-t border-nexoraBorder p-2.5">
+            <input
+              value={body}
+              onChange={(event) => setBody(event.target.value)}
+              maxLength={500}
+              placeholder="Nhắn tin…"
+              aria-label={`Nhắn tin cho ${job.posterName}`}
+              className="min-h-11 min-w-0 flex-1 rounded-full border border-nexoraBorder bg-nexoraSurfaceMuted px-3 text-xs text-nexoraText outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand"
+            />
+            {/* h-11 w-11 (44px, up from h-9/36px): icon-only send control, so the
+                hit area matters even more than for labeled buttons (HIG touch-target
+                audit, round 10). */}
+            <button type="submit" disabled={!body.trim()} aria-label="Gửi tin nhắn" className={`grid h-11 w-11 shrink-0 place-items-center rounded-full text-white ${gradientClass} disabled:cursor-not-allowed disabled:opacity-50`}>
+              <Send className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// The full-width JobDetailView that displays complete job details when a card is selected —
+// replaces the side docking panel / drawer per user request: "bấm vào bài viết sẽ hiển thị chi tiết thay vì hiển thị modal bên cạnh".
+function JobDetailView({
+  job,
+  isActive,
+  isOwn,
+  deleteConfirmId,
+  chatExpanded,
+  prefersReducedMotion,
+  onClose,
+  onEdit,
+  onCycleStatus,
+  onRequestDelete,
+  onConfirmDelete,
+  onCancelDelete,
+  onToggleChat,
+}: {
+  job: DemoJob | null
+  isActive: boolean
+  isOwn: boolean
+  deleteConfirmId: string | null
+  chatExpanded: boolean
+  prefersReducedMotion: boolean
+  onClose: () => void
+  onEdit: (job: DemoJob) => void
+  onCycleStatus: (job: DemoJob) => void
+  onRequestDelete: (job: DemoJob) => void
+  onConfirmDelete: () => void
+  onCancelDelete: () => void
+  onToggleChat: () => void
+}) {
+  // Scroll-to-top + focus-the-back-button on open — symmetric with the
+  // scroll/focus restoration that runs on close (in the parent component).
+  // Keyed on `job?.id` (not just mount) so this also fires when the selection
+  // advances to a different job while staying open (e.g. delete confirmed ->
+  // next item), not only on the very first open. Hooks must run unconditionally
+  // before the `if (!job) return null` below (Rules of Hooks), so the guard
+  // lives inside the effect body instead. `isActive` guard (P3 fix, round 4):
+  // this panel can still hold a stale, non-null selection while `hidden` behind
+  // the OTHER jobMode panel (both stay mounted now) — without this check, that
+  // hidden instance's JobDetailView would still scroll/focus the page the user
+  // is actually looking at.
+  const backButtonRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    if (!job || !isActive) return
+    try {
+      window.scrollTo({ top: 0, behavior: 'auto' })
+    } catch {
+      // jsdom (unit tests) does not implement scrollTo — harmless no-op there.
+    }
+    backButtonRef.current?.focus()
+  }, [job?.id, isActive])
+
+  if (!job) return null
+  const confirmingDelete = deleteConfirmId === job.id
+
+  return (
+    // Inline content, not a modal — no role="dialog"/aria-modal (there's no focus
+    // trap or Escape handling, which a real dialog role would imply). Applies at
+    // ALL widths per user decision (2026-09-23): this replaces both the old
+    // <1280px overlay drawer and the >=1280px docking panel with one unified view.
+    <div className="space-y-4">
+      {/* Top action bar: Back button + Status chips */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <button
+          ref={backButtonRef}
+          type="button"
+          onClick={onClose}
+          // No aria-label here: the visible text "Quay lại danh sách tin" is
+          // already a complete, descriptive accessible name. An aria-label that
+          // doesn't contain the visible text would violate WCAG 2.5.3 (Label in
+          // Name) — a speech-input user saying "quay lại danh sách tin" wouldn't
+          // match a differently-worded aria-label like the earlier "Đóng chi tiết".
+          className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-nexoraBorder bg-nexoraSurface px-4 text-xs font-bold text-nexoraText shadow-sm hover:border-nexoraBrand hover:text-nexoraBrand transition-colors"
+        >
+          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+          <span>Quay lại danh sách tin</span>
+        </button>
+
+        <div className="flex items-center gap-2">
+          {/* Business Rule 11: every detail view carries a "Sample content" label
+              — same badge/wording as the rest of Jobs (P2 regression fix). */}
+          <span className="inline-flex items-center rounded-full bg-nexoraWarning/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#8a5a00] border border-nexoraWarning/40">Nội dung mẫu</span>
+          <span className="rounded-full bg-nexoraBrandSoft px-3 py-1 text-xs font-bold text-nexoraBrand">
+            {postKindLabel(job.postKind)}
+          </span>
+          <span className={`rounded-full px-3 py-1 text-xs font-bold ${job.status === 'open' ? 'bg-nexoraSuccess/15 text-nexoraSuccess' : 'bg-nexoraSubtle/15 text-nexoraSubtle'}`}>
+            {statusLabel(job.status, job.postKind)}
+          </span>
+          {job.urgent ? (
+            <span className="shrink-0 rounded bg-nexoraWarning px-2 py-1 text-[11px] font-extrabold text-white">
+              Cần gấp
+            </span>
+          ) : null}
+          {isOwn ? (
+            <span className="rounded-full bg-nexoraSurfaceMuted px-3 py-1 text-xs font-bold text-nexoraText">
+              Bài của bạn
+            </span>
+          ) : null}
+        </div>
+      </div>
+
+      {/* Main card */}
+      <article className="overflow-hidden rounded-2xl border border-nexoraBorder bg-nexoraSurface shadow-nexora-card">
+        {/* Banner image with overlay */}
+        <div className="relative">
+          <img
+            src={job.image}
+            alt="Không gian salon minh hoạ cho tin tuyển dụng"
+            className="h-60 sm:h-72 w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+          <div className="absolute bottom-4 left-5 right-5 text-white">
+            <h2 className="text-xl sm:text-2xl font-extrabold leading-tight text-white drop-shadow-sm">
+              {job.title}
+            </h2>
+            <p className="mt-1.5 flex flex-wrap items-center gap-2 text-xs sm:text-sm text-white/90">
+              <span className="font-bold">{job.posterName}</span>
+              {job.salon ? <span>· Tiệm {job.salon}</span> : null}
+              <span>·</span>
+              <MapPin className="inline h-3.5 w-3.5" aria-hidden="true" />
+              <span>{job.location}</span>
+              <span>·</span>
+              <span>{job.posted}</span>
+            </p>
+          </div>
+        </div>
+
+        {/* Content Body */}
+        <div className="p-6 space-y-6">
+          {/* Key Facts Grid */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-3.5">
+              <span className="block text-[11px] font-bold uppercase tracking-wider text-nexoraSubtle">Mức lương</span>
+              <b className="mt-1 block text-sm sm:text-base font-extrabold text-nexoraText">{job.salary || 'Thoả thuận'}</b>
+            </div>
+            <div className="rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-3.5">
+              <span className="block text-[11px] font-bold uppercase tracking-wider text-nexoraSubtle">Kinh nghiệm</span>
+              <b className="mt-1 block text-sm sm:text-base font-extrabold text-nexoraText">{job.experience || 'Không yêu cầu'}</b>
+            </div>
+            <div className="rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-3.5">
+              <span className="block text-[11px] font-bold uppercase tracking-wider text-nexoraSubtle">Hình thức</span>
+              <b className="mt-1 block text-sm sm:text-base font-extrabold text-nexoraText">{job.employmentType}</b>
+            </div>
+            <div className="rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-3.5">
+              <span className="block text-[11px] font-bold uppercase tracking-wider text-nexoraSubtle">Trạng thái</span>
+              <b className="mt-1 block text-sm sm:text-base font-extrabold text-nexoraText">{statusLabel(job.status, job.postKind)}</b>
+            </div>
+          </div>
+
+          {/* Skills, Pay model, Support */}
+          {((job.skills && job.skills.length > 0) || (job.support && job.support.length > 0) || job.payModel) ? (
+            <div className="space-y-3 rounded-xl border border-nexoraBorder bg-nexoraCanvas p-4">
+              {job.skills && job.skills.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-bold text-nexoraMuted">Tay nghề:</span>
+                  {job.skills.map((skill) => (
+                    <span key={skill} className="rounded-md border border-nexoraBorder bg-white px-2.5 py-1 text-xs font-bold text-nexoraBrand shadow-sm">
+                      {skill}
+                    </span>
+                  ))}
+                  {job.availability ? (
+                    <span className="text-xs font-medium text-nexoraSubtle ml-1">· {job.availability}</span>
+                  ) : null}
+                </div>
+              ) : null}
+              {job.support && job.support.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-bold text-nexoraMuted">Tiệm hỗ trợ:</span>
+                  {job.support.map((item) => (
+                    <span key={item} className="rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
+                      ✓ {item}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+              {job.payModel ? (
+                <div className="text-xs text-nexoraMuted">
+                  <span className="font-bold">Thu nhập:</span> {job.payModel}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
+          {/* Description */}
+          <div>
+            <h3 className="text-xs font-black uppercase tracking-wider text-nexoraSubtle mb-2">
+              Mô tả chi tiết
+            </h3>
+            <p className="whitespace-pre-line text-sm leading-relaxed text-nexoraText">
+              {job.description}
+            </p>
+          </div>
+
+          <p className="rounded-lg bg-nexoraBrandSoft px-3 py-2 text-xs text-nexoraBrand">Dữ liệu mẫu cho mục đích trình bày. Tin tuyển dụng và cuộc trò chuyện không được lưu hoặc gửi thật.</p>
+
+          {/* Actions & Chat Footer */}
+          <div className="border-t border-nexoraRule pt-5">
+            {confirmingDelete ? (
+              <div role="alertdialog" aria-label="Xác nhận xoá tin" className="flex flex-wrap items-center gap-2.5 rounded-xl border border-nexoraDanger/20 bg-nexoraDanger/10 p-4">
+                <p className="flex-1 text-sm font-semibold text-nexoraDanger">Xoá tin này? Không thể hoàn tác.</p>
+                <button type="button" onClick={onCancelDelete} className="min-h-11 rounded-xl border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted">Huỷ</button>
+                <button type="button" onClick={onConfirmDelete} className="min-h-11 rounded-xl bg-nexoraDanger px-4 text-xs font-extrabold text-white hover:bg-opacity-90">Xác nhận xoá</button>
+              </div>
+            ) : isOwn ? (
+              <div className="flex flex-wrap gap-2.5">
+                <button type="button" onClick={() => onEdit(job)} className="min-h-11 flex-1 rounded-xl border border-nexoraBorder text-sm font-bold text-nexoraText hover:bg-nexoraSurfaceMuted">
+                  Sửa
+                </button>
+                <button type="button" onClick={() => onCycleStatus(job)} className="min-h-11 flex-1 rounded-xl border border-nexoraBorder text-sm font-bold text-nexoraText hover:bg-nexoraSurfaceMuted">
+                  Đổi trạng thái
+                </button>
+                {/* Delete now always routes through the inline confirm step
+                    (REQUEST_DELETE -> "Xác nhận xoá") at every width — the old
+                    "<1280px immediate delete" / ">=1280px confirm" split only
+                    existed to feed the now-deleted JobDetailDrawer (P1 fix). */}
+                <button
+                  type="button"
+                  onClick={() => onRequestDelete(job)}
+                  className="min-h-11 flex-1 rounded-xl bg-nexoraDanger text-sm font-extrabold text-white hover:bg-opacity-90"
+                >
+                  Xoá
+                </button>
+              </div>
+            ) : (
+              // Exactly one chat control (P3 fix, round 4): an earlier version
+              // showed a "Nhắn tin cho X" button ABOVE this section that also
+              // toggled it, so once expanded there were two redundant toggles
+              // doing the same thing. InlineChatSection's own header IS the one
+              // control now, personalized via `label`. It's also always mounted
+              // (not conditionally on `chatExpanded`) so its CSS
+              // grid-template-rows transition can actually play on both open AND
+              // close — the earlier conditional-mount version could only ever
+              // play the "opening" transition, since React removes the node
+              // synchronously on collapse with no chance for the CSS transition
+              // to run (same underlying issue as the removed
+              // `animate-in`/`fade-in`/`zoom-in-95` classes elsewhere, which had
+              // no working plugin behind them at all — this one has real
+              // infrastructure, it just needed to stay mounted to use it).
+              <InlineChatSection
+                key={job.id}
+                job={job}
+                expanded={chatExpanded}
+                onToggle={onToggleChat}
+                prefersReducedMotion={prefersReducedMotion}
+                label={`Nhắn tin cho ${job.posterName.split(' ')[0]}`}
+              />
+            )}
+          </div>
+        </div>
+      </article>
+    </div>
+  )
+}
+
+
+export function CommunityJobsPanel({ isActive = true }: { isActive?: boolean } = {}) {
   const persona = useCurrentPersona()
   const personaLabel = persona ? (persona.id === 'kayla' ? 'Kayla · Chủ salon' : 'Jessica · Thợ nail') : 'Khách (chỉ xem)'
   const myPostKind: PostKind | null = persona ? (persona.id === 'kayla' ? 'hiring' : 'seeking') : null
 
   const [jobs, setJobs] = useState<DemoJob[]>(demoJobs)
-  const [detailJobId, setDetailJobId] = useState<string | null>(null)
-  const [chatJobId, setChatJobId] = useState<string | null>(null)
+  const [panelState, setPanelState] = useState<PanelState>(createInitialPanelState)
   const [createOpen, setCreateOpen] = useState(false)
   const [editingJobId, setEditingJobId] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
-  const [kindFilter, setKindFilter] = useState<'all' | PostKind>('all')
-  const [locationFilter, setLocationFilter] = useState(JOB_LOCATIONS[0])
 
-  useEffect(() => {
-    setCreateOpen(false)
-    setEditingJobId(null)
-  }, [persona?.id])
-
-  const detailJob = jobs.find((job) => job.id === detailJobId) ?? null
-  const chatJob = jobs.find((job) => job.id === chatJobId) ?? null
-  const editingJob = jobs.find((job) => job.id === editingJobId) ?? null
-
-  const visibleJobs = jobs.filter((job) => {
-    if (kindFilter !== 'all' && job.postKind !== kindFilter) return false
-    if (locationFilter !== JOB_LOCATIONS[0] && job.location !== locationFilter) return false
-    if (query.trim()) {
-      const haystack = `${job.title} ${job.salon ?? ''} ${job.location} ${job.description}`.toLowerCase()
-      if (!haystack.includes(query.trim().toLowerCase())) return false
-    }
-    return true
-  })
+  const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
 
   const isOwn = (job: DemoJob) => persona !== null && job.ownerPersonaId === persona.id
 
-  const handleManage = (job: DemoJob, action: 'edit' | 'delete' | 'cycle-status') => {
+  const editingJob = jobs.find((job) => job.id === editingJobId) ?? null
+  const filteredJobs = useMemo(
+    () => filterJobsForState(jobs, panelState, persona),
+    [jobs, panelState.viewTab, panelState.kindFilter, panelState.locationFilter, panelState.statusFilter, panelState.query, persona],
+  )
+  // While the create/edit modal is open, JobDetailView should not show — the
+  // modal is a full overlay either way. Selection must also stay within
+  // filteredJobs so mutations or active filters do not show an excluded job
+  // (P2 fix).
+  const visibleSelectedJob = createOpen ? null : filteredJobs.find((job) => job.id === panelState.selectedJobId) ?? null
+  const { totalPages, safePageNumber, pageJobs } = useMemo(
+    () => paginate(filteredJobs, panelState.pageNumber),
+    [filteredJobs, panelState.pageNumber],
+  )
+  // Wraps the pure reducer: computes `visibleJobIds` (the reducer's 3rd param)
+  // from the component-owned `jobs` array before every dispatch, per the
+  // reducer-signature note ("visibleJobIds lives in the component, not PanelState").
+  const dispatch = (action: PanelAction) => {
+    setPanelState((prev) => {
+      const projected = projectFilterState(prev, action)
+      const projectedFiltered = filterJobsForState(jobs, projected, persona)
+      const { pageJobs: projectedPageJobs } = paginate(projectedFiltered, projected.pageNumber)
+      return communityJobsReducer(prev, action, projectedPageJobs.map((job) => job.id))
+    })
+  }
+
+  // Scroll + focus restoration (P1 fix): JobDetailView is full-width and applies
+  // at ALL widths (user decision, 2026-09-23) — opening it replaces the grid in
+  // place, so without this the user loses their scroll position and keyboard
+  // focus every time they open then close a detail view. Captured at the moment
+  // of selecting a job (not in an effect) so it reflects exactly where the user
+  // was an instant before navigating away; restored only on a genuine
+  // open->closed transition.
+  //
+  // Round-3 fix: this used to watch `visibleSelectedJob`, which `createOpen`
+  // (the edit modal) ALSO forces to `null` — so opening "Sửa" incorrectly ran
+  // the close restoration (scrolled back, focused the card behind the now-open
+  // modal). `panelState.selectedJobId` is not touched by `createOpen` (edit
+  // preserves selection — see submitDraft/handleManage), so watching ITS
+  // transition to `null` only fires on an actual close: the back button, a
+  // delete that empties the list, or the stale-selection cleanup effect below —
+  // never when the edit modal merely opens on top of the same selection.
+  const lastScrollYRef = useRef(0)
+  const lastFocusedElementRef = useRef<HTMLElement | null>(null)
+  const prevSelectedJobIdRef = useRef<string | null>(null)
+  // Fallback focus target (P3 fix): when the originally-clicked card is gone
+  // (deleted) or the closing wasn't triggered by an explicit card click at all
+  // (e.g. the stale-selection cleanup effect below, after a status
+  // change/edit drops the open job out of the active filter), focus was
+  // dropping to `<body>`. Fall back to the grid's search input instead of
+  // leaving focus nowhere.
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
+  const selectJob = (jobId: string | null) => {
+    if (jobId !== null) {
+      lastScrollYRef.current = window.scrollY
+      lastFocusedElementRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    }
+    dispatch({ type: 'SELECT_JOB', jobId })
+  }
+
+  useEffect(() => {
+    const wasOpen = prevSelectedJobIdRef.current !== null
+    const isOpen = panelState.selectedJobId !== null
+    // `isActive` guard (P3 fix, round 4): both Jobs panels (this one and
+    // OwnerJobsPanel) now stay mounted always — toggled via a `hidden` class in
+    // CommunityScreens.tsx, not conditional mounting, so switching jobMode
+    // preserves state (round-5 fix). But that means a persona switch (which
+    // resets this panel's selection to null) while this panel is the HIDDEN one
+    // would otherwise still run `window.scrollTo`/`.focus()` here — `scrollTo`
+    // is a `window`-level call, so it would visibly scroll whichever panel IS
+    // showing, even though this panel's own content is `display:none`.
+    if (wasOpen && !isOpen && isActive) {
+      try {
+        window.scrollTo({ top: lastScrollYRef.current, behavior: 'auto' })
+      } catch {
+        // jsdom (unit tests) does not implement scrollTo — harmless no-op there.
+      }
+      const el = lastFocusedElementRef.current
+      if (el && document.body.contains(el)) {
+        el.focus()
+      } else {
+        searchInputRef.current?.focus()
+      }
+    }
+    prevSelectedJobIdRef.current = panelState.selectedJobId
+  }, [panelState.selectedJobId])
+
+  // Round-3 blocker fix: `visibleSelectedJob` correctly hides JobDetailView the
+  // instant its job drops out of `filteredJobs` (e.g. Kayla changes her own
+  // post's status while filtered to "Đang mở"), but `panelState.selectedJobId`
+  // itself was never cleared — it kept pointing at the now-invisible job. The
+  // next filter/tab/page dispatch would then see a non-null selection that
+  // isn't in the visible set and (before this round) re-clamp to
+  // `visibleJobIds[0]`, silently opening a stranger's post. Proactively clear
+  // the stale id as soon as it's detected (not while the create/edit modal is
+  // open, which legitimately forces `visibleSelectedJob` to null too without
+  // the selection actually being invalid).
+  useEffect(() => {
+    if (!createOpen && panelState.selectedJobId !== null && !visibleSelectedJob) {
+      dispatch({ type: 'SELECT_JOB', jobId: null })
+    }
+  }, [createOpen, panelState.selectedJobId, visibleSelectedJob])
+
+  useEffect(() => {
+    // Persona switch (demo login change): full reset per Selection invariants —
+    // filters/tab back to defaults, selection cleared.
+    setCreateOpen(false)
+    setEditingJobId(null)
+    setPanelState(createInitialPanelState())
+  }, [persona?.id])
+
+  // NOTE: there is deliberately no "auto-select the first result" effect here.
+  // The detail view only opens on an explicit card click. An earlier version of
+  // this effect auto-selected pageJobs[0] whenever selectedJobId was null, which
+  // also fired right after the detail view's own close button set selectedJobId
+  // to null — so it could never actually stay closed (Blocker fix, round 1).
+  // Blocker 1 (round 2) was the same root bug one level down: the reducer's own
+  // re-clamp logic treated "no selection" the same as "invalid selection," so
+  // every filter/tab/page change re-triggered it too — fixed in
+  // communityJobsReducer.ts's clampSelection, not here.
+
+  const cycleJobStatus = (job: DemoJob) => {
     if (!isOwn(job)) return
-    if (action === 'edit') {
-      setEditingJobId(job.id)
-      setCreateOpen(true)
-      setDetailJobId(null)
-      return
-    }
-    if (action === 'delete') {
-      setJobs((current) => current.filter((item) => item.id !== job.id))
-      setDetailJobId(null)
-      setChatJobId((current) => current === job.id ? null : current)
-      return
-    }
     setJobs((current) => current.map((item) => {
       if (item.id !== job.id) return item
       const next = item.status === 'open' ? 'filled' : item.status === 'filled' ? 'closed' : 'open'
       return { ...item, status: next }
     }))
+  }
+
+  // Delete always routes through the inline confirm step (REQUEST_DELETE ->
+  // CONFIRM_DELETE/CANCEL_DELETE), at every width — see JobDetailView (P1 fix,
+  // removed the old <1280px-immediate-delete / >=1280px-confirm split that only
+  // existed to feed the now-deleted JobDetailDrawer).
+  const requestDeleteJob = (job: DemoJob) => dispatch({ type: 'REQUEST_DELETE', jobId: job.id })
+  const cancelDeleteJob = () => dispatch({ type: 'CANCEL_DELETE' })
+  const confirmDeleteJob = () => {
+    const deletingId = panelState.deleteConfirmId
+    if (!deletingId) return
+    dispatch({ type: 'CONFIRM_DELETE' })
+    setJobs((current) => current.filter((item) => item.id !== deletingId))
   }
 
   const submitDraft = (draft: DraftJob) => {
@@ -569,6 +1010,9 @@ export function CommunityJobsPanel() {
         return
       }
       setJobs((current) => current.map((item) => (item.id === editingJob.id ? { ...item, ...draft, salon: draft.salon || null } : item)))
+      // Selection is left untouched — "Edit saved" stays on the same job id at
+      // every width (Selection invariants), the detail view simply re-shows the
+      // (now updated) job once the modal closes.
     } else if (myPostKind && persona) {
       const newJob: DemoJob = {
         id: `local-${Date.now()}`,
@@ -593,117 +1037,168 @@ export function CommunityJobsPanel() {
         ownerPersonaId: persona.id,
       }
       setJobs((current) => [newJob, ...current])
-      setQuery('')
-      setKindFilter('all')
-      setLocationFilter(JOB_LOCATIONS[0])
+      dispatch({ type: 'RESET_FILTERS' })
+      // Selection moves to the new post, at every width (Selection invariants).
+      selectJob(newJob.id)
     }
     setCreateOpen(false)
     setEditingJobId(null)
   }
 
+  const postButtonNode = myPostKind ? (
+    <button
+      type="button"
+      onClick={() => { setEditingJobId(null); setCreateOpen(true) }}
+      className={`min-h-11 shrink-0 rounded-lg px-4 text-sm font-extrabold text-white ${gradientClass}`}
+    >
+      {myPostKind === 'hiring' ? 'Đăng tin tuyển thợ' : 'Đăng tin tìm việc'}
+    </button>
+  ) : (
+    <span className="rounded-lg bg-nexoraSurfaceMuted px-3 py-2 text-xs font-semibold text-nexoraSubtle">Đăng nhập persona thợ/chủ để đăng tin</span>
+  )
+
+  // Duplicate-CTA fix (P2): the toolbar's CTA is generic/always-there, so when
+  // the grid's own empty state already shows the same CTA with context ("Bạn
+  // chưa có tin nào...", mine tab + zero listings), suppress the toolbar copy —
+  // show it in exactly one place instead of both simultaneously.
+  const isMineEmpty = panelState.viewTab === 'mine' && filteredJobs.length === 0
+
   return (
     <>
-      <div className="mb-3 space-y-2.5 rounded-xl border border-nexoraBorder bg-nexoraSurface p-3 shadow-nexora-card">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative min-w-[180px] flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nexoraSubtle" aria-hidden="true" />
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Tìm theo tiêu đề, salon, khu vực…"
-              aria-label="Tìm tin tuyển dụng"
-              className="min-h-10 w-full rounded-full border border-nexoraBorder bg-nexoraSurfaceMuted pl-9 pr-3 text-sm text-nexoraText outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand"
-            />
-          </div>
-          <select value={locationFilter} onChange={(event) => setLocationFilter(event.target.value)} aria-label="Lọc theo khu vực" className="min-h-10 rounded-lg border border-nexoraBorder bg-nexoraSurface px-3 text-sm text-nexoraText outline-none focus:border-nexoraBrand">
-            {JOB_LOCATIONS.map((loc) => <option key={loc} value={loc}>{loc}</option>)}
-          </select>
-          {myPostKind ? (
-            <button
-              type="button"
-              onClick={() => { setEditingJobId(null); setCreateOpen(true) }}
-              className={`min-h-10 shrink-0 rounded-lg px-4 text-sm font-extrabold text-white ${gradientClass}`}
-            >
-              {myPostKind === 'hiring' ? 'Đăng tin tuyển thợ' : 'Đăng tin tìm việc'}
-            </button>
-          ) : (
-            <span className="rounded-lg bg-nexoraSurfaceMuted px-3 py-2 text-xs font-semibold text-nexoraSubtle">Đăng nhập persona thợ/chủ để đăng tin</span>
-          )}
-        </div>
-        <div className="flex gap-1.5">
-          {(['all', 'seeking', 'hiring'] as const).map((kind) => (
-            <button
-              key={kind}
-              type="button"
-              onClick={() => setKindFilter(kind)}
-              className={`min-h-8 rounded-full px-3 text-xs font-bold transition-colors ${kindFilter === kind ? 'bg-nexoraBrand text-white' : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-nexoraBrandSoft'}`}
-            >
-              {kind === 'all' ? 'Tất cả' : postKindLabel(kind)}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* Small, separate status element — NOT nested inside the grid's hideable
+          wrapper below, which used to make it announce nothing: a live region's
+          text changing at the same instant its ancestor gets `display:none` is
+          never read aloud by screen readers (P2 fix). */}
+      <p aria-live="polite" className="sr-only">{visibleSelectedJob ? `Đã chọn: ${visibleSelectedJob.title}` : ''}</p>
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fit,minmax(18rem,1fr))]">
-        {visibleJobs.map((job) => {
-          return (
-            <article
-              key={job.id}
-              role="button"
-              tabIndex={0}
-              aria-label={`Mở chi tiết tin: ${job.title}`}
-              onClick={() => setDetailJobId(job.id)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault()
-                  setDetailJobId(job.id)
-                }
-              }}
-              className="cursor-pointer rounded-xl border border-nexoraBorder bg-nexoraSurface p-2.5 text-left shadow-nexora-card transition-colors hover:border-nexoraBrand hover:bg-nexoraBrandSoft/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2"
+      {visibleSelectedJob ? (
+        <JobDetailView
+          job={visibleSelectedJob}
+          isActive={isActive}
+          isOwn={isOwn(visibleSelectedJob)}
+          deleteConfirmId={panelState.deleteConfirmId}
+          chatExpanded={panelState.chatExpanded}
+          prefersReducedMotion={prefersReducedMotion}
+          onClose={() => selectJob(null)}
+          onEdit={(job) => {
+            setEditingJobId(job.id)
+            setCreateOpen(true)
+          }}
+          onCycleStatus={cycleJobStatus}
+          onRequestDelete={requestDeleteJob}
+          onConfirmDelete={confirmDeleteJob}
+          onCancelDelete={cancelDeleteJob}
+          onToggleChat={() => dispatch({ type: 'TOGGLE_CHAT' })}
+        />
+      ) : null}
+
+      <div className={visibleSelectedJob ? 'hidden' : 'space-y-4'}>
+        {/* No Jobs workspace header ("Nexora Community / Jobs · N tin") here —
+            the user explicitly chose the headerless version (reversing an
+            earlier round's P2 restoration), same product decision as the
+            global header removal in CommunityScreens.tsx's CommunityHome. */}
+        <div className="space-y-2.5 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-3.5 shadow-nexora-card">
+          {/* Search, Select Filters, and Post Button. `flex-wrap` (not a fixed
+              row) is intentional: at compact width (375px) these controls stack
+              onto their own lines instead of clipping or hiding — every control
+              here is core filtering, not overflow-worthy (HIG responsive audit,
+              round 10). All controls bumped to min-h-11 (44px) in the same pass;
+              they were min-h-10/40px, under the touch-target minimum. */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative min-w-[180px] flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nexoraSubtle" aria-hidden="true" />
+              <input
+                ref={searchInputRef}
+                value={panelState.query}
+                onChange={(event) => dispatch({ type: 'SET_QUERY', query: event.target.value })}
+                placeholder="Tìm theo tiêu đề, salon, khu vực…"
+                aria-label="Tìm tin tuyển dụng"
+                className="min-h-11 w-full rounded-full border border-nexoraBorder bg-nexoraSurfaceMuted pl-9 pr-3 text-sm text-nexoraText outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand"
+              />
+            </div>
+            <select value={panelState.locationFilter} onChange={(event) => dispatch({ type: 'SET_LOCATION_FILTER', location: event.target.value })} aria-label="Lọc theo khu vực" className="min-h-11 rounded-lg border border-nexoraBorder bg-nexoraSurface px-3 text-sm text-nexoraText outline-none focus:border-nexoraBrand">
+              {JOB_LOCATIONS.map((loc) => <option key={loc} value={loc}>{loc}</option>)}
+            </select>
+            <select
+              value={panelState.statusFilter}
+              onChange={(event) => dispatch({ type: 'SET_STATUS_FILTER', status: event.target.value === 'open' ? 'open' : 'all' })}
+              aria-label="Lọc theo trạng thái"
+              className="min-h-11 rounded-lg border border-nexoraBorder bg-nexoraSurface px-3 text-sm text-nexoraText outline-none focus:border-nexoraBrand"
             >
-              <div className="flex items-start gap-2.5">
-                <img src={job.image} alt="" className="h-14 w-14 shrink-0 rounded-xl object-cover" loading="lazy" />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5">
-                      {job.urgent ? <span className="shrink-0 rounded bg-nexoraDanger px-1.5 py-1 text-[10px] font-extrabold text-white">Cần gấp</span> : null}
-                      <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-extrabold ${postKindBadgeClassName(job.postKind)}`}>{postKindLabel(job.postKind)}</span>
-                    </div>
-                    {displayableSalary(job.salary) ? (
-                      <span
-                        className="shrink-0 max-w-[144px] truncate rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-black leading-tight text-blue-700"
-                        title={job.salary}
-                      >
-                        {job.salary}
-                      </span>
-                    ) : null}
-                  </div>
-                  <h3 className="mt-1 line-clamp-2 text-sm font-extrabold leading-snug text-nexoraText">{job.title}</h3>
+              <option value="all">Tất cả trạng thái</option>
+              <option value="open">Đang mở</option>
+            </select>
+            {isMineEmpty ? null : postButtonNode}
+          </div>
+
+          {/* Filter Chips and View Tabs */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+            <div className="flex gap-1.5">
+              {(['all', 'seeking', 'hiring'] as const).map((kind) => (
+                <button
+                  key={kind}
+                  type="button"
+                  onClick={() => dispatch({ type: 'SET_KIND_FILTER', kind })}
+                  className={`min-h-11 rounded-full px-3 text-xs font-bold transition-colors ${panelState.kindFilter === kind ? 'bg-nexoraBrand text-white' : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-nexoraBrandSoft'}`}
+                >
+                  {kind === 'all' ? 'Tất cả' : postKindLabel(kind)}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-1.5">
+              <button
+                type="button"
+                onClick={() => dispatch({ type: 'SET_VIEW_TAB', tab: 'browse' })}
+                aria-pressed={panelState.viewTab === 'browse'}
+                className={`min-h-11 rounded-full px-3 text-xs font-bold transition-colors ${panelState.viewTab === 'browse' ? 'bg-nexoraBrand text-white' : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-nexoraBrandSoft'}`}
+              >
+                Duyệt tin
+              </button>
+              <button
+                type="button"
+                onClick={() => dispatch({ type: 'SET_VIEW_TAB', tab: 'mine' })}
+                aria-pressed={panelState.viewTab === 'mine'}
+                className={`min-h-11 rounded-full px-3 text-xs font-bold transition-colors ${panelState.viewTab === 'mine' ? 'bg-nexoraBrand text-white' : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-nexoraBrandSoft'}`}
+              >
+                Bài của tôi
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Grid + pagination unified across all widths — the earlier isXlUp
+            split here only existed to pair with the now-deleted docking
+            panel/drawer split; JobDetailView applies at every width now. */}
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fit,minmax(18rem,1fr))]">
+          {pageJobs.map((job) => (
+            <JobCard
+              key={job.id}
+              job={job}
+              dimmed={job.status !== 'open'}
+              onSelect={() => selectJob(job.id)}
+            />
+          ))}
+          {pageJobs.length === 0 ? (
+            panelState.viewTab === 'mine' ? (
+              <div className="col-span-full flex flex-col items-center justify-center rounded-2xl border border-dashed border-nexoraBorder bg-nexoraSurface p-10 text-center shadow-nexora-card">
+                <p className="text-sm font-semibold text-nexoraText">Bạn chưa có tin nào. Đăng tin đầu tiên.</p>
+                <div className="mt-3">
+                  {postButtonNode}
                 </div>
               </div>
-              <p className="mt-1 flex min-w-0 items-center gap-1 truncate text-xs text-nexoraMuted">
-                <span className="min-w-0 truncate font-semibold text-nexoraBrand">{job.salon || job.posterName}</span>
-                <span aria-hidden="true">·</span>
-                <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
-                <span className="truncate">{job.location}</span>
-              </p>
-              <p className="mt-2 min-h-[63px] line-clamp-3 text-sm leading-relaxed text-nexoraMuted">{job.description}</p>
-            </article>
-          )
-        })}
-        {visibleJobs.length === 0 ? (
-          <p className="col-span-full rounded-xl border border-dashed border-nexoraBorder p-6 text-center text-sm text-nexoraMuted">Không có tin phù hợp bộ lọc. Thử đổi khu vực hoặc loại tin.</p>
+            ) : (
+              <div className="col-span-full rounded-xl border border-dashed border-nexoraBorder p-6 text-center text-sm text-nexoraMuted">
+                <p>Không có tin phù hợp bộ lọc. Thử đổi khu vực hoặc loại tin.</p>
+                <button type="button" onClick={() => dispatch({ type: 'CLEAR_ALL_FILTERS' })} className="mt-2 text-xs font-bold text-nexoraBrand hover:underline">Xoá bộ lọc</button>
+              </div>
+            )
+          ) : null}
+        </section>
+        {totalPages > 1 ? (
+          <Pagination pageNumber={safePageNumber} totalPages={totalPages} onPageChange={(page) => dispatch({ type: 'SET_PAGE', page })} variant="simple" className="mt-4" />
         ) : null}
-      </section>
+      </div>
 
-      <JobDetailDrawer
-        job={detailJob}
-        isOwn={detailJob ? isOwn(detailJob) : false}
-        onClose={() => setDetailJobId(null)}
-        onMessage={(job) => setChatJobId(job.id)}
-        onManage={handleManage}
-      />
-      {chatJob ? <JobChatDock key={chatJob.id} job={chatJob} onClose={() => setChatJobId(null)} /> : null}
       {createOpen && myPostKind ? (
         <PostJobModal
           postKind={editingJob ? editingJob.postKind : myPostKind}

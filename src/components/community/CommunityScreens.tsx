@@ -1,5 +1,6 @@
 import {
   BadgeCheck,
+  Briefcase,
   Calendar,
   ChevronLeft,
   AlertCircle,
@@ -8,10 +9,12 @@ import {
   GraduationCap,
   Heart,
   Image as ImageIcon,
+  LayoutGrid,
   Link as LinkIcon,
   Loader2,
   LockKeyhole,
   MapPin,
+  Megaphone,
   MessageCircle,
   Phone,
   Plus,
@@ -58,7 +61,8 @@ import { CommunityPostComposer, CommunityPostMedia } from './CommunityPostMedia'
 import { CommunityRightRail } from './CommunityRightRail'
 import { createCommunitySlug } from './communitySlug'
 import { demoEvents, demoLearning } from './communityDemoContent'
-import { CommunityJobsPanel } from './CommunityJobDetail'
+import { OwnerJobsPanel } from './OwnerJobsPanel'
+import { CommunityJobsPanel as VariantBJobsPanel } from './CommunityJobDetail'
 import IconButton from '../ui/IconButton'
 import StaffQuickChatModal from '../ui/StaffQuickChatModal'
 import ToggleSwitch from '../ui/ToggleSwitch'
@@ -264,33 +268,53 @@ function CommunityFeed({ community, withComposer = false, announcementOnly = fal
   )
 }
 
+// `id` values stay in English (used for tab routing/matching via ?tab= search
+// params, e.g. `currentTab === 'feed'`) — only the displayed `label` is
+// translated (user-requested, round 5).
+// icon+label pill nav (redesigned from the earlier underline-tab style to match
+// a reference screenshot exactly, per user request). `id` values are unchanged
+// (still drive tab routing/matching via ?tab=), only the presentation changed.
 const TABS = [
-  { id: 'feed', label: 'Feed' },
-  { id: 'groups', label: 'Groups' },
-  { id: 'events', label: 'Events' },
-  { id: 'announcements', label: 'Announcements' },
-  { id: 'learning', label: 'Learning' },
-  { id: 'jobs', label: 'Jobs' },
+  { id: 'feed', label: 'Bảng tin', icon: MessageCircle },
+  { id: 'groups', label: 'Nhóm', icon: Users },
+  { id: 'events', label: 'Sự kiện', icon: Calendar },
+  { id: 'announcements', label: 'Thông báo', icon: Megaphone },
+  { id: 'learning', label: 'Học tập', icon: GraduationCap },
+  { id: 'jobs', label: 'Việc làm', icon: Briefcase },
 ]
 
 function CommunityTabs({ activeTab, onChange }: { activeTab: string; onChange: (tab: string) => void }) {
   return (
-    <div className="mb-4 overflow-x-auto border-b border-nexoraRule no-scrollbar" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
-      <nav className="-mb-px flex gap-6" aria-label="Tabs">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => onChange(tab.id)}
-            className={`whitespace-nowrap border-b-2 py-3 text-sm transition-colors ${
-              activeTab === tab.id
-                ? 'border-nexoraBrand font-bold text-nexoraBrand'
-                : 'border-transparent font-semibold text-nexoraMuted hover:border-nexoraRule hover:text-foreground'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+    <div className="mb-4 overflow-x-auto no-scrollbar" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+      <nav className="flex items-center gap-2.5 py-1" aria-label="Tabs">
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.id
+          const Icon = tab.icon
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => onChange(tab.id)}
+              aria-current={isActive ? 'page' : undefined}
+              // Active: the same brand gradient pill fill used elsewhere in
+              // Community (CommunityChatDock.tsx/CommunityRightRail.tsx's
+              // `gradientClass`, reused as-is here — not a new color).
+              // Inactive: white/outlined card, following the
+              // `rounded-xl border border-nexoraBorder` pattern already used
+              // for pill/tile buttons (SelectTechniciansModal.tsx) rather than
+              // GlobalDemoQuickNav.tsx's colored-tint style, which doesn't
+              // match the reference image's plain white inactive pills.
+              className={`inline-flex shrink-0 min-h-11 items-center gap-2 whitespace-nowrap rounded-2xl border px-4 text-sm font-bold shadow-nexora-card transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2 ${
+                isActive
+                  ? `border-transparent text-white ${gradientClass}`
+                  : 'border-nexoraBorder bg-nexoraSurface text-nexoraText hover:border-nexoraBrand'
+              }`}
+            >
+              <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-white' : 'text-nexoraBrand'}`} aria-hidden="true" />
+              {tab.label}
+            </button>
+          )
+        })}
       </nav>
     </div>
   )
@@ -375,6 +399,7 @@ export function CommunityHome() {
   const [composerCommunityId, setComposerCommunityId] = useState<string | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
   const currentTab = searchParams.get('tab') || 'feed'
+  const jobMode = searchParams.get('jobMode') || 'b'
   const needsCommunityList = currentTab === 'feed' || currentTab === 'groups' || currentTab === 'announcements'
 
   const ringCommunities = myCommunities.data?.items.length ? myCommunities.data.items : (communities.data?.items ?? [])
@@ -382,12 +407,12 @@ export function CommunityHome() {
 
   return (
     <CommunityFrame containerClassName="mx-auto w-full max-w-[1040px] pb-20">
-      <header className="mx-auto mb-4 flex w-full max-w-[680px] items-center justify-between gap-3 2xl:max-w-none">
-        <div><p className="text-xs font-bold uppercase tracking-[0.12em] text-nexoraBrand">Nexora</p><h1 className="text-xl font-extrabold text-nexoraText">Cộng đồng</h1></div>
-        <Link to="/community/new" className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-extrabold text-white ${gradientClass}`}><Plus className="h-4 w-4" aria-hidden="true" />Tạo nhóm</Link>
-      </header>
+      {/* No global "Nexora / Cộng đồng" header here — the user explicitly chose
+          the headerless version (reversing an earlier round's P2 restoration,
+          which itself had reversed Antigravity's original removal). This is a
+          deliberate, informed product decision, not a regression. */}
       <div className="flex flex-col gap-6 2xl:flex-row 2xl:items-start">
-        <div className="mx-auto w-full max-w-[680px] flex-1 2xl:mx-0">
+        <div className={currentTab === 'jobs' ? 'w-full flex-1' : 'mx-auto w-full max-w-[680px] flex-1 2xl:mx-0'}>
           <CommunityTabs activeTab={currentTab} onChange={(tab) => setSearchParams({ tab }, { replace: true })} />
           <div className="space-y-4">
             {needsCommunityList ? (
@@ -397,7 +422,7 @@ export function CommunityHome() {
                 {communities.error ? <ErrorState error={communities.error} onRetry={() => void communities.refetch()} /> : null}
               </>
             ) : null}
-            
+
             {currentTab === 'feed' ? (
               <>
                 {composerCommunityId ? <PostComposer communityId={composerCommunityId} onClose={() => setComposerCommunityId(null)} /> : <QuickComposer communityId={feedCommunities[0]?.id} onOpen={() => setComposerCommunityId(feedCommunities[0]?.id ?? null)} />}
@@ -405,7 +430,15 @@ export function CommunityHome() {
                 {feedCommunities.map((community) => <CommunityFeed key={community.id} community={community} />)}
               </>
             ) : currentTab === 'groups' ? (
-              <GroupList groups={ringCommunities} />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-lg font-extrabold text-nexoraText">Nhóm</h2>
+                  <Link to="/community/new" className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-extrabold text-white ${gradientClass}`}>
+                    <Plus className="h-4 w-4" aria-hidden="true" />Tạo nhóm
+                  </Link>
+                </div>
+                <GroupList groups={ringCommunities} />
+              </div>
             ) : currentTab === 'announcements' ? (
               <>
                 {feedCommunities.map((community) => <CommunityFeed key={`announcement-${community.id}`} community={community} announcementOnly={true} />)}
@@ -416,13 +449,71 @@ export function CommunityHome() {
             ) : currentTab === 'learning' ? (
               <DemoLearningList />
             ) : currentTab === 'jobs' ? (
-              <CommunityJobsPanel />
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-3 shadow-nexora-card">
+                  <div className="inline-flex rounded-xl bg-nexoraSurfaceMuted p-1 border border-nexoraBorder">
+                    {/* min-h-11 (44px): touch-target audit, round 10 — these
+                        previously relied on px-4 py-2 alone, which comes in
+                        under the 44px minimum. */}
+                    <button
+                      type="button"
+                      onClick={() => setSearchParams({ tab: 'jobs', jobMode: 'b' }, { replace: true })}
+                      className={`inline-flex min-h-11 items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all ${
+                        jobMode !== 'ai'
+                          ? 'bg-nexoraSurface text-nexoraBrand shadow-sm font-black'
+                          : 'text-nexoraMuted hover:text-nexoraText'
+                      }`}
+                    >
+                      <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+                      Bảng tin việc làm
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSearchParams({ tab: 'jobs', jobMode: 'ai' }, { replace: true })}
+                      className={`inline-flex min-h-11 items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all ${
+                        jobMode === 'ai'
+                          ? 'bg-nexoraSurface text-nexoraBrand shadow-sm font-black'
+                          : 'text-nexoraMuted hover:text-nexoraText'
+                      }`}
+                    >
+                      <Sparkles className="h-4 w-4" aria-hidden="true" />
+                      Theo AI gợi ý tuyển thợ
+                    </button>
+                  </div>
+                  <span className="text-xs font-semibold text-nexoraMuted px-1">
+                    {jobMode === 'ai'
+                      ? 'AI gợi ý: Gợi ý ứng viên nail ẩn danh phù hợp salon'
+                      : 'Bảng tin việc làm & xem chi tiết bài đăng'}
+                  </span>
+                </div>
+
+                {/* Both panels stay mounted always, toggled via `hidden` (same
+                    pattern JobDetailView/grid already use in CommunityJobDetail.tsx)
+                    instead of conditional mounting — switching jobMode used to
+                    unmount the inactive panel and silently discard all of its
+                    local state (created/edited/deleted posts, or
+                    requested/saved/dismissed candidates) (P2 fix). */}
+                {/* `isActive` (P3 fix, round 4): tells each always-mounted panel
+                    whether IT is the one currently visible, so its scroll/focus
+                    restoration effects don't act on the other, hidden panel's
+                    behalf (window.scrollTo/.focus() are global calls — a hidden
+                    panel's own effect firing would still move focus/scroll on
+                    whichever panel the user is actually looking at). */}
+                <div className={jobMode === 'ai' ? '' : 'hidden'}>
+                  <OwnerJobsPanel isActive={jobMode === 'ai'} />
+                </div>
+                <div className={jobMode === 'ai' ? 'hidden' : ''}>
+                  <VariantBJobsPanel isActive={jobMode !== 'ai'} />
+                </div>
+              </div>
             ) : null}
           </div>
         </div>
-        <div className="hidden w-[336px] shrink-0 2xl:sticky 2xl:top-[132px] 2xl:block 2xl:self-start">
-          <CommunityRightRail />
-        </div>
+        {currentTab === 'jobs' ? null : (
+          <div className="hidden w-[336px] shrink-0 2xl:sticky 2xl:top-[132px] 2xl:block 2xl:self-start">
+            <CommunityRightRail />
+          </div>
+        )}
       </div>
     </CommunityFrame>
   )
