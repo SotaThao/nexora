@@ -95,8 +95,9 @@ export const TURN_BOARD_STATUS_FILTERS: TurnBoardStatusFilter[] = [
   TurnBoardStatusFilter.ClockedOut,
 ]
 
-/** Station cards vs the turn-by-turn grid. Remembered across visits (pure UI preference). */
+/** Dense table, station cards, or the turn-by-turn grid. Remembered across visits (pure UI preference). */
 export enum TurnBoardViewMode {
+  Compact = 'compact',
   Stations = 'stations',
   Grid = 'grid',
 }

@@ -46,9 +46,14 @@ export function formatPromotionStudioSchedule(
   return `${dayPart} / ${timePart}`
 }
 
-/** "10:00 AM–2:00 PM" — always 12-hour, in the salon's own wall clock. */
+/** "10:00 AM–2:00 PM" — always 12-hour with uppercase English meridiem. */
 export function formatPromotionWindow(startTime: string, endTime: string, language: string): string {
-  return `${formatPosClockTime(startTime, language)}–${formatPosClockTime(endTime, language)}`
+  return `${formatPromotionClockTime(startTime, language)}–${formatPromotionClockTime(endTime, language)}`
+}
+
+function formatPromotionClockTime(hhmm: string, language: string): string {
+  // Shared POS clock uses lowercase "am"/"pm"; posters/schedules use uppercase AM/PM.
+  return formatPosClockTime(hhmm, language).replace(/\b(am|pm)\b/g, (match) => match.toUpperCase())
 }
 
 /**

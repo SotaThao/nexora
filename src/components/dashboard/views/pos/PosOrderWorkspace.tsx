@@ -20,11 +20,16 @@ import { posCheckoutRepository } from '../../../../data/repositories/posCheckout
 import CameraCaptureModal from '../../../ui/CameraCaptureModal'
 import ImageFileInput from '../../../ui/ImageFileInput'
 import IconButton from '../../../ui/IconButton'
+import VlinkPayCheckoutFrame from '../../../posDevice/VlinkPayCheckoutFrame'
+import { VlinkPayPaymentPage } from '../../../../types/repositories'
+
 import {
   useAddOrderCustomServiceLine,
   useAddOrderServiceLine,
   useCheckoutServiceCatalog,
   useCompleteOrder,
+  useVlinkPayPaymentStatus,
+  useVlinkPayPaymentUrl,
   useOrderDetail,
   useRemoveOrderProductLine,
   useRemoveOrderServiceLine,
@@ -110,6 +115,7 @@ import { reallocateTip } from './posPaymentAllocations'
 import {
   getPosCheckoutPaymentMethodLabel,
   isPosCheckoutPaymentMethod,
+  POS_CHECKOUT_GIFT_CARD_ENABLED,
   POS_CHECKOUT_PAYMENT_METHOD_LABEL_KEYS,
   PosCheckoutPaymentMethod,
 } from '../../../../constants/posCheckoutPaymentMethod'
@@ -467,6 +473,12 @@ export default function PosOrderWorkspace({
   const setStaffTipSplit = useSetOrderStaffTipSplit(businessId)
   const setPaymentAllocations = useSetOrderPaymentAllocations(businessId)
   const completeOrder = useCompleteOrder(businessId)
+  const vlinkPayPaymentUrl = useVlinkPayPaymentUrl(businessId)
+  const vlinkPayPaymentStatus = useVlinkPayPaymentStatus(businessId)
+
+  // Gift Card is collected through VlinkPay: the cashier opens the VlinkPay page in a frame and
+  // the order is only completed once VlinkPay confirms the money moved.
+  const [vlinkPayFrameUrl, setVlinkPayFrameUrl] = useState<string | null>(null)
 
   // Sync lock so a second tap in the same tick cannot queue another call. Mutation
   // `isPending` is the visual source of truth; the ref covers the gap before React
@@ -712,8 +724,12 @@ export default function PosOrderWorkspace({
       if (line.itemType !== 'Service' || !line.posStaffProfileId || !line.technicianName) continue
       names.set(line.posStaffProfileId, line.technicianName)
     }
-    return Array.from(names, ([posStaffProfileId, technicianName]) => ({ posStaffProfileId, technicianName }))
-  }, [visibleLines])
+    return Array.from(names, ([posStaffProfileId, technicianName]) => ({
+      posStaffProfileId,
+      technicianName,
+      photoUrl: allTechnicians.find((tech) => tech.posStaffProfileId === posStaffProfileId)?.photoUrl,
+    }))
+  }, [visibleLines, allTechnicians])
   const isTechnicianRosterLoading = areTechniciansPending || areTechniciansFetching
   // Ticket Detail placeholder and catalog pending share `isAddingLine` so one panel cannot
   // finish while the other is still locked. Initial sole-technician skill load uses pending
@@ -842,7 +858,12 @@ export default function PosOrderWorkspace({
     (method) => method.isActive && method.isConfigured && method.type === paymentMethod,
   )
   const isCorePaymentMethod = CORE_CHECKOUT_PAYMENT_METHODS.has(paymentMethod)
-  const isPaymentMethodEligible = isCorePaymentMethod || Boolean(selectedReceivePaymentMethod)
+  // A ticket saved with Gift Card before the pause must not be payable through it either: the
+  // money leg is switched off, so the method is ineligible until the cashier picks another one.
+  const isGiftCardPaused = paymentMethod === PosCheckoutPaymentMethod.GiftCard
+    && !POS_CHECKOUT_GIFT_CARD_ENABLED
+  const isPaymentMethodEligible = !isGiftCardPaused
+    && (isCorePaymentMethod || Boolean(selectedReceivePaymentMethod))
   const cashPaymentCovered = paymentMethod !== PosCheckoutPaymentMethod.Cash
     || (order ? isCashPaymentCovered(cashReceived, order.total) : false)
 
@@ -894,7 +915,7 @@ export default function PosOrderWorkspace({
     const core: PosCheckoutPaymentMethodType[] = [
       PosCheckoutPaymentMethod.Cash,
       PosCheckoutPaymentMethod.Card,
-      PosCheckoutPaymentMethod.GiftCard,
+      ...(POS_CHECKOUT_GIFT_CARD_ENABLED ? [PosCheckoutPaymentMethod.GiftCard] : []),
     ]
     const configured = receivePaymentMethods
       .filter((method) => method.isActive && method.isConfigured && isPosCheckoutPaymentMethod(method.type))
@@ -1673,7 +1694,71 @@ export default function PosOrderWorkspace({
     confirmMismatch('checkout', unfinishedLineLabels, unfinishedLineLabels.length > 0, runComplete)
   }
 
+  // Gift Card money is taken through VlinkPay, so the ticket cannot be closed on the cashier's
+  // word alone: the frame is opened first, and the order is settled only after VlinkPay confirms.
   const runComplete = () => {
+    if (!order) return
+
+    if (paymentMethod === PosCheckoutPaymentMethod.GiftCard) {
+      if (!POS_CHECKOUT_GIFT_CARD_ENABLED) return
+      openVlinkPayGiftCardFrame()
+      return
+    }
+
+    settleOrder()
+  }
+
+  const openVlinkPayGiftCardFrame = () => {
+    if (!order) return
+    vlinkPayPaymentUrl.mutate(
+      {
+        orderId,
+        payload: {
+          page: VlinkPayPaymentPage.GiftCard,
+          callbackOrigin: window.location.origin,
+          // Pre-filled and locked on the VlinkPay side, so the amount charged is the amount owed.
+          amount: order.total,
+        },
+      },
+      {
+        onSuccess: (result) => setVlinkPayFrameUrl(result.iframeUrl),
+        onError: reportError,
+      },
+    )
+  }
+
+  // Never settles on the frame's message alone. That message is a browser event and can be
+  // forged or replayed, so the payment is re-read from VlinkPay before the ticket is closed.
+  const confirmVlinkPayThenSettle = () => {
+    setVlinkPayFrameUrl(null)
+    vlinkPayPaymentStatus.mutate(
+      { orderId },
+      {
+        onSuccess: (status) => {
+          if (!status.found) {
+            showToast(
+              t('components.dashboard.views.pos.PosOrderWorkspace.vlinkPayNotConfirmed'),
+              'error',
+            )
+            return
+          }
+          settleOrder()
+        },
+        onError: reportError,
+      },
+    )
+  }
+
+  // Closed without a result. The customer may still have paid, so the cashier is told to check
+  // rather than shown a clean slate that invites collecting a second time.
+  const handleVlinkPayUnresolved = () => {
+    showToast(
+      t('components.dashboard.views.pos.PosOrderWorkspace.vlinkPayUnresolved'),
+      'error',
+    )
+  }
+
+  const settleOrder = () => {
     if (!order) return
     if (!startTicketAction(TicketBusySurface.Complete)) return
     // Complete carries the method itself and closes the order to edits, so a queued write landing
@@ -2739,7 +2824,9 @@ export default function PosOrderWorkspace({
                       ? t('components.dashboard.views.pos.PosOrderWorkspace.addLineFirst')
                       : hasUnassignedServiceLine
                         ? t('components.dashboard.views.pos.PosOrderWorkspace.assignTechnicianFirst')
-                        : undefined
+                        : isGiftCardPaused
+                          ? t('components.dashboard.views.pos.PosOrderWorkspace.paymentMethodUnavailable')
+                          : undefined
                   }
                   className="h-11 w-full rounded-lg bg-nexoraBrand text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
                 >
@@ -3152,6 +3239,17 @@ export default function PosOrderWorkspace({
           setMismatchWarning(null)
           run()
         }}
+      />
+    ) : null}
+    {vlinkPayFrameUrl ? (
+      <VlinkPayCheckoutFrame
+        iframeUrl={vlinkPayFrameUrl}
+        orderId={orderId}
+        onSuccess={confirmVlinkPayThenSettle}
+        onFailed={() => setVlinkPayFrameUrl(null)}
+        onCancelled={() => setVlinkPayFrameUrl(null)}
+        onUnresolved={handleVlinkPayUnresolved}
+        onClose={() => setVlinkPayFrameUrl(null)}
       />
     ) : null}
     {printableReceipt}

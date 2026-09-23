@@ -3,7 +3,7 @@
 // URL at all, only by asking a developer to look it up in the database. Shared by
 // PosBookingSettingsPanel and BookingTab. Renders nothing if the slug isn't loaded yet.
 import { useState } from 'react'
-import { Check, Copy } from 'lucide-react'
+import { Check, Copy, ExternalLink } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import { copyTextToClipboard } from '../../../../../utils/clipboard'
@@ -42,7 +42,7 @@ export default function BookingLinkShare({ businessSlug }: { businessSlug?: stri
         href={url}
         target="_blank"
         rel="noreferrer"
-        className="min-w-0 max-w-full truncate text-left font-mono text-[11px] text-nexoraMuted hover:text-nexoraBrand"
+        className="min-w-0 max-w-full truncate text-left font-mono text-[11px] font-semibold text-nexoraBrand underline decoration-nexoraBrand/40 underline-offset-2 transition-colors hover:text-nexoraBrandDark hover:decoration-nexoraBrandDark"
       >
         {url.replace(/^https?:\/\//, '')}
       </a>
@@ -54,6 +54,16 @@ export default function BookingLinkShare({ businessSlug }: { businessSlug?: stri
         {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
         <span>{t('common.copy')}</span>
       </button>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={t(p + 'openLink')}
+        title={t(p + 'openLink')}
+        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-nexoraBrand/15 bg-white text-nexoraBrand transition hover:border-nexoraBrand/30 hover:bg-nexoraBrandSoft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexoraBrand"
+      >
+        <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+      </a>
     </div>
   )
 }

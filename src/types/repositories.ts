@@ -705,6 +705,7 @@ export interface TurnBoardStationApiDto {
   currentCustomerName?: string | null
   currentCustomerPhone?: string | null
   currentServiceNames: string[]
+  currentAddOnCount?: number
   assignedAt?: string | null
   /** See PosOrderItemStatus — the lifecycle of this technician's own line on the ticket above. */
   currentLineStatus?: string | null
@@ -1863,6 +1864,57 @@ export interface CompleteOrderPayload {
   paymentMethodType: PosCheckoutPaymentMethodType
   receiptEmail?: string
   receiptPhone?: string
+}
+
+/** Which VlinkPay payment page the cashier wants to open. Mirrors the backend enum. */
+export const VlinkPayPaymentPage = {
+  Crypto: 0,
+  GiftCard: 1,
+} as const
+export type VlinkPayPaymentPageValue =
+  (typeof VlinkPayPaymentPage)[keyof typeof VlinkPayPaymentPage]
+
+export interface VlinkPayPaymentUrlPayload {
+  page: VlinkPayPaymentPageValue
+  /** Origin of this POS page. VlinkPay posts the result only here. */
+  callbackOrigin: string
+  /** Order total, pre-filled and locked so the cashier cannot mistype it. */
+  amount?: number
+}
+
+export interface VlinkPayPaymentUrlApiDto {
+  iframeUrl: string
+}
+
+export interface RecordVlinkPayPaymentPayload {
+  /** Tip attributed to the VlinkPay portion. Only one method on an order may carry the tip. */
+  tipAmount: number
+}
+
+export interface RecordVlinkPayPaymentResultApiDto {
+  /** Amount VlinkPay confirms was collected — not the amount the browser reported. */
+  amount: number
+  txId?: string | null
+  method?: string | null
+}
+
+export interface VlinkPayPaymentStatusApiDto {
+  found: boolean
+  txId?: string | null
+  amount: number
+  paidAt?: string | null
+  /** 'crypto' | 'giftcard'; null when nothing was found. */
+  method?: string | null
+}
+
+/** Result the embedded VlinkPay page posts back to this window. */
+export interface VlinkPayEmbedResultMessage {
+  type: 'VLINKPAY_PAYMENT_RESULT'
+  externalRefId: string
+  txId: string | null
+  amount: number | null
+  method: 'crypto' | 'giftcard'
+  status: 'success' | 'failed' | 'cancelled'
 }
 
 export interface CompleteOrderResultApiDto {

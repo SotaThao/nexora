@@ -8,6 +8,13 @@ import type { OrderPaymentAllocationApiDto } from '../../../../types/repositorie
 /** Shown wherever a value is legitimately absent (no technician yet, no ticket in progress). */
 export const EMPTY_VALUE = '—'
 
+/** Keep numbered levels compact, e.g. "Level 1 · Basic services" becomes "Level 1". */
+export function formatStaffLevelLabel(name: string | null | undefined, label: string): string {
+  const value = name?.trim()
+  const number = value?.match(/^(?:Level|Cấp)\s+(\d+)\b/i)?.[1]
+  return `${label} ${number ?? (value || EMPTY_VALUE)}`
+}
+
 const MAX_INITIALS = 2
 
 /** Avatar initials — the POS iPad standard uses initials, never a photo placeholder. */
