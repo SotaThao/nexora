@@ -115,6 +115,7 @@ import { reallocateTip } from './posPaymentAllocations'
 import {
   getPosCheckoutPaymentMethodLabel,
   isPosCheckoutPaymentMethod,
+  POS_CHECKOUT_GIFT_CARD_ENABLED,
   POS_CHECKOUT_PAYMENT_METHOD_LABEL_KEYS,
   PosCheckoutPaymentMethod,
 } from '../../../../constants/posCheckoutPaymentMethod'
@@ -857,7 +858,12 @@ export default function PosOrderWorkspace({
     (method) => method.isActive && method.isConfigured && method.type === paymentMethod,
   )
   const isCorePaymentMethod = CORE_CHECKOUT_PAYMENT_METHODS.has(paymentMethod)
-  const isPaymentMethodEligible = isCorePaymentMethod || Boolean(selectedReceivePaymentMethod)
+  // A ticket saved with Gift Card before the pause must not be payable through it either: the
+  // money leg is switched off, so the method is ineligible until the cashier picks another one.
+  const isGiftCardPaused = paymentMethod === PosCheckoutPaymentMethod.GiftCard
+    && !POS_CHECKOUT_GIFT_CARD_ENABLED
+  const isPaymentMethodEligible = !isGiftCardPaused
+    && (isCorePaymentMethod || Boolean(selectedReceivePaymentMethod))
   const cashPaymentCovered = paymentMethod !== PosCheckoutPaymentMethod.Cash
     || (order ? isCashPaymentCovered(cashReceived, order.total) : false)
 
@@ -909,7 +915,7 @@ export default function PosOrderWorkspace({
     const core: PosCheckoutPaymentMethodType[] = [
       PosCheckoutPaymentMethod.Cash,
       PosCheckoutPaymentMethod.Card,
-      PosCheckoutPaymentMethod.GiftCard,
+      ...(POS_CHECKOUT_GIFT_CARD_ENABLED ? [PosCheckoutPaymentMethod.GiftCard] : []),
     ]
     const configured = receivePaymentMethods
       .filter((method) => method.isActive && method.isConfigured && isPosCheckoutPaymentMethod(method.type))
@@ -1694,6 +1700,7 @@ export default function PosOrderWorkspace({
     if (!order) return
 
     if (paymentMethod === PosCheckoutPaymentMethod.GiftCard) {
+      if (!POS_CHECKOUT_GIFT_CARD_ENABLED) return
       openVlinkPayGiftCardFrame()
       return
     }
@@ -2817,7 +2824,9 @@ export default function PosOrderWorkspace({
                       ? t('components.dashboard.views.pos.PosOrderWorkspace.addLineFirst')
                       : hasUnassignedServiceLine
                         ? t('components.dashboard.views.pos.PosOrderWorkspace.assignTechnicianFirst')
-                        : undefined
+                        : isGiftCardPaused
+                          ? t('components.dashboard.views.pos.PosOrderWorkspace.paymentMethodUnavailable')
+                          : undefined
                   }
                   className="h-11 w-full rounded-lg bg-nexoraBrand text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
                 >

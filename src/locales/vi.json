@@ -4538,6 +4538,7 @@
             "enlargeQr": "Phóng to QR",
             "closeQr": "Đóng QR",
             "markAsReceived": "Đánh dấu đã nhận",
+            "paymentMethodUnavailable": "Hình thức thanh toán này tạm thời không khả dụng. Vui lòng chọn hình thức khác.",
             "paymentMethod": {
               "Card": "Thẻ",
               "Cash": "Tiền mặt",
