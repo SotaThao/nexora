@@ -78,14 +78,14 @@ export default function PosPromotionBannerArt({
 
   return (
     <div
-      className={`flex aspect-[3/1] w-full flex-col justify-center gap-1 overflow-hidden rounded-xl border border-nexoraBorder px-3 py-2 sm:gap-1.5 sm:px-4 ${className}`}
+      className={`flex aspect-[3/1] w-full flex-col justify-center gap-1 overflow-hidden rounded-xl border border-nexoraBorder px-3 py-2.5 sm:gap-1.5 sm:px-4 sm:py-3 ${className}`}
       style={{ background, color }}
       data-promotion-banner="theme"
     >
       <span className="inline-flex w-fit max-w-full truncate rounded-md bg-white/85 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-nexoraText sm:text-[10px]">
         {promotion.badgeLabel || specialOfferFallback}
       </span>
-      <h3 className="line-clamp-1 text-sm font-black leading-tight text-nexoraText sm:text-base">
+      <h3 className="line-clamp-2 text-sm font-black leading-tight text-nexoraText sm:text-base">
         {promotion.name || '—'}
       </h3>
       <strong className="block text-sm font-black leading-none sm:text-base">{artSaving}</strong>

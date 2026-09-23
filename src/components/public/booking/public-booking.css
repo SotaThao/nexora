@@ -173,6 +173,15 @@ body.public-booking-active #root {
   gap: 6px;
 }
 
+.public-booking-root .promotion-banner-caption {
+  margin: 0;
+  padding: 0 2px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #111827;
+}
+
 .public-booking-root .promotion-banner-schedule {
   margin: 0;
   padding: 0 2px;
@@ -2148,3 +2157,47 @@ body.public-booking-active #root {
 body.service-description-open {
   overflow: hidden;
 }
+
+/* Pair tablet: reuse booking banner art, but always one full-width slide (not booking's 2-up).
+   Do NOT inherit booking's full-page shell (100vh + lavender gradient) — that left a long empty strip. */
+.public-booking-root.pos-device-pair-promotions {
+  min-height: 0;
+  min-width: 0;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+}
+
+.public-booking-root.pos-device-pair-promotions .promotion-section {
+  margin: 0;
+}
+
+.public-booking-root.pos-device-pair-promotions .promotion-banner-slide {
+  flex: 0 0 100%;
+}
+
+/* Booking bullets are pale lavender on this canvas — bump contrast so dots read clearly. */
+.public-booking-root.pos-device-pair-promotions .promotion-pagination {
+  margin-top: 12px;
+  gap: 8px;
+}
+
+.public-booking-root.pos-device-pair-promotions .promotion-bullet {
+  width: 8px;
+  height: 8px;
+  background: #9ca3af;
+  opacity: 1;
+}
+
+.public-booking-root.pos-device-pair-promotions .promotion-bullet.is-active {
+  width: 22px;
+  background: #4d6fff;
+  opacity: 1;
+}
+
+@media (min-width: 640px) {
+  .public-booking-root.pos-device-pair-promotions .promotion-banner-slide {
+    flex: 0 0 100%;
+  }
+}
+

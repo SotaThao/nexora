@@ -27,15 +27,18 @@ export default function BookingPromotions({ promotions, copy, locale }) {
 
   useEffect(() => {
     if (!emblaApi) return undefined
-    setScrollSnaps(emblaApi.scrollSnapList())
+    const syncSnaps = () => {
+      setScrollSnaps(emblaApi.scrollSnapList())
+      setSelectedIndex(emblaApi.selectedScrollSnap())
+    }
+    syncSnaps()
     emblaApi.on('select', onSelect)
-    emblaApi.on('reInit', onSelect)
-    onSelect()
+    emblaApi.on('reInit', syncSnaps)
     return () => {
       emblaApi.off('select', onSelect)
-      emblaApi.off('reInit', onSelect)
+      emblaApi.off('reInit', syncSnaps)
     }
-  }, [emblaApi, onSelect])
+  }, [emblaApi, onSelect, promotions.length])
 
   useEffect(() => {
     if (!emblaApi || promotions.length < 2) return undefined
@@ -44,6 +47,9 @@ export default function BookingPromotions({ promotions, copy, locale }) {
   }, [emblaApi, promotions.length])
 
   if (!promotions.length) return null
+
+  const dotCount = Math.max(scrollSnaps.length, promotions.length)
+  const showDots = promotions.length > 1
 
   return (
     <section className="promotion-section" aria-label={copy.promotionsHeading}>
@@ -61,6 +67,8 @@ export default function BookingPromotions({ promotions, copy, locale }) {
             const schedule = [days || copy.promotionAllWeek, window]
               .filter(Boolean)
               .join(' · ')
+            const imageUrl =
+              promotion.primaryBannerImageUrl || promotion.photoUrl || null
             return (
               <article
                 className="promotion-banner-slide"
@@ -74,14 +82,16 @@ export default function BookingPromotions({ promotions, copy, locale }) {
                     badgeLabel: promotion.badgeLabel,
                     discountType: promotion.discountType,
                     discountValue: promotion.discountValue,
-                    primaryBannerImageUrl:
-                      promotion.primaryBannerImageUrl || promotion.photoUrl || null,
+                    primaryBannerImageUrl: imageUrl,
                     photoUrl: promotion.photoUrl || null,
                     primaryBannerColorHex: promotion.primaryBannerColorHex || null,
                   }}
                   index={index}
                   specialOfferFallback={copy.specialOffer || 'SPECIAL OFFER'}
                 />
+                {imageUrl ? (
+                  <p className="promotion-banner-caption">{promotion.name}</p>
+                ) : null}
                 {schedule ? <p className="promotion-banner-schedule">{schedule}</p> : null}
               </article>
             )
@@ -89,15 +99,15 @@ export default function BookingPromotions({ promotions, copy, locale }) {
         </div>
       </div>
 
-      {scrollSnaps.length > 1 ? (
+      {showDots ? (
         <div className="promotion-pagination">
-          {scrollSnaps.map((_, index) => (
+          {Array.from({ length: dotCount }, (_, index) => (
             <button
               className={`promotion-bullet${index === selectedIndex ? ' is-active' : ''}`}
               key={index}
               type="button"
-              aria-label={copy.promotionSlideAria(index + 1, scrollSnaps.length)}
-              aria-current={index === selectedIndex}
+              aria-label={copy.promotionSlideAria(index + 1, dotCount)}
+              aria-current={index === selectedIndex ? 'true' : undefined}
               onClick={() => emblaApi?.scrollTo(index)}
             />
           ))}

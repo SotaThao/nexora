@@ -91,6 +91,7 @@ export default function PublicCheckInPage() {
         useSource={useSource}
         layout={data.layout ?? PosCheckInLayout.SinglePage}
         businessName={data.businessName}
+        promotions={data.promotions}
         // Nobody is waiting to reuse this phone, so the number stays until the guest dismisses it.
         autoReturnSeconds={null}
         onCheckedIn={(_orderNumber, result) => setReceiptToken(result.receiptToken ?? null)}

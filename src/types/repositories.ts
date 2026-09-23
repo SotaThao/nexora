@@ -1791,6 +1791,8 @@ export interface PublicCheckInPageApiDto {
   layout: PosCheckInLayout
   services: PublicCheckInServiceApiDto[]
   technicians: PublicCheckInTechnicianApiDto[]
+  /** Active offers for the door-QR surface (banner 3:1). Empty when none. */
+  promotions?: PosPromotionApiDto[]
 }
 
 export interface PublicCheckInCustomerApiDto {

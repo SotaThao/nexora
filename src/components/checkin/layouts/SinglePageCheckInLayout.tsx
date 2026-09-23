@@ -17,6 +17,7 @@ import CheckInActivePromotionsSection from '../parts/CheckInActivePromotionsSect
 import ServiceCatalogSection from '../parts/ServiceCatalogSection'
 import TechnicianPickerGrid from '../parts/TechnicianPickerGrid'
 import type { CheckInSession } from '../useCheckInSession'
+import type { PosPromotionApiDto } from '../../../types/repositories'
 
 const K = 'components.checkin.SinglePageCheckInLayout'
 
@@ -26,6 +27,7 @@ export default function SinglePageCheckInLayout({
   onCancel,
   compactTechnicianCards = false,
   businessId,
+  promotions,
 }: {
   session: CheckInSession
   businessName: string
@@ -33,8 +35,16 @@ export default function SinglePageCheckInLayout({
   compactTechnicianCards?: boolean
   /** Front desk only — loads active promotions under the service catalog. */
   businessId?: string
+  /** Door-QR public page — promotions from the page payload. */
+  promotions?: PosPromotionApiDto[]
 }) {
   const { t } = useTranslation()
+
+  const promotionsSection = businessId ? (
+    <CheckInActivePromotionsSection source="merchant" businessId={businessId} />
+  ) : promotions && promotions.length > 0 ? (
+    <CheckInActivePromotionsSection source="inline" promotions={promotions} />
+  ) : null
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-4">
@@ -97,9 +107,7 @@ export default function SinglePageCheckInLayout({
             isSubmitting={session.isSubmitting}
           />
 
-          {businessId ? (
-            <CheckInActivePromotionsSection source="merchant" businessId={businessId} />
-          ) : null}
+          {promotionsSection}
         </div>
 
         <aside className="min-w-0 space-y-4 lg:sticky lg:top-4 lg:self-start">
