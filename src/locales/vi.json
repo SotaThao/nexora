@@ -4918,7 +4918,8 @@
             "notifyAssignedStaffSmsDescription": "Báo cho (các) nhân viên được gán cho lịch hẹn."
           },
           "BookingLinkShare": {
-            "title": "Trang đặt lịch của bạn — chia sẻ link này cho khách",
+            "title": "Đặt lịch trực tuyến",
+            "openLink": "Mở trang đặt lịch trong tab mới",
             "copied": "Đã sao chép link."
           },
           "NewBookingForm": {

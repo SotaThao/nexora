@@ -4917,7 +4917,8 @@
             "notifyAssignedStaffSmsDescription": "Alert the staff member(s) assigned to the appointment."
           },
           "BookingLinkShare": {
-            "title": "Your Booking Page — share this link with customers",
+            "title": "Booking online",
+            "openLink": "Open booking page in a new tab",
             "copied": "Link copied to clipboard."
           },
           "NewBookingForm": {
