@@ -21,6 +21,7 @@ export default function CustomerFlow() {
   const {
     currentLanguage, setLanguage, t, showToast,
     isApiMode, touchPageQuery,
+    businessSlug,
     bizName, scannedTouchpoint,
     filteredStaff, selectedStaffMembers, searchQuery, setSearchQuery, handleToggleStaff,
     step, setStep,
@@ -244,7 +245,7 @@ export default function CustomerFlow() {
               )}
 
               {step === 'final_done' && (
-                <FinalDone t={t} rating={rating} />
+                <FinalDone t={t} rating={rating} businessSlug={businessSlug} />
               )}
             </>
           )}

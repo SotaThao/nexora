@@ -20,6 +20,7 @@ export default function DirectPaymentFlow() {
     showToast,
     pageQuery,
     businessName,
+    businessSlug,
     logoUrl,
     step,
     setStep,
@@ -183,6 +184,7 @@ export default function DirectPaymentFlow() {
                 <DirectPaymentSuccess
                   t={t}
                   businessName={businessName}
+                  businessSlug={businessSlug}
                   activeAmount={totalAmount}
                   selectedWalletObj={selectedWalletObj}
                   cryptoSymbol={selectedCryptoSymbol}
