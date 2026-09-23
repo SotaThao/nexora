@@ -109,6 +109,8 @@ function clockToMinutes(hhmm: string | null | undefined): number | null {
 /**
  * Whether an enabled promotion's day/time window covers `now` (device-local clock).
  * Empty `daysOfWeek` means every day. Missing/invalid times mean the whole day.
+ * Overnight windows (end ≤ start, e.g. 22:00–02:00) stay on the starting day's listing
+ * after midnight until `end`.
  */
 export function isPromotionInScheduleNow(
   promotion: {
@@ -118,18 +120,23 @@ export function isPromotionInScheduleNow(
   },
   now: Date = new Date(),
 ): boolean {
+  const start = clockToMinutes(promotion.startTime)
+  const end = clockToMinutes(promotion.endTime)
+  const current = now.getHours() * 60 + now.getMinutes()
+  const isOvernight = start != null && end != null && end <= start
+
   const days = promotion.daysOfWeek ?? []
   if (days.length > 0) {
     const today = WEEK_ORDER[now.getDay()]
-    if (!days.includes(today)) return false
+    const yesterday = WEEK_ORDER[(now.getDay() + 6) % 7]
+    const onListedDay = days.includes(today)
+    // 01:00 Tuesday still belongs to Monday's 22:00–02:00 offer.
+    const onOvernightCarry =
+      Boolean(isOvernight && end != null && current < end && days.includes(yesterday))
+    if (!onListedDay && !onOvernightCarry) return false
   }
 
-  const start = clockToMinutes(promotion.startTime)
-  const end = clockToMinutes(promotion.endTime)
   if (start == null || end == null) return true
-
-  const current = now.getHours() * 60 + now.getMinutes()
-  // Overnight window (e.g. 22:00–02:00): wrap past midnight.
-  if (end <= start) return current >= start || current < end
+  if (isOvernight) return current >= start || current < end
   return current >= start && current < end
 }

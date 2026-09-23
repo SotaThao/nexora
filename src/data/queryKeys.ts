@@ -260,7 +260,12 @@ export const qk = {
   posSelfCheckInActiveVisit: (phone?: string) => ['posSelfCheckIn', 'activeVisit', phone ?? ''],
   posSelfCheckInBooking: (phone?: string) => ['posSelfCheckIn', 'booking', phone ?? ''],
   posSelfCheckInTechnicians: () => ['posSelfCheckIn', 'technicians'],
-  posSelfCheckInPromotions: () => ['posSelfCheckIn', 'promotions'],
+  // Scoped by device token so a re-pair to another salon cannot reuse a 5-minute stale cache.
+  posSelfCheckInPromotions: (deviceToken?: string | null) => [
+    'posSelfCheckIn',
+    'promotions',
+    deviceToken ?? '',
+  ],
   merchantPosCheckInTechnicians: (businessId?: string) => ['merchantSettings', 'posCheckInTechnicians', businessId ?? ''],
   merchantPosCheckInActiveVisit: (businessId?: string, phone?: string) => [
     'merchantSettings', 'posCheckInActiveVisit', businessId ?? '', phone ?? '',

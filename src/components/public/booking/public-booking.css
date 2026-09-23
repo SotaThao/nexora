@@ -2176,7 +2176,7 @@ body.service-description-open {
   flex: 0 0 100%;
 }
 
-/* Booking bullets are pale lavender on this canvas — bump contrast so dots read clearly. */
+/* Pair dots: Nexora brand purple (same as check-in strip), not booking pink/lavender. */
 .public-booking-root.pos-device-pair-promotions .promotion-pagination {
   margin-top: 12px;
   gap: 8px;
@@ -2185,13 +2185,13 @@ body.service-description-open {
 .public-booking-root.pos-device-pair-promotions .promotion-bullet {
   width: 8px;
   height: 8px;
-  background: #9ca3af;
+  background: #c5c8e0;
   opacity: 1;
 }
 
 .public-booking-root.pos-device-pair-promotions .promotion-bullet.is-active {
   width: 22px;
-  background: #4d6fff;
+  background: #4648d8;
   opacity: 1;
 }
 

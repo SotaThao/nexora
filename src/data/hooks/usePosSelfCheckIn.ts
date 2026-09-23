@@ -10,6 +10,7 @@
  */
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
+import { posDeviceToken } from '../../lib/posDeviceHttpClient'
 import posSelfCheckInRepository, {
   type CheckInSelfCheckInBookingPayload,
   type CreateSelfCheckInOrderPayload,
@@ -84,10 +85,11 @@ export function useSelfCheckInTechnicians(enabled = true) {
 
 /** Keypad promo banners — soft-empty when BE has not shipped the endpoint yet (404 → []). */
 export function useKioskPromotions(enabled = true) {
+  const deviceToken = posDeviceToken.get()
   return useQuery<PosPromotionApiDto[]>({
-    queryKey: qk.posSelfCheckInPromotions(),
+    queryKey: qk.posSelfCheckInPromotions(deviceToken),
     queryFn: () => posSelfCheckInRepository.getPromotions(),
-    enabled,
+    enabled: enabled && Boolean(deviceToken),
     retry: false,
     staleTime: CATALOG_STALE_MS,
   })
