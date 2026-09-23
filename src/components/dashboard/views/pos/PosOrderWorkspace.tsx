@@ -723,8 +723,12 @@ export default function PosOrderWorkspace({
       if (line.itemType !== 'Service' || !line.posStaffProfileId || !line.technicianName) continue
       names.set(line.posStaffProfileId, line.technicianName)
     }
-    return Array.from(names, ([posStaffProfileId, technicianName]) => ({ posStaffProfileId, technicianName }))
-  }, [visibleLines])
+    return Array.from(names, ([posStaffProfileId, technicianName]) => ({
+      posStaffProfileId,
+      technicianName,
+      photoUrl: allTechnicians.find((tech) => tech.posStaffProfileId === posStaffProfileId)?.photoUrl,
+    }))
+  }, [visibleLines, allTechnicians])
   const isTechnicianRosterLoading = areTechniciansPending || areTechniciansFetching
   // Ticket Detail placeholder and catalog pending share `isAddingLine` so one panel cannot
   // finish while the other is still locked. Initial sole-technician skill load uses pending

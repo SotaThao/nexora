@@ -705,6 +705,7 @@ export interface TurnBoardStationApiDto {
   currentCustomerName?: string | null
   currentCustomerPhone?: string | null
   currentServiceNames: string[]
+  currentAddOnCount?: number
   assignedAt?: string | null
   /** See PosOrderItemStatus — the lifecycle of this technician's own line on the ticket above. */
   currentLineStatus?: string | null

@@ -58,7 +58,7 @@ export default function TipModal({
   onClose: () => void
   panelMode: TipPanelMode
   onSelectPanelMode: (mode: TipPanelMode) => void
-  technicians: { posStaffProfileId: string; technicianName: string }[]
+  technicians: { posStaffProfileId: string; technicianName: string; photoUrl?: string | null }[]
   servicesSubtotal: number
   orderTipAmount: number
   onApplyTip: (mode: TipMode, amount: number) => void
@@ -318,9 +318,13 @@ export default function TipModal({
                   >
                     <span
                       aria-hidden="true"
-                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-black text-white ${AVATAR_COLORS[index % AVATAR_COLORS.length]}`}
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full text-[11px] font-black text-white ${AVATAR_COLORS[index % AVATAR_COLORS.length]}`}
                     >
-                      {share.technicianName.charAt(0).toUpperCase()}
+                      {share.photoUrl ? (
+                        <img src={share.photoUrl} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        share.technicianName.charAt(0).toUpperCase()
+                      )}
                     </span>
                     <span className="min-w-[64px] flex-1 truncate text-xs font-semibold text-nexoraText">
                       {share.technicianName}
@@ -332,7 +336,7 @@ export default function TipModal({
                           type="button"
                           onClick={() => onTipSplitInputChange(share.posStaffProfileId, String(amount))}
                           disabled={isBusy}
-                          className={`h-7 rounded-lg border px-2 text-[10px] font-bold transition-colors disabled:opacity-60 ${
+                          className={`h-9 rounded-lg border px-2.5 text-xs font-bold transition-colors disabled:opacity-60 ${
                             currentValue === amount
                               ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
                               : 'border-nexoraBorder/70 bg-white text-nexoraText hover:border-nexoraBrand/50'
@@ -341,8 +345,8 @@ export default function TipModal({
                           ${amount}
                         </button>
                       ))}
-                      <div className="relative w-20">
-                        <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-[10px] font-medium text-nexoraMuted">
+                      <div className="relative w-24">
+                        <span className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-xs font-medium text-nexoraMuted">
                           $
                         </span>
                         <input
@@ -356,7 +360,7 @@ export default function TipModal({
                             )
                           }
                           disabled={isBusy}
-                          className="h-7 w-full rounded-lg border border-nexoraBorder/70 bg-white pl-5 pr-1.5 text-[10px] text-nexoraText outline-none transition-colors focus:border-nexoraBrand/60 disabled:opacity-60"
+                          className="h-9 w-full rounded-lg border border-nexoraBorder/70 bg-white pl-6 pr-2 text-xs text-nexoraText outline-none transition-colors focus:border-nexoraBrand/60 disabled:opacity-60"
                         />
                       </div>
                     </div>
