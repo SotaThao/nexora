@@ -5,6 +5,8 @@
  * (or none at all, for pairing) and must never attach a user's bearer token.
  */
 import posDeviceHttpClient from '../../lib/posDeviceHttpClient'
+import type { PosPromotionApiDto } from '../../types/repositories'
+import { normalizePosPromotion } from './posPromotions'
 
 type Client = typeof posDeviceHttpClient
 
@@ -31,6 +33,27 @@ export function createPosDevicePairingRepository(client: Client = posDeviceHttpC
       })
       if (!res) throw new Error('Pairing returned no result')
       return res
+    },
+
+    /**
+     * Active promotions for the pairing screen banner (before a device token exists).
+     * Auth: same QR `t` as POST /pair — verified, not consumed. Soft-empty on failure.
+     */
+    async getPairPromotions(
+      businessId: string,
+      userProfileId: string,
+      token: string,
+    ): Promise<PosPromotionApiDto[]> {
+      try {
+        const raw = await client.get<unknown>('/api/v1/pos-device/pair/promotions', {
+          anonymous: true,
+          params: { businessId, userProfileId, token },
+        })
+        if (!Array.isArray(raw)) return []
+        return raw.map(normalizePosPromotion).filter((item) => item.id)
+      } catch {
+        return []
+      }
     },
 
     // Gate for the tablet's own Settings screen. Rejection comes back as a 400, which the caller

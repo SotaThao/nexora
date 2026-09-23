@@ -40,6 +40,7 @@ export default function SelfCheckInFlow({
       layout={layout}
       businessName={businessName}
       autoReturnSeconds={AUTO_RETURN_SECONDS}
+      showKioskPromotions
       // Both endings land in the same place on a tablet by the door: a fresh keypad, with nothing
       // of the last person left on it. The remount is the guarantee of that, not the reset call.
       onFinished={onExit}
