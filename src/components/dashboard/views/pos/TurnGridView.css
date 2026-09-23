@@ -1,0 +1,33 @@
+.pos-turn-grid-wrap {
+  border-color: #e5e9e7;
+  border-radius: 14px;
+}
+
+.pos-turn-grid thead th {
+  color: #7d8784;
+}
+
+.pos-turn-grid thead th:first-child {
+  background: #f8faf9;
+}
+
+.pos-turn-grid .pos-turn-grid-cell {
+  border-color: #dce3e0;
+  border-radius: 7px;
+  background: #f8faf9;
+  color: #1c6654;
+}
+
+.pos-turn-grid .pos-turn-grid-cell-filled {
+  background: #e7f3ef;
+}
+
+.pos-turn-grid .pos-turn-grid-empty-half {
+  fill: #f8faf9;
+}
+
+.pos-turn-grid .pos-turn-grid-empty-slot {
+  border-color: #8ab7aa;
+  background: #f3faf7;
+  color: #27705d;
+}
