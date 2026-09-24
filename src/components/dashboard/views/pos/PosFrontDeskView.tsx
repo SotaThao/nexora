@@ -138,7 +138,6 @@ const tk = (suffix: string) => `${I18N_PREFIX}.${suffix}`
 
 // Keep long queues inside the currently available viewport, rather than using a fixed pixel cap.
 // The reserved space accounts for the dashboard header, Front Desk title/tabs, and list controls.
-const SCROLL_PANEL_MAX_HEIGHT = 'max-h-[calc(100dvh-18rem)]'
 const ORDER_LIST_FILL_MAIN_HEIGHT = 'min-h-0 flex-1'
 
 const TURN_BOARD_VIEW_MODE_LABEL_KEYS: Record<TurnBoardViewMode, string> = {
@@ -1250,7 +1249,9 @@ export default function PosFrontDeskView({
           </span>
         </div>
 
-        <div className={`grid ${SCROLL_PANEL_MAX_HEIGHT} grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}>
+        {/* One page scroll only — an inner max-height + overflow made the card grid feel
+            trapped in a short pane that also fought the outer dashboard scroll. */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {inServiceOrders.map((order) => {
             const orderSummary = orderList.find((item) => item.id === order.id)
             const customerPhone = orderSummary?.customerPhone || orderSummary?.customerPhoneE164
