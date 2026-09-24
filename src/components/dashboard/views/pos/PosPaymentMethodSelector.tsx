@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import {
-  POS_CHECKOUT_GIFT_CARD_ENABLED,
   POS_CHECKOUT_PAYMENT_METHOD_ICON_SOURCES,
   POS_CHECKOUT_PAYMENT_METHOD_LABEL_KEYS,
   POS_CHECKOUT_PAYMENT_METHOD_OPTIONS,
@@ -61,19 +60,12 @@ export default function PosPaymentMethodSelector({
 
   const renderOption = (method: (typeof POS_CHECKOUT_PAYMENT_METHOD_OPTIONS)[number]) => {
     const selected = value === method.value
-    // Gift Card is paused, not removed: the chip stays on the row so cashiers can see the method
-    // exists and is temporarily unavailable rather than wondering where it went.
-    const unavailable = method.value === PosCheckoutPaymentMethod.GiftCard && !POS_CHECKOUT_GIFT_CARD_ENABLED
     return (
       <button
         key={method.value}
         type="button"
         aria-pressed={selected}
-        aria-disabled={unavailable || undefined}
-        title={unavailable
-          ? t('components.dashboard.views.pos.PosOrderWorkspace.paymentMethodUnavailable')
-          : undefined}
-        disabled={disabled || unavailable}
+        disabled={disabled}
         onClick={() => onChange(method.value)}
         className={`inline-flex min-h-8 w-auto flex-none items-center justify-center gap-1 whitespace-nowrap rounded-lg border px-2 text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
           selected
