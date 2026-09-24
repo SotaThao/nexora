@@ -6,6 +6,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import posBookingRepository from '../repositories/posBooking'
 import type {
+  AssignBookingServiceLineStaffPayload,
+  BookingAssignmentCandidateApiDto,
   BookingDetailApiDto,
   BookingListFilters,
   BookingListResultApiDto,
@@ -14,6 +16,7 @@ import type {
   CreateBookingPayload,
   PosCheckInResultApiDto,
   RescheduleBookingPayload,
+  UnassignedBookingAssignmentApiDto,
 } from '../../types/repositories'
 
 export function useCreateStaffBooking(businessId?: string) {
@@ -119,6 +122,50 @@ export function useRescheduleBooking(businessId?: string) {
     mutationFn: ({ bookingId, payload }) =>
       posBookingRepository.rescheduleBooking(businessId as string, bookingId, payload),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosBookingList(businessId) })
+    },
+  })
+}
+
+export function useUnassignedBookingAssignments(
+  businessId?: string,
+  filters: { dateFrom?: string; dateTo?: string } = {},
+  options?: { enabled?: boolean; refetchInterval?: number | false },
+) {
+  return useQuery<UnassignedBookingAssignmentApiDto[]>({
+    queryKey: qk.merchantPosUnassignedBookingAssignments(businessId, filters),
+    queryFn: () => posBookingRepository.getUnassignedAssignments(businessId as string, filters),
+    enabled: Boolean(businessId) && (options?.enabled ?? true),
+    refetchInterval: options?.refetchInterval ?? 15000,
+  })
+}
+
+export function useBookingAssignmentCandidates(
+  businessId?: string,
+  bookingId?: string,
+  serviceLineId?: string,
+  { enabled = true }: { enabled?: boolean } = {},
+) {
+  return useQuery<BookingAssignmentCandidateApiDto[]>({
+    queryKey: qk.merchantPosBookingAssignmentCandidates(businessId, bookingId, serviceLineId),
+    queryFn: () =>
+      posBookingRepository.getAssignmentCandidates(businessId as string, bookingId as string, serviceLineId as string),
+    enabled: enabled && Boolean(businessId) && Boolean(bookingId) && Boolean(serviceLineId),
+  })
+}
+
+export function useAssignBookingServiceLineStaff(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<
+    void,
+    Error,
+    { bookingId: string; serviceLineId: string; payload: AssignBookingServiceLineStaffPayload }
+  >({
+    mutationFn: ({ bookingId, serviceLineId, payload }) =>
+      posBookingRepository.assignServiceLineStaff(businessId as string, bookingId, serviceLineId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosUnassignedBookingAssignments(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosBookingAssignmentCandidates(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosBookingList(businessId) })
     },
   })

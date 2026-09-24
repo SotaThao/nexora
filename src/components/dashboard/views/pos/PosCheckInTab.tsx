@@ -33,6 +33,7 @@ export default function PosCheckInTab({
       useSource={useSource}
       layout={settings?.frontDeskCheckInLayout ?? 'SinglePage'}
       businessName={businessName ?? ''}
+      businessId={businessId}
       // No countdown here: the number on the thank-you screen is what the operator reads out, and
       // a screen that clears itself mid-sentence is worse than one extra tap.
       autoReturnSeconds={null}

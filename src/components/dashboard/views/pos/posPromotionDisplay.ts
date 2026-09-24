@@ -92,3 +92,51 @@ export function formatPromotionArtSaving(discountType: string, discountValue: nu
   }
   return `$${formatPromotionMoneyAmount(discountValue)} off`
 }
+
+/** Minutes since midnight from API `HH:mm` / `HH:mm:ss`. Invalid → null. */
+function clockToMinutes(hhmm: string | null | undefined): number | null {
+  if (!hhmm) return null
+  const match = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(hhmm.trim())
+  if (!match) return null
+  const hours = Number(match[1])
+  const minutes = Number(match[2])
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes) || hours > 23 || minutes > 59) {
+    return null
+  }
+  return hours * 60 + minutes
+}
+
+/**
+ * Whether an enabled promotion's day/time window covers `now` (device-local clock).
+ * Empty `daysOfWeek` means every day. Missing/invalid times mean the whole day.
+ * Overnight windows (end ≤ start, e.g. 22:00–02:00) stay on the starting day's listing
+ * after midnight until `end`.
+ */
+export function isPromotionInScheduleNow(
+  promotion: {
+    daysOfWeek?: string[] | null
+    startTime?: string | null
+    endTime?: string | null
+  },
+  now: Date = new Date(),
+): boolean {
+  const start = clockToMinutes(promotion.startTime)
+  const end = clockToMinutes(promotion.endTime)
+  const current = now.getHours() * 60 + now.getMinutes()
+  const isOvernight = start != null && end != null && end <= start
+
+  const days = promotion.daysOfWeek ?? []
+  if (days.length > 0) {
+    const today = WEEK_ORDER[now.getDay()]
+    const yesterday = WEEK_ORDER[(now.getDay() + 6) % 7]
+    const onListedDay = days.includes(today)
+    // 01:00 Tuesday still belongs to Monday's 22:00–02:00 offer.
+    const onOvernightCarry =
+      Boolean(isOvernight && end != null && current < end && days.includes(yesterday))
+    if (!onListedDay && !onOvernightCarry) return false
+  }
+
+  if (start == null || end == null) return true
+  if (isOvernight) return current >= start || current < end
+  return current >= start && current < end
+}

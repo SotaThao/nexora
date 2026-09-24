@@ -2705,6 +2705,7 @@ export default function PosOrderWorkspace({
                         {t('components.dashboard.views.pos.PosOrderWorkspace.addTipButton')}
                       </button>
                       <OrderDiscountSection
+                        businessId={businessId}
                         order={order}
                         promotions={eligiblePromotions}
                         isSaving={setOrderDiscount.isPending}

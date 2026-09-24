@@ -476,7 +476,8 @@
   justify-content: center;
   gap: 9px;
   min-width: 0;
-  min-height: 140px;
+  aspect-ratio: 3 / 1;
+  min-height: 0;
   padding: 18px;
   border-radius: 10px;
   color: #464394;
@@ -488,7 +489,8 @@
 
 .pos-promotions-page .promotion-card > .promo-art {
   border-radius: 11px 11px 0 0;
-  min-height: 140px;
+  aspect-ratio: 3 / 1;
+  min-height: 0;
 }
 
 .pos-promotions-page .promo-art.theme-purple,
@@ -608,7 +610,7 @@
   display: block;
   padding: 0;
   background: #edf0f6;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 3 / 1;
   min-height: 0;
 }
 
@@ -622,9 +624,9 @@
 }
 
 .pos-promotions-page .promotion-card > .promo-art.image-art {
-  height: 140px;
-  min-height: 140px;
-  aspect-ratio: auto;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 3 / 1;
 }
 
 .pos-promotions-page .promotion-card > .promo-art.image-art img {

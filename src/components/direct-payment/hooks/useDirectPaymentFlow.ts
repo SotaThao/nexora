@@ -80,6 +80,7 @@ export default function useDirectPaymentFlow() {
   const pageData = pageQuery.data
   const businessName = pageData?.businessName || ''
   const logoUrl = pageData?.logoUrl || null
+  const businessSlug = pageData?.businessSlug || touchContext.businessSlug || null
 
   const tipContext = useDirectPaymentTipContext({
     page: pageData,
@@ -342,6 +343,7 @@ export default function useDirectPaymentFlow() {
     pageQuery,
     pageData,
     businessName,
+    businessSlug,
     logoUrl,
     step,
     setStep,

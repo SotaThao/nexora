@@ -1,5 +1,6 @@
 {
   "oneqr": {
+    "backToMenuButton": "Back to OneQR menu",
     "artwork": {
       "png": "Download PNG",
       "showHours": "Show business hours",
@@ -2991,6 +2992,7 @@
     "pos_booking_advance_limit_exceeded": "This booking is too far in advance — please pick a closer date.",
     "pos_booking_staff_outside_schedule": "The selected technician is not scheduled to work at this time.",
     "pos_booking_slot_conflict": "This technician already has a booking that overlaps with the selected time.",
+    "pos_booking_invalid_status_for_assignment": "Only a Pending or Confirmed booking can have a technician assigned before check-in.",
     "pos_booking_phone_already_active": "This phone number already has an active booking.",
     "pos_booking_customer_phone_required": "Phone number is required.",
     "pos_booking_not_found": "Booking not found.",
@@ -4388,6 +4390,45 @@
             "calendarNextMonth": "Next month",
             "calendarBookingsOnDay": "{{count}} booking(s)",
             "backToMonth": "Back to month"
+          },
+          "AnyoneAppointmentsQueue": {
+            "eyebrow": "Anyone Appointments",
+            "titleSuffix": "appointments need assignment",
+            "subtitle": "Auto-assign immediately · Alert 24 hours before",
+            "emptyTitle": "All Anyone appointments are assigned",
+            "emptySubtitle": "No action needed here right now.",
+            "anyoneBadge": "Anyone",
+            "durationMinutes": "{{count}} min",
+            "urgentBadge": "Assignment due soon",
+            "suggestedLabel": "Suggested technician",
+            "availableToday": "Available · Turn {{turn}} · {{count}} today",
+            "noSuggestion": "No technician available",
+            "assignButton": "Assign {{name}}",
+            "assignButtonDisabled": "No suggestion",
+            "viewOthersButton": "View others",
+            "assignSuccess": "Assigned to {{name}}",
+            "candidatesEyebrow": "Anyone Assignment",
+            "candidatesHeading": "Choose technician",
+            "candidatesSubtitle": "{{time}} · {{name}} · {{service}}",
+            "candidatesTitle": "{{name}} · {{service}}",
+            "candidatesClose": "Close technician picker",
+            "rankedRuleTitle": "Ranked with explainable rules",
+            "rankedRuleSubtitle": "Skills, availability, turn score, then daily workload.",
+            "turnScoreLabel": "Turn score",
+            "qualifiedReason": "Qualified for service · Available for full duration",
+            "bookedTodayShort": "today",
+            "eligiblePill": "Eligible",
+            "ineligiblePill": "Unavailable",
+            "noTechnicians": "No technicians match this service.",
+            "bookedToday": "{{count}} booking(s) that day",
+            "reasonNoSkill": "Not qualified for this service",
+            "reasonOutsideSchedule": "Not scheduled to work at this time",
+            "reasonSlotConflict": "Already has a booking at this time",
+            "reasonStaffLocked": "Account is locked",
+            "reasonUnknown": "Not available",
+            "loadError": "Could not load Anyone appointments. Please try again.",
+            "candidatesLoadError": "Could not load technicians. Please try again.",
+            "retryButton": "Retry"
           },
           "PosQuickSplitPanel": {
             "close": "Close",
@@ -8408,6 +8449,23 @@
         "closeDetails": "Close",
         "noteLabel": "Note for the front desk",
         "notePlaceholder": "Anything we should know?"
+      },
+      "CheckInActivePromotionsSection": {
+        "title": "Active promotions",
+        "subtitle": "Offers on now (today's hours). View only — apply at checkout if the visit qualifies.",
+        "specialOffer": "SPECIAL OFFER",
+        "previous": "Previous promotions",
+        "next": "Next promotions",
+        "dot": "Promotion {{index}} of {{total}}",
+        "dayShort": {
+          "Sunday": "Sun",
+          "Monday": "Mon",
+          "Tuesday": "Tue",
+          "Wednesday": "Wed",
+          "Thursday": "Thu",
+          "Friday": "Fri",
+          "Saturday": "Sat"
+        }
       },
       "SelectedServicesSummary": {
         "title": "Selected services",

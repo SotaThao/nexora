@@ -31,6 +31,7 @@ import {
   type BookingCalendarRange,
 } from './bookingCalendarView'
 import BookingOverviewCalendar from './BookingOverviewCalendar'
+import AnyoneAppointmentsQueue from './AnyoneAppointmentsQueue'
 
 function staffInitials(displayName: string): string {
   return displayName
@@ -94,6 +95,7 @@ function weekdayLabel(dateIso: string, locale: string): string {
 }
 
 export default function BookingCalendar({
+  businessId,
   bookings,
   mode,
   anchorDate,
@@ -110,6 +112,7 @@ export default function BookingCalendar({
   onNewBooking,
   onViewDetail,
 }: {
+  businessId: string
   bookings: BookingListItemApiDto[]
   mode: PosBookingCalendarViewMode
   anchorDate: string
@@ -289,6 +292,43 @@ export default function BookingCalendar({
 
   return (
     <div className="booking-hub-view pos-booking-calendar">
+      <div className="pos-booking-calendar-toolbar">
+        <div className="pos-booking-calendar-navigation">
+          <button
+            type="button"
+            aria-label={t(p + 'calendarPrevious')}
+            onClick={() => onAnchorDateChange(shiftBookingCalendarAnchor(anchorDate, mode, -1))}
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            onClick={() => onAnchorDateChange(formatLocalDateIso(new Date()))}
+          >
+            {t(p + 'calendarToday')}
+          </button>
+          <button
+            type="button"
+            aria-label={t(p + 'calendarNext')}
+            onClick={() => onAnchorDateChange(shiftBookingCalendarAnchor(anchorDate, mode, 1))}
+          >
+            ›
+          </button>
+          <strong className="pos-booking-calendar-range-label">{rangeLabel}</strong>
+        </div>
+        <div className="pos-booking-calendar-modes" aria-label={t(p + 'calendarViewModeLabel')}>
+          {modeOptions.map(([optionMode, labelKey]) => (
+            <button
+              key={optionMode}
+              type="button"
+              aria-pressed={mode === optionMode}
+              onClick={() => onModeChange(optionMode)}
+            >
+              {t(p + labelKey)}
+            </button>
+          ))}
+        </div>
+      </div>
       <div
         className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
         role="region"
@@ -328,43 +368,7 @@ export default function BookingCalendar({
           </div>
         ))}
       </div>
-      <div className="pos-booking-calendar-toolbar">
-        <div className="pos-booking-calendar-navigation">
-          <button
-            type="button"
-            aria-label={t(p + 'calendarPrevious')}
-            onClick={() => onAnchorDateChange(shiftBookingCalendarAnchor(anchorDate, mode, -1))}
-          >
-            ‹
-          </button>
-          <button
-            type="button"
-            onClick={() => onAnchorDateChange(formatLocalDateIso(new Date()))}
-          >
-            {t(p + 'calendarToday')}
-          </button>
-          <button
-            type="button"
-            aria-label={t(p + 'calendarNext')}
-            onClick={() => onAnchorDateChange(shiftBookingCalendarAnchor(anchorDate, mode, 1))}
-          >
-            ›
-          </button>
-          <strong className="pos-booking-calendar-range-label">{rangeLabel}</strong>
-        </div>
-        <div className="pos-booking-calendar-modes" aria-label={t(p + 'calendarViewModeLabel')}>
-          {modeOptions.map(([optionMode, labelKey]) => (
-            <button
-              key={optionMode}
-              type="button"
-              aria-pressed={mode === optionMode}
-              onClick={() => onModeChange(optionMode)}
-            >
-              {t(p + labelKey)}
-            </button>
-          ))}
-        </div>
-      </div>
+      <AnyoneAppointmentsQueue businessId={businessId} dateFrom={range.dateFrom} dateTo={range.dateTo} />
       <div className="pos-booking-calendar-controls">
         {mode === PosBookingCalendarViewMode.Day ? (
           <select

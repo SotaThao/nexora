@@ -1,5 +1,6 @@
 {
   "oneqr": {
+    "backToMenuButton": "Quay về menu OneQR",
     "artwork": {
       "png": "Tải PNG",
       "showHours": "Hiện giờ làm việc",
@@ -2991,6 +2992,7 @@
     "pos_booking_advance_limit_exceeded": "Lịch hẹn này đặt trước quá xa — vui lòng chọn ngày gần hơn.",
     "pos_booking_staff_outside_schedule": "Kỹ thuật viên đã chọn không có lịch làm việc vào thời gian này.",
     "pos_booking_slot_conflict": "Kỹ thuật viên này đã có lịch hẹn trùng với thời gian đã chọn.",
+    "pos_booking_invalid_status_for_assignment": "Chỉ lịch hẹn đang Chờ xác nhận hoặc Đã xác nhận mới có thể phân công thợ trước khi check-in.",
     "pos_booking_phone_already_active": "Số điện thoại này đã có một lịch hẹn đang hoạt động.",
     "pos_booking_customer_phone_required": "Vui lòng nhập số điện thoại.",
     "pos_booking_not_found": "Không tìm thấy lịch hẹn.",
@@ -4388,6 +4390,45 @@
             "calendarNextMonth": "Tháng sau",
             "calendarBookingsOnDay": "{{count}} lịch hẹn",
             "backToMonth": "Về xem tháng"
+          },
+          "AnyoneAppointmentsQueue": {
+            "eyebrow": "Lịch hẹn Anyone",
+            "titleSuffix": "lịch hẹn cần phân công",
+            "subtitle": "Tự động phân công ngay · Cảnh báo trước 24 giờ",
+            "emptyTitle": "Đã xử lý hết lịch hẹn Anyone",
+            "emptySubtitle": "Hiện không cần thao tác gì ở đây.",
+            "anyoneBadge": "Anyone",
+            "durationMinutes": "{{count}} phút",
+            "urgentBadge": "Sắp đến hạn phân công",
+            "suggestedLabel": "Thợ được gợi ý",
+            "availableToday": "Còn trống · Turn {{turn}} · {{count}} lịch hôm đó",
+            "noSuggestion": "Không có thợ phù hợp",
+            "assignButton": "Phân công {{name}}",
+            "assignButtonDisabled": "Không có gợi ý",
+            "viewOthersButton": "Xem thợ khác",
+            "assignSuccess": "Đã phân công cho {{name}}",
+            "candidatesEyebrow": "Phân công Anyone",
+            "candidatesHeading": "Chọn thợ",
+            "candidatesSubtitle": "{{time}} · {{name}} · {{service}}",
+            "candidatesTitle": "{{name}} · {{service}}",
+            "candidatesClose": "Đóng bảng chọn thợ",
+            "rankedRuleTitle": "Xếp hạng theo quy tắc rõ ràng",
+            "rankedRuleSubtitle": "Kỹ năng, lịch trống, điểm turn, rồi tải công việc trong ngày.",
+            "turnScoreLabel": "Điểm turn",
+            "qualifiedReason": "Đủ kỹ năng dịch vụ · Còn trống trong toàn bộ thời gian dịch vụ",
+            "bookedTodayShort": "lịch hôm đó",
+            "eligiblePill": "Đủ điều kiện",
+            "ineligiblePill": "Không phù hợp",
+            "noTechnicians": "Không có thợ phù hợp với dịch vụ này.",
+            "bookedToday": "{{count}} lịch hẹn trong ngày đó",
+            "reasonNoSkill": "Không đủ kỹ năng cho dịch vụ này",
+            "reasonOutsideSchedule": "Không có lịch làm vào giờ này",
+            "reasonSlotConflict": "Đã có lịch hẹn khác trùng giờ",
+            "reasonStaffLocked": "Tài khoản đã bị khoá",
+            "reasonUnknown": "Không phù hợp",
+            "loadError": "Không thể tải danh sách lịch hẹn Anyone. Vui lòng thử lại.",
+            "candidatesLoadError": "Không thể tải danh sách kỹ thuật viên. Vui lòng thử lại.",
+            "retryButton": "Thử lại"
           },
           "PosQuickSplitPanel": {
             "close": "Đóng",
@@ -8404,6 +8445,23 @@
         "closeDetails": "Đóng",
         "noteLabel": "Ghi chú cho quầy lễ tân",
         "notePlaceholder": "Bạn muốn nhắn gì thêm không?"
+      },
+      "CheckInActivePromotionsSection": {
+        "title": "Ưu đãi đang áp dụng",
+        "subtitle": "Ưu đãi trong khung ngày/giờ hiện tại. Chỉ xem — áp dụng khi thanh toán nếu đơn đủ điều kiện.",
+        "specialOffer": "ƯU ĐÃI ĐẶC BIỆT",
+        "previous": "Ưu đãi trước",
+        "next": "Ưu đãi sau",
+        "dot": "Ưu đãi {{index}} / {{total}}",
+        "dayShort": {
+          "Sunday": "CN",
+          "Monday": "T2",
+          "Tuesday": "T3",
+          "Wednesday": "T4",
+          "Thursday": "T5",
+          "Friday": "T6",
+          "Saturday": "T7"
+        }
       },
       "SelectedServicesSummary": {
         "title": "Dịch vụ đã chọn",
