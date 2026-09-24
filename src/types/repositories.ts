@@ -705,6 +705,7 @@ export interface TurnBoardStationApiDto {
   currentCustomerName?: string | null
   currentCustomerPhone?: string | null
   currentServiceNames: string[]
+  currentAddOnCount?: number
   assignedAt?: string | null
   /** See PosOrderItemStatus — the lifecycle of this technician's own line on the ticket above. */
   currentLineStatus?: string | null
@@ -1622,6 +1623,44 @@ export interface RescheduleBookingPayload {
   items: RescheduleBookingItemPayload[]
 }
 
+export interface SuggestedTechnicianApiDto {
+  posStaffProfileId: string
+  displayName: string
+  photoUrl?: string | null
+  staffLevelName?: string | null
+  bookedServiceLineCountToday: number
+  // Today's real weighted turns (same number as the Turn Board), not specific to this booking's date.
+  turnScore: number
+}
+
+export interface UnassignedBookingAssignmentApiDto {
+  bookingId: string
+  serviceLineId: string
+  scheduledAt: string
+  source: string
+  durationMinutes: number
+  customerName: string
+  serviceName: string
+  isUrgent: boolean
+  suggestedTechnician?: SuggestedTechnicianApiDto | null
+}
+
+export interface BookingAssignmentCandidateApiDto {
+  rank: number
+  posStaffProfileId: string
+  displayName: string
+  photoUrl?: string | null
+  staffLevelName?: string | null
+  isEligible: boolean
+  ineligibleReason?: string | null
+  bookedServiceLineCountToday: number
+  turnScore: number
+}
+
+export interface AssignBookingServiceLineStaffPayload {
+  posStaffProfileId: string
+}
+
 // POS Booking — Public Booking Page discovery (Ticket 4). Anonymous, no auth — resolved by
 // Business.Slug. Technicians are filtered by employment status only (never real-time
 // clock/busy state), per POS-Booking-Business.md.
@@ -1791,6 +1830,8 @@ export interface PublicCheckInPageApiDto {
   layout: PosCheckInLayout
   services: PublicCheckInServiceApiDto[]
   technicians: PublicCheckInTechnicianApiDto[]
+  /** Active offers for the door-QR surface (banner 3:1). Empty when none. */
+  promotions?: PosPromotionApiDto[]
 }
 
 export interface PublicCheckInCustomerApiDto {
@@ -1863,6 +1904,57 @@ export interface CompleteOrderPayload {
   paymentMethodType: PosCheckoutPaymentMethodType
   receiptEmail?: string
   receiptPhone?: string
+}
+
+/** Which VlinkPay payment page the cashier wants to open. Mirrors the backend enum. */
+export const VlinkPayPaymentPage = {
+  Crypto: 0,
+  GiftCard: 1,
+} as const
+export type VlinkPayPaymentPageValue =
+  (typeof VlinkPayPaymentPage)[keyof typeof VlinkPayPaymentPage]
+
+export interface VlinkPayPaymentUrlPayload {
+  page: VlinkPayPaymentPageValue
+  /** Origin of this POS page. VlinkPay posts the result only here. */
+  callbackOrigin: string
+  /** Order total, pre-filled and locked so the cashier cannot mistype it. */
+  amount?: number
+}
+
+export interface VlinkPayPaymentUrlApiDto {
+  iframeUrl: string
+}
+
+export interface RecordVlinkPayPaymentPayload {
+  /** Tip attributed to the VlinkPay portion. Only one method on an order may carry the tip. */
+  tipAmount: number
+}
+
+export interface RecordVlinkPayPaymentResultApiDto {
+  /** Amount VlinkPay confirms was collected — not the amount the browser reported. */
+  amount: number
+  txId?: string | null
+  method?: string | null
+}
+
+export interface VlinkPayPaymentStatusApiDto {
+  found: boolean
+  txId?: string | null
+  amount: number
+  paidAt?: string | null
+  /** 'crypto' | 'giftcard'; null when nothing was found. */
+  method?: string | null
+}
+
+/** Result the embedded VlinkPay page posts back to this window. */
+export interface VlinkPayEmbedResultMessage {
+  type: 'VLINKPAY_PAYMENT_RESULT'
+  externalRefId: string
+  txId: string | null
+  amount: number | null
+  method: 'crypto' | 'giftcard'
+  status: 'success' | 'failed' | 'cancelled'
 }
 
 export interface CompleteOrderResultApiDto {
@@ -2178,9 +2270,9 @@ export interface MerchantDashboardAnalytics {
 export type DashboardReviewRoutingType = 'Public' | 'Private' | 'Skipped'
 
 /**
- * Aggregate review stats for the reviews tab KPI/filter counts.
+ * Aggregate review stats for the reviews tab KPI cards.
  * Sourced from GET /api/v1/merchant/dashboard/overview -> reviewsSummary
- * (all-time, not the current reviews list page).
+ * with an explicit all-time date range (overview defaults to last 30 days).
  */
 export interface DashboardReviewsSummary {
   totalReviews: number

@@ -412,6 +412,7 @@ export default function BookingTab({
       ) : (
         <div className="min-w-0">
           <BookingCalendar
+            businessId={businessId}
             bookings={statsBookings}
             mode={calendarViewMode}
             anchorDate={calendarAnchorDate}
