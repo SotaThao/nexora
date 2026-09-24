@@ -6,6 +6,7 @@ import { OneQrIdentityPolicy } from '../../../constants/oneQr'
 import type { OneQrModuleCatalogItem } from '../../../types/oneQr'
 import {
   resolveModuleIcon,
+  resolveModuleIconUrl,
   resolveModuleLabel,
   type AudienceDraft,
 } from './oneQrDraft'
@@ -91,6 +92,7 @@ export default function OneQrPreview({
                       <span className="grid h-8 w-8 place-items-center rounded-lg bg-nexoraSurfaceMuted text-nexoraBrand">
                         <OneQrModuleIcon
                           name={resolveModuleIcon(module, catalog)}
+                          iconUrl={resolveModuleIconUrl(module)}
                         />
                       </span>
                       <span className="line-clamp-2 text-[10px] font-black leading-tight text-nexoraText">

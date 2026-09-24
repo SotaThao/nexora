@@ -24,6 +24,8 @@ export interface OneQrModule {
   isEnabled: boolean
   customLabel: string | null
   customIcon: string | null
+  /** Merchant-uploaded icon image. Mutually exclusive with `customIcon` — takes priority when set. */
+  customIconUrl: string | null
   /** Only meaningful when `moduleKey === CustomLink`. */
   customUrl: string | null
   /**
@@ -96,6 +98,7 @@ export interface SaveOneQrModulesVars {
     isEnabled: boolean
     customLabel?: string | null
     customIcon?: string | null
+    customIconUrl?: string | null
     customUrl?: string | null
   }>
 }
@@ -115,6 +118,8 @@ export interface OneQrLandingModule {
   moduleKey: string
   label: string
   icon: string | null
+  /** Merchant-uploaded icon image. Takes priority over `icon` when set. */
+  iconUrl: string | null
   url: string
 }
 
