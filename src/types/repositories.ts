@@ -2270,9 +2270,9 @@ export interface MerchantDashboardAnalytics {
 export type DashboardReviewRoutingType = 'Public' | 'Private' | 'Skipped'
 
 /**
- * Aggregate review stats for the reviews tab KPI/filter counts.
+ * Aggregate review stats for the reviews tab KPI cards.
  * Sourced from GET /api/v1/merchant/dashboard/overview -> reviewsSummary
- * (all-time, not the current reviews list page).
+ * with an explicit all-time date range (overview defaults to last 30 days).
  */
 export interface DashboardReviewsSummary {
   totalReviews: number
