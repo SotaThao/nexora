@@ -122,7 +122,7 @@ sequenceDiagram
 
 | Step | Who | Action | System Response | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| 1 | Member | Opens the Jobs tab | Shows every current listing — Open, Filled, and Closed | Filled/Closed listings stay visible with an updated status label rather than being hidden |
+| 1 | Member | Opens the Jobs tab | Shows only listings that are still Open ("Duyệt tin") | Filled/Closed listings are **not** shown in the feed. They appear only in "Bài của tôi" (the poster's own listings) and "Đã liên hệ" (listings the member has messaged), with a status label. Changed 2026-09-24, see Rule 4 |
 | 2 | Member | Types a keyword and/or picks an area and a listing-type filter | List narrows to matching listings instantly | Search matches title, salon name, area, and description text |
 | 3 | Member | Taps a listing card | Opens a detail panel with the full description, pay, schedule, and perks | |
 | 4 | Member | Taps "Message [poster's name]" | Opens a chat panel with the poster | Chat is simulated in this prototype — see Business Rules |
@@ -222,7 +222,7 @@ stateDiagram-v2
 - **Rule 1:** Only two account types may publish a listing — Salon Owner accounts always post Hiring listings, and Nail Technician accounts always post Seeking listings. The listing type is locked to the account type and cannot be changed, even while editing.
 - **Rule 2:** A Guest or a visitor who isn't signed in as an owner or technician may browse and view listings but cannot publish one.
 - **Rule 3:** A salon name is required to publish a Hiring listing, so job seekers know which salon is hiring. No other field is mandatory.
-- **Rule 4:** Filled and Closed listings remain visible to everyone browsing — they are not hidden, only their status label changes.
+- **Rule 4 (changed 2026-09-24):** Filled and Closed listings are **hidden from the browse feed** ("Duyệt tin"). They stay visible, with their status label, in the poster's "Bài của tôi" and in "Đã liên hệ" for members who messaged them. The feed's status filter is removed because the feed only contains Open listings. *(Previously: "Filled and Closed listings remain visible to everyone browsing — they are not hidden, only their status label changes." Reversed by the product owner after the 2026-09-24 layout review, see `docs/01-product/community-jobs-ui_product_260924_v1.09.24.md`.)*
 - **Rule 5:** Only the original poster can edit, change the status of, or delete their own listing.
 - **Rule 6:** Marking a listing "Urgent" adds a highlighted badge but does not change its position in the list, its visibility, or when it disappears.
 - **Rule 7:** The pay field is free text and optional. It is only shown as a highlight badge on the listing card when it names a weekly rate or says "negotiable" — other formats (e.g., hourly rate, commission split) are shown only inside the full detail view, to avoid a confusing partial number on the card.
@@ -258,7 +258,7 @@ A: Not yet. In this prototype, messaging is simulated locally in the viewer's ow
 A: No. The listing type is locked to the signed-in account type — Salon Owner accounts always post Hiring listings, Nail Technician accounts always post Seeking listings.
 
 **Q: Is a deleted or closed listing gone for good?**
-A: A deleted listing is removed immediately with no recovery option. A closed listing is not deleted — it stays visible with a "Closed" label and can be reopened by cycling its status again.
+A: A deleted listing is removed immediately with no recovery option. A closed listing is not deleted. It leaves the browse feed but stays in the poster's "Bài của tôi" (and in "Đã liên hệ" for members who messaged it) with a "Closed" label, and can be reopened by cycling its status again.
 
 **Q: Will listings and messages still be there tomorrow?**
 A: Not in the current prototype. Nothing is saved to a database yet; refreshing the page resets everything back to the 4 starting example listings.

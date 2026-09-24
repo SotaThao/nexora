@@ -13,14 +13,12 @@
 import { JOB_LOCATIONS } from './communityDemoContent'
 
 export type PostKind = 'seeking' | 'hiring'
-export type ViewTab = 'browse' | 'mine'
-export type StatusFilter = 'all' | 'open'
+export type ViewTab = 'browse' | 'mine' | 'contacted'
 
 export type PanelState = {
   query: string
   kindFilter: 'all' | PostKind
   locationFilter: string
-  statusFilter: StatusFilter
   viewTab: ViewTab
   pageNumber: number
   selectedJobId: string | null
@@ -32,7 +30,6 @@ export type PanelAction =
   | { type: 'SET_QUERY'; query: string }
   | { type: 'SET_KIND_FILTER'; kind: 'all' | PostKind }
   | { type: 'SET_LOCATION_FILTER'; location: string }
-  | { type: 'SET_STATUS_FILTER'; status: StatusFilter }
   | { type: 'SET_VIEW_TAB'; tab: ViewTab }
   | { type: 'SET_PAGE'; page: number }
   | { type: 'SELECT_JOB'; jobId: string | null }
@@ -50,7 +47,6 @@ export function createInitialPanelState(): PanelState {
     query: '',
     kindFilter: 'all',
     locationFilter: DEFAULT_LOCATION_FILTER,
-    statusFilter: 'all',
     viewTab: 'browse',
     pageNumber: 1,
     selectedJobId: null,
@@ -100,9 +96,6 @@ export function communityJobsReducer(
 
     case 'SET_LOCATION_FILTER':
       return clampSelection({ ...state, locationFilter: action.location }, visibleJobIds)
-
-    case 'SET_STATUS_FILTER':
-      return clampSelection({ ...state, statusFilter: action.status }, visibleJobIds)
 
     case 'SET_VIEW_TAB':
       // Also clears any pending delete confirmation — switching tabs while a
@@ -163,7 +156,6 @@ export function communityJobsReducer(
         query: '',
         kindFilter: 'all',
         locationFilter: DEFAULT_LOCATION_FILTER,
-        statusFilter: 'all',
         pageNumber: 1,
       }
 
@@ -178,7 +170,6 @@ export function communityJobsReducer(
         query: '',
         kindFilter: 'all',
         locationFilter: DEFAULT_LOCATION_FILTER,
-        statusFilter: 'all',
         viewTab: 'browse',
         pageNumber: 1,
       }

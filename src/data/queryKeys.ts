@@ -546,6 +546,7 @@ export const qk = {
   communityDirectChannels: () => ['community', 'directMessages', 'channels'],
   communityDirectChannel: (channelId: string) => ['community', 'directMessages', 'channel', channelId],
   communityDirectProfileSearch: (query: string) => ['community', 'directMessages', 'profileSearch', query.trim().toLocaleLowerCase()],
+  communityJobContacts: () => ['community', 'jobContacts'],
   communityReports: (communityId: string, filters = EMPTY) => ['community', 'reports', communityId, filters],
   communityNotifications: (filters = EMPTY) => ['community', 'notifications', filters],
   communityNotificationsUnreadCount: () => ['community', 'notifications', 'unreadCount'],
