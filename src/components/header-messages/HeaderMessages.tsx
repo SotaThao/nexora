@@ -1,4 +1,4 @@
-import { ArrowLeft, MessagesSquare, Search, Store, Users, X } from 'lucide-react'
+import { ArrowLeft, MessagesSquare, Plus, Search, Store, Users, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
@@ -20,6 +20,7 @@ import {
 import { useHydrateCommunityChatLastMessagePreviews } from '../../data/hooks/useHydrateCommunityChatLastMessagePreviews'
 import { useProfileSettings } from '../../data/hooks/useProfileSettings'
 import { useStaffBusinesses } from '../../data/hooks/useStaffSelf'
+import type { CommunityChatSession } from '../../types/communityChat'
 import {
   dedupeCommunityChatSessions,
   isSameCommunityChatProfileId,
@@ -34,6 +35,7 @@ import {
 } from '../staff/staffCommunityChatUtils'
 import { STAFF_CHAT_ENSURE_SESSION_PRECONDITION_ERROR } from '../staff/constants'
 import IconButton from '../ui/IconButton'
+import CreateCommunityChatGroupModal from './CreateCommunityChatGroupModal'
 import HeaderMessageChatWindow from './HeaderMessageChatWindow'
 import HeaderMessagesEmptyState from './HeaderMessagesEmptyState'
 import HeaderMessagesListSkeleton from './HeaderMessagesListSkeleton'
@@ -132,11 +134,16 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
   const [pendingStaffChat, setPendingStaffChat] = useState<OpenStaffCommunityChatDetail | null>(null)
   /** Mobile staff/non-header open → true edge-to-edge chat (covers app header). */
   const [mobileImmersiveChat, setMobileImmersiveChat] = useState(false)
+  /** US-111 — "Create group" staff picker (Merchant Owner only, see canCreateGroup below). */
+  const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false)
 
   const currentUserProfileId = session?.id ?? ''
   const isAuthenticated = status === 'authenticated'
   const { isOwner, isStaff } = useSessionRole()
   const directoryRole = resolveMessengerDirectoryRole(isOwner, isStaff)
+  // US-111 V1 — only Merchant Owner can create groups; Staff-Manager parity needs a
+  // "list my business coworkers" endpoint the Staff API doesn't expose yet (see US-111 Out of Scope).
+  const canCreateGroup = directoryRole === MessengerDirectoryRole.Owner
   const isDesktop = variant === HeaderMessagesVariant.Desktop
   const isMobileUI = useIsMobileUI()
   const {
@@ -404,6 +411,25 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
     merchantBusinessId,
     salonOwnerIdByBusinessId,
   ])
+
+  const handleGroupCreated = useCallback((session: CommunityChatSession) => {
+    const conversation = mapCommunityChatSessionToConversation(
+      session,
+      currentUserProfileId,
+      listPreviewKey,
+      titleMapOptions,
+    )
+
+    if (isDesktop) {
+      ensureDesktopConversationOpen(conversation)
+    } else {
+      setMobileActiveConversation(conversation)
+      setOpen(true)
+    }
+
+    setActiveTab(HeaderMessagesTab.Groups)
+    setIsCreateGroupOpen(false)
+  }, [currentUserProfileId, ensureDesktopConversationOpen, isDesktop, listPreviewKey, titleMapOptions])
 
   useEffect(() => {
     if (!pendingOpenSessionId) return
@@ -707,6 +733,19 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
     </div>
   )
 
+  const createGroupRow = activeTab === HeaderMessagesTab.Groups && canCreateGroup ? (
+    <div className="header-messages-create-group-row">
+      <button
+        type="button"
+        className="header-messages-create-group-btn"
+        onClick={() => setIsCreateGroupOpen(true)}
+      >
+        <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+        <span>{t(`${HEADER_MESSAGES_I18N}.createGroup`)}</span>
+      </button>
+    </div>
+  ) : null
+
   const searchPlaceholder = t(
     isDesktop ? `${HEADER_MESSAGES_I18N}.searchDesktop` : `${HEADER_MESSAGES_I18N}.searchMobile`,
   )
@@ -750,6 +789,7 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
       </div>
       {searchField}
       {tabs}
+      {createGroupRow}
       <div className={`header-messages-list${listIsEmpty ? ' header-messages-list--empty' : ''}`}>{conversationList}</div>
       {directoryCtaFooter}
     </div>
@@ -769,6 +809,7 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
         {searchField}
       </div>
       {tabs}
+      {createGroupRow}
       <div className={`header-messages-list header-messages-list--mobile${listIsEmpty ? ' header-messages-list--empty' : ''}`}>{conversationList}</div>
       {directoryCtaFooter}
     </div>
@@ -857,6 +898,14 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
       </div>
       {mobilePanel}
       {desktopChatWindows}
+      {canCreateGroup && (
+        <CreateCommunityChatGroupModal
+          open={isCreateGroupOpen}
+          businessId={merchantBusinessId}
+          onClose={() => setIsCreateGroupOpen(false)}
+          onCreated={handleGroupCreated}
+        />
+      )}
     </>
   )
 }
