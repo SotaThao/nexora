@@ -6,7 +6,10 @@ import {
 import PosPromotionBannerArt from '../../dashboard/views/pos/PosPromotionBannerArt'
 import { formatBookingTimeDisplay } from './bookingUtils'
 
-const AUTOPLAY_MS = 4000
+/** Dwell between slides — long enough to read the offer before it advances. */
+const AUTOPLAY_MS = 5500
+/** Embla attraction duration (not ms). Mid-range = smooth without stacking scrolls. */
+const SCROLL_DURATION = 35
 
 /**
  * Offers advertised above the booking form, from the booking page API's `promotions`.
@@ -16,9 +19,14 @@ const AUTOPLAY_MS = 4000
  * under the art so the ratio is not distorted.
  */
 export default function BookingPromotions({ promotions, copy, locale }) {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: 'start' })
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    loop: true,
+    align: 'start',
+    duration: SCROLL_DURATION,
+  })
   const [scrollSnaps, setScrollSnaps] = useState([])
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [hovered, setHovered] = useState(false)
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return
@@ -40,11 +48,48 @@ export default function BookingPromotions({ promotions, copy, locale }) {
     }
   }, [emblaApi, onSelect, promotions.length])
 
+  // Settle-based autoplay — wait for animation to finish, dwell, then advance.
+  // Avoids setInterval firing mid-tween (stutter / lag).
   useEffect(() => {
-    if (!emblaApi || promotions.length < 2) return undefined
-    const timer = setInterval(() => emblaApi.scrollNext(), AUTOPLAY_MS)
-    return () => clearInterval(timer)
-  }, [emblaApi, promotions.length])
+    if (!emblaApi || promotions.length < 2 || hovered) return undefined
+
+    let timeoutId
+    let cancelled = false
+
+    const clear = () => {
+      if (timeoutId === undefined) return
+      window.clearTimeout(timeoutId)
+      timeoutId = undefined
+    }
+
+    const scheduleNext = () => {
+      clear()
+      timeoutId = window.setTimeout(() => {
+        if (cancelled) return
+        emblaApi.scrollNext()
+      }, AUTOPLAY_MS)
+    }
+
+    const onSettle = () => {
+      if (cancelled) return
+      scheduleNext()
+    }
+
+    const onPointerDown = () => {
+      clear()
+    }
+
+    scheduleNext()
+    emblaApi.on('settle', onSettle)
+    emblaApi.on('pointerDown', onPointerDown)
+
+    return () => {
+      cancelled = true
+      clear()
+      emblaApi.off('settle', onSettle)
+      emblaApi.off('pointerDown', onPointerDown)
+    }
+  }, [emblaApi, promotions.length, hovered])
 
   if (!promotions.length) return null
 
@@ -52,7 +97,12 @@ export default function BookingPromotions({ promotions, copy, locale }) {
   const showDots = promotions.length > 1
 
   return (
-    <section className="promotion-section" aria-label={copy.promotionsHeading}>
+    <section
+      className="promotion-section"
+      aria-label={copy.promotionsHeading}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <div className="promotion-viewport" ref={emblaRef}>
         <div className="promotion-list">
           {promotions.map((promotion, index) => {
@@ -60,11 +110,11 @@ export default function BookingPromotions({ promotions, copy, locale }) {
               promotion.daysOfWeek,
               (day) => copy.dayShort[day] || day,
             )
-            const window =
+            const timeWindow =
               promotion.startTime && promotion.endTime
                 ? `${formatBookingTimeDisplay(promotion.startTime, locale)}–${formatBookingTimeDisplay(promotion.endTime, locale)}`
                 : ''
-            const schedule = [days || copy.promotionAllWeek, window]
+            const schedule = [days || copy.promotionAllWeek, timeWindow]
               .filter(Boolean)
               .join(' · ')
             const imageUrl =
@@ -89,9 +139,6 @@ export default function BookingPromotions({ promotions, copy, locale }) {
                   index={index}
                   specialOfferFallback={copy.specialOffer || 'SPECIAL OFFER'}
                 />
-                {imageUrl ? (
-                  <p className="promotion-banner-caption">{promotion.name}</p>
-                ) : null}
                 {schedule ? <p className="promotion-banner-schedule">{schedule}</p> : null}
               </article>
             )

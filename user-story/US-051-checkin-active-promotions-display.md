@@ -21,7 +21,7 @@
 ### Front desk
 - **Given** salon có promotion `isActive` trong khung ngày/giờ
 - **When** tới form SinglePage check-in
-- **Then** dưới services: carousel 2 card desktop, Prev/Next + autoplay, cao 9.25rem
+- **Then** dưới services: carousel 2 card desktop, dots + autoplay (không Prev/Next), cao 9.25rem
 
 ### Kiosk
 - **Given** device token hợp lệ và BE trả promotions

@@ -8479,8 +8479,6 @@
         "title": "Active promotions",
         "subtitle": "Offers on now (today's hours). View only — apply at checkout if the visit qualifies.",
         "specialOffer": "SPECIAL OFFER",
-        "previous": "Previous promotions",
-        "next": "Next promotions",
         "dot": "Promotion {{index}} of {{total}}",
         "dayShort": {
           "Sunday": "Sun",

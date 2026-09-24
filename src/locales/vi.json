@@ -8475,8 +8475,6 @@
         "title": "Ưu đãi đang áp dụng",
         "subtitle": "Ưu đãi trong khung ngày/giờ hiện tại. Chỉ xem — áp dụng khi thanh toán nếu đơn đủ điều kiện.",
         "specialOffer": "ƯU ĐÃI ĐẶC BIỆT",
-        "previous": "Ưu đãi trước",
-        "next": "Ưu đãi sau",
         "dot": "Ưu đãi {{index}} / {{total}}",
         "dayShort": {
           "Sunday": "CN",
