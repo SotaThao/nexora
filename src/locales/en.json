@@ -182,6 +182,7 @@
         "welcome_named": "Welcome back, {{name}} 👋",
         "no_modules": "Nothing is available here right now. Please ask our front desk.",
         "view_as_customer": "View as customer",
+        "view_more": "View more",
         "paused_title": "Temporarily paused",
         "paused_desc": "{{business}} has paused this QR code for now. Please ask our front desk for help.",
         "not_found_title": "QR code not found",

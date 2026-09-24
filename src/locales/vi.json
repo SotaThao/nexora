@@ -182,6 +182,7 @@
         "welcome_named": "Chào mừng {{name}} quay lại 👋",
         "no_modules": "Hiện chưa có chức năng nào. Vui lòng hỏi quầy lễ tân.",
         "view_as_customer": "Xem như khách",
+        "view_more": "Xem thêm",
         "paused_title": "Đang tạm ngưng",
         "paused_desc": "{{business}} đang tạm ngưng mã QR này. Vui lòng liên hệ quầy lễ tân để được hỗ trợ.",
         "not_found_title": "Không tìm thấy mã QR",
