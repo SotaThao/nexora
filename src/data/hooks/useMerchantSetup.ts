@@ -160,11 +160,12 @@ export function useUpdateBusinessInfo() {
 // POS Owner Setup — Business Hours (US-014)
 export function useBusinessHours() {
   const auth = useContext(AuthContext)
-  const isOwner = auth?.status === 'authenticated' && auth?.session?.role === 'owner'
+  // POS Front Desk calendar needs the same hours owners edit in Salon Information.
+  const enabled = auth?.status === 'authenticated'
   return useQuery<BusinessHourEntry[]>({
     queryKey: qk.merchantBusinessHours(),
     queryFn: () => merchantsRepository.getBusinessHours(),
-    enabled: isOwner,
+    enabled,
     retry: false,
   })
 }

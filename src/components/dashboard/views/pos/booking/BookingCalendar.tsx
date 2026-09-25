@@ -3,6 +3,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { ArrowRight, ArrowUpRight, Check, MoreHorizontal, X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
+import { useBusinessHours } from '../../../../../data/hooks/useMerchantSetup'
 import type { BookingListItemApiDto, TimeClockRosterRowApiDto } from '../../../../../types/repositories'
 import BookingTeamCalendar from '../../BookingTeamCalendar'
 import { formatTurnCredit } from '../TurnGridView'
@@ -32,6 +33,9 @@ import {
 } from './bookingCalendarView'
 import BookingOverviewCalendar from './BookingOverviewCalendar'
 import AnyoneAppointmentsQueue from './AnyoneAppointmentsQueue'
+import { resolveBookingCalendarBusinessWindow } from './bookingBusinessHours'
+import { formatPosClockTime } from '../posDateTime'
+import type { BusinessHourEntry } from '../../../../../types/domain'
 
 function staffInitials(displayName: string): string {
   return displayName
@@ -41,6 +45,27 @@ function staffInitials(displayName: string): string {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? '')
     .join('')
+}
+
+const DAY_NAMES = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+] as const
+
+function businessHourEntryForDate(
+  hours: ReadonlyArray<BusinessHourEntry> | undefined,
+  dateIso: string,
+): BusinessHourEntry | undefined {
+  if (!hours?.length || !dateIso) return undefined
+  const [year, month, day] = dateIso.split('-').map(Number)
+  const local = new Date(year, (month || 1) - 1, day || 1)
+  const dayName = DAY_NAMES[local.getDay()]
+  return hours.find((row) => row.dayOfWeek === dayName)
 }
 
 function staffColumnHtml(row: TimeClockRosterRowApiDto, workingTodayLabel: string): string {
@@ -133,6 +158,25 @@ export default function BookingCalendar({
   const { t, currentLanguage } = useTranslation()
   const p = 'components.dashboard.views.pos.BookingTab.'
   const [staffScope, setStaffScope] = useState(PosBookingCalendarStaffScope.WorkingToday)
+  const { data: businessHours } = useBusinessHours()
+
+  const businessWindow = useMemo(
+    () => resolveBookingCalendarBusinessWindow(businessHours, anchorDate),
+    [businessHours, anchorDate],
+  )
+
+  const calendarHoursSubtitle = useMemo(() => {
+    if (!businessWindow.isOpen) {
+      return t(p + 'calendarClosedDay')
+    }
+    const entry = businessHourEntryForDate(businessHours, anchorDate)
+    if (entry?.openTime && entry?.closeTime) {
+      const open = formatPosClockTime(entry.openTime.slice(0, 5), currentLanguage)
+      const close = formatPosClockTime(entry.closeTime.slice(0, 5), currentLanguage)
+      return t(p + 'calendarSubtitleHours', { hours: `${open} – ${close}` })
+    }
+    return t(p + 'calendarSubtitle')
+  }, [anchorDate, businessHours, businessWindow.isOpen, currentLanguage, p, t])
 
   const visibleRosterRows = useMemo(
     () => staffScope === PosBookingCalendarStaffScope.WorkingToday
@@ -189,8 +233,10 @@ export default function BookingCalendar({
         statusGroup: getBookingCalendarStatusGroup(booking.status),
         startAtUtc: booking.scheduledAt,
         startAtWallClock: bookingCalendarWallClock(booking.scheduledAt, booking.source),
-        // The list DTO has no end time, so the shared calendar's standard 60-minute fallback
-        // applies until the booking endpoint exposes service duration.
+        // Prefer summed service durations from the list API; fall back to 60 min only when missing.
+        durationMinutes: booking.totalDurationMinutes && booking.totalDurationMinutes > 0
+          ? booking.totalDurationMinutes
+          : null,
         endAtUtc: null,
       })),
     [bookings, p, t],
@@ -410,25 +456,34 @@ export default function BookingCalendar({
           </div>
         ) : (
           <div aria-busy={loading}>
-            <BookingTeamCalendar
-              bookings={calendarBookings}
-              columnsOverride={columns}
-              staffIdsByName={staffIdsByName}
-              calendarDate={anchorDate}
-              onCalendarDateChange={onAnchorDateChange}
-              onEventClick={onViewDetail}
-              onSlotSelect={onNewBooking}
-              todayIso={formatLocalDateIso(new Date())}
-              locale={currentLanguage}
-              title={t(p + 'calendarTitle')}
-              subtitle={t(p + 'calendarSubtitle')}
-              todayLabel={t(p + 'calendarToday')}
-              prevAriaLabel={t(p + 'calendarPrevDay')}
-              nextAriaLabel={t(p + 'calendarNextDay')}
-              unassignedLabel={t(p + 'unassigned')}
-              hideBuiltInHeader
-              showHalfHourLabels
-            />
+            {businessWindow.isOpen ? (
+              <BookingTeamCalendar
+                bookings={calendarBookings}
+                columnsOverride={columns}
+                staffIdsByName={staffIdsByName}
+                calendarDate={anchorDate}
+                onCalendarDateChange={onAnchorDateChange}
+                onEventClick={onViewDetail}
+                onSlotSelect={onNewBooking}
+                todayIso={formatLocalDateIso(new Date())}
+                locale={currentLanguage}
+                title={t(p + 'calendarTitle')}
+                subtitle={calendarHoursSubtitle}
+                todayLabel={t(p + 'calendarToday')}
+                prevAriaLabel={t(p + 'calendarPrevDay')}
+                nextAriaLabel={t(p + 'calendarNextDay')}
+                unassignedLabel={t(p + 'unassigned')}
+                hideBuiltInHeader
+                showHalfHourLabels
+                businessBeginsHour={businessWindow.beginsHour}
+                businessEndsHour={businessWindow.endsHour}
+                scrollToHour={businessWindow.scrollToHour}
+              />
+            ) : (
+              <div className="pos-booking-overview-state" role="status">
+                <span>{t(p + 'calendarClosedDay')}</span>
+              </div>
+            )}
           </div>
         )
       ) : (

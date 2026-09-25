@@ -161,15 +161,33 @@ body.public-booking-active #root {
 }
 
 .public-booking-root .promotion-list {
+  /*
+   * Spacing between banners MUST use slide margin (see .promotion-banner-slide),
+   * never flex `gap`. Embla’s loop clones copy margins but not container gap, so
+   * last→first would sit flush (~0–1px) for any promotion count ≥ 3.
+   */
+  --promotion-slide-gap: 0px;
+  --promotion-slides-per-view: 1;
   display: flex;
   align-items: stretch;
-  gap: 12px;
+  gap: 0;
 }
 
 .public-booking-root .promotion-banner-slide {
   display: grid;
+  box-sizing: border-box;
   min-width: 0;
-  flex: 0 0 100%;
+  /*
+   * Width formula scales to any N:
+   *   W = (100% - (perView - 1) * gap) / perView
+   * Mobile perView=1 → 100%, margin 0 (one card, no side-by-side seam).
+   * Desktop overrides perView=2 + gap>0 so every pair (incl. loop seam) stays spaced.
+   */
+  flex: 0 0 calc(
+    (100% - (var(--promotion-slides-per-view) - 1) * var(--promotion-slide-gap))
+      / var(--promotion-slides-per-view)
+  );
+  margin-inline-end: var(--promotion-slide-gap);
   gap: 8px;
   padding: 8px;
   overflow: hidden;
@@ -1912,13 +1930,21 @@ body.public-booking-active #root {
     margin-bottom: 18px;
   }
 
-  .public-booking-root .promotion-card {
-    flex: 0 0 calc(50% - 6px);
+  .public-booking-root .promotion-list {
+    /* Two banners per view; margin on every slide → spacing holds for any N. */
+    --promotion-slide-gap: 20px;
+    --promotion-slides-per-view: 2;
   }
 
-  .public-booking-root .promotion-banner-slide {
-    flex: 0 0 calc(50% - 6px);
+  .public-booking-root .promotion-card {
+    flex: 0 0 calc(
+      (100% - (var(--promotion-slides-per-view) - 1) * var(--promotion-slide-gap))
+        / var(--promotion-slides-per-view)
+    );
+    margin-inline-end: var(--promotion-slide-gap);
   }
+
+  /* Inherits the same width/margin formula from the base slide rule via CSS vars. */
 
   .public-booking-root .app-card {
     padding: 28px;
@@ -2186,8 +2212,15 @@ body.service-description-open {
   margin: 0;
 }
 
+.public-booking-root.pos-device-pair-promotions .promotion-list {
+  --promotion-slide-gap: 0px;
+  --promotion-slides-per-view: 1;
+  gap: 0;
+}
+
 .public-booking-root.pos-device-pair-promotions .promotion-banner-slide {
   flex: 0 0 100%;
+  margin-inline-end: 0;
 }
 
 /* Pair dots: Nexora brand purple (same as check-in strip), not booking pink/lavender. */
@@ -2212,6 +2245,7 @@ body.service-description-open {
 @media (min-width: 640px) {
   .public-booking-root.pos-device-pair-promotions .promotion-banner-slide {
     flex: 0 0 100%;
+    margin-inline-end: 0;
   }
 }
 

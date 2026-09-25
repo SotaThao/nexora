@@ -1567,6 +1567,8 @@ export interface BookingListItemApiDto {
   orderNumber?: string | null
   serviceNames: string[]
   technicianNames: string[]
+  /** Sum of top-level service durations (minutes). Drives calendar block length. */
+  totalDurationMinutes?: number
 }
 
 export interface BookingListResultApiDto {

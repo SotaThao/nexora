@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import useEmblaCarousel from 'embla-carousel-react'
 import {
   formatPromotionDays,
@@ -17,13 +17,31 @@ const SCROLL_DURATION = 35
  * Ticket #1768: banner is always 3:1 — uploaded image when the API provides one, otherwise the
  * same themed studio art (badge / name / rate) used when creating a promotion. Schedule stays
  * under the art so the ratio is not distorted.
+ *
+ * Spacing: desktop shows 2 cards via slide `margin-inline-end` (not flex `gap`). Embla loop
+ * clones copy margins, so last→first never collapses no matter how many promotions exist.
  */
 export default function BookingPromotions({ promotions, copy, locale }) {
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    loop: true,
-    align: 'start',
-    duration: SCROLL_DURATION,
-  })
+  const count = promotions.length
+  // Desktop shows 2-up: loop only when there is more than one viewport of cards.
+  // (1–2 cards: no loop — avoids a seam with nothing to scroll to.)
+  const canLoop = count > 2
+  const canScroll = count > 1
+
+  const emblaOptions = useMemo(
+    () => ({
+      align: 'start',
+      loop: canLoop,
+      slidesToScroll: 1,
+      duration: SCROLL_DURATION,
+      watchDrag: canScroll,
+      // Without loop, trim end snaps so the last pair still keeps card margins.
+      containScroll: canLoop ? false : 'trimSnaps',
+    }),
+    [canLoop, canScroll],
+  )
+
+  const [emblaRef, emblaApi] = useEmblaCarousel(emblaOptions)
   const [scrollSnaps, setScrollSnaps] = useState([])
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [hovered, setHovered] = useState(false)
@@ -32,6 +50,12 @@ export default function BookingPromotions({ promotions, copy, locale }) {
     if (!emblaApi) return
     setSelectedIndex(emblaApi.selectedScrollSnap())
   }, [emblaApi])
+
+  // Re-init whenever the merchant adds/removes promotions so slide sizes + loop stay correct.
+  useEffect(() => {
+    if (!emblaApi) return
+    emblaApi.reInit(emblaOptions)
+  }, [emblaApi, emblaOptions, count])
 
   useEffect(() => {
     if (!emblaApi) return undefined
@@ -46,12 +70,12 @@ export default function BookingPromotions({ promotions, copy, locale }) {
       emblaApi.off('select', onSelect)
       emblaApi.off('reInit', syncSnaps)
     }
-  }, [emblaApi, onSelect, promotions.length])
+  }, [emblaApi, onSelect])
 
   // Settle-based autoplay — wait for animation to finish, dwell, then advance.
-  // Avoids setInterval firing mid-tween (stutter / lag).
+  // Works with or without loop (wraps to start when scrollNext is exhausted).
   useEffect(() => {
-    if (!emblaApi || promotions.length < 2 || hovered) return undefined
+    if (!emblaApi || !canScroll || hovered) return undefined
 
     let timeoutId
     let cancelled = false
@@ -62,11 +86,19 @@ export default function BookingPromotions({ promotions, copy, locale }) {
       timeoutId = undefined
     }
 
+    const advance = () => {
+      if (emblaApi.canScrollNext()) {
+        emblaApi.scrollNext()
+        return
+      }
+      emblaApi.scrollTo(0)
+    }
+
     const scheduleNext = () => {
       clear()
       timeoutId = window.setTimeout(() => {
         if (cancelled) return
-        emblaApi.scrollNext()
+        advance()
       }, AUTOPLAY_MS)
     }
 
@@ -89,12 +121,12 @@ export default function BookingPromotions({ promotions, copy, locale }) {
       emblaApi.off('settle', onSettle)
       emblaApi.off('pointerDown', onPointerDown)
     }
-  }, [emblaApi, promotions.length, hovered])
+  }, [emblaApi, canScroll, hovered])
 
-  if (!promotions.length) return null
+  if (!count) return null
 
-  const dotCount = Math.max(scrollSnaps.length, promotions.length)
-  const showDots = promotions.length > 1
+  const dotCount = Math.max(scrollSnaps.length, count)
+  const showDots = canScroll
 
   return (
     <section
@@ -124,7 +156,7 @@ export default function BookingPromotions({ promotions, copy, locale }) {
                 className="promotion-banner-slide"
                 key={promotion.id}
                 data-promotion-id={promotion.id}
-                aria-label={copy.promotionSlideAria(index + 1, promotions.length)}
+                aria-label={copy.promotionSlideAria(index + 1, count)}
               >
                 <PosPromotionBannerArt
                   promotion={{
