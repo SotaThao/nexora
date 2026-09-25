@@ -25,7 +25,6 @@ import HomepageLink from '../../ui/HomepageLink'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import {
   SIDEBAR_SHELL_CLASS,
-  SIDEBAR_MOBILE_DRAWER_CLASS,
   SIDEBAR_NAV_CLASS,
   SIDEBAR_PROFILE_CARD_CLASS,
   SIDEBAR_AVATAR_IMAGE_CLASS,
@@ -36,6 +35,7 @@ import {
   sidebarMenuItemBetweenClass,
   sidebarSubmenuItemClass,
 } from '../../ui/sidebarMenuStyles'
+import MobileSidebarOverlay from '../../ui/MobileSidebarOverlay'
 
 export default function StaffSidebar({ activeScreen, isHomeActive = false, mobileOnly = false, onNavigate, onLogout, isOpen, onClose }) {
   const { t } = useTranslation()
@@ -373,19 +373,10 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
       </aside>
       )}
 
-      {isOpen && (
-        <div className="fixed inset-0 z-[100] lg:hidden" id="dashboard-mobile-menu">
-          <button
-            type="button"
-            className="absolute inset-0 bg-nexoraText/60"
-            aria-label="Close navigation menu"
-            onClick={onClose}
-          />
-          <aside className={SIDEBAR_MOBILE_DRAWER_CLASS}>
-            {renderContent(true)}
-          </aside>
-        </div>
-      )}
+      {/* Animated overlay — slides in/out above header messenger when open. */}
+      <MobileSidebarOverlay isOpen={isOpen} onClose={onClose}>
+        {renderContent(true)}
+      </MobileSidebarOverlay>
     </>
   )
 }

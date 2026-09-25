@@ -483,7 +483,10 @@ html.header-messages-mobile-open [data-mobile-bottom-nav] {
   display: none !important;
 }
 
-/* App header stays above the messenger shell (clickable hamburger / icons). */
+/*
+ * App header stays above the messenger shell (clickable hamburger / icons).
+ * Mobile nav drawer uses z-[130] so it can open over this header + messenger.
+ */
 html.header-messages-mobile-open header.sticky {
   z-index: 110;
 }
