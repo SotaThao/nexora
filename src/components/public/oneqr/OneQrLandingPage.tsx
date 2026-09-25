@@ -18,6 +18,7 @@ import {
 import OneQrModuleIcon from '../../oneqr/OneQrModuleIcon'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import { resolveOneQrModuleLabel } from '../../oneqr/oneQrModuleLabel'
+import { resolveOneQrModuleIconColor } from '../../oneqr/oneQrModuleIconColor'
 import { resolveOneQrModuleHref } from './oneQrModuleHref'
 import {
   ONEQR_ROUTE,
@@ -345,12 +346,7 @@ function ModuleTile({
   const isExternal = /^https?:\/\//i.test(url)
   const isInternal = url.startsWith('/')
   const safeHref = isExternal || isInternal ? url : '#'
-  const iconColor = {
-    [OneQrModuleKey.CheckIn]: 'bg-nexoraTeal/10 text-nexoraTealAlt',
-    [OneQrModuleKey.Payment]: 'bg-nexoraElectric/10 text-nexoraElectric',
-    [OneQrModuleKey.Booking]: 'bg-nexoraViolet/10 text-nexoraViolet',
-    [OneQrModuleKey.Rewards]: 'bg-nexoraTeal/10 text-nexoraTealAlt',
-  }[module.moduleKey] ?? 'bg-nexoraBrandSoft/70 text-nexoraBrand'
+  const iconColor = resolveOneQrModuleIconColor(module.moduleKey)
 
   return (
     <a
