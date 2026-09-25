@@ -23,7 +23,7 @@ export default function BackToOneQrMenuButton({
 
   if (!businessSlug) return null
 
-  const returnAudience = readOneQrReturnAudience(businessSlug)
+  const returnAudience = readOneQrReturnAudience()
 
   return (
     <Link
