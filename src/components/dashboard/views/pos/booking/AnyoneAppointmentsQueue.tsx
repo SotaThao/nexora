@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Loader2, RefreshCw, UserRound } from 'lucide-react'
+import { Check, Loader2, RefreshCw, UserRound } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import { getApiErrorCode } from '../../../../../types/domain'
@@ -82,7 +82,19 @@ export default function AnyoneAppointmentsQueue({
 
   const lines = queue ?? []
 
-  if (lines.length === 0) return null
+  if (lines.length === 0) {
+    return (
+      <section className="mb-4 flex items-center justify-center gap-3 rounded-2xl border border-nexoraBorder bg-white px-4 py-6">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+          <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-[12px] font-extrabold text-nexoraText">{t(p + 'emptyTitle')}</p>
+          <p className="text-[10px] font-semibold text-nexoraMuted">{t(p + 'emptySubtitle')}</p>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section className="mb-4 overflow-hidden rounded-2xl border border-nexoraBorder bg-white">

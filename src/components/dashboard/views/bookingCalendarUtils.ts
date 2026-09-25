@@ -12,6 +12,8 @@ import { parseApiDateTime } from '../utils'
 
 export type BookingCalendarSource = {
   id: string
+  /** Set when one booking is split into several events (one per technician); defaults to `id`. */
+  bookingId?: string
   name: string
   tech: string
   date: string
@@ -48,6 +50,7 @@ export type BookingCalendarEvent = {
   cssClass: string
   html: string
   toolTip: string
+  tags: { bookingId: string }
 }
 
 export function escapeBookingCalendarHtml(value: string) {
@@ -255,6 +258,7 @@ export function buildBookingCalendarEvents(
           + `</div>`
         ),
         toolTip: `${name} · ${serviceTooltip}`,
+        tags: { bookingId: booking.bookingId ?? booking.id },
       }
     })
 }

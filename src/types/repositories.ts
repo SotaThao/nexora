@@ -1569,6 +1569,13 @@ export interface BookingListItemApiDto {
   technicianNames: string[]
   /** Sum of top-level service durations (minutes). Drives calendar block length. */
   totalDurationMinutes?: number
+  serviceLines?: BookingListServiceLineApiDto[]
+}
+
+export interface BookingListServiceLineApiDto {
+  serviceName?: string | null
+  posStaffProfileId?: string | null
+  technicianName?: string | null
 }
 
 export interface BookingListResultApiDto {
