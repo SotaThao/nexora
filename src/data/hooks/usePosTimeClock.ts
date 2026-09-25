@@ -78,6 +78,7 @@ export function useTimeClockLog(businessId?: string, window?: { fromUtc: string;
 function useTimeClockInvalidation(businessId?: string) {
   const queryClient = useQueryClient()
   return () => {
+    queryClient.invalidateQueries({ queryKey: qk.staffClockStatusesRoot() })
     // Deliberately keyed without dayKey: this is a prefix of whichever day is on screen, so the
     // board refreshes no matter which local day the caller is looking at.
     queryClient.invalidateQueries({ queryKey: qk.merchantPosTimeClockRoster(businessId) })
@@ -139,6 +140,7 @@ export function useScanClockQr() {
   return useMutation<ScanClockQrResultApiDto, unknown, { businessId: string; token: string }>({
     mutationFn: ({ businessId, token }) => posTimeClockRepository.scan(businessId, token),
     onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: qk.staffClockStatusesRoot() })
       // Same session may also hold the front-desk POS; keep check-in / roster in sync.
       queryClient.invalidateQueries({ queryKey: qk.merchantPosTimeClockRoster(variables.businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosTimeClockLog(variables.businessId) })

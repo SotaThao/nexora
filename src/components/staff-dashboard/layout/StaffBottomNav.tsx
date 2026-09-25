@@ -1,7 +1,7 @@
 // StaffBottomNav — fixed bottom navigation for mobile (<1024px).
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { STAFF_BOTTOM_NAV_ITEMS, isStaffBottomNavItemActive } from '../constants'
+import { STAFF_BOTTOM_NAV_ITEMS, STAFF_WORK_ORDERS_SCREEN, isStaffBottomNavItemActive } from '../constants'
 
 export default function StaffBottomNav({ activeScreen, onNavigate }) {
   const { t } = useTranslation()
@@ -11,6 +11,23 @@ export default function StaffBottomNav({ activeScreen, onNavigate }) {
   function renderItem(item) {
     const Icon = item.icon
     const isActive = isStaffBottomNavItemActive(activeScreen, tabParam, item)
+    if (item.id === STAFF_WORK_ORDERS_SCREEN) {
+      return (
+        <div key={item.id} className="flex min-w-0 flex-1 justify-center">
+          <button
+            type="button"
+            onClick={() => onNavigate(item.screen, item.params)}
+            aria-current={isActive ? 'page' : undefined}
+            className="relative flex h-16 w-16 shrink-0 -translate-y-3 flex-col items-center justify-center gap-0.5 rounded-full bg-nexoraBrand text-white shadow-lg ring-4 ring-white transition-transform active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-nexoraBrand"
+          >
+            <Icon className="h-5 w-5 -translate-y-[5px]" strokeWidth={isActive ? 2.4 : 2} aria-hidden="true" />
+            <span className="max-w-14 -translate-y-[5px] text-center text-[10px] font-semibold leading-3">
+              {t(item.labelKey)}
+            </span>
+          </button>
+        </div>
+      )
+    }
     return (
       <button
         key={item.id}
@@ -26,7 +43,7 @@ export default function StaffBottomNav({ activeScreen, onNavigate }) {
           strokeWidth={isActive ? 2.4 : 2}
         />
         <span
-          className={`max-w-full px-0.5 text-center text-xs leading-tight font-semibold transition-colors duration-200 ${
+          className={`max-w-full px-0.5 text-center text-[10px] min-[375px]:text-[11px] sm:text-xs leading-tight font-semibold transition-colors duration-200 ${
             isActive ? 'text-nexoraBrand' : 'text-nexoraSubtle'
           }`}
         >

@@ -25,6 +25,7 @@ import type {
 import type { TransactionsListPage, TransactionsListQuery } from './transactions'
 import type { StaffLinkRequestDetailApiDto } from '../../types/repositories'
 import { PENDING_STAFF_LINK_REQUEST_STATUSES } from '../../utils/staffLinkRequestStatus'
+import { STAFF_BUSINESS_LINK_STATUS } from '../../utils/staffBusinessLinkStatus'
 
 type HttpClient = typeof httpClient
 
@@ -605,6 +606,20 @@ export function createStaffSelfRepository(client: HttpClient = httpClient) {
         totalCount: res?.totalCount ?? 0,
         hasNextPage: Boolean(res?.hasNextPage),
         hasPreviousPage: Boolean(res?.hasPreviousPage),
+      }
+    },
+
+    async listActiveBusinessLinks(): Promise<StaffLinkRequestDetail[]> {
+      const links: StaffLinkRequestDetail[] = []
+      let pageNumber = 1
+      while (true) {
+        const page = await this.listLinkRequests({
+          statuses: [STAFF_BUSINESS_LINK_STATUS.active],
+          pageNumber,
+        })
+        links.push(...page.items)
+        if (!page.hasNextPage) return links
+        pageNumber += 1
       }
     },
 

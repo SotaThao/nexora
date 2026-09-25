@@ -1964,7 +1964,7 @@ export default function PosOrderWorkspace({
                       disabled={isBusy}
                       className="inline-flex h-7 shrink-0 items-center justify-center rounded-lg border border-violet-200 bg-violet-50/50 px-3 text-[11px] font-bold text-violet-700 transition-colors hover:bg-violet-100/70 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {t('components.dashboard.views.pos.PosOrderWorkspace.addCustomServiceButton')}
+                      {t('components.dashboard.views.pos.PosOrderWorkspace.ticketCustomServiceButton')}
                     </button>
                   </div>
                 ) : null}

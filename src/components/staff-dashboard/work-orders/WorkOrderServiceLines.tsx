@@ -17,7 +17,6 @@ import {
 import {
   formatWorkOrderDurationMinutes,
   formatWorkOrderMoney,
-  workOrderAssignedTechnicianLabel,
   workOrderTextOrPlaceholder,
 } from './workOrderTickets'
 
@@ -217,7 +216,7 @@ function WorkOrderServiceLineRow({
                   type="button"
                   className={WORK_ORDERS_LAYOUT_CLASS.serviceRemoveButton}
                   aria-label={`${t(WORK_ORDERS_I18N.removeService)} ${workOrderTextOrPlaceholder(line.serviceName)}`}
-                  disabled={lineActionsLocked}
+                  disabled={Boolean(line.pendingRemoval) || (isAwaitingApproval && Boolean(line.id))}
                   onClick={onRemoveService}
                 >
                   {t(WORK_ORDERS_I18N.removeService)}
@@ -228,9 +227,6 @@ function WorkOrderServiceLineRow({
         </div>
       ) : null}
       <div className={WORK_ORDERS_LAYOUT_CLASS.serviceMeta}>
-        <p className={WORK_ORDERS_LAYOUT_CLASS.serviceTech}>
-          {workOrderAssignedTechnicianLabel(line.technicianName, t)}
-        </p>
         {!line.isAddOn && line.lineStatus ? (
           <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-black uppercase ${
             LINE_STATUS_BADGE_CLASS[line.lineStatus] ?? LINE_STATUS_BADGE_CLASS[PosOrderItemStatus.Unassigned]

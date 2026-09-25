@@ -45,6 +45,7 @@ import {
 import type { WorkSkillCategory, WorkSkillService } from '../../../data/repositories/staffSelf'
 import { STAFF_SALONS_PATH } from '../staffSalonPaths'
 import { staffWorkOrdersPath } from '../work-orders/constants'
+import { useStaffClockedInSalons } from '../../../data/hooks/useStaffClockedInSalons'
 
 const SALON_ACTION_BTN_BASE =
   'inline-flex h-[38px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-[10px] px-3.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60'
@@ -409,6 +410,7 @@ function EditWorkSkillModal({
 
 function SalonCard({
   business,
+  isClockedIn = false,
   index,
   currentLanguage,
   t,
@@ -423,6 +425,7 @@ function SalonCard({
   onChatStartHintDismiss,
 }: {
   business: StaffBusinessLink
+  isClockedIn?: boolean
   index: number
   currentLanguage: string
   t: TFunction
@@ -476,6 +479,12 @@ function SalonCard({
             <h3 className="truncate text-nexoraText text-base font-semibold leading-snug">
               {business.businessName}
             </h3>
+            {isClockedIn ? (
+              <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-nexoraSuccess/10 px-2 py-0.5 text-xs font-bold text-nexoraSuccess">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" aria-hidden="true" />
+                {t('staff_salons.clocked_in')}
+              </span>
+            ) : null}
             {location ? (
               <p className="mt-1 flex min-w-0 items-center gap-1 text-xs font-medium text-nexoraMuted">
                 <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -593,6 +602,7 @@ export default function StaffMySalons() {
   const unlinkBusiness = useUnlinkStaffBusiness()
   const [unlinkError, setUnlinkError] = useState<{ title: string; message: string } | null>(null)
   const { data: businesses = [], isPending, refetch: refetchBusinesses } = useStaffBusinesses()
+  const clockedInBusinessIds = useStaffClockedInSalons(businesses)
   const salons = useMemo(() => {
     const visibleBusinesses = businesses.filter((business) => {
       const statusLabel = resolveStaffBusinessLinkStatusLabel(business).trim().toLowerCase()
@@ -604,8 +614,8 @@ export default function StaffMySalons() {
       )
       return !isPreviousOrInactive
     })
-    return sortSalonBusinesses(visibleBusinesses)
-  }, [businesses])
+    return sortSalonBusinesses(visibleBusinesses, clockedInBusinessIds)
+  }, [businesses, clockedInBusinessIds])
   const salonChatMemberById = useMemo(
     () => getSalonChatMemberByBusinessId(salons),
     [salons],
@@ -693,6 +703,7 @@ export default function StaffMySalons() {
             <SalonCard
               key={business.businessId}
               business={business}
+              isClockedIn={clockedInBusinessIds.has(business.businessId)}
               index={index}
               currentLanguage={currentLanguage}
               t={t}

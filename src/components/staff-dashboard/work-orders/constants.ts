@@ -110,6 +110,7 @@ export const WORK_ORDERS_I18N = {
   pickerConfirmEdit: 'staff_dashboard.work_orders.picker_confirm_edit',
   pickerClose: 'staff_dashboard.work_orders.picker_close',
   pickerAlreadyOnTicket: 'staff_dashboard.work_orders.picker_already_on_ticket',
+  pickerRequiresApproval: 'staff_dashboard.work_orders.picker_requires_approval',
   customTitle: 'staff_dashboard.work_orders.custom_title',
   customSubtitle: 'staff_dashboard.work_orders.custom_subtitle',
   customNameLabel: 'staff_dashboard.work_orders.custom_name_label',
