@@ -4140,6 +4140,9 @@ body.booking-appointment-panel-modal-open {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 12px;
 }
 
 .booking-hub-view .settings-service-save-all {
@@ -4408,18 +4411,18 @@ body.booking-appointment-panel-modal-open {
 }
 
 .booking-hub-view .settings-service-category-body {
-  --settings-service-grid-columns: 28px 34px minmax(88px, 1fr) 76px 88px 112px;
+  --settings-service-grid-columns: 28px 34px minmax(88px, 1fr) 76px 88px 128px;
   display: grid;
   gap: 5px;
   padding: 7px;
 }
 
 .booking-hub-view .settings-service-category-body.has-status-column {
-  --settings-service-grid-columns: 28px 34px minmax(88px, 1fr) 76px 88px 72px 76px;
+  --settings-service-grid-columns: 28px 34px minmax(88px, 1fr) 76px 88px 72px 128px;
 }
 
 .booking-hub-view .settings-service-category-body.has-status-column.has-approval-column {
-  --settings-service-grid-columns: 28px 34px minmax(72px, 1fr) 68px 76px 64px 58px 72px;
+  --settings-service-grid-columns: 28px 34px minmax(72px, 1fr) 68px 76px 64px 84px 128px;
 }
 
 .booking-hub-view .settings-service-sort-item {
@@ -4526,6 +4529,7 @@ body.booking-appointment-panel-modal-open {
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  grid-column: -2 / -1;
   justify-self: end;
 }
 
@@ -4588,9 +4592,11 @@ body.booking-appointment-panel-modal-open {
 }
 
 .booking-hub-view .settings-service-header-approval {
+  display: inline-flex;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  align-items: center;
+  gap: 4px;
+  overflow: visible;
   white-space: nowrap;
 }
 
@@ -4601,6 +4607,15 @@ body.booking-appointment-panel-modal-open {
   height: 36px;
   border-radius: 9px;
   font-size: 15px;
+}
+
+.booking-hub-view .settings-service-row.is-compact.has-text-actions .settings-service-remove,
+.booking-hub-view .settings-service-row.is-compact.has-text-actions .settings-service-confirm,
+.booking-hub-view .settings-service-row.is-compact.has-text-actions .settings-service-edit {
+  width: auto;
+  min-width: 54px;
+  padding: 0 10px;
+  font-size: 11px;
 }
 
 .booking-hub-view .settings-service-photo {
@@ -5364,6 +5379,11 @@ body.booking-appointment-panel-modal-open {
   grid-column: 1 / -1;
 }
 
+.booking-hub-view .settings-field.settings-service-modal-field-name.has-open-menu {
+  position: relative;
+  z-index: 40;
+}
+
 .booking-hub-view .settings-service-modal-categories {
   display: flex;
   flex-wrap: wrap;
@@ -5380,6 +5400,73 @@ body.booking-appointment-panel-modal-open {
 .booking-hub-view .settings-service-modal-categories.has-error {
   border-color: #dc2626;
   background: #fff5f5;
+}
+
+.booking-hub-view .settings-service-modal-category-select {
+  position: relative;
+}
+
+.booking-hub-view .settings-service-modal-category-trigger {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 42px;
+  align-items: center;
+  padding-right: 36px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.booking-hub-view .settings-service-modal-category-trigger > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.booking-hub-view .settings-service-modal-category-trigger > span.is-placeholder {
+  color: var(--nexora-muted);
+}
+
+.booking-hub-view .settings-service-modal-category-trigger.has-error {
+  border-color: #dc2626;
+  background: #fff5f5;
+}
+
+.booking-hub-view .settings-service-modal-category-chevron {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition: transform 160ms ease;
+}
+
+.booking-hub-view .settings-service-modal-category-chevron.is-open {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.booking-hub-view .settings-service-modal-category-menu {
+  position: absolute;
+  z-index: 1;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  display: grid;
+  gap: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 6px;
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+}
+
+.booking-hub-view .settings-service-modal-category-menu .settings-service-modal-category-option {
+  width: 100%;
 }
 
 .booking-hub-view .settings-required-mark {
@@ -7723,7 +7810,7 @@ body.booking-appointment-panel-modal-open {
 
 @container service-category (max-width: 960px) {
   .settings-service-category-body.has-status-column.has-approval-column {
-    --settings-service-grid-columns: 28px 32px minmax(64px, 1fr) 64px 72px 88px 68px;
+    --settings-service-grid-columns: 28px 32px minmax(64px, 1fr) 64px 72px 88px 128px;
   }
 
   .settings-service-category-body.has-approval-column .settings-service-row-flags {
@@ -7741,7 +7828,7 @@ body.booking-appointment-panel-modal-open {
 
 @container service-category (max-width: 720px) {
   .settings-service-category-body.has-status-column.has-approval-column {
-    --settings-service-grid-columns: 28px 30px minmax(56px, 1fr) 60px 68px 80px 60px;
+    --settings-service-grid-columns: 28px 30px minmax(56px, 1fr) 60px 68px 80px 120px;
   }
 }
 
@@ -7773,7 +7860,7 @@ body.booking-appointment-panel-modal-open {
     .settings-service-category-body.has-status-column
     .settings-service-row.is-compact
     .settings-service-edit-grid {
-    grid-template-columns: 28px 30px minmax(0, 1fr) 84px 72px;
+    grid-template-columns: 28px 30px minmax(0, 1fr) 84px 120px;
   }
 
   .booking-hub-view
@@ -7855,6 +7942,13 @@ body.booking-appointment-panel-modal-open {
   .booking-hub-view .settings-service-edit-grid > .settings-service-row-actions .settings-service-remove {
     width: 34px;
     height: 36px;
+  }
+
+  .booking-hub-view .settings-service-row.has-text-actions .settings-service-row-actions .settings-service-confirm,
+  .booking-hub-view .settings-service-row.has-text-actions .settings-service-row-actions .settings-service-edit,
+  .booking-hub-view .settings-service-row.has-text-actions .settings-service-row-actions .settings-service-remove {
+    width: auto;
+    min-width: 54px;
   }
 
   .booking-hub-view .settings-service-visual {
