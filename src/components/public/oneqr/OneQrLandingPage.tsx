@@ -30,6 +30,10 @@ import type {
   OneQrLandingBusiness,
   OneQrLandingModule,
 } from '../../../types/oneQr'
+import {
+  rememberOneQrReturnAudience,
+  withOneQrReturnAudience,
+} from '../../../utils/oneQrReturnAudience'
 
 /**
  * The session id identifies one scan for analytics dedupe. It is generated in
@@ -70,6 +74,11 @@ export default function OneQrLandingPage() {
     viewAs,
   })
   const trackClick = useTrackOneQrModuleClick()
+  const landingAudience = data?.audience
+
+  useEffect(() => {
+    if (landingAudience) rememberOneQrReturnAudience(landingAudience)
+  }, [landingAudience])
 
   useEffect(() => {
     document.body.classList.add('oneqr-landing-active')
@@ -240,6 +249,7 @@ export default function OneQrLandingPage() {
               // CustomLink may repeat, so the key needs the position too.
               key={`${module.moduleKey}-${index}`}
               module={module}
+              audience={data.audience}
               label={resolveOneQrModuleLabel(
                 // The landing DTO ships one merged `label`. For a CustomLink
                 // that string is the merchant's own wording — there is no
@@ -331,10 +341,12 @@ function BusinessFooter({ business }: { business: OneQrLandingBusiness }) {
 
 function ModuleTile({
   module,
+  audience,
   label,
   onClick,
 }: {
   module: OneQrLandingModule
+  audience: OneQrAudience
   /** Resolved from the locale files, not `module.label` — see oneQrModuleLabel. */
   label: string
   onClick: () => void
@@ -342,7 +354,7 @@ function ModuleTile({
   // Destinations come from the backend registry and may be either an in-app
   // path or an external CustomLink, so this is a plain anchor rather than a
   // react-router <Link>; external targets additionally get noopener.
-  const url = resolveOneQrModuleHref(module)
+  const url = withOneQrReturnAudience(resolveOneQrModuleHref(module), audience)
   const isExternal = /^https?:\/\//i.test(url)
   const isInternal = url.startsWith('/')
   const safeHref = isExternal || isInternal ? url : '#'
