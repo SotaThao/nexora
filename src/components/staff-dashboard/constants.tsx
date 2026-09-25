@@ -62,6 +62,11 @@ export const STAFF_WORKSPACE_MENU_ITEM = {
 
 export const STAFF_WORKSPACE_SUBMENU = [
   {
+    id: 'my_salons',
+    screen: 'salons',
+    labelKey: 'staff_dashboard.nav.my_salons',
+  },
+  {
     id: 'my_qr',
     screen: 'qr',
     labelKey: 'staff_dashboard.nav.my_qr_menu',
@@ -76,11 +81,6 @@ export const STAFF_WORKSPACE_SUBMENU = [
     id: 'my_reviews',
     screen: 'reviews',
     labelKey: 'staff_dashboard.nav.my_reviews',
-  },
-  {
-    id: 'my_salons',
-    screen: 'salons',
-    labelKey: 'staff_dashboard.nav.my_salons',
   },
   {
     id: 'report',
@@ -145,7 +145,7 @@ export function isStaffTopLevelMenuItemActive(
   return !isStaffWorkspaceRouteActive(activeScreen, tabParam)
 }
 
-/** Bottom nav: 2 items each side of center Scan FAB. */
+/** Bottom nav: My Tickets centered between the two items on each side. */
 export const STAFF_BOTTOM_NAV_ITEMS = [
   {
     id: 'home',
@@ -158,6 +158,12 @@ export const STAFF_BOTTOM_NAV_ITEMS = [
     screen: 'payments',
     icon: ReceiptText,
     labelKey: 'staff_dashboard.nav.transactions',
+  },
+  {
+    id: STAFF_WORK_ORDERS_SCREEN,
+    screen: STAFF_WORK_ORDERS_SCREEN,
+    icon: ListChecks,
+    labelKey: 'staff_dashboard.nav.my_tickets',
   },
   {
     id: 'my_qr',

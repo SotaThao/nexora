@@ -1002,6 +1002,12 @@ export interface StaffBeepResponseResultApiDto {
   responseNote?: string | null
 }
 
+export interface StaffClockStatusApiDto {
+  isClockedIn: boolean
+  clockInAt?: string | null
+  openEntryId?: string | null
+}
+
 export interface ClockScanPreviewApiDto {
   businessId: string
   businessName: string

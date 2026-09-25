@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Check, ChevronDown, Inbox, Search } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
+  WORK_ORDER_APPROVAL_PILL_CLASS,
   WORK_ORDERS_I18N,
   WORK_ORDERS_LAYOUT_CLASS,
   workOrderPickerOptionClass,
@@ -204,6 +205,11 @@ export default function WorkOrderServicePickerModal({
                       <span className="min-w-0 flex-1">
                         <span className={WORK_ORDERS_LAYOUT_CLASS.pickerOptionNameRow}>
                           <span className={WORK_ORDERS_LAYOUT_CLASS.pickerOptionName}>{service.name}</span>
+                          {service.isRequiredApproval ? (
+                            <span className={WORK_ORDER_APPROVAL_PILL_CLASS.pending}>
+                              {t(WORK_ORDERS_I18N.pickerRequiresApproval)}
+                            </span>
+                          ) : null}
                           {isAlreadyOnTicket ? (
                             <span
                               className={WORK_ORDERS_LAYOUT_CLASS.pickerAlreadyOnTicket}
