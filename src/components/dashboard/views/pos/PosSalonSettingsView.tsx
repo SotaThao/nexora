@@ -1,5 +1,5 @@
 import { Navigate, NavLink, useLocation, useParams } from 'react-router-dom'
-import { Building2, Layers, List, ShieldCheck, Users, type LucideIcon } from 'lucide-react'
+import { Building2, Layers, List, MessageSquare, ShieldCheck, Users, type LucideIcon } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import {
   isPosSalonSettingsTab,
@@ -11,6 +11,7 @@ import PosRolesView from './PosRolesView'
 import PosServicesView from './PosServicesView'
 import PosStaffLevelsView from './PosStaffLevelsView'
 import PosStaffProfileView from './PosStaffProfileView'
+import PosSmsSettingsView from './sms/PosSmsSettingsView'
 
 type Props = {
   verificationStatus?: string
@@ -45,6 +46,7 @@ export default function PosSalonSettingsView({ verificationStatus, businessId }:
       label: t(`${TK}.tabs.salonInformation`),
       Icon: Building2,
     },
+    { id: PosSalonSettingsTab.Sms, label: t(`${TK}.tabs.sms`), Icon: MessageSquare },
     { id: PosSalonSettingsTab.Staff, label: t(`${TK}.tabs.staff`), Icon: Users },
     {
       id: PosSalonSettingsTab.Services,
@@ -120,6 +122,7 @@ export default function PosSalonSettingsView({ verificationStatus, businessId }:
         {settingsTab === PosSalonSettingsTab.Services ? <PosServicesView embedded /> : null}
         {settingsTab === PosSalonSettingsTab.RolesPermissions ? <PosRolesView embedded /> : null}
         {settingsTab === PosSalonSettingsTab.StaffLevels ? <PosStaffLevelsView embedded /> : null}
+        {settingsTab === PosSalonSettingsTab.Sms ? <PosSmsSettingsView businessId={businessId} /> : null}
       </div>
     </div>
   )

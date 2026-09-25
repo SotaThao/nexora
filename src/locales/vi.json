@@ -2852,6 +2852,14 @@
     "return_merchant": "Đi tới Bảng điều khiển Personal"
   },
   "errors": {
+    "pos_sms_body_required": "Vui lòng nhập nội dung tin nhắn.",
+    "pos_sms_body_too_long": "Nội dung tin nhắn quá dài.",
+    "pos_sms_placeholder_not_allowed": "Tin nhắn có trường không dùng được cho loại SMS này.",
+    "pos_sms_invalid_send_mode": "Vui lòng chọn cách gửi hợp lệ.",
+    "pos_sms_invalid_visit_link_ttl": "Vui lòng chọn một thời hạn link có sẵn.",
+    "pos_sms_test_phone_required": "Vui lòng nhập số điện thoại nhận tin thử.",
+    "pos_sms_test_phone_invalid": "Số điện thoại nhận tin thử không hợp lệ.",
+    "pos_sms_visit_link_not_found": "Link này không hợp lệ.",
     "TIP_AMOUNT_TOO_HIGH": "Số tiền tip quá lớn.",
     "TIP_CRYPTO_SYMBOL_REQUIRED": "Hãy chọn token VLINKPAY (USDV hoặc USDT) trước khi tip.",
     "TIP_CRYPTO_ADDRESS_NOT_FOUND": "Không tìm thấy địa chỉ ví VLINKPAY cho token đã chọn.",
@@ -3825,6 +3833,106 @@
             "description": "Hoàn tất onboarding để mở khóa POS cho doanh nghiệp của bạn.",
             "cta": "Hoàn Tất Onboarding"
           },
+          "PosSmsSettings": {
+            "loading": "Đang tải cài đặt SMS…",
+            "loadFailed": "Không tải được cài đặt SMS.",
+            "aiHub": {
+              "inactive": "Salon chưa có AI Hub đang hoạt động nên Welcome SMS và tin thử sẽ không được gửi. Bạn vẫn có thể lưu cài đặt.",
+              "noCredit": "Salon đã hết SMS Credit nên tin tự động sẽ bị bỏ qua cho tới khi nạp thêm. Bạn vẫn có thể lưu cài đặt."
+            },
+            "tabs": {
+              "ariaLabel": "Cài đặt SMS",
+              "welcome": "Welcome SMS",
+              "afterCheckout": "Sau Thanh Toán",
+              "link": "Cài Đặt Link"
+            },
+            "welcome": {
+              "title": "Thiết Lập Welcome SMS",
+              "previewTitle": "Khách sẽ thấy",
+              "enableLabel": "Bật tin chào mừng sau khi check-in",
+              "sendModeAutomatic": "Tự động sau khi check-in",
+              "save": "Lưu Thiết Lập Welcome"
+            },
+            "afterCheckout": {
+              "title": "Thiết Lập Sau Thanh Toán",
+              "previewTitle": "Xem trước tin sau thanh toán",
+              "enableLabel": "Bật tin nhắn sau khi thanh toán",
+              "sendModeAutomatic": "Tự động sau khi thanh toán",
+              "save": "Lưu Thiết Lập Sau Thanh Toán"
+            },
+            "sendMode": {
+              "label": "Cách gửi",
+              "manual": "Thủ công",
+              "manualNote": "Tin thủ công được chuẩn bị sẵn nhưng không tự gửi. Tin sẽ chờ nhân viên gửi."
+            },
+            "quickTemplate": {
+              "label": "Mẫu nhanh",
+              "welcomeMessage": "Lời chào",
+              "checkInConfirmed": "Xác nhận check-in",
+              "ticketReceipt": "Hóa đơn phiếu",
+              "reviewRequest": "Mời đánh giá",
+              "tipFollowUp": "Nhắc tip",
+              "privateFeedback": "Góp ý riêng",
+              "bookNextVisit": "Đặt lịch lần sau"
+            },
+            "message": {
+              "label": "Nội dung",
+              "insert": "Chèn:",
+              "placeholder": "Nhập nội dung tin nhắn…",
+              "estimateHint": "Ước tính theo thông tin khách mẫu; độ dài thực tế có thể khác",
+              "estimate": "{chars} ký tự — ~{segments} SMS ({encoding})",
+              "encodingGsm7": "GSM-7",
+              "encodingUnicode": "Unicode",
+              "required": "Vui lòng nhập nội dung.",
+              "multiSegmentWarning": "Tin này được gửi thành {segments} phần SMS và tốn {segments} credit cho mỗi khách."
+            },
+            "chips": {
+              "customerName": "Tên khách",
+              "shopName": "Tên tiệm",
+              "visitLink": "OneQR Link",
+              "phoneNumber": "Số điện thoại",
+              "ticketNumber": "Số phiếu",
+              "ticketTotal": "Tổng phiếu",
+              "reviewLink": "Link đánh giá",
+              "tipLink": "Link tip",
+              "feedbackLink": "Link góp ý",
+              "bookingLink": "Link đặt lịch",
+              "receiptLink": "Link hóa đơn"
+            },
+            "preview": {
+              "messages": "Tin nhắn",
+              "linkActive": "Link lượt ghé còn dùng được {period} sau khi thanh toán.",
+              "disabled": "Tin này đang tắt và sẽ không được gửi."
+            },
+            "marketingConsent": {
+              "title": "Cần đồng ý nhận marketing:",
+              "body": "Nếu OneQR hiển thị ưu đãi khuyến mãi, khách phải đồng ý nhận tin marketing. Nếu chưa đồng ý, cùng link đó chỉ mở menu OneQR thường và các quyền lợi hiện có của khách."
+            },
+            "customerProtection": {
+              "title": "Bảo vệ khách hàng:",
+              "body": "Không xin tip lần hai khi khách đã tip. Không tặng thưởng chỉ cho đánh giá công khai tích cực. Tin marketing cần có sự đồng ý hợp lệ."
+            },
+            "test": {
+              "phoneLabel": "Số điện thoại nhận tin thử",
+              "send": "Gửi thử",
+              "sending": "Đang gửi…",
+              "sent": "Đã gửi tin thử.",
+              "failed": "Không gửi được tin thử.",
+              "noAiHub": "Cần AI Hub đang hoạt động để gửi tin thử."
+            },
+            "link": {
+              "title": "Cài đặt link lượt ghé",
+              "description": "Một thời hạn chung cho OneQR link trong mọi SMS. Link dùng được suốt lượt ghé; đếm ngược từ lúc thanh toán hoặc hủy. Gửi lại link không làm reset thời hạn.",
+              "descriptionLinks": "Sau khi thanh toán, cùng link đó mở trang sau lượt ghé. Link Tip, Đánh giá, Góp ý hết hạn cùng lúc; link Hóa đơn và Đặt lịch không hết hạn.",
+              "availabilityLabel": "Thời hạn link",
+              "afterCheckoutOption": "{period} sau khi thanh toán",
+              "oneDay": "1 ngày",
+              "days": "{count} ngày",
+              "exampleOneDay": "Ví dụ: check-in lúc 10:00, thanh toán lúc 11:00 → link lượt ghé hết hạn lúc 11:00 ngày hôm sau.",
+              "exampleDays": "Ví dụ: check-in lúc 10:00, thanh toán lúc 11:00 → link lượt ghé hết hạn lúc 11:00, {count} ngày sau.",
+              "save": "Lưu cài đặt link"
+            }
+          },
           "PosSalonSettingsView": {
             "title": "Cài Đặt Salon",
             "description": "Quản lý thông tin salon, nhân viên, dịch vụ, vai trò và quyền.",
@@ -3834,7 +3942,8 @@
               "staff": "Nhân Viên",
               "services": "Dịch Vụ",
               "rolesPermissions": "Vai Trò & Quyền",
-              "staffLevels": "Cấp Độ Nhân Viên"
+              "staffLevels": "Cấp Độ Nhân Viên",
+              "sms": "Cài Đặt SMS"
             }
           },
           "PosGeneralSettingsView": {
@@ -8625,6 +8734,24 @@
     "stampExpired": "Đã hết hạn"
   },
   "public": {
+    "posVisit": {
+      "notFoundTitle": "Không tìm thấy link",
+      "notFoundDesc": "Link này không hợp lệ. Vui lòng kiểm tra lại tin nhắn bạn nhận được.",
+      "expiredTitle": "Link đã hết hạn",
+      "expiredSectionDesc": "Link này không còn dùng được. Bạn vẫn có thể xem trang của {business}.",
+      "openSalonPage": "Mở trang salon",
+      "expiredNotice": "Link lượt ghé này đã hết hạn.",
+      "leaveReview": "Đánh giá",
+      "addTip": "Thêm tip",
+      "privateFeedback": "Góp ý riêng",
+      "receipt": "Hóa đơn",
+      "thanks": "Cảm ơn {name} đã ghé!",
+      "ticket": "Phiếu {number}",
+      "checkedIn": "Chào {name}, bạn đã check-in",
+      "statusWaiting": "Đang chờ phục vụ",
+      "statusInService": "Đang được phục vụ",
+      "services": "Dịch vụ: {services}"
+    },
     "certificate": {
       "notFoundTitle": "Không có chứng chỉ nào mang mã này",
       "notFoundBody": "Không tìm thấy chứng chỉ khớp với {{code}}. Hãy đối chiếu lại với chứng chỉ đã in — chữ hoa chữ thường không quan trọng, nhưng từng dấu gạch ngang thì có.",
