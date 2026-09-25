@@ -4637,7 +4637,7 @@
             "addServicesButton": "+ Add service",
             "addServicesModalTitle": "Add Services",
             "addServicesModalClose": "Close",
-            "addCustomServiceButton": "Add custom service",
+            "addCustomServiceButton": "+ Custom",
             "ticketCustomServiceButton": "+ Custom",
             "customServiceAddTitle": "Custom Service",
             "customServiceEditTitle": "Edit Custom Service",
