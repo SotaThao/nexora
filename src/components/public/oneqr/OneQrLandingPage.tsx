@@ -48,11 +48,8 @@ function useScanSessionId(): string {
 }
 
 type OneQrLandingPageProps = {
-  // Set by the POS visit link page (/q/:token), which knows the slug from its token, not the URL.
   businessSlugOverride?: string
   topSlot?: ReactNode
-  // Sends the guest straight into this module once the landing loads; stays on the page if the
-  // salon has not enabled it.
   autoOpenModuleKey?: OneQrModuleKey
 }
 

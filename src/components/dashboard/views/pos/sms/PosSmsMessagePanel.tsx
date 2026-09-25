@@ -1,5 +1,3 @@
-// Shared editor for the Welcome SMS and After Checkout tabs. The parent remounts it (via `key`)
-// when saved settings change, so local form state always starts from the server's values.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   CalendarDays,
@@ -41,7 +39,6 @@ import { renderPosSmsEstimateText, renderPosSmsPreview } from './posSmsPreview'
 const K = 'components.dashboard.views.pos.PosSmsSettings'
 const ANALYZE_DEBOUNCE_MS = 300
 
-// Links that share the visit token and so expire per Link Settings. Receipt and Booking never do.
 const EXPIRING_LINKS: PosSmsPlaceholder[] = [
   PosSmsPlaceholder.VisitLink,
   PosSmsPlaceholder.ReviewLink,
@@ -111,8 +108,6 @@ export default function PosSmsMessagePanel({
     estimate.encoding === SmsEncoding.Ucs2 ? `${K}.message.encodingUnicode` : `${K}.message.encodingGsm7`,
   )
 
-  // Same estimate the AI Hub campaign composer shows, run with the server's sample values so the
-  // count matches the one returned with the settings.
   useEffect(() => {
     const requestId = ++analyzeRequestIdRef.current
     const timer = window.setTimeout(() => {

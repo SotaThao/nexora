@@ -1,7 +1,3 @@
-/**
- * posSmsSettingsRepository — POS > Salon Settings > SMS Settings (Welcome SMS, After Checkout,
- * Link Settings) and the Send Test action.
- */
 import httpClient from '../../lib/httpClient'
 import type {
   PosSmsSettingsApiDto,

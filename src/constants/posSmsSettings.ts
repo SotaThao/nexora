@@ -1,10 +1,5 @@
-// Mirrors of the backend enums behind POS > Salon Settings > SMS Settings, plus the editor's
-// fixed content (insert chips, quick templates). Wait Care and Automation Settings are deferred
-// to a later ticket, so they have no entries here.
-
 export const PosSmsSendMode = {
   Automatic: 'Automatic',
-  // Only a setting for now: messages wait as PendingManual until the manual-send screen exists.
   Manual: 'Manual',
 } as const
 export type PosSmsSendMode = (typeof PosSmsSendMode)[keyof typeof PosSmsSendMode]
@@ -30,7 +25,6 @@ export const PosVisitLandingMode = {
 } as const
 export type PosVisitLandingMode = (typeof PosVisitLandingMode)[keyof typeof PosVisitLandingMode]
 
-// The `/q/:token/:section` shortcuts the After Checkout message links to.
 export const PosVisitSection = {
   Review: 'review',
   Tip: 'tip',
@@ -43,7 +37,6 @@ export const POS_VISIT_ROUTE = {
   sectionPath: '/q/:token/:section',
 } as const
 
-// Tokens exactly as the backend renders them. The chip label is translated; the token is not.
 export const PosSmsPlaceholder = {
   CustomerName: '[Customer Name]',
   SalonName: '[Salon Name]',
@@ -80,7 +73,6 @@ export const POS_SMS_INSERT_CHIPS: Record<PosSmsTemplateType, PosSmsInsertChip[]
   ],
 }
 
-// Quick templates are English starting points; whatever the manager types is what gets sent.
 export type PosSmsQuickTemplate = { id: string; labelKey: string; body: string }
 
 export const POS_SMS_QUICK_TEMPLATES: Record<PosSmsTemplateType, PosSmsQuickTemplate[]> = {
@@ -125,7 +117,6 @@ export const POS_SMS_QUICK_TEMPLATES: Record<PosSmsTemplateType, PosSmsQuickTemp
   ],
 }
 
-// Example values for the phone preview. The backend fills real ones when it sends.
 export const POS_SMS_PREVIEW_VALUES: Record<PosSmsPlaceholder, string> = {
   [PosSmsPlaceholder.CustomerName]: 'Sarah',
   [PosSmsPlaceholder.SalonName]: '',

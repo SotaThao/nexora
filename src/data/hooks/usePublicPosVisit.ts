@@ -8,7 +8,6 @@ export function usePublicPosVisit(token?: string) {
     queryKey: qk.publicPosVisit(token),
     queryFn: () => publicPosVisitRepository.getVisit(token as string),
     enabled: Boolean(token),
-    // An unknown token is a 404 that stays a 404.
     retry: false,
   })
 }

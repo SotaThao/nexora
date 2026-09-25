@@ -1,5 +1,3 @@
-// Test phone number + Send Test. Prefilled with the salon's business phone; whatever is typed
-// here is used for this test only and is never saved to the salon profile.
 import { useState } from 'react'
 import { Send } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
@@ -17,7 +15,6 @@ import type { PosSmsPhoneApiDto } from '../../../../../types/posSms'
 
 const K = 'components.dashboard.views.pos.PosSmsSettings'
 
-// The backend answers with this when the salon has no AI Hub, instead of sending unmetered.
 const NO_AI_HUB_ERROR = 'NoAiHub'
 
 type Props = {

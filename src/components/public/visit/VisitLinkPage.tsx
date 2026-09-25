@@ -1,6 +1,3 @@
-// `/q/:token` and `/q/:token/:section` — the personalized OneQR link from POS SMS. The page is
-// the salon's OneQR page plus a block about this visit; what the block shows comes from the
-// server-side visit state, never from the URL.
 import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Clock, FileText, Loader2, MessageCircle, Star, Wallet } from 'lucide-react'
@@ -14,7 +11,6 @@ import type { PosVisitApiDto } from '../../../types/posSms'
 
 const K = 'public.posVisit'
 
-// Private feedback goes through the Review module: 1–3 stars already route to the private form.
 const SECTION_MODULE: Record<PosVisitSection, OneQrModuleKey> = {
   [PosVisitSection.Review]: OneQrModuleKey.Review,
   [PosVisitSection.Tip]: OneQrModuleKey.TipAndPay,
@@ -50,7 +46,6 @@ export default function VisitLinkPage() {
   const isExpired = data.mode === PosVisitLandingMode.Expired
   const hasSection = isPosVisitSection(section)
 
-  // A Tip / Review / Feedback link expires with the visit link and must not open the flow.
   if (hasSection && isExpired) {
     return (
       <CenteredMessage>

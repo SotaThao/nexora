@@ -1,7 +1,3 @@
-/**
- * TanStack Query hooks for POS > Salon Settings > SMS Settings. All three tabs read the same
- * settings query, so a save on one tab is immediately visible on the others.
- */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import posSmsSettingsRepository from '../repositories/posSmsSettings'

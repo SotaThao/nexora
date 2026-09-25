@@ -146,7 +146,6 @@ export const errorCodeToI18nKey = {
   HOLIDAY_DATE_IN_PAST: 'errors.holiday_date_in_past',
   HOLIDAY_ADJUSTED_TIME_ALREADY_PASSED: 'errors.holiday_adjusted_time_already_passed',
 
-  // POS SMS Settings
   POS_SMS_BODY_REQUIRED: 'errors.pos_sms_body_required',
   POS_SMS_BODY_TOO_LONG: 'errors.pos_sms_body_too_long',
   POS_SMS_PLACEHOLDER_NOT_ALLOWED: 'errors.pos_sms_placeholder_not_allowed',
