@@ -179,6 +179,115 @@ body:has(.pos-front-desk-action-surface)
     padding-bottom: calc(1.5rem + var(--app-safe-area-bottom));
   }
 
+  /*
+   * Mobile sidebar overlay — keyframe slide + backdrop fade (not CSS transition).
+   * Keyframes run on first paint when the node mounts with `.is-open`, which is
+   * more reliable on mobile Safari than transition + delayed class toggle.
+   * Durations must match MOBILE_SIDEBAR_DURATION_MS / MOBILE_SIDEBAR_EXIT_MS.
+   * z-index 130 sits above header messenger (100) and elevated sticky header (110).
+   */
+  .mobile-sidebar-overlay {
+    --mobile-sidebar-open-duration: 360ms;
+    --mobile-sidebar-exit-duration: 280ms;
+    --mobile-sidebar-open-ease: cubic-bezier(0.32, 0.72, 0, 1);
+    --mobile-sidebar-exit-ease: cubic-bezier(0.4, 0, 1, 1);
+    position: fixed;
+    inset: 0;
+    z-index: 130;
+    overflow: hidden;
+    pointer-events: auto;
+  }
+
+  .mobile-sidebar-overlay__backdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    padding: 0;
+    @apply bg-nexoraText/60;
+    opacity: 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-sidebar-overlay.is-open .mobile-sidebar-overlay__backdrop {
+    animation: mobile-sidebar-backdrop-in var(--mobile-sidebar-open-duration)
+      var(--mobile-sidebar-open-ease) both;
+  }
+
+  .mobile-sidebar-overlay.is-closing .mobile-sidebar-overlay__backdrop {
+    animation: mobile-sidebar-backdrop-out var(--mobile-sidebar-exit-duration)
+      var(--mobile-sidebar-exit-ease) both;
+  }
+
+  .mobile-sidebar-overlay__panel {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    max-width: 100%;
+    transform: translate3d(-100%, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .mobile-sidebar-overlay.is-open .mobile-sidebar-overlay__panel {
+    animation: mobile-sidebar-panel-in var(--mobile-sidebar-open-duration)
+      var(--mobile-sidebar-open-ease) both;
+  }
+
+  .mobile-sidebar-overlay.is-closing .mobile-sidebar-overlay__panel {
+    animation: mobile-sidebar-panel-out var(--mobile-sidebar-exit-duration)
+      var(--mobile-sidebar-exit-ease) both;
+  }
+
+  @keyframes mobile-sidebar-backdrop-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes mobile-sidebar-backdrop-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes mobile-sidebar-panel-in {
+    from {
+      transform: translate3d(-100%, 0, 0);
+    }
+    to {
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  @keyframes mobile-sidebar-panel-out {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-100%, 0, 0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-sidebar-overlay {
+      --mobile-sidebar-open-duration: 1ms;
+      --mobile-sidebar-exit-duration: 1ms;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .mobile-sidebar-overlay {
+      display: none;
+    }
+  }
+
   /* Docks the staff beep surfaces (the sheet and its minimised bell) just above StaffBottomNav:
      68px of nav, plus the home indicator, plus a gap. Both surfaces share it, and the lg override
      below drops the nav clearance once the sidebar layout takes over.

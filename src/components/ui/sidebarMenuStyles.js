@@ -4,7 +4,7 @@ export const SIDEBAR_SHELL_CLASS =
   'fixed inset-y-0 left-0 z-30 hidden w-72 flex-col bg-nexoraSidebar px-5 py-7 text-white lg:flex'
 
 export const SIDEBAR_MOBILE_DRAWER_CLASS =
-  'mobile-drawer-safe relative flex h-full w-[min(84vw,320px)] flex-col bg-nexoraSidebar px-5 text-white shadow-2xl animate-scaleIn'
+  'mobile-drawer-safe relative flex h-full w-[min(84vw,320px)] flex-col bg-nexoraSidebar px-5 text-white shadow-2xl'
 
 export const SIDEBAR_NAV_CLASS = 'mt-6 flex-1 space-y-1.5 overflow-y-auto pr-1'
 
