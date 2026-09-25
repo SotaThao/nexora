@@ -30,6 +30,7 @@ import type {
   OneQrLandingBusiness,
   OneQrLandingModule,
 } from '../../../types/oneQr'
+import { rememberOneQrReturnAudience } from '../../../utils/oneQrReturnAudience'
 
 /**
  * The session id identifies one scan for analytics dedupe. It is generated in
@@ -70,6 +71,11 @@ export default function OneQrLandingPage() {
     viewAs,
   })
   const trackClick = useTrackOneQrModuleClick()
+  const landingAudience = data?.audience
+
+  useEffect(() => {
+    if (businessSlug && landingAudience) rememberOneQrReturnAudience(businessSlug, landingAudience)
+  }, [businessSlug, landingAudience])
 
   useEffect(() => {
     document.body.classList.add('oneqr-landing-active')
