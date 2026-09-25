@@ -4615,6 +4615,7 @@
             "enlargeQr": "Enlarge QR",
             "closeQr": "Close QR",
             "markAsReceived": "Mark as received",
+            "paymentMethodUnavailable": "This payment method is temporarily unavailable. Please choose another one.",
             "paymentMethod": {
               "Card": "Card",
               "Cash": "Cash",
