@@ -4,6 +4,7 @@ import { Search, X } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useMerchantStaff, StatusFilter } from '../../data/hooks/useMerchantStaff'
+import { COMMUNITY_CHAT_GROUP_TITLE_MAX_LENGTH } from '../../constants/communityChat'
 import { useCreateCommunityChatSession } from '../../data/hooks/useCommunityChat'
 import { getErrorMessage } from '../../data/errorCodes'
 import type { CommunityChatSession } from '../../types/communityChat'
@@ -23,8 +24,6 @@ import {
 const CREATE_GROUP_STAFF_PAGE_SIZE = 100
 /** Selecting only 1 staff would make the backend dedupe/create a OneOnOne session, not a Group — block earlier. */
 const CREATE_GROUP_MIN_MEMBERS = 2
-/** Matches `title` limits on `POST /sessions` and `PUT /sessions/{id}` (see US-102/US-103). */
-const CREATE_GROUP_NAME_MAX_LENGTH = 200
 const CREATE_GROUP_I18N = `${HEADER_MESSAGES_I18N}.createGroupModal` as const
 
 interface CreateCommunityChatGroupModalProps {
@@ -60,6 +59,9 @@ export default function CreateCommunityChatGroupModal({
     isError: isStaffError,
   } = useMerchantStaff({
     statusFilter: StatusFilter.Active,
+    // Filter local staff out server-side — salons can have hundreds of local staff, which pushed
+    // account staff past the single fetched page.
+    isLocalStaff: false,
     pageSize: CREATE_GROUP_STAFF_PAGE_SIZE,
     enabled: open,
   })
@@ -143,21 +145,21 @@ export default function CreateCommunityChatGroupModal({
           </button>
         </div>
 
-        <div className="shrink-0 border-b border-nexoraBorder px-4 py-3">
+        <div className="shrink-0 border-b border-nexoraBorder px-4 py-2">
           <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-nexoraSubtle">
             {t(`${CREATE_GROUP_I18N}.groupNameLabel`)}
           </label>
           <input
             type="text"
             value={groupName}
-            maxLength={CREATE_GROUP_NAME_MAX_LENGTH}
+            maxLength={COMMUNITY_CHAT_GROUP_TITLE_MAX_LENGTH}
             onChange={(event) => setGroupName(event.target.value)}
             placeholder={t(`${CREATE_GROUP_I18N}.groupNamePlaceholder`)}
-            className="w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm text-nexoraText outline-none focus:border-nexoraBrand"
+            className="w-full rounded-lg border border-nexoraBorder px-3 py-1.5 text-sm text-nexoraText outline-none focus:border-nexoraBrand"
           />
         </div>
 
-        <div className="shrink-0 border-b border-nexoraBorder px-4 py-2.5">
+        <div className="shrink-0 border-b border-nexoraBorder px-4 py-2">
           <div className="relative">
             <Search
               className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-nexoraSubtle"
@@ -169,7 +171,7 @@ export default function CreateCommunityChatGroupModal({
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder={t(`${CREATE_GROUP_I18N}.searchPlaceholder`)}
               aria-label={t(`${CREATE_GROUP_I18N}.searchPlaceholder`)}
-              className="w-full rounded-lg border border-nexoraBorder py-2 pl-8 pr-3 text-sm text-nexoraText outline-none focus:border-nexoraBrand"
+              className="w-full rounded-lg border border-nexoraBorder py-1.5 pl-8 pr-3 text-sm text-nexoraText outline-none focus:border-nexoraBrand"
             />
           </div>
         </div>

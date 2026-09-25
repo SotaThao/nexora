@@ -307,7 +307,7 @@
 }
 
 .header-message-chat-head-copy {
-  @apply min-w-0;
+  @apply flex min-w-0 items-center gap-1;
 }
 
 .header-message-chat-head-subtitle {
@@ -496,7 +496,7 @@ html.header-messages-mobile-open header.sticky {
 }
 
 .header-message-chat-head-main {
-  @apply flex min-w-0 items-center gap-2;
+  @apply flex min-w-0 flex-1 items-center gap-2;
 }
 
 .header-message-chat-head-avatar {
@@ -504,7 +504,20 @@ html.header-messages-mobile-open header.sticky {
 }
 
 .header-message-chat-head-name {
-  @apply truncate text-sm font-bold text-nexoraText;
+  /* block + min-w-0: `truncate` does nothing on an inline span, so long group names overflowed onto the call/close buttons (#1827). */
+  @apply block min-w-0 truncate text-sm font-bold text-nexoraText;
+}
+
+.header-message-chat-rename-btn {
+  @apply inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-nexoraSubtle transition hover:bg-nexoraSurfaceMuted hover:text-nexoraText;
+}
+
+.header-message-chat-rename-form {
+  @apply flex min-w-0 flex-1 items-center gap-1;
+}
+
+.header-message-chat-rename-input {
+  @apply min-w-0 flex-1 rounded-lg border border-nexoraBorder px-2 py-1 text-sm font-semibold text-nexoraText outline-none focus:border-nexoraBrand disabled:opacity-60;
 }
 
 .header-message-chat-head-actions {
