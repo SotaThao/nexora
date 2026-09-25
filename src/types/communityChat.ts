@@ -106,6 +106,12 @@ export interface CommunityChatTypingEvent {
   chatSessionId: string
 }
 
+/** Server → client: ChatSessionRenamed event (group title changed by an owner/manager). */
+export interface CommunityChatSessionRenamedEvent {
+  chatSessionId: string
+  title: string
+}
+
 /** Server → client: MessageDeleted event. */
 export interface CommunityChatMessageDeletedEvent {
   messageId: string

@@ -6,6 +6,7 @@ import {
   Lock,
   MessagesSquare,
   Minus,
+  Pencil,
   Phone,
   Send,
   Sparkles,
@@ -14,13 +15,14 @@ import {
   Video,
   X,
 } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactElement } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type ReactElement } from 'react'
 import { createPortal } from 'react-dom'
 import { formatCallDuration } from '../../calls/callFormat'
 import { buildCallMediaConstraints } from '../../calls/webrtc'
 import useCall from '../../calls/useCall'
 import {
   CommunityChatType,
+  COMMUNITY_CHAT_GROUP_TITLE_MAX_LENGTH,
   COMMUNITY_CHAT_IMAGE_ACCEPT,
   COMMUNITY_CHAT_MAX_MESSAGE_LENGTH,
   isAllowedCommunityChatImageFile,
@@ -30,6 +32,7 @@ import { CommunityCallEndReason, CommunityCallType } from '../../constants/commu
 import { useCommunityChatMessagesInfinite } from '../../data/hooks/useCommunityChatMessageThread'
 import {
   useMarkCommunityChatSessionRead,
+  useRenameCommunityChatSession,
   useSendCommunityChatImage,
   useSendCommunityChatMessage,
 } from '../../data/hooks/useCommunityChat'
@@ -84,6 +87,8 @@ interface HeaderMessageChatWindowProps {
   ensureSessionId?: () => Promise<string>
   /** Cover the whole viewport including app header (staff page open on mobile). */
   immersive?: boolean
+  /** Salon owner can rename group chats from the header. */
+  canRenameGroup?: boolean
   onToggleMinimize: () => void
   onClose: () => void
   onBack?: () => void
@@ -295,6 +300,7 @@ function HeaderMessageChatWindow({
   isConversationLoading = false,
   ensureSessionId,
   immersive = false,
+  canRenameGroup = false,
   onToggleMinimize,
   onClose,
   onBack,
@@ -307,10 +313,13 @@ function HeaderMessageChatWindow({
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null)
   const [isSending, setIsSending] = useState(false)
   const [menuMessageId, setMenuMessageId] = useState<string | null>(null)
+  const [isRenaming, setIsRenaming] = useState(false)
+  const [renameDraft, setRenameDraft] = useState('')
 
   const sessionId = conversation.id
   const isPendingSession = isPendingCommunityChatSessionId(sessionId)
   const isGroupChat = conversation.chatType === CommunityChatType.Group
+  const canRename = canRenameGroup && isGroupChat && !isPendingSession
 
   const {
     messages: rawMessages,
@@ -326,6 +335,7 @@ function HeaderMessageChatWindow({
   const sendMessageMutation = useSendCommunityChatMessage(isPendingSession ? '' : sessionId)
   const sendImageMutation = useSendCommunityChatImage(isPendingSession ? '' : sessionId)
   const markReadMutation = useMarkCommunityChatSessionRead()
+  const renameMutation = useRenameCommunityChatSession(isPendingSession ? '' : sessionId)
   const { deletingMessageId, deleteMessage } = useCommunityChatDeleteMessage({
     sessionId: isPendingSession ? null : sessionId,
     onDeleted: () => setMenuMessageId(null),
@@ -433,6 +443,7 @@ function HeaderMessageChatWindow({
     setDraft('')
     setPreviewImageUrl(null)
     setMenuMessageId(null)
+    setIsRenaming(false)
   }, [conversation.id])
 
   useEffect(() => {
@@ -485,6 +496,38 @@ function HeaderMessageChatWindow({
     } finally {
       setIsSending(false)
     }
+  }
+
+  const startRename = () => {
+    setRenameDraft(conversation.name)
+    setIsRenaming(true)
+  }
+
+  const submitRename = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (renameMutation.isPending) return
+
+    const title = renameDraft.trim()
+    if (!title) {
+      showToast(t(`${chatTk}.renameGroupEmpty`), 'error')
+      return
+    }
+    if (title === conversation.name) {
+      setIsRenaming(false)
+      return
+    }
+
+    try {
+      await renameMutation.mutateAsync({ title })
+      showToast(t(`${chatTk}.renameGroupSuccess`), 'success')
+      setIsRenaming(false)
+    } catch (error) {
+      showToast(resolveTranslatedApiError(t, error, `${chatTk}.renameGroupError`), 'error')
+    }
+  }
+
+  const handleRenameKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape') setIsRenaming(false)
   }
 
   const handleMarkAsRead = () => {
@@ -801,9 +844,56 @@ function HeaderMessageChatWindow({
           <span className="header-message-chat-head-avatar" aria-hidden="true">
             {conversation.initials}
           </span>
-          <div className="header-message-chat-head-copy">
-            <span className="header-message-chat-head-name">{conversation.name}</span>
-          </div>
+          {isRenaming ? (
+            <form className="header-message-chat-rename-form" onSubmit={submitRename}>
+              <input
+                type="text"
+                value={renameDraft}
+                maxLength={COMMUNITY_CHAT_GROUP_TITLE_MAX_LENGTH}
+                onChange={(event) => setRenameDraft(event.target.value)}
+                onKeyDown={handleRenameKeyDown}
+                placeholder={t(`${chatTk}.renameGroupPlaceholder`)}
+                aria-label={t(`${chatTk}.renameGroupPlaceholder`)}
+                className="header-message-chat-rename-input"
+                disabled={renameMutation.isPending}
+                autoFocus
+              />
+              <button
+                type="submit"
+                className="header-message-chat-icon-btn"
+                aria-label={t(`${chatTk}.renameGroupSave`)}
+                title={t(`${chatTk}.renameGroupSave`)}
+                disabled={renameMutation.isPending}
+              >
+                <Check className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className="header-message-chat-icon-btn"
+                aria-label={t(`${chatTk}.renameGroupCancel`)}
+                title={t(`${chatTk}.renameGroupCancel`)}
+                disabled={renameMutation.isPending}
+                onClick={() => setIsRenaming(false)}
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </form>
+          ) : (
+            <div className="header-message-chat-head-copy">
+              <span className="header-message-chat-head-name" title={conversation.name}>{conversation.name}</span>
+              {canRename ? (
+                <button
+                  type="button"
+                  className="header-message-chat-rename-btn"
+                  aria-label={t(`${chatTk}.renameGroup`)}
+                  title={t(`${chatTk}.renameGroup`)}
+                  onClick={startRename}
+                >
+                  <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+              ) : null}
+            </div>
+          )}
         </div>
 
         {isFloating ? (

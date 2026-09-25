@@ -50,12 +50,13 @@ export const qk = {
   kybRegister:              () => ['userProfile', 'kybRegister'],
 
   // Merchant Staff Management
-  merchantStaff:       (statusFilter?: string, pageNumber?: number, pageSize?: number, keyword?: string) => {
+  merchantStaff:       (statusFilter?: string, pageNumber?: number, pageSize?: number, keyword?: string, isLocalStaff?: boolean) => {
     const key: unknown[] = ['merchantStaff']
     if (statusFilter) key.push(statusFilter)
     if (pageNumber !== undefined || pageSize !== undefined || keyword) {
       key.push({ pageNumber, pageSize, keyword: keyword?.trim() || '' })
     }
+    if (isLocalStaff !== undefined) key.push({ isLocalStaff })
     return key
   },
   merchantStaffSearch: (q)     => ['merchantStaff', 'search', q],

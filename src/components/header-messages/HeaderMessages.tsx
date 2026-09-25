@@ -144,6 +144,7 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
   // US-111 V1 — only Merchant Owner can create groups; Staff-Manager parity needs a
   // "list my business coworkers" endpoint the Staff API doesn't expose yet (see US-111 Out of Scope).
   const canCreateGroup = directoryRole === MessengerDirectoryRole.Owner
+  const canRenameGroup = directoryRole === MessengerDirectoryRole.Owner
   const isDesktop = variant === HeaderMessagesVariant.Desktop
   const isMobileUI = useIsMobileUI()
   const {
@@ -252,6 +253,19 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
     )),
     [dedupedChatSessions, currentUserProfileId, listPreviewKey, titleMapOptions],
   )
+
+  const conversationById = useMemo(
+    () => new Map(conversations.map((conversation) => [conversation.id, conversation])),
+    [conversations],
+  )
+
+  // Open windows hold a snapshot taken when opened — take the title from the (refetched) session
+  // list so a group rename shows up in the window header.
+  const withLiveTitle = useCallback((conversation: HeaderMessageConversation): HeaderMessageConversation => {
+    const live = conversationById.get(conversation.id)
+    if (!live || live.name === conversation.name) return conversation
+    return { ...conversation, name: live.name, initials: live.initials }
+  }, [conversationById])
 
   useEffect(() => {
     function isDesktopViewport(): boolean {
@@ -820,7 +834,8 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
         mobileActiveConversation ? (
           <HeaderMessageChatWindow
             key={mobileActiveConversation.id}
-            conversation={mobileActiveConversation}
+            conversation={withLiveTitle(mobileActiveConversation)}
+            canRenameGroup={canRenameGroup}
             currentUserProfileId={currentUserProfileId}
             layout={HeaderMessageChatLayout.Fullscreen}
             immersive={mobileImmersiveChat}
@@ -852,7 +867,8 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
       return (
         <HeaderMessageChatWindow
           key={conversation.id}
-          conversation={conversation}
+          conversation={withLiveTitle(conversation)}
+          canRenameGroup={canRenameGroup}
           currentUserProfileId={currentUserProfileId}
           layout={HeaderMessageChatLayout.Floating}
           minimized={sessionItem.minimized}
