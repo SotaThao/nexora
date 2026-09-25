@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Lock, Sparkles } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import OneQrModuleIcon from '../../oneqr/OneQrModuleIcon'
+import { resolveOneQrModuleIconColor } from '../../oneqr/oneQrModuleIconColor'
 import { OneQrIdentityPolicy } from '../../../constants/oneQr'
 import type { OneQrModuleCatalogItem } from '../../../types/oneQr'
 import {
@@ -89,7 +90,9 @@ export default function OneQrPreview({
                       key={module.localId}
                       className="flex min-h-[76px] flex-col items-center justify-center gap-1.5 rounded-2xl border border-nexoraBorder bg-white px-2 py-3 text-center"
                     >
-                      <span className="grid h-8 w-8 place-items-center rounded-lg bg-nexoraSurfaceMuted text-nexoraBrand">
+                      <span
+                        className={`grid h-8 w-8 place-items-center rounded-lg ${resolveOneQrModuleIconColor(module.moduleKey)}`}
+                      >
                         <OneQrModuleIcon
                           name={resolveModuleIcon(module, catalog)}
                           iconUrl={resolveModuleIconUrl(module)}

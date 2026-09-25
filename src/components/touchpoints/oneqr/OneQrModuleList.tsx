@@ -17,6 +17,7 @@ import { AlertTriangle, GripVertical, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import ToggleSwitch from '../../ui/ToggleSwitch'
 import OneQrModuleIcon from '../../oneqr/OneQrModuleIcon'
+import { resolveOneQrModuleIconColor } from '../../oneqr/oneQrModuleIconColor'
 import { OneQrModuleKey } from '../../../constants/oneQr'
 import type { OneQrModuleCatalogItem } from '../../../types/oneQr'
 import {
@@ -155,7 +156,9 @@ function SortableModuleRow({
         <GripVertical className="h-4 w-4" aria-hidden />
       </button>
 
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-nexoraSurfaceMuted text-nexoraBrand sm:h-9 sm:w-9">
+      <span
+        className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg sm:h-9 sm:w-9 ${resolveOneQrModuleIconColor(module.moduleKey)}`}
+      >
         <OneQrModuleIcon name={icon} iconUrl={iconUrl} />
       </span>
 
