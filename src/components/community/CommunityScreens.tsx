@@ -1,6 +1,5 @@
 import {
   BadgeCheck,
-  Briefcase,
   Calendar,
   ChevronLeft,
   AlertCircle,
@@ -9,12 +8,10 @@ import {
   GraduationCap,
   Heart,
   Image as ImageIcon,
-  LayoutGrid,
   Link as LinkIcon,
   Loader2,
   LockKeyhole,
   MapPin,
-  Megaphone,
   MessageCircle,
   Phone,
   Plus,
@@ -275,12 +272,12 @@ function CommunityFeed({ community, withComposer = false, announcementOnly = fal
 // a reference screenshot exactly, per user request). `id` values are unchanged
 // (still drive tab routing/matching via ?tab=), only the presentation changed.
 const TABS = [
-  { id: 'feed', label: 'Bảng tin', icon: MessageCircle },
-  { id: 'groups', label: 'Nhóm', icon: Users },
-  { id: 'events', label: 'Sự kiện', icon: Calendar },
-  { id: 'announcements', label: 'Thông báo', icon: Megaphone },
-  { id: 'learning', label: 'Học tập', icon: GraduationCap },
-  { id: 'jobs', label: 'Việc làm', icon: Briefcase },
+  { id: 'feed', label: 'Bảng tin' },
+  { id: 'groups', label: 'Nhóm' },
+  { id: 'events', label: 'Sự kiện' },
+  { id: 'announcements', label: 'Thông báo' },
+  { id: 'learning', label: 'Học tập' },
+  { id: 'jobs', label: 'Việc làm' },
 ]
 
 function CommunityTabs({ activeTab, onChange }: { activeTab: string; onChange: (tab: string) => void }) {
@@ -289,7 +286,6 @@ function CommunityTabs({ activeTab, onChange }: { activeTab: string; onChange: (
       <nav className="flex items-center gap-2.5 py-1" aria-label="Tabs">
         {TABS.map((tab) => {
           const isActive = activeTab === tab.id
-          const Icon = tab.icon
           return (
             <button
               key={tab.id}
@@ -304,13 +300,16 @@ function CommunityTabs({ activeTab, onChange }: { activeTab: string; onChange: (
               // for pill/tile buttons (SelectTechniciansModal.tsx) rather than
               // GlobalDemoQuickNav.tsx's colored-tint style, which doesn't
               // match the reference image's plain white inactive pills.
-              className={`inline-flex shrink-0 min-h-11 items-center gap-2 whitespace-nowrap rounded-2xl border px-4 text-sm font-bold shadow-nexora-card transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2 ${
+              // Text-only (S5, user 2026-09-24): the tab strip previously paired
+              // an icon with each label; dropped to plain text, no auto-center/
+              // fade — accepted risk that the active tab can sit off-screen on
+              // very narrow viewports (see plan's S5 standing decision).
+              className={`inline-flex shrink-0 min-h-11 items-center whitespace-nowrap rounded-2xl border px-4 text-sm font-bold shadow-nexora-card transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2 ${
                 isActive
                   ? `border-transparent text-white ${gradientClass}`
                   : 'border-nexoraBorder bg-nexoraSurface text-nexoraText hover:border-nexoraBrand'
               }`}
             >
-              <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-white' : 'text-nexoraBrand'}`} aria-hidden="true" />
               {tab.label}
             </button>
           )
@@ -450,41 +449,35 @@ export function CommunityHome() {
               <DemoLearningList />
             ) : currentTab === 'jobs' ? (
               <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-3 shadow-nexora-card">
-                  <div className="inline-flex rounded-xl bg-nexoraSurfaceMuted p-1 border border-nexoraBorder">
-                    {/* min-h-11 (44px): touch-target audit, round 10 — these
-                        previously relied on px-4 py-2 alone, which comes in
-                        under the 44px minimum. */}
-                    <button
-                      type="button"
-                      onClick={() => setSearchParams({ tab: 'jobs', jobMode: 'b' }, { replace: true })}
-                      className={`inline-flex min-h-11 items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all ${
-                        jobMode !== 'ai'
-                          ? 'bg-nexoraSurface text-nexoraBrand shadow-sm font-black'
-                          : 'text-nexoraMuted hover:text-nexoraText'
-                      }`}
-                    >
-                      <LayoutGrid className="h-4 w-4" aria-hidden="true" />
-                      Bảng tin việc làm
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSearchParams({ tab: 'jobs', jobMode: 'ai' }, { replace: true })}
-                      className={`inline-flex min-h-11 items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all ${
-                        jobMode === 'ai'
-                          ? 'bg-nexoraSurface text-nexoraBrand shadow-sm font-black'
-                          : 'text-nexoraMuted hover:text-nexoraText'
-                      }`}
-                    >
-                      <Sparkles className="h-4 w-4" aria-hidden="true" />
-                      Theo AI gợi ý tuyển thợ
-                    </button>
-                  </div>
-                  <span className="text-xs font-semibold text-nexoraMuted px-1">
-                    {jobMode === 'ai'
-                      ? 'AI gợi ý: Gợi ý ứng viên nail ẩn danh phù hợp salon'
-                      : 'Bảng tin việc làm & xem chi tiết bài đăng'}
-                  </span>
+                {/* Compact segmented control (round 2 layout pass) — replaces the
+                    earlier bordered card + caption line: same two buttons, same
+                    onClick/setSearchParams and same jobMode-driven visibility
+                    logic, just restyled so it sits directly above the toolbar
+                    instead of its own card. min-h-11 (44px): touch-target audit,
+                    round 10. */}
+                <div className="mb-2 inline-flex rounded-xl bg-nexoraSurfaceMuted p-1">
+                  <button
+                    type="button"
+                    onClick={() => setSearchParams({ tab: 'jobs', jobMode: 'b' }, { replace: true })}
+                    className={`min-h-11 whitespace-nowrap rounded-lg px-3 text-sm font-bold transition-all ${
+                      jobMode !== 'ai'
+                        ? 'bg-nexoraSurface text-nexoraBrand shadow-sm'
+                        : 'text-nexoraMuted hover:text-nexoraText'
+                    }`}
+                  >
+                    Bảng tin
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSearchParams({ tab: 'jobs', jobMode: 'ai' }, { replace: true })}
+                    className={`min-h-11 whitespace-nowrap rounded-lg px-3 text-sm font-bold transition-all ${
+                      jobMode === 'ai'
+                        ? 'bg-nexoraSurface text-nexoraBrand shadow-sm'
+                        : 'text-nexoraMuted hover:text-nexoraText'
+                    }`}
+                  >
+                    ✦ AI gợi ý
+                  </button>
                 </div>
 
                 {/* Both panels stay mounted always, toggled via `hidden` (same
