@@ -2,7 +2,8 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { LayoutGrid } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
-import { buildOneQrPath } from '../../constants/oneQr'
+import { buildOneQrPath, buildOneQrPathFor } from '../../constants/oneQr'
+import { readOneQrReturnAudience } from '../../utils/oneQrReturnAudience'
 
 const VARIANT_CLASSNAME = {
   default: 'w-full py-3.5 bg-gradient-to-r from-nexoraBrand to-indigo-600 hover:opacity-95 active:scale-[0.98] transition-all text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-indigo-600/25 inline-flex items-center justify-center gap-2',
@@ -22,9 +23,11 @@ export default function BackToOneQrMenuButton({
 
   if (!businessSlug) return null
 
+  const returnAudience = readOneQrReturnAudience()
+
   return (
     <Link
-      to={buildOneQrPath(businessSlug)}
+      to={returnAudience ? buildOneQrPathFor(businessSlug, returnAudience) : buildOneQrPath(businessSlug)}
       className={`${VARIANT_CLASSNAME[variant]} ${className}`}
     >
       <LayoutGrid className="h-4 w-4" />
