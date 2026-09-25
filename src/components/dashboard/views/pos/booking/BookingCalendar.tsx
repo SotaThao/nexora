@@ -177,22 +177,43 @@ export default function BookingCalendar({
 
   const calendarBookings = useMemo<BookingCalendarSource[]>(
     () =>
-      bookings.map((booking) => ({
-        id: booking.bookingId,
-        name: booking.customerName,
-        // A booking can carry several service-line technicians. The calendar represents the
-        // appointment in its primary technician column; the event itself still lists all services.
-        tech: booking.technicianNames[0] ?? '',
-        date: bookingDateKey(booking.scheduledAt, booking.source),
-        services: booking.serviceNames,
-        statusLabel: t(p + statusLabelKey(booking.status)),
-        statusGroup: getBookingCalendarStatusGroup(booking.status),
-        startAtUtc: booking.scheduledAt,
-        startAtWallClock: bookingCalendarWallClock(booking.scheduledAt, booking.source),
-        // The list DTO has no end time, so the shared calendar's standard 60-minute fallback
-        // applies until the booking endpoint exposes service duration.
-        endAtUtc: null,
-      })),
+      bookings.flatMap((booking) => {
+        const baseSource = {
+          bookingId: booking.bookingId,
+          name: booking.customerName,
+          date: bookingDateKey(booking.scheduledAt, booking.source),
+          statusLabel: t(p + statusLabelKey(booking.status)),
+          statusGroup: getBookingCalendarStatusGroup(booking.status),
+          startAtUtc: booking.scheduledAt,
+          startAtWallClock: bookingCalendarWallClock(booking.scheduledAt, booking.source),
+          // The list DTO has no end time, so the shared calendar's standard 60-minute fallback
+          // applies until the booking endpoint exposes service duration.
+          endAtUtc: null,
+        }
+        const lines = booking.serviceLines ?? []
+        if (lines.length === 0) {
+          return [{
+            ...baseSource,
+            id: booking.bookingId,
+            tech: booking.technicianNames[0] ?? '',
+            services: booking.serviceNames,
+          }]
+        }
+
+        const servicesByTech = new Map<string, string[]>()
+        for (const line of lines) {
+          const tech = line.technicianName?.trim() ?? ''
+          const services = servicesByTech.get(tech) ?? []
+          if (line.serviceName) services.push(line.serviceName)
+          servicesByTech.set(tech, services)
+        }
+        return Array.from(servicesByTech, ([tech, services]) => ({
+          ...baseSource,
+          id: `${booking.bookingId}:${tech || BOOKING_CALENDAR_UNASSIGNED_TECH}`,
+          tech,
+          services,
+        }))
+      }),
     [bookings, p, t],
   )
 

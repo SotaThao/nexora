@@ -1567,6 +1567,13 @@ export interface BookingListItemApiDto {
   orderNumber?: string | null
   serviceNames: string[]
   technicianNames: string[]
+  serviceLines?: BookingListServiceLineApiDto[]
+}
+
+export interface BookingListServiceLineApiDto {
+  serviceName?: string | null
+  posStaffProfileId?: string | null
+  technicianName?: string | null
 }
 
 export interface BookingListResultApiDto {

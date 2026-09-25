@@ -206,8 +206,8 @@ export default function BookingTeamCalendar({
                 }
                 args.cell.properties.html = BOOKING_CREATE_CELL_ADD_HTML
               }}
-              onEventClick={(args: { e: { id: () => string | number } }) => {
-                onEventClick(String(args.e.id()))
+              onEventClick={(args: { e: { id: () => string | number; tag: (name: string) => unknown } }) => {
+                onEventClick(String(args.e.tag('bookingId') ?? args.e.id()))
               }}
               onTimeRangeSelected={(args) => {
                 const { date, time } = dayPilotStartToLocalParts(args.start)
