@@ -10,11 +10,13 @@
  */
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
+import { posDeviceToken } from '../../lib/posDeviceHttpClient'
 import posSelfCheckInRepository, {
   type CheckInSelfCheckInBookingPayload,
   type CreateSelfCheckInOrderPayload,
 } from '../repositories/posSelfCheckIn'
 import type {
+  PosPromotionApiDto,
   SelfCheckInBookingApiDto,
   SelfCheckInOrderResultApiDto,
   SelfCheckInServiceApiDto,
@@ -78,6 +80,18 @@ export function useSelfCheckInTechnicians(enabled = true) {
     // Who is clocked in changes through the day, and a customer must not be offered someone who
     // went home an hour ago.
     staleTime: 0,
+  })
+}
+
+/** Keypad promo banners — soft-empty when BE has not shipped the endpoint yet (404 → []). */
+export function useKioskPromotions(enabled = true) {
+  const deviceToken = posDeviceToken.get()
+  return useQuery<PosPromotionApiDto[]>({
+    queryKey: qk.posSelfCheckInPromotions(deviceToken),
+    queryFn: () => posSelfCheckInRepository.getPromotions(),
+    enabled: enabled && Boolean(deviceToken),
+    retry: false,
+    staleTime: CATALOG_STALE_MS,
   })
 }
 

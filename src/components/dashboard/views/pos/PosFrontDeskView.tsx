@@ -138,7 +138,6 @@ const tk = (suffix: string) => `${I18N_PREFIX}.${suffix}`
 
 // Keep long queues inside the currently available viewport, rather than using a fixed pixel cap.
 // The reserved space accounts for the dashboard header, Front Desk title/tabs, and list controls.
-const SCROLL_PANEL_MAX_HEIGHT = 'max-h-[calc(100dvh-18rem)]'
 const ORDER_LIST_FILL_MAIN_HEIGHT = 'min-h-0 flex-1'
 
 const TURN_BOARD_VIEW_MODE_LABEL_KEYS: Record<TurnBoardViewMode, string> = {
@@ -956,6 +955,35 @@ export default function PosFrontDeskView({
 
   const notArrivedLabel = t(tk(`orderListFilter.${OrderListFilter.NotArrived}`))
 
+  const renderViewModeToggle = () => (
+    <div className="flex gap-1 rounded-xl border border-nexoraBorder bg-nexoraCanvas/70 p-1">
+      <button
+        type="button"
+        onClick={() => handleChangeViewMode(OrderListViewMode.List)}
+        aria-label={t(tk('viewModeList'))}
+        className={`rounded-lg p-1.5 transition-all ${
+          viewMode === OrderListViewMode.List
+            ? 'bg-white text-nexoraBrandDark shadow-sm ring-1 ring-inset ring-nexoraBorder/70'
+            : 'text-nexoraMuted hover:bg-white/80 hover:text-nexoraText'
+        }`}
+      >
+        <ListIcon className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        onClick={() => handleChangeViewMode(OrderListViewMode.Card)}
+        aria-label={t(tk('viewModeCard'))}
+        className={`rounded-lg p-1.5 transition-all ${
+          viewMode === OrderListViewMode.Card
+            ? 'bg-white text-nexoraBrandDark shadow-sm ring-1 ring-inset ring-nexoraBorder/70'
+            : 'text-nexoraMuted hover:bg-white/80 hover:text-nexoraText'
+        }`}
+      >
+        <LayoutGrid className="h-4 w-4" />
+      </button>
+    </div>
+  )
+
   // The badge only earns its place where ticket cards sit next to these — under the Not Arrived
   // chip every card would repeat the chip's own label.
   const renderNotArrivedCard = (booking: BookingListItemApiDto, withStatusBadge = false) => (
@@ -1250,7 +1278,9 @@ export default function PosFrontDeskView({
           </span>
         </div>
 
-        <div className={`grid ${SCROLL_PANEL_MAX_HEIGHT} grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}>
+        {/* One page scroll only — an inner max-height + overflow made the card grid feel
+            trapped in a short pane that also fought the outer dashboard scroll. */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {inServiceOrders.map((order) => {
             const orderSummary = orderList.find((item) => item.id === order.id)
             const customerPhone = orderSummary?.customerPhone || orderSummary?.customerPhoneE164
@@ -1666,57 +1696,38 @@ export default function PosFrontDeskView({
           <CheckInOverviewPanel businessId={businessId} onBack={() => setShowCheckInOverview(false)} />
         ) : (
           <div className="relative flex min-h-0 flex-1 flex-col gap-3">
-            <div className="flex flex-col items-end gap-2 sm:absolute sm:right-0 sm:top-0">
-              <CheckInsTodayCard businessId={businessId} onViewOverview={() => setShowCheckInOverview(true)} />
-              <div className="flex gap-1 rounded-xl border border-nexoraBorder bg-nexoraCanvas/70 p-1">
-                <button
-                  type="button"
-                  onClick={() => handleChangeViewMode(OrderListViewMode.List)}
-                  aria-label={t(tk('viewModeList'))}
-                  className={`rounded-lg p-1.5 transition-all ${
-                    viewMode === OrderListViewMode.List
-                      ? 'bg-white text-nexoraBrandDark shadow-sm ring-1 ring-inset ring-nexoraBorder/70'
-                      : 'text-nexoraMuted hover:bg-white/80 hover:text-nexoraText'
-                  }`}
-                >
-                  <ListIcon className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleChangeViewMode(OrderListViewMode.Card)}
-                  aria-label={t(tk('viewModeCard'))}
-                  className={`rounded-lg p-1.5 transition-all ${
-                    viewMode === OrderListViewMode.Card
-                      ? 'bg-white text-nexoraBrandDark shadow-sm ring-1 ring-inset ring-nexoraBorder/70'
-                      : 'text-nexoraMuted hover:bg-white/80 hover:text-nexoraText'
-                  }`}
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </button>
+            <header className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex flex-wrap gap-1.5 rounded-xl bg-nexoraCanvas/70 p-1.5 sm:max-w-[65%]">
+                {ORDER_LIST_FILTERS.map((filter) => (
+                  <button
+                    key={filter}
+                    type="button"
+                    onClick={() => setOrderListFilter(filter)}
+                    aria-pressed={orderListFilter === filter}
+                    className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold transition-all ${
+                      orderListFilter === filter
+                        ? ORDER_LIST_FILTER_STYLES[filter].active
+                        : ORDER_LIST_FILTER_STYLES[filter].inactive
+                    }`}
+                  >
+                    {/* Counted over the whole queue, not the active filter — the point of the
+                        number is deciding which chip to tap next. */}
+                    {t(tk(`orderListFilter.${filter}`))} ({orderListFilterCounts[filter]})
+                  </button>
+                ))}
               </div>
-            </div>
 
-            <div className="flex flex-wrap gap-1.5 rounded-xl bg-nexoraCanvas/70 p-1.5 sm:max-w-[65%]">
-              {ORDER_LIST_FILTERS.map((filter) => (
-                <button
-                  key={filter}
-                  type="button"
-                  onClick={() => setOrderListFilter(filter)}
-                  aria-pressed={orderListFilter === filter}
-                  className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold transition-all ${
-                    orderListFilter === filter
-                      ? ORDER_LIST_FILTER_STYLES[filter].active
-                      : ORDER_LIST_FILTER_STYLES[filter].inactive
-                  }`}
-                >
-                  {/* Counted over the whole queue, not the active filter — the point of the
-                      number is deciding which chip to tap next. */}
-                  {t(tk(`orderListFilter.${filter}`))} ({orderListFilterCounts[filter]})
-                </button>
-              ))}
-            </div>
+              <div className="shrink-0">
+                <CheckInsTodayCard businessId={businessId} onViewOverview={() => setShowCheckInOverview(true)} />
+              </div>
+            </header>
 
-            {orderListFilter === OrderListFilter.NotArrived ? renderNotArrivedList() : (() => {
+            {orderListFilter === OrderListFilter.NotArrived ? (
+              <div className="flex min-h-0 flex-1 flex-col gap-3">
+                <div className="flex justify-end">{renderViewModeToggle()}</div>
+                {renderNotArrivedList()}
+              </div>
+            ) : (() => {
               const filteredOrderList = sortByAttentionFirst(
                 orderList.filter((order) => {
                   if (orderListFilter === OrderListFilter.Waiting) return order.status === PosOrderStatus.Waiting
@@ -1752,6 +1763,13 @@ export default function PosFrontDeskView({
                     ) : null}
                   </div>
                 ) : null
+
+              const listToolbar = (
+                <div className="flex items-center gap-2">
+                  {attentionBadges}
+                  <div className="ml-auto shrink-0">{renderViewModeToggle()}</div>
+                </div>
+              )
 
               // Same two labels the badges above count, repeated on the row itself — the count
               // tells staff how many, the row tells them which.
@@ -1857,11 +1875,11 @@ export default function PosFrontDeskView({
               if (viewMode === OrderListViewMode.Card) {
                 return (
                   <div className="flex min-h-0 flex-1 flex-col gap-3">
-                  {attentionBadges}
-                  <div
-                    className={`grid ${ORDER_LIST_FILL_MAIN_HEIGHT} mt-8 content-start grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
-                  >
-                    {filteredOrderList.map((order) => (
+                    {listToolbar}
+                    <div
+                      className={`grid ${ORDER_LIST_FILL_MAIN_HEIGHT} content-start grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
+                    >
+                      {filteredOrderList.map((order) => (
                       <div
                         key={order.id}
                         data-order-status={order.status}
@@ -1896,20 +1914,20 @@ export default function PosFrontDeskView({
                           </div>
                         </div>
                       </div>
-                    ))}
-                    {notArrivedRows.map((booking) => renderNotArrivedCard(booking, true))}
-                  </div>
+                      ))}
+                      {notArrivedRows.map((booking) => renderNotArrivedCard(booking, true))}
+                    </div>
                   </div>
                 )
               }
 
               return (
                 <div className="flex min-h-0 flex-1 flex-col gap-3">
-                {attentionBadges}
-                <div
-                  className={`${ORDER_LIST_FILL_MAIN_HEIGHT} mt-8 overflow-auto rounded-xl border border-nexoraBorder bg-white`}
-                >
-                  <table className="w-full min-w-[1100px] table-auto text-left text-xs">
+                  {listToolbar}
+                  <div
+                    className={`${ORDER_LIST_FILL_MAIN_HEIGHT} overflow-auto rounded-xl border border-nexoraBorder bg-white`}
+                  >
+                    <table className="w-full min-w-[1100px] table-auto text-left text-xs">
                     <thead className="sticky top-0 z-[1] bg-nexoraCanvas/90">
                       <tr className={POS_TABLE_HEADER_ROW_CLASS}>
                         <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('orderListColumnNumber'))}</th>
@@ -1965,8 +1983,8 @@ export default function PosFrontDeskView({
                       ))}
                       {notArrivedRows.map(renderNotArrivedOrderRow)}
                     </tbody>
-                  </table>
-                </div>
+                    </table>
+                  </div>
                 </div>
               )
             })()}

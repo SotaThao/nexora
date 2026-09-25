@@ -43,6 +43,9 @@ export const COMMUNITY_CHAT_MAX_TITLE_LENGTH = 200
 /** Max message content length (characters). */
 export const COMMUNITY_CHAT_MAX_MESSAGE_LENGTH = 2000
 
+/** Matches `title` limits on `POST /sessions` and `PUT /sessions/{id}` (US-102/US-103). */
+export const COMMUNITY_CHAT_GROUP_TITLE_MAX_LENGTH = 200
+
 /** Max image upload size in bytes (10 MB). */
 export const COMMUNITY_CHAT_MAX_IMAGE_BYTES = 10_000_000
 

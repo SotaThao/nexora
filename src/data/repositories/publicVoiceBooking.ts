@@ -212,6 +212,24 @@ function normalizePromotion(raw: unknown): PublicBookingPromotion | null {
   // Sorted into week order here so every caller renders the same run of days.
   const daysOfWeek = BOOKING_DAY_OF_WEEK.filter((day) => days.includes(day))
 
+  const primaryBannerImageUrl = (() => {
+    const v =
+      readField(dto, 'primaryBannerImageUrl', 'PrimaryBannerImageUrl') ??
+      readField(dto, 'photoUrl', 'PhotoUrl')
+    const s = v == null ? '' : String(v).trim()
+    return s || null
+  })()
+  const primaryBannerColorHex = (() => {
+    const v = readField(dto, 'primaryBannerColorHex', 'PrimaryBannerColorHex')
+    const s = v == null ? '' : String(v).trim()
+    return s || null
+  })()
+  const photoUrl = (() => {
+    const v = readField(dto, 'photoUrl', 'PhotoUrl')
+    const s = v == null ? '' : String(v).trim()
+    return s || primaryBannerImageUrl
+  })()
+
   return {
     id,
     name,
@@ -221,6 +239,9 @@ function normalizePromotion(raw: unknown): PublicBookingPromotion | null {
     daysOfWeek: [...daysOfWeek],
     startTime: String(readField(dto, 'startTime', 'StartTime') ?? '').trim(),
     endTime: String(readField(dto, 'endTime', 'EndTime') ?? '').trim(),
+    primaryBannerColorHex,
+    primaryBannerImageUrl,
+    photoUrl,
   }
 }
 

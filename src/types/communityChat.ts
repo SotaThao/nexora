@@ -42,6 +42,8 @@ export interface CommunityChatMessage {
   id: string
   chatSessionId: string
   senderId: string
+  senderName?: string | null
+  senderAvatarUrl?: string | null
   content: string
   messageType: CommunityChatMessageType
   sentAt: string
@@ -86,6 +88,8 @@ export interface CommunityChatReceiveMessageEvent {
   id: string
   chatSessionId: string
   senderId: string
+  senderName?: string | null
+  senderAvatarUrl?: string | null
   content: string
   messageType: string
   sentAt: string
@@ -104,6 +108,12 @@ export interface CommunityChatUserStatusChangedEvent {
 export interface CommunityChatTypingEvent {
   userId: string
   chatSessionId: string
+}
+
+/** Server → client: ChatSessionRenamed event (group title changed by an owner/manager). */
+export interface CommunityChatSessionRenamedEvent {
+  chatSessionId: string
+  title: string
 }
 
 /** Server → client: MessageDeleted event. */

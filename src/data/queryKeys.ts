@@ -50,12 +50,13 @@ export const qk = {
   kybRegister:              () => ['userProfile', 'kybRegister'],
 
   // Merchant Staff Management
-  merchantStaff:       (statusFilter?: string, pageNumber?: number, pageSize?: number, keyword?: string) => {
+  merchantStaff:       (statusFilter?: string, pageNumber?: number, pageSize?: number, keyword?: string, isLocalStaff?: boolean) => {
     const key: unknown[] = ['merchantStaff']
     if (statusFilter) key.push(statusFilter)
     if (pageNumber !== undefined || pageSize !== undefined || keyword) {
       key.push({ pageNumber, pageSize, keyword: keyword?.trim() || '' })
     }
+    if (isLocalStaff !== undefined) key.push({ isLocalStaff })
     return key
   },
   merchantStaffSearch: (q)     => ['merchantStaff', 'search', q],
@@ -260,6 +261,12 @@ export const qk = {
   posSelfCheckInActiveVisit: (phone?: string) => ['posSelfCheckIn', 'activeVisit', phone ?? ''],
   posSelfCheckInBooking: (phone?: string) => ['posSelfCheckIn', 'booking', phone ?? ''],
   posSelfCheckInTechnicians: () => ['posSelfCheckIn', 'technicians'],
+  // Scoped by device token so a re-pair to another salon cannot reuse a 5-minute stale cache.
+  posSelfCheckInPromotions: (deviceToken?: string | null) => [
+    'posSelfCheckIn',
+    'promotions',
+    deviceToken ?? '',
+  ],
   merchantPosCheckInTechnicians: (businessId?: string) => ['merchantSettings', 'posCheckInTechnicians', businessId ?? ''],
   merchantPosCheckInActiveVisit: (businessId?: string, phone?: string) => [
     'merchantSettings', 'posCheckInActiveVisit', businessId ?? '', phone ?? '',
@@ -364,6 +371,17 @@ export const qk = {
   },
   merchantPosBookingDetail: (businessId?: string, bookingId?: string) =>
     ['merchantSettings', 'posBookingDetail', businessId ?? '', bookingId ?? ''],
+  merchantPosUnassignedBookingAssignments: (businessId?: string, filters?: { dateFrom?: string; dateTo?: string }) => {
+    const key: unknown[] = ['merchantSettings', 'posUnassignedBookingAssignments', businessId ?? '']
+    if (filters?.dateFrom || filters?.dateTo) key.push(filters)
+    return key
+  },
+  merchantPosBookingAssignmentCandidates: (businessId?: string, bookingId?: string, serviceLineId?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posBookingAssignmentCandidates', businessId ?? '']
+    if (bookingId) key.push(bookingId)
+    if (serviceLineId) key.push(serviceLineId)
+    return key
+  },
   // POS Front Desk — Customer tab (US-043), read-only list/detail/order-history.
   merchantPosCustomerListRoot: () => ['merchantSettings', 'posCustomerList'],
   merchantPosCustomerDetailRoot: () => ['merchantSettings', 'posCustomerDetail'],

@@ -20,14 +20,17 @@ import { PosCheckInLayout } from '../../../constants/posCheckInLayout'
 import { usePublicCheckInPage } from '../../../data/hooks/usePublicCheckIn'
 import PublicCheckInShell from './PublicCheckInShell'
 import { rememberPublicCheckInSlug } from './publicCheckInUtils'
+import BackToOneQrMenuButton from '../BackToOneQrMenuButton'
 
 /** The one thing a guest away from the salon needs and a guest inside it does not. */
 function QueuePositionLink({
   receiptToken,
   businessSlug,
+  children,
 }: {
   receiptToken: string
   businessSlug: string
+  children?: React.ReactNode
 }) {
   const { t } = useTranslation()
   return (
@@ -40,6 +43,7 @@ function QueuePositionLink({
         <ListOrdered className="h-4 w-4" />
         {t('public.checkIn.viewQueueButton')}
       </Link>
+      {children}
       <p className="text-xs text-white/60">{t('public.checkIn.saveLinkHint')}</p>
     </div>
   )
@@ -91,6 +95,7 @@ export default function PublicCheckInPage() {
         useSource={useSource}
         layout={data.layout ?? PosCheckInLayout.SinglePage}
         businessName={data.businessName}
+        promotions={data.promotions}
         // Nobody is waiting to reuse this phone, so the number stays until the guest dismisses it.
         autoReturnSeconds={null}
         onCheckedIn={(_orderNumber, result) => setReceiptToken(result.receiptToken ?? null)}
@@ -107,8 +112,14 @@ export default function PublicCheckInPage() {
         }}
         doneSlot={
           receiptToken ? (
-            <QueuePositionLink receiptToken={receiptToken} businessSlug={businessSlug as string} />
-          ) : null
+            <QueuePositionLink receiptToken={receiptToken} businessSlug={businessSlug as string}>
+              <BackToOneQrMenuButton businessSlug={businessSlug} variant="public" />
+            </QueuePositionLink>
+          ) : (
+            <div className="mx-auto w-full max-w-md">
+              <BackToOneQrMenuButton businessSlug={businessSlug} variant="public" />
+            </div>
+          )
         }
       />
     </PublicCheckInShell>

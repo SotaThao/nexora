@@ -375,6 +375,7 @@ export function createMerchantStaffRepository(client: HttpClient = httpClient) {
       pageNumber = 1,
       pageSize = 10,
       keyword?: string,
+      isLocalStaff?: boolean,
     ): Promise<StaffListPage> {
       let url = '/api/v1/merchant/staff'
       const queryParams: string[] = []
@@ -384,6 +385,9 @@ export function createMerchantStaffRepository(client: HttpClient = httpClient) {
       }
       if (statusFilter) {
         queryParams.push(`StatusFilter=${encodeURIComponent(statusFilter)}`)
+      }
+      if (isLocalStaff !== undefined) {
+        queryParams.push(`IsLocalStaff=${isLocalStaff}`)
       }
       if (pageNumber !== undefined) {
         queryParams.push(`PageNumber=${pageNumber}`)

@@ -73,6 +73,7 @@ const COPY_BY_LANG = {
     promotionsHeading: 'Current offers',
     promotionSlideAria: (index, total) => `Offer ${index} of ${total}`,
     promotionRateOff: (rate) => `${rate} off`,
+    specialOffer: 'SPECIAL OFFER',
     promotionAllWeek: 'Every day',
     dayShort: {
       Sunday: 'Sun',
@@ -187,6 +188,7 @@ const COPY_BY_LANG = {
     promotionsHeading: 'Ưu đãi đang áp dụng',
     promotionSlideAria: (index, total) => `Ưu đãi ${index} trên ${total}`,
     promotionRateOff: (rate) => `Giảm ${rate}`,
+    specialOffer: 'ƯU ĐÃI ĐẶC BIỆT',
     promotionAllWeek: 'Mỗi ngày',
     dayShort: {
       Sunday: 'CN',

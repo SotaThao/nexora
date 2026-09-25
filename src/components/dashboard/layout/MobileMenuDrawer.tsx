@@ -12,7 +12,6 @@ import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import { useOwnerTaxYearByBusiness } from '../../../data/hooks/useTaxiqOwnerTaxYear'
 import { useAuth } from '../../../auth/useAuth'
 import {
-  SIDEBAR_MOBILE_DRAWER_CLASS,
   SIDEBAR_NAV_CLASS,
   SIDEBAR_PROFILE_CARD_CLASS,
   SIDEBAR_AVATAR_IMAGE_CLASS,
@@ -46,6 +45,7 @@ import {
 import { PackageManagementTab } from '../views/packageManagement/constants'
 import { handleExpandableMenuClick } from '../hooks/expandableMenuNav'
 import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
+import MobileSidebarOverlay from '../../ui/MobileSidebarOverlay'
 
 export default function MobileMenuDrawer({
   isOpen,
@@ -184,17 +184,8 @@ export default function MobileMenuDrawer({
     })
   }
 
-  if (!isOpen) return null
-
   return (
-    <div className="fixed inset-0 z-[100] lg:hidden" id="dashboard-mobile-menu">
-      <button
-        type="button"
-        className="absolute inset-0 bg-nexoraText/60"
-        aria-label="Close navigation menu"
-        onClick={onClose}
-      />
-      <aside className={`${SIDEBAR_MOBILE_DRAWER_CLASS} py-6`}>
+    <MobileSidebarOverlay isOpen={isOpen} onClose={onClose} panelClassName="py-6">
         <button
           type="button"
           onClick={onClose}
@@ -540,7 +531,6 @@ export default function MobileMenuDrawer({
             </button>
           </div>
         </div>
-      </aside>
-    </div>
+    </MobileSidebarOverlay>
   )
 }

@@ -2,10 +2,12 @@ import React from 'react'
 import { CheckCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { resolvePaymentMethodViaDisplay } from '../paymentFlowShared'
+import BackToOneQrMenuButton from '../../public/BackToOneQrMenuButton'
 
 export default function DirectPaymentSuccess({
   t,
   businessName,
+  businessSlug = null,
   activeAmount,
   selectedWalletObj,
   cryptoSymbol,
@@ -65,13 +67,16 @@ export default function DirectPaymentSuccess({
         ) : null}
       </div>
 
-      <button
-        type="button"
-        onClick={() => navigate('/')}
-        className="w-full rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet py-3 text-xs font-extrabold uppercase tracking-wider text-white shadow-lg shadow-nexoraElectric/25 transition hover:opacity-90 active:scale-[0.98]"
-      >
-        {t('direct_payment.back_home')}
-      </button>
+      <div className="w-full space-y-3">
+        <BackToOneQrMenuButton businessSlug={businessSlug} />
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="w-full rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet py-3 text-xs font-extrabold uppercase tracking-wider text-white shadow-lg shadow-nexoraElectric/25 transition hover:opacity-90 active:scale-[0.98]"
+        >
+          {t('direct_payment.back_home')}
+        </button>
+      </div>
     </div>
   )
 }

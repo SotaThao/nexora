@@ -12,9 +12,11 @@ import {
   removeCommunityChatMessageFromCache,
 } from '../../data/communityChatCache'
 import { normalizeCommunityChatMessage } from '../../data/repositories/communityChat'
+import { qk } from '../../data/queryKeys'
 import type {
   CommunityChatMessageDeletedEvent,
   CommunityChatReceiveMessageEvent,
+  CommunityChatSessionRenamedEvent,
 } from '../../types/communityChat'
 import { logger } from '../../utils/logger'
 
@@ -55,6 +57,14 @@ function handleMessageDeleted(event: CommunityChatMessageDeletedEvent) {
 
   // Remove message from cache for real-time deletion across all clients
   removeCommunityChatMessageFromCache(queryClientRef, event.chatSessionId, event.messageId)
+}
+
+function handleChatSessionRenamed(event: CommunityChatSessionRenamedEvent) {
+  if (!event.chatSessionId || !queryClientRef) return
+
+  // Refetch so the list and any open window header pick up the new group title.
+  queryClientRef.invalidateQueries({ queryKey: qk.communityChatSessions() })
+  queryClientRef.invalidateQueries({ queryKey: qk.communityChatSession(event.chatSessionId) })
 }
 
 function emitHubMessageError(message: string) {
@@ -109,6 +119,7 @@ async function ensureHubStarted(): Promise<HubConnection | null> {
       handlers: {
         onReceiveMessage: handleIncomingMessage,
         onMessageDeleted: handleMessageDeleted,
+        onChatSessionRenamed: handleChatSessionRenamed,
         onMessageError: (message) => {
           logger.warn('Community chat hub send error', message)
           emitHubMessageError(message)
