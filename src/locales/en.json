@@ -4396,6 +4396,8 @@
             "statusCompleted": "Completed",
             "calendarTitle": "Team calendar",
             "calendarSubtitle": "9:00 AM – 7:00 PM · appointments grouped by technician",
+            "calendarSubtitleHours": "{{hours}} · appointments grouped by technician",
+            "calendarClosedDay": "The salon is closed on this day. Business hours can be changed in Salon Information.",
             "calendarToday": "Today",
             "calendarPrevDay": "Previous day",
             "calendarNextDay": "Next day",

@@ -122,6 +122,7 @@ export function OverviewRoute() {
       reviewsPage={ctx.reviewsPage}
       isReviewsPending={ctx.isReviewsPending}
       reviewsThisWeekCount={ctx.reviewsThisWeekCount}
+      reviewsKpiSummary={ctx.reviewsSummary}
       metricsMonth={ctx.metricsMonth}
       metricsYear={ctx.metricsYear}
     />
