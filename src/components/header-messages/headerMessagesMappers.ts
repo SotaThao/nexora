@@ -113,6 +113,9 @@ export function mapCommunityChatMessageToThreadMessage(
     direction: isOutgoing
       ? HeaderChatMessageDirection.Outgoing
       : HeaderChatMessageDirection.Incoming,
+    senderId: message.senderId,
+    senderName: message.senderName ?? null,
+    senderAvatarUrl: message.senderAvatarUrl ?? null,
     // Call messages never use the raw `content` fallback (English text from the backend) — the
     // bubble renders a localized label from `callMeta` instead (US-06).
     bodyText: isImage || isCall ? undefined : message.content,

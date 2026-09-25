@@ -59,7 +59,9 @@ import { useCommunityChatHubSendErrorToast } from './useCommunityChatHubSendErro
 import { useCommunityChatSessionOpen } from './useCommunityChatSessionOpen'
 import { useCommunityChatThreadScroll } from './useCommunityChatThreadScroll'
 import { sendCommunityChatOutboundText } from './sendCommunityChatOutboundText'
+import { isSameCommunityChatProfileId } from '../../data/communityChatSessionUtils'
 import {
+  getHeaderMessageContactInitials,
   mapCommunityChatMessageToThreadMessage,
   sortThreadMessagesForDisplay,
 } from './headerMessagesMappers'
@@ -135,6 +137,21 @@ function getMessageBodyText(
 }
 
 
+
+/** First incoming bubble of a run — in group chats a sender change also starts a new run (#1819). */
+function isIncomingRunStart(
+  messages: HeaderChatThreadMessage[],
+  index: number,
+  isGroupChat: boolean,
+): boolean {
+  const message = messages[index]
+  if (message.direction !== HeaderChatMessageDirection.Incoming) return false
+
+  const previous = messages[index - 1]
+  if (!previous || previous.direction !== HeaderChatMessageDirection.Incoming) return true
+
+  return isGroupChat && !isSameCommunityChatProfileId(previous.senderId, message.senderId)
+}
 
 function getOutgoingReceiptStatus(
   message: HeaderChatThreadMessage,
@@ -596,14 +613,25 @@ function HeaderMessageChatWindow({
     )
   }
 
+  const resolveIncomingSenderName = (message: HeaderChatThreadMessage) => (
+    (isGroupChat && message.senderName?.trim()) || conversation.name
+  )
+
+  const resolveIncomingAvatarInitials = (message: HeaderChatThreadMessage) => (
+    isGroupChat ? getHeaderMessageContactInitials(resolveIncomingSenderName(message)) : conversation.initials
+  )
+
   const renderMessageBubble = (
     message: HeaderChatThreadMessage,
-    options: { mobile?: boolean } = {},
+    options: { mobile?: boolean; isRunStart?: boolean } = {},
   ) => {
     const mobile = Boolean(options.mobile)
     const isOutgoing = message.direction === HeaderChatMessageDirection.Outgoing
     const bodyText = getMessageBodyText(message, t, chatTk)
     const isImage = Boolean(message.imageUrl)
+    // Group images have no bubble background, so they always carry the sender name (#1821).
+    const showSenderLabel = !isOutgoing
+      && (isGroupChat ? Boolean(options.isRunStart) || isImage : !isImage && mobile)
 
     return (
       <div
@@ -614,8 +642,8 @@ function HeaderMessageChatWindow({
           isImage ? 'is-image' : '',
         ].filter(Boolean).join(' ')}
       >
-        {!isOutgoing && !isImage && mobile ? (
-          <span className="header-message-chat-bubble-sender">{conversation.name}</span>
+        {showSenderLabel ? (
+          <span className="header-message-chat-bubble-sender">{resolveIncomingSenderName(message)}</span>
         ) : null}
         {message.replyTo ? renderQuote(message.replyTo) : null}
         {renderBubbleBody(message, bodyText)}
@@ -627,8 +655,7 @@ function HeaderMessageChatWindow({
   const desktopMessageNodes = useMemo(
     () => localMessages.map((message, index) => {
       const isOutgoing = message.direction === HeaderChatMessageDirection.Outgoing
-      const showAvatar = !isOutgoing
-        && (index === 0 || localMessages[index - 1]?.direction !== HeaderChatMessageDirection.Incoming)
+      const showAvatar = isIncomingRunStart(localMessages, index, isGroupChat)
 
       return (
         <div
@@ -640,16 +667,16 @@ function HeaderMessageChatWindow({
               className={`header-message-chat-row-avatar${showAvatar ? '' : ' is-spacer'}`}
               aria-hidden="true"
             >
-              {showAvatar ? conversation.initials : ''}
+              {showAvatar ? resolveIncomingAvatarInitials(message) : ''}
             </span>
           )}
           {isOutgoing ? renderMessageMenu(message) : null}
-          {renderMessageBubble(message)}
+          {renderMessageBubble(message, { isRunStart: showAvatar })}
         </div>
       )
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [chatTk, conversation.initials, conversation.name, currentLanguage, deletingMessageId, isSending, localMessages, menuMessageId, t],
+    [chatTk, conversation.initials, conversation.name, currentLanguage, deletingMessageId, isGroupChat, isSending, localMessages, menuMessageId, t],
   )
 
   const mobileMessageNodes = useMemo(() => {
@@ -658,7 +685,8 @@ function HeaderMessageChatWindow({
 
     localMessages.forEach((message, index) => {
       const dayKey = formatHeaderMessageLocalDayKey(message.sentAt)
-      if (dayKey !== lastDayKey) {
+      const isNewDay = dayKey !== lastDayKey
+      if (isNewDay) {
         lastDayKey = dayKey
         nodes.push(
           <div key={`sep-${dayKey}-${index}`} className="header-message-chat-date-sep">
@@ -668,8 +696,7 @@ function HeaderMessageChatWindow({
       }
 
       const isOutgoing = message.direction === HeaderChatMessageDirection.Outgoing
-      const showAvatar = !isOutgoing
-        && (index === 0 || localMessages[index - 1]?.direction !== HeaderChatMessageDirection.Incoming)
+      const showAvatar = !isOutgoing && (isNewDay || isIncomingRunStart(localMessages, index, isGroupChat))
 
       nodes.push(
         <div
@@ -681,18 +708,18 @@ function HeaderMessageChatWindow({
               className={`header-message-chat-row-avatar${showAvatar ? '' : ' is-spacer'}`}
               aria-hidden="true"
             >
-              {showAvatar ? conversation.initials : ''}
+              {showAvatar ? resolveIncomingAvatarInitials(message) : ''}
             </span>
           )}
           {isOutgoing ? renderMessageMenu(message) : null}
-          {renderMessageBubble(message, { mobile: true })}
+          {renderMessageBubble(message, { mobile: true, isRunStart: showAvatar })}
         </div>,
       )
     })
 
     return nodes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chatTk, conversation.initials, conversation.name, currentLanguage, deletingMessageId, isSending, localMessages, menuMessageId, t])
+  }, [chatTk, conversation.initials, conversation.name, currentLanguage, deletingMessageId, isGroupChat, isSending, localMessages, menuMessageId, t])
 
   const isThreadEmpty = !isThreadLoading && !isMessagesError && localMessages.length === 0
 
