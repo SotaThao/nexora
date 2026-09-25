@@ -306,6 +306,10 @@ export const qk = {
     ['staffWorkOrders', 'serviceCatalog', orderId ?? ''],
   staffClockScanPreview: (businessId?: string, token?: string) =>
     ['staffClockScanPreview', businessId ?? '', token ?? ''],
+  staffClockStatusesRoot: () => ['staffClockStatuses'] as const,
+  staffClockStatus: (businessId: string, businessStaffLinkId: string) =>
+    ['staffClockStatuses', businessId, businessStaffLinkId] as const,
+  staffActiveBusinessLinks: () => ['staffBusinesses', 'activeLinks'] as const,
   // POS Merchant Ops — Checkout (US-14 / US-025, refactored to Order in US-026)
   merchantPosInServiceOrders: (businessId?: string) => ['merchantSettings', 'posInServiceOrders', businessId ?? ''],
   merchantPosOrderDetail: (businessId?: string, orderId?: string) =>

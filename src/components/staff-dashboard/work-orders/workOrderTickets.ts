@@ -272,6 +272,26 @@ export function countWorkOrdersByFilter(
   return tickets.filter((ticket) => workOrderTicketMatchesFilter(ticket.myStatus, filter)).length
 }
 
+export function shouldShowAllForEmptyInitialWorkOrderFilter({
+  filter,
+  assignedCount,
+  totalCount,
+  isLoading,
+  isDetailMode,
+}: {
+  filter: WorkOrderTicketFilter
+  assignedCount: number
+  totalCount: number
+  isLoading: boolean
+  isDetailMode: boolean
+}): boolean {
+  return !isLoading
+    && !isDetailMode
+    && filter === WORK_ORDER_TICKET_FILTER.Assigned
+    && assignedCount === 0
+    && totalCount > 0
+}
+
 export function formatWorkOrderStationNumber(stationNumber: number): string {
   return String(stationNumber).padStart(WORK_ORDER_STATION_DIGITS, WORK_ORDER_PAD_CHAR)
 }
