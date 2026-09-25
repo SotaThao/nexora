@@ -24,6 +24,7 @@ import {
   ONEQR_AUDIENCE_ORDER,
   ONEQR_MODULE_CATALOG,
   ONEQR_MODULE_CATALOG_BY_KEY,
+  getDefaultOneQrModulePrimaryAudience,
 } from '../../constants/oneQr'
 import type {
   OneQr,
@@ -199,6 +200,11 @@ function normalizeCatalogItem(raw: Raw): OneQrModuleCatalogItem {
 
   return {
     moduleKey,
+    primaryAudience: Object.prototype.hasOwnProperty.call(raw, 'primaryAudience')
+      ? nullableStr(raw.primaryAudience)
+        ? toOneQrAudience(raw.primaryAudience)
+        : null
+      : getDefaultOneQrModulePrimaryAudience(moduleKey),
     defaultLabel: nullableStr(raw.defaultLabel),
     defaultIcon: nullableStr(raw.defaultIcon) ?? bundled?.defaultIcon ?? null,
     urlTemplate: nullableStr(raw.urlTemplate),
@@ -231,6 +237,7 @@ function normalizeCatalogItem(raw: Raw): OneQrModuleCatalogItem {
 export function buildOneQrFallbackCatalog(): OneQrModuleCatalogItem[] {
   return ONEQR_MODULE_CATALOG.map((entry) => ({
     moduleKey: entry.moduleKey,
+    primaryAudience: getDefaultOneQrModulePrimaryAudience(entry.moduleKey),
     defaultLabel: null,
     defaultIcon: entry.defaultIcon,
     // Routers live in the admin table; the bundle never guesses one.

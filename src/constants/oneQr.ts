@@ -53,9 +53,10 @@ export enum OneQrIdentityPolicy {
  * Never coerce an unknown key into a member of this enum — that would silently
  * rewrite an admin-authored module into something else on save.
  *
- * The numeric bands on the backend (0-9, 10-19, 20-29, 90+) only record which
- * role a module was originally designed for; they are NOT an access rule, since
- * every module is assignable to every audience (decision 3b).
+ * The numeric bands on the backend (0-9, 10-19, 20-29, 90+) record which role
+ * a built-in module was designed for. The builder uses the explicit groups
+ * below to keep Staff and Owner management actions out of lower-privilege
+ * audience tabs, while the backend remains the final authorization boundary.
  */
 export enum OneQrModuleKey {
   // Band 0-9 — originally Customer
@@ -83,6 +84,54 @@ export enum OneQrModuleKey {
   // Band 90+ — shared
   CustomLink = 'CustomLink',
   AIAssistant = 'AIAssistant',
+}
+
+const STAFF_ONLY_MODULE_KEYS = new Set<string>([
+  OneQrModuleKey.ClockIn,
+  OneQrModuleKey.TurnBoard,
+  OneQrModuleKey.MyTips,
+  OneQrModuleKey.StaffPortal,
+  OneQrModuleKey.ReceiveCustomer,
+  OneQrModuleKey.CompleteService,
+  OneQrModuleKey.RequestApproval,
+])
+
+const OWNER_ONLY_MODULE_KEYS = new Set<string>([
+  OneQrModuleKey.OwnerDashboard,
+  OneQrModuleKey.ManageBookings,
+  OneQrModuleKey.ManageServices,
+])
+
+export function getDefaultOneQrModulePrimaryAudience(
+  moduleKey: string,
+): OneQrAudience | null {
+  if (STAFF_ONLY_MODULE_KEYS.has(moduleKey)) return OneQrAudience.Staff
+  if (OWNER_ONLY_MODULE_KEYS.has(moduleKey)) return OneQrAudience.Owner
+  if (moduleKey === OneQrModuleKey.VoiceBooking) return OneQrAudience.AIVoice
+  if (moduleKey === OneQrModuleKey.CustomLink) return null
+  return isBuiltInOneQrModuleKey(moduleKey) ? OneQrAudience.Customer : null
+}
+
+/** Product-level visibility for catalog modules in the merchant builder. */
+export function isOneQrModuleVisibleForAudience(
+  moduleKey: string,
+  audience: OneQrAudience,
+  primaryAudience?: OneQrAudience | null,
+): boolean {
+  const moduleAudience =
+    primaryAudience === undefined
+      ? getDefaultOneQrModulePrimaryAudience(moduleKey)
+      : primaryAudience
+  if (audience === OneQrAudience.Customer) {
+    return (
+      moduleAudience !== OneQrAudience.Staff &&
+      moduleAudience !== OneQrAudience.Owner
+    )
+  }
+  if (audience === OneQrAudience.Staff) {
+    return moduleAudience !== OneQrAudience.Owner
+  }
+  return true
 }
 
 /**

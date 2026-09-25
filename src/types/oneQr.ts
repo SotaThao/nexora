@@ -55,6 +55,8 @@ export interface OneQrRoleConfig {
 
 export interface OneQrModuleCatalogItem {
   moduleKey: string
+  /** Admin-managed role classification used by the builder's visibility rules. */
+  primaryAudience?: OneQrAudience | null
   defaultLabel: string | null
   defaultIcon: string | null
   /** Admin-configured router with placeholders intact; null for CustomLink. */

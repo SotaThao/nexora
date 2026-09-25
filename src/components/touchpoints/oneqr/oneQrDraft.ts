@@ -59,14 +59,24 @@ export function buildDraft(oneQr: OneQr | null): OneQrDraft {
     byAudience[audience] = {
       welcomeMessage: config?.welcomeMessage ?? '',
       identityPolicy: config?.identityPolicy ?? OneQrIdentityPolicy.PublicFirst,
-      modules: (config?.modules ?? []).map((module) => ({
-        ...module,
-        localId: module.id || nextLocalId(),
-      })),
+      modules: prioritizeEnabledModules(
+        (config?.modules ?? []).map((module) => ({
+          ...module,
+          localId: module.id || nextLocalId(),
+        })),
+      ),
     }
   }
 
   return { name: oneQr?.name ?? '', byAudience }
+}
+
+/** Stable partition: enabled rows first, preserving order within both groups. */
+export function prioritizeEnabledModules(modules: DraftModule[]): DraftModule[] {
+  return [
+    ...modules.filter((module) => module.isEnabled),
+    ...modules.filter((module) => !module.isEnabled),
+  ]
 }
 
 export function createDraftModule(
