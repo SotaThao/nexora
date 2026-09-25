@@ -7,7 +7,7 @@
  * distinct: paused (HTTP 200 + a polite notice, never an error page — the QR is
  * printed and in the wild), not found (404), and sign-in required.
  */
-import { useCallback, useEffect, useMemo, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowUpRight, Clock, Loader2, LogIn, MapPin, PauseCircle, Sparkles } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -21,6 +21,7 @@ import { resolveOneQrModuleLabel } from '../../oneqr/oneQrModuleLabel'
 import { resolveOneQrModuleHref } from './oneQrModuleHref'
 import {
   ONEQR_ROUTE,
+  OneQrAudience,
   OneQrModuleKey,
   buildOneQrPath,
 } from '../../../constants/oneQr'
@@ -56,6 +57,11 @@ export default function OneQrLandingPage() {
   // Forwarded verbatim: a printed code may carry `?as=staff`, and only the
   // backend can say whether this scanner is entitled to that view.
   const viewAs = searchParams.get(ONEQR_ROUTE.asQuery)
+  const [showAllModules, setShowAllModules] = useState(false)
+
+  useEffect(() => {
+    setShowAllModules(false)
+  }, [businessSlug, viewAs])
 
   const { data, isPending, isError } = usePublicOneQrLanding({
     businessSlug,
@@ -185,9 +191,15 @@ export default function OneQrLandingPage() {
   }
 
   // The backend decides who may switch views; the query value only hides the
-  // button once the switch has already been taken.
+  // button once the switch has already been taken. AI Voice replaces that
+  // switch with a local expand: the API list is already complete, so the page
+  // shows the first four in server order (ascending) until "View more".
+  const isAiVoice = data.audience === OneQrAudience.AIVoice
   const showViewAsCustomer =
-    viewAs !== ONEQR_ROUTE.asCustomerValue && data.canViewAsCustomer
+    !isAiVoice && viewAs !== ONEQR_ROUTE.asCustomerValue && data.canViewAsCustomer
+  const visibleModules =
+    isAiVoice && !showAllModules ? data.modules.slice(0, 4) : data.modules
+  const showViewMore = isAiVoice && !showAllModules && data.modules.length > 4
   const welcomeMessage = data.welcomeMessage?.trim().toLowerCase() === 'welcome to merchant'
     ? t('oneqr.landing.visit_message')
     : data.welcomeMessage
@@ -203,7 +215,7 @@ export default function OneQrLandingPage() {
         </div>
       ) : null}
 
-      {data.modules.length > 0 ? (
+      {visibleModules.length > 0 ? (
         <div className="px-3 pb-3 pt-3 sm:px-5">
           <h2 className="text-sm font-bold tracking-tight text-nexoraText">
             {t('oneqr.landing.actions_title')}
@@ -211,7 +223,7 @@ export default function OneQrLandingPage() {
         </div>
       ) : null}
 
-      {data.modules.length === 0 ? (
+      {visibleModules.length === 0 ? (
         <p className="px-5 py-12 text-center text-xs font-medium text-nexoraMuted">
           {t('oneqr.landing.no_modules')}
         </p>
@@ -222,7 +234,7 @@ export default function OneQrLandingPage() {
           })}
           className="grid grid-cols-2 gap-2.5 px-3 pb-3 sm:px-5"
         >
-          {data.modules.map((module, index) => (
+          {visibleModules.map((module, index) => (
             <ModuleTile
               // CustomLink may repeat, so the key needs the position too.
               key={`${module.moduleKey}-${index}`}
@@ -241,6 +253,18 @@ export default function OneQrLandingPage() {
           ))}
         </nav>
       )}
+
+      {showViewMore ? (
+        <div className="px-3 pb-3 sm:px-5">
+          <button
+            type="button"
+            onClick={() => setShowAllModules(true)}
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraMuted transition hover:text-nexoraText"
+          >
+            {t('oneqr.landing.view_more')}
+          </button>
+        </div>
+      ) : null}
 
       {showViewAsCustomer ? (
         <div className="px-3 pb-3 sm:px-5">
