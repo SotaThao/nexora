@@ -17,18 +17,18 @@ export default function CheckInsTodayCard({
     <button
       type="button"
       onClick={onViewOverview}
-      className="rounded-xl border border-nexoraLavender bg-violet-50 px-4 py-3 text-left shadow-sm transition-colors hover:bg-violet-100"
+      className="rounded-lg border border-nexoraLavender bg-violet-50 px-3 py-2 text-left shadow-sm transition-colors hover:bg-violet-100"
     >
       {isLoading ? (
-        <p className="text-xs font-bold text-violet-600">{t(p + 'loading')}</p>
+        <p className="text-[10px] font-bold text-violet-600">{t(p + 'loading')}</p>
       ) : isError ? (
-        <p className="text-xs font-bold text-violet-600">{t(p + 'loadError')}</p>
+        <p className="text-[10px] font-bold text-violet-600">{t(p + 'loadError')}</p>
       ) : (
         <>
-          <p className="text-base font-black text-violet-700">
+          <p className="text-xs font-black leading-tight text-violet-700">
             {t(p + 'title', { count: summary?.totalCheckIns ?? 0 })}
           </p>
-          <p className="mt-0.5 text-xs font-bold text-violet-600">
+          <p className="mt-0.5 text-[10px] font-bold leading-tight text-violet-600">
             {t(p + 'breakdown', { newCount: summary?.newGuests ?? 0, returningCount: summary?.returningGuests ?? 0 })}
             {' → '}
             <span>{t(p + 'viewOverview')}</span>
