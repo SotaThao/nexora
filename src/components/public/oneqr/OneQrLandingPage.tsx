@@ -199,7 +199,7 @@ export default function OneQrLandingPage() {
     !isAiVoice && viewAs !== ONEQR_ROUTE.asCustomerValue && data.canViewAsCustomer
   const visibleModules =
     isAiVoice && !showAllModules ? data.modules.slice(0, 4) : data.modules
-  const showViewMore = isAiVoice && !showAllModules && data.modules.length > 0
+  const showViewMore = isAiVoice && !showAllModules && data.modules.length > 4
   const welcomeMessage = data.welcomeMessage?.trim().toLowerCase() === 'welcome to merchant'
     ? t('oneqr.landing.visit_message')
     : data.welcomeMessage
