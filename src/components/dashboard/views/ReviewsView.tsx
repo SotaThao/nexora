@@ -109,12 +109,21 @@ function ReviewsView({
     [hasCollected, collectedItems, reviews, filter, staff],
   )
 
-  // While the full collected list is loading, KPI cards use the all-time
-  // overview summary (All staff only). Once collected is ready, derive KPI
-  // from the same pool as the Google/Yelp tab badges so the numbers match.
-  const useSummary = Boolean(summary) && filter === 'all' && !hasCollected
+  // All-staff KPIs always use the all-time overview summary so they match
+  // /dashboard (Total Reviews / Google / Yelp). Collected list is only for
+  // staff filters and client-side source/star tabs.
+  const useSummary = Boolean(summary) && filter === 'all'
 
   const stats = useMemo(() => {
+    if (useSummary && summary) {
+      return {
+        avg: summary.averageRating > 0 ? summary.averageRating.toFixed(1) : '0.0',
+        google: summary.googleClicks,
+        yelp: summary.yelpClicks,
+        internal: Math.max(0, summary.totalReviews - summary.googleClicks - summary.yelpClicks),
+      }
+    }
+
     if (hasCollected) {
       let sum = 0
       let google = 0
@@ -133,15 +142,6 @@ function ReviewsView({
         google,
         yelp,
         internal,
-      }
-    }
-
-    if (useSummary && summary) {
-      return {
-        avg: summary.averageRating > 0 ? summary.averageRating.toFixed(1) : '0.0',
-        google: summary.googleClicks,
-        yelp: summary.yelpClicks,
-        internal: Math.max(0, summary.totalReviews - summary.googleClicks - summary.yelpClicks),
       }
     }
 
@@ -180,14 +180,19 @@ function ReviewsView({
       if (matchesLowStars(r)) lowStars++
     })
 
+    // Prefer server all-time summary for All-staff tab badges (matches Overview).
+    const useSummaryBadges = Boolean(summary) && filter === 'all' && starFilter === 'all'
+
     return {
-      all: filter === 'all' && starFilter === 'all' ? totalCount : starMatchedCount,
-      google,
-      yelp,
+      all: useSummaryBadges
+        ? (summary.totalReviews ?? totalCount)
+        : (filter === 'all' && starFilter === 'all' ? totalCount : starMatchedCount),
+      google: useSummaryBadges ? summary.googleClicks : google,
+      yelp: useSummaryBadges ? summary.yelpClicks : yelp,
       lowStars,
       stars,
     }
-  }, [countPool, filter, starFilter, totalCount])
+  }, [countPool, filter, starFilter, totalCount, summary])
 
   const reviewLinks = useMemo(() => {
     const defaultLinks = {

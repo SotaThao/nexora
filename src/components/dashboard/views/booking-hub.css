@@ -8417,6 +8417,10 @@ body.booking-appointment-panel-modal-open {
 }
 
 .booking-hub-view .booking-team-calendar .calendar_default_event_inner {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: 100%;
   overflow: hidden;
   border-radius: 11px !important;
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.1);
@@ -8433,31 +8437,68 @@ body.booking-appointment-panel-modal-open {
   transform: translateY(-1px);
 }
 
+/* Tall multi-service tickets: fill the block — name + wrapping services + meta pinned low. */
 .booking-hub-view .booking-calendar-event {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 0;
+  height: 100%;
   overflow: hidden;
-  line-height: 1.32;
+  line-height: 1.35;
 }
 
 .booking-hub-view .booking-calendar-event-name {
+  flex-shrink: 0;
+  display: -webkit-box;
   overflow: hidden;
   font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
   font-weight: 900;
   letter-spacing: -0.015em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  word-break: break-word;
 }
 
+.booking-hub-view .booking-calendar-event-services {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 1px 0;
+  min-height: 0;
+  overflow: hidden;
+  font-size: clamp(0.6875rem, 0.66rem + 0.12vw, 0.75rem);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.booking-hub-view .booking-calendar-event-service-item {
+  max-width: 100%;
+  word-break: break-word;
+}
+
+.booking-hub-view .booking-calendar-event-service-item:not(:last-child)::after {
+  content: ' · ';
+  font-weight: 600;
+  opacity: 0.5;
+}
+
+/* Legacy single-line class kept for any older event HTML still in memory. */
 .booking-hub-view .booking-calendar-event-service {
   overflow: hidden;
   margin-top: 2px;
   font-size: clamp(0.6875rem, 0.66rem + 0.12vw, 0.75rem);
-  font-weight: 800;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-weight: 700;
+  line-height: 1.4;
+  word-break: break-word;
 }
 
 .booking-hub-view .booking-calendar-event-meta {
-  margin-top: 4px;
+  flex-shrink: 0;
+  margin-top: auto;
+  padding-top: 4px;
   font-size: clamp(0.625rem, 0.6rem + 0.12vw, 0.6875rem);
   font-weight: 700;
   opacity: 0.72;
@@ -8590,7 +8631,7 @@ body.booking-appointment-panel-modal-open {
 .booking-hub-view.pos-booking-calendar .booking-calendar-half-hour-labels {
   position: absolute;
   inset: 0 auto auto 0;
-  z-index: 4;
+  z-index: 2;
   width: 64px;
   color: #64748b;
   font-size: 10px;
@@ -8909,7 +8950,8 @@ body.booking-appointment-panel-modal-open {
     font-size: 10px;
   }
 
-  .booking-hub-view .booking-calendar-event-service {
+  .booking-hub-view .booking-calendar-event-service,
+  .booking-hub-view .booking-calendar-event-services {
     font-size: 9px;
   }
 

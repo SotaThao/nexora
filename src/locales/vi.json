@@ -4396,6 +4396,8 @@
             "statusCompleted": "Hoàn tất",
             "calendarTitle": "Lịch theo kỹ thuật viên",
             "calendarSubtitle": "9:00 SA – 7:00 CH · lịch hẹn nhóm theo kỹ thuật viên",
+            "calendarSubtitleHours": "{{hours}} · lịch hẹn nhóm theo kỹ thuật viên",
+            "calendarClosedDay": "Salon đóng cửa ngày này. Giờ mở cửa chỉnh trong Salon Information.",
             "calendarToday": "Hôm nay",
             "calendarPrevDay": "Ngày trước",
             "calendarNextDay": "Ngày sau",
