@@ -24,6 +24,7 @@ import {
   ONEQR_AUDIENCE_ORDER,
   ONEQR_MODULE_CATALOG,
   ONEQR_MODULE_CATALOG_BY_KEY,
+  getDefaultOneQrIdentityPolicy,
   getDefaultOneQrModulePrimaryAudience,
 } from '../../constants/oneQr'
 import type {
@@ -185,7 +186,7 @@ function withAllAudiences(configs: OneQrRoleConfig[]): OneQrRoleConfig[] {
       configs.find((config) => config.audience === audience) ?? {
         audience,
         welcomeMessage: null,
-        identityPolicy: OneQrIdentityPolicy.PublicFirst,
+        identityPolicy: getDefaultOneQrIdentityPolicy(audience),
         modules: [],
       },
   )

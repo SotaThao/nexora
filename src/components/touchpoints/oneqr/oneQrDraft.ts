@@ -14,6 +14,7 @@ import {
   OneQrModuleUnavailableReason,
   ONEQR_AUDIENCE_ORDER,
   ONEQR_MODULE_CATALOG_BY_KEY,
+  getDefaultOneQrIdentityPolicy,
 } from '../../../constants/oneQr'
 import type {
   OneQr,
@@ -58,7 +59,8 @@ export function buildDraft(oneQr: OneQr | null): OneQrDraft {
     const config = oneQr?.audiences.find((item) => item.audience === audience)
     byAudience[audience] = {
       welcomeMessage: config?.welcomeMessage ?? '',
-      identityPolicy: config?.identityPolicy ?? OneQrIdentityPolicy.PublicFirst,
+      identityPolicy:
+        config?.identityPolicy ?? getDefaultOneQrIdentityPolicy(audience),
       modules: prioritizeEnabledModules(
         (config?.modules ?? []).map((module) => ({
           ...module,

@@ -38,6 +38,14 @@ export enum OneQrIdentityPolicy {
   AlwaysSignIn = 'AlwaysSignIn',
 }
 
+export function getDefaultOneQrIdentityPolicy(
+  audience: OneQrAudience,
+): OneQrIdentityPolicy {
+  return audience === OneQrAudience.Staff || audience === OneQrAudience.Owner
+    ? OneQrIdentityPolicy.AlwaysSignIn
+    : OneQrIdentityPolicy.PublicFirst
+}
+
 /**
  * The **built-in** module keys, mirroring the backend's `OneQrModuleKey` enum.
  *
