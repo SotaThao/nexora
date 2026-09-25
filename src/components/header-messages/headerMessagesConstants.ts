@@ -82,6 +82,9 @@ export interface HeaderChatMessageReplyTo {
 export interface HeaderChatThreadMessage {
   id: string
   direction: HeaderChatMessageDirection
+  senderId?: string
+  senderName?: string | null
+  senderAvatarUrl?: string | null
   bodyKey?: string
   bodyText?: string
   imageUrl?: string

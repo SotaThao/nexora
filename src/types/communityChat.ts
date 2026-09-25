@@ -42,6 +42,8 @@ export interface CommunityChatMessage {
   id: string
   chatSessionId: string
   senderId: string
+  senderName?: string | null
+  senderAvatarUrl?: string | null
   content: string
   messageType: CommunityChatMessageType
   sentAt: string
@@ -86,6 +88,8 @@ export interface CommunityChatReceiveMessageEvent {
   id: string
   chatSessionId: string
   senderId: string
+  senderName?: string | null
+  senderAvatarUrl?: string | null
   content: string
   messageType: string
   sentAt: string
