@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { Upload } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { getErrorMessage } from '../../../data/errorCodes'
+import { isApiError } from '../../../types/domain'
 import {
   usePosCustomerImport,
   usePosCustomerImportPreview,
@@ -115,6 +116,13 @@ function mappingFromSuggested(
     created: fromBackend.created || indexToSelectValue(fromFrontend.created),
     lastVisit: fromBackend.lastVisit || indexToSelectValue(fromFrontend.lastVisit),
   }
+}
+
+/** No response or a gateway error: the server may have imported part of the file before the request dropped. */
+const IMPORT_INTERRUPTED_STATUSES = new Set([0, 502, 504])
+
+function isImportInterrupted(error: unknown): boolean {
+  return isApiError(error) && IMPORT_INTERRUPTED_STATUSES.has(error.status)
 }
 
 function buildPreviewRows(columns: PosCustomerImportColumnDto[], headerRow: number) {
@@ -442,7 +450,7 @@ export default function BookingCustomerImportModal({
           error,
           t,
           'ERROR',
-          t(`${TK}.errors.importFailed`),
+          t(isImportInterrupted(error) ? `${TK}.errors.importTimeout` : `${TK}.errors.importFailed`),
         ))
         goToStep(1)
       }
