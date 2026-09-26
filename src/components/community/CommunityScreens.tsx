@@ -58,8 +58,7 @@ import { CommunityPostComposer, CommunityPostMedia } from './CommunityPostMedia'
 import { CommunityRightRail } from './CommunityRightRail'
 import { createCommunitySlug } from './communitySlug'
 import { demoEvents, demoLearning } from './communityDemoContent'
-import { OwnerJobsPanel } from './OwnerJobsPanel'
-import { CommunityJobsPanel as VariantBJobsPanel } from './CommunityJobDetail'
+import CommunityJobsTab from './jobs/CommunityJobsTab'
 import IconButton from '../ui/IconButton'
 import StaffQuickChatModal from '../ui/StaffQuickChatModal'
 import ToggleSwitch from '../ui/ToggleSwitch'
@@ -398,7 +397,6 @@ export function CommunityHome() {
   const [composerCommunityId, setComposerCommunityId] = useState<string | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
   const currentTab = searchParams.get('tab') || 'feed'
-  const jobMode = searchParams.get('jobMode') || 'b'
   const needsCommunityList = currentTab === 'feed' || currentTab === 'groups' || currentTab === 'announcements'
 
   const ringCommunities = myCommunities.data?.items.length ? myCommunities.data.items : (communities.data?.items ?? [])
@@ -448,57 +446,7 @@ export function CommunityHome() {
             ) : currentTab === 'learning' ? (
               <DemoLearningList />
             ) : currentTab === 'jobs' ? (
-              <div className="space-y-4">
-                {/* Compact segmented control (round 2 layout pass) — replaces the
-                    earlier bordered card + caption line: same two buttons, same
-                    onClick/setSearchParams and same jobMode-driven visibility
-                    logic, just restyled so it sits directly above the toolbar
-                    instead of its own card. min-h-11 (44px): touch-target audit,
-                    round 10. */}
-                <div className="mb-2 inline-flex rounded-xl bg-nexoraSurfaceMuted p-1">
-                  <button
-                    type="button"
-                    onClick={() => setSearchParams({ tab: 'jobs', jobMode: 'b' }, { replace: true })}
-                    className={`min-h-11 whitespace-nowrap rounded-lg px-3 text-sm font-bold transition-all ${
-                      jobMode !== 'ai'
-                        ? 'bg-nexoraSurface text-nexoraBrand shadow-sm'
-                        : 'text-nexoraMuted hover:text-nexoraText'
-                    }`}
-                  >
-                    Bảng tin
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSearchParams({ tab: 'jobs', jobMode: 'ai' }, { replace: true })}
-                    className={`min-h-11 whitespace-nowrap rounded-lg px-3 text-sm font-bold transition-all ${
-                      jobMode === 'ai'
-                        ? 'bg-nexoraSurface text-nexoraBrand shadow-sm'
-                        : 'text-nexoraMuted hover:text-nexoraText'
-                    }`}
-                  >
-                    ✦ AI gợi ý
-                  </button>
-                </div>
-
-                {/* Both panels stay mounted always, toggled via `hidden` (same
-                    pattern JobDetailView/grid already use in CommunityJobDetail.tsx)
-                    instead of conditional mounting — switching jobMode used to
-                    unmount the inactive panel and silently discard all of its
-                    local state (created/edited/deleted posts, or
-                    requested/saved/dismissed candidates) (P2 fix). */}
-                {/* `isActive` (P3 fix, round 4): tells each always-mounted panel
-                    whether IT is the one currently visible, so its scroll/focus
-                    restoration effects don't act on the other, hidden panel's
-                    behalf (window.scrollTo/.focus() are global calls — a hidden
-                    panel's own effect firing would still move focus/scroll on
-                    whichever panel the user is actually looking at). */}
-                <div className={jobMode === 'ai' ? '' : 'hidden'}>
-                  <OwnerJobsPanel isActive={jobMode === 'ai'} />
-                </div>
-                <div className={jobMode === 'ai' ? 'hidden' : ''}>
-                  <VariantBJobsPanel isActive={jobMode !== 'ai'} />
-                </div>
-              </div>
+              <CommunityJobsTab />
             ) : null}
           </div>
         </div>

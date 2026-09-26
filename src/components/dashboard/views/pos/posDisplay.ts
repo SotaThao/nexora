@@ -19,3 +19,22 @@ export function getInitials(name: string): string {
 export function joinOrEmpty(values: string[] | null | undefined): string {
   return values && values.length > 0 ? values.join(', ') : EMPTY_VALUE
 }
+
+/** Formats the salon address for receipt headers without dropping locality fields. */
+export function formatBusinessAddress(parts: {
+  address?: string | null
+  city?: string | null
+  state?: string | null
+  zipCode?: string | null
+  country?: string | null
+}): string {
+  const clean = (value?: string | null) => value?.trim() || ''
+  const street = clean(parts.address)
+  const city = clean(parts.city)
+  const state = clean(parts.state)
+  const zipCode = clean(parts.zipCode)
+  const country = clean(parts.country)
+  const stateAndZip = [state, zipCode].filter(Boolean).join(' ')
+
+  return [street, city, stateAndZip, country].filter(Boolean).join(', ')
+}
