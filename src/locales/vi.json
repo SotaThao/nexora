@@ -6941,7 +6941,8 @@
                 "emptyFile": "File “{name}” không có dòng dữ liệu.",
                 "missingPhoneColumn": "File “{name}” cần có ít nhất một cột số điện thoại (ví dụ Phone, Mobile, Tel, SĐT).",
                 "readFailed": "Không thể đọc file “{name}”. Vui lòng thử file .xlsx hoặc .csv khác.",
-                "importFailed": "Không thể import khách hàng. Vui lòng thử lại."
+                "importFailed": "Không thể import khách hàng. Vui lòng thử lại.",
+                "importTimeout": "Quá trình import mất nhiều thời gian hơn dự kiến. Một số khách hàng có thể đã được import — hãy tải lại danh sách trước khi thử lại."
               },
               "requirements": {
                 "title": "Yêu cầu đối với file",
