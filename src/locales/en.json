@@ -392,7 +392,185 @@
     "onboarding_banner_description": "Add your contact details and, if you choose, a payout method so you are ready when you need it.",
     "onboarding_banner_description_payment": "Set up at least one payout method so you can receive tips.",
     "complete_onboarding_now": "Complete onboarding",
-    "dismiss_onboarding_banner": "Dismiss profile reminder"
+    "dismiss_onboarding_banner": "Dismiss profile reminder",
+    "community": {
+      "jobs": {
+        "pageTitle": "Community Jobs",
+        "pageDescription": "Browse hiring posts from salons, or let salons find you with your own \"seeking work\" post.",
+        "simulatedNotice": "Simulated data",
+        "chatFallbackHint": "Direct chat with this salon unlocks once you're linked there. We opened your chat inbox instead.",
+        "tabs": {
+          "ariaLabel": "Community jobs sections",
+          "browse": "Browse Jobs",
+          "mine": "My Posts",
+          "applied": "Applied"
+        },
+        "filters": {
+          "keywordLabel": "Keyword",
+          "keywordPlaceholder": "e.g. Acrylic, Dip, Full-time",
+          "cityLabel": "City",
+          "cityPlaceholder": "e.g. Austin",
+          "stateLabel": "State",
+          "statePlaceholder": "e.g. TX",
+          "workTypeLabel": "Work type",
+          "workTypeAll": "All work types",
+          "skillLabel": "Skill",
+          "skillAll": "All skills",
+          "clear": "Clear filters"
+        },
+        "feed": {
+          "title": "Hiring posts",
+          "emptyTitle": "No hiring posts match your filters",
+          "emptyDescription": "Try clearing a filter or check back later — salons post new openings often.",
+          "loadError": "Could not load the hiring feed. Please try again.",
+          "retry": "Try again"
+        },
+        "card": {
+          "postedOn": "Posted {{date}}",
+          "alreadyApplied": "You applied",
+          "messageAction": "Message",
+          "viewDetail": "View details",
+          "applyAction": "Apply",
+          "headcountOne": "1 opening",
+          "headcountOther": "{{count}} openings"
+        },
+        "detail": {
+          "eyebrow": "Hiring post",
+          "title": "Job details",
+          "close": "Close",
+          "chatAction": "Message salon",
+          "applyAction": "Apply now"
+        },
+        "apply": {
+          "title": "Apply to this job",
+          "subtitle": "Your application goes to {{business}}.",
+          "noteLabel": "Note to the salon",
+          "notePlaceholder": "e.g. I have 3 years of acrylic and dip experience and can start next week.",
+          "attachSeekingLabel": "Attach a seeking post",
+          "attachSeekingNone": "Don't attach",
+          "optional": "optional",
+          "sharePhoneLabel": "Share my phone number with this salon",
+          "cancel": "Cancel",
+          "submit": "Submit application",
+          "submitting": "Submitting…",
+          "close": "Close",
+          "successTitle": "Application sent",
+          "successDescription": "Your application to {{business}} was submitted.",
+          "messageBusiness": "Message the business",
+          "viewApplied": "View applied jobs",
+          "alreadyAppliedError": "You already applied to this posting.",
+          "genericError": "Could not submit your application. Please try again."
+        },
+        "applied": {
+          "emptyTitle": "No applications yet",
+          "emptyDescription": "Jobs you apply to will show up here.",
+          "loadError": "Could not load your applications. Please try again.",
+          "retry": "Try again",
+          "appliedOn": "Applied {{date}}",
+          "messageAction": "Message",
+          "postingUnavailable": "Posting no longer available"
+        },
+        "applicationStatus": {
+          "Submitted": "Submitted"
+        },
+        "composer": {
+          "title": "Post that you're seeking work",
+          "editTitle": "Edit your seeking post",
+          "close": "Close",
+          "titleLabel": "Headline",
+          "experienceLabel": "Experience",
+          "availableFromLabel": "Available from",
+          "optional": "optional",
+          "workTypesLabel": "Work types",
+          "skillsLabel": "Skills",
+          "locationPaySection": "Location & pay",
+          "cityLabel": "City",
+          "stateLabel": "State",
+          "payTypeLabel": "Pay expectation",
+          "payAmountLabel": "Amount (USD)",
+          "payUnitLabel": "Unit",
+          "payTextLabel": "Specific pay",
+          "contactSection": "Contact",
+          "displayNameLabel": "Your name",
+          "phoneLabel": "Phone",
+          "showFullNameLabel": "Show my full name publicly",
+          "showPhoneLabel": "Show my phone number publicly",
+          "bodyLabel": "About you",
+          "phoneLeakWarning": "Your phone number appears in the text above but you've chosen to hide it — remove it from the text or turn on \"Show my phone number publicly\".",
+          "previewLabel": "Live preview",
+          "placeholders": {
+            "title": "e.g. Experienced nail tech seeking full-time",
+            "city": "e.g. Austin",
+            "state": "e.g. TX",
+            "payAmount": "e.g. 25",
+            "payText": "e.g. $25/hr + tips",
+            "displayName": "e.g. Jane Nguyen",
+            "body": "e.g. 3 years of acrylic, dip, and gel-x experience. Reliable, punctual, and great with clients."
+          },
+          "validation": {
+            "title": "Headline is required.",
+            "skills": "Select at least one skill.",
+            "workTypes": "Select at least one work type.",
+            "body": "About you must be between 20 and 2,000 characters.",
+            "displayName": "Your name is required.",
+            "phone": "Enter a valid 10-digit US phone number.",
+            "draftTitle": "Add a headline before saving a draft."
+          },
+          "saveDraft": "Save draft",
+          "publish": "Publish",
+          "publishing": "Publishing…",
+          "draftSaved": "Draft saved.",
+          "saveFailed": "Could not save your draft.",
+          "publishSuccess": "Your seeking post was submitted for review.",
+          "publishFailed": "Could not publish your post.",
+          "unsavedTitle": "Discard changes?",
+          "unsavedConfirm": "You have unsaved changes. Leave without saving?",
+          "unsavedStay": "Keep editing",
+          "unsavedLeave": "Discard",
+          "preview": {
+            "badge": "Seeking work",
+            "category": "Community · Seeking Work",
+            "titleFallback": "Your headline goes here",
+            "bodyFallback": "Your description goes here.",
+            "contact": "Contact",
+            "chatOnly": "Message to contact",
+            "availableFrom": "Available from {{date}}",
+            "anonymousName": "Candidate",
+            "pendingNotice": "Your post is pending review and isn't visible to salons yet."
+          }
+        },
+        "myPosts": {
+          "title": "My seeking posts",
+          "description": "Let salons discover you — post once and edit anytime.",
+          "createAction": "New seeking post",
+          "emptyTitle": "You haven't posted yet",
+          "emptyDescription": "Create a seeking post so salons can find and message you.",
+          "loadError": "Could not load your posts. Please try again.",
+          "retry": "Try again",
+          "continueDraft": "Continue draft",
+          "edit": "Edit",
+          "closeAction": "Close",
+          "closeSuccess": "Post closed.",
+          "closeFailed": "Could not close the post.",
+          "closeConfirmTitle": "Close this post?",
+          "closeConfirmBody": "\"{{title}}\" will no longer be visible to salons.",
+          "closeConfirmCancel": "Cancel",
+          "closeConfirmAction": "Close post"
+        },
+        "seekingStatus": {
+          "Draft": "Draft",
+          "Pending": "Pending review",
+          "Published": "Visible to salons",
+          "Closed": "Closed"
+        },
+        "experience": {
+          "UnderOneYear": "Under 1 year",
+          "OneToThreeYears": "1–3 years",
+          "ThreeToFiveYears": "3–5 years",
+          "FivePlusYears": "5+ years"
+        }
+      }
+    }
   },
   "common": {
     "close": "Close",
@@ -4858,6 +5036,389 @@
             "scanConfirmClockOut": "End your shift? You have worked {{hours}} so far.",
             "scanClockedIn": "Clocked in at {{time}}.",
             "scanClockedOut": "Clocked out at {{time}} — {{hours}} on shift."
+          },
+          "recruitment": {
+            "enums": {
+              "status": {
+                "Draft": "Draft",
+                "Pending": "Pending review",
+                "Published": "Recruiting",
+                "Closed": "Closed",
+                "Filled": "Filled"
+              },
+              "position": {
+                "NailTechnician": "Nail technician",
+                "AcrylicDipTechnician": "Acrylic / Dip technician",
+                "ManicurePedicureTechnician": "Manicure / Pedicure technician",
+                "Receptionist": "Receptionist",
+                "SalonManager": "Salon manager"
+              },
+              "workType": {
+                "FullTime": "Full time",
+                "PartTime": "Part time",
+                "Flexible": "Flexible"
+              },
+              "payType": {
+                "Negotiable": "Negotiable",
+                "Fixed": "Fixed pay",
+                "Commission": "Commission"
+              },
+              "payUnit": {
+                "Hour": "hour",
+                "Day": "day",
+                "Week": "week",
+                "Month": "month",
+                "Year": "year"
+              },
+              "skill": {
+                "Acrylic": "Acrylic",
+                "Dip": "Dip",
+                "Gel": "Gel",
+                "Manicure": "Manicure",
+                "Pedicure": "Pedicure",
+                "NailArt": "Nail Art",
+                "French": "French",
+                "GelX": "Gel X",
+                "BuilderGel": "Builder Gel",
+                "ThreeDNailArt": "3D Nail Art",
+                "HeadSpa": "Head Spa",
+                "Lash": "Lash",
+                "Waxing": "Waxing"
+              },
+              "benefit": {
+                "FlexibleSchedule": "Flexible schedule",
+                "AdditionalTraining": "Additional training",
+                "HousingSupport": "Housing support"
+              }
+            },
+            "shell": {
+              "title": "Staff & Recruitment",
+              "description": "Manage your team and find the right new technicians.",
+              "addStaff": "Add Staff",
+              "recruitStaff": "Post a Job",
+              "staffCtaTitle": "Need more people on your team?",
+              "staffCtaDescription": "Create and manage a job posting right here.",
+              "subtabsAriaLabel": "Staff and recruitment views",
+              "staffTab": "Staff",
+              "recruitmentTab": "Recruitment",
+              "closeConfirmTitle": "Close this job posting?",
+              "closeConfirmBody": "“{{title}}” will be moved to Closed. You can edit and publish it again.",
+              "closeConfirmCancel": "Go back",
+              "closeConfirmAction": "Position filled · Close posting",
+              "closeSuccess": "Recruitment closed.",
+              "closeFailed": "Could not close this posting. Please try again."
+            },
+            "list": {
+              "bridgeTitle": "From POS to the NailHub community",
+              "bridgeDescription": "Create once, then track and close the posting from POS.",
+              "postingChannel": "Recruitment posting channel",
+              "title": "Job postings",
+              "filterAriaLabel": "Filter job postings",
+              "filters": {
+                "all": "All",
+                "draft": "Draft"
+              },
+              "searchLabel": "Search job postings",
+              "searchPlaceholder": "Search job postings...",
+              "loadError": "Job postings could not be loaded.",
+              "retry": "Try again",
+              "emptyTitle": "No matching postings yet",
+              "emptyDescription": "Try another filter or create a new job posting.",
+              "showAll": "Show all postings",
+              "notSent": "Not sent to NailHub yet",
+              "nailhubStatus": "NailHub",
+              "closedStatus": "Recruitment closed",
+              "messages": "Messages",
+              "viewPost": "View posting",
+              "continueDraft": "Continue editing",
+              "edit": "Edit",
+              "closeRecruitment": "Close recruitment",
+              "previewDialogEyebrow": "Job seeker's view",
+              "previewDialogTitle": "Posting on NailHub",
+              "closePreview": "Close preview",
+              "connectionTitle": "Recruitment connection",
+              "nexoraDescription": "Compose & manage postings",
+              "nailhubDescription": "Reach the nail technician community",
+              "connectionDescription": "Each posting has an original record on NailHub. Its status is returned to POS.",
+              "ownerStepsTitle": "Owner workflow",
+              "ownerStep1Title": "Compose",
+              "ownerStep1Description": "Use saved salon information",
+              "ownerStep2Title": "Preview",
+              "ownerStep2Description": "Review public content",
+              "ownerStep3Title": "Publish & manage",
+              "ownerStep3Description": "Edit or close when the position is filled",
+              "ownerHint": "Try posting a new job →"
+            },
+            "preview": {
+              "salonFallback": "Nail salon",
+              "hiddenSalon": "Nail salon in {{location}}",
+              "hiddenSalonFallback": "Nail salon",
+              "titleFallback": "Your job posting title",
+              "bodyFallback": "Your job description will appear here.",
+              "headcount": "{{count}} openings",
+              "fixedPay": "{{amount}} / {{unit}}",
+              "locationContact": "Workplace & contact",
+              "category": "NAIL TECHNICIAN WANTED",
+              "negotiablePay": "Pay negotiable",
+              "commissionPay": "Commission · discuss directly",
+              "fixedPayMissing": "Pay amount not entered",
+              "selectedServices": "Services to perform",
+              "deadline": "Accepting applications until: {{date}}",
+              "contactAction": "Contact {{contact}}",
+              "managerFallback": "Salon manager",
+              "chatAction": "Message through the NailHub inbox",
+              "chatHelper": "Continue the conversation in the inbox. The salon will share more information as needed.",
+              "closedAction": "Posting closed",
+              "pendingNotice": "This posting is pending review and is not public yet.",
+              "hiddenCoverNote": "Salon name and photo are hidden",
+              "urgentBadge": "Urgent",
+              "benefits": "Salon benefits",
+              "liveUpdate": "Preview content updates automatically."
+            },
+            "modePicker": {
+              "title": "Choose how to post",
+              "close": "Close posting mode picker",
+              "quickTitle": "Quick post",
+              "quickDescription": "A few basic fields, published in about 1 minute.",
+              "advancedTitle": "Advanced compose",
+              "advancedDescription": "Choose services from the menu, detailed visibility settings, and step-by-step preview."
+            },
+            "quick": {
+              "title": "Post a technician job",
+              "userFallback": "Owner",
+              "close": "Close quick posting form",
+              "rolePrefix": "Current role: {{name}} ·",
+              "ownerRole": "Salon owner",
+              "roleMiddle": "→ the posting will be published as",
+              "postType": "Hiring technicians",
+              "roleSuffix": "The posting type cannot be changed for the current signed-in role.",
+              "urgentLabel": "Mark as \"Urgent\"",
+              "urgentHint": "(stands out more in the list)",
+              "salonName": "Salon name",
+              "location": "Location",
+              "scheduleIncome": "Schedule & income",
+              "workTypeLabel": "Work type",
+              "payTextLabel": "Specific pay",
+              "optional": "(optional)",
+              "showBenefits": "+ Add salon benefits (optional)",
+              "benefitsLabel": "Salon benefits",
+              "salonDetails": "What technicians should know about the salon",
+              "salonPhoto": "Salon photo",
+              "changePhoto": "Change photo",
+              "messageLabel": "Additional message",
+              "writeWithAi": "✨ Write with AI",
+              "previewTitle": "Posting preview",
+              "workerBadge": "Hiring technicians",
+              "skillFallback": "Choose skills",
+              "incomeFallback": "Income",
+              "timingFallback": "Choose timing",
+              "cancel": "Cancel",
+              "publish": "Post",
+              "publishing": "Posting…",
+              "success": "The posting was sent for review.",
+              "publishFailed": "Could not submit the posting. Please try again.",
+              "imageTooLarge": "Choose an image no larger than 5 MB.",
+              "imageInvalidType": "Choose an image file.",
+              "businessLoading": "Salon information is still loading.",
+              "businessLoadError": "Salon information could not be loaded.",
+              "businessRetry": "Try again",
+              "unsavedTitle": "Close the quick posting form?",
+              "unsavedConfirm": "Your changes have not been posted.",
+              "unsavedStay": "Keep editing",
+              "unsavedLeave": "Discard changes",
+              "autoTitle": "Hiring nail technician {{workType}}",
+              "workType": {
+                "FullTime": "full-time",
+                "PartTime": "part-time"
+              },
+              "workTypeDisplay": {
+                "FullTime": "Full-time",
+                "PartTime": "Part-time"
+              },
+              "placeholders": {
+                "salonName": "e.g. Luxury Nails & Spa",
+                "location": "e.g. Houston, TX",
+                "payText": "e.g. $1,000 - $1,300/week",
+                "message": "e.g. Busy salon with regular clients and a comfortable work environment…"
+              },
+              "validation": {
+                "salonName": "Enter the salon name.",
+                "titleLength": "Shorten the location so the generated job title is 120 characters or fewer.",
+                "message": "Keep the message to 500 characters or fewer."
+              }
+            },
+            "composer": {
+              "title": "Post a Job",
+              "editTitle": "Edit job posting",
+              "description": "Salon information is ready. Just add your hiring needs.",
+              "backToRecruitment": "Back to recruitment",
+              "steps": {
+                "compose": "Compose",
+                "review": "Preview",
+                "result": "Result"
+              },
+              "quickPreview": "Quick preview",
+              "quickPreviewNote": "Job seekers see the posting on NailHub. The owner manages it in POS.",
+              "saveDraft": "Save draft",
+              "previewAction": "Preview posting",
+              "draftSaved": "Draft saved.",
+              "suggestedApplied": "Template text was filled based on your visibility settings. You can edit it.",
+              "saveFailed": "Could not save the draft. Please try again.",
+              "publishFailed": "Could not submit the posting. Please try again.",
+              "unsavedTitle": "Leave the posting composer?",
+              "unsavedConfirm": "Your draft has unsaved content.",
+              "unsavedCancel": "Go back",
+              "unsavedLeave": "Leave composer",
+              "needs": {
+                "title": "Hiring needs",
+                "description": "Help job seekers understand what your salon needs.",
+                "servicesTitle": "Services you are hiring for",
+                "servicesDescription": "Choose the services you want the new hire to perform.",
+                "chooseServices": "Choose from the salon menu",
+                "changeServices": "Change selected services",
+                "menuSourceTag": "From menu",
+                "servicesEmpty": "Choose services to receive skill suggestions.",
+                "servicesSummary": "{{serviceCount}} services → {{skillCount}} suggested skills",
+                "clearServices": "Clear services",
+                "skillsHint": "Review menu suggestions, remove them, or add skills that fit the role.",
+                "skillsSelected": "{{count}} skills selected",
+                "benefitsTitle": "Salon benefits",
+                "urgentHint": "The posting stands out more in the list."
+              },
+              "fields": {
+                "title": "Job title",
+                "position": "Position",
+                "headcount": "Number of openings",
+                "workType": "Work schedule",
+                "deadline": "Apply by",
+                "skills": "Desired skills",
+                "payType": "Compensation",
+                "payAmount": "Pay (USD)",
+                "payUnit": "Unit",
+                "payText": "Specific pay",
+                "urgent": "Mark as urgent",
+                "body": "Posting content",
+                "contactName": "Contact name in profile",
+                "phone": "Phone number in profile"
+              },
+              "placeholders": {
+                "title": "e.g. Hiring an experienced Acrylic / Dip technician",
+                "headcount": "e.g. 2",
+                "deadline": "e.g. 2026-10-15",
+                "payAmount": "e.g. 25",
+                "payText": "e.g. $1,000 - $1,300/week",
+                "body": "e.g. Describe the role, schedule, salon culture, and how to get in touch.",
+                "contactName": "e.g. Salon manager"
+              },
+              "content": {
+                "title": "Posting content",
+                "description": "Describe the work, schedule, and how applicants should contact you.",
+                "useSuggested": "Use template text",
+                "bodyHint": "20–4,000 characters",
+                "template": {
+                  "introWithLocation": "{{salon}} is hiring {{count}} {{position}} in {{location}}.",
+                  "intro": "{{salon}} is hiring {{count}} {{position}}.",
+                  "details": "Desired skills: {{skills}}. Work schedule: {{workType}}. {{pay}}.",
+                  "detailsWithoutSkills": "Work schedule: {{workType}}. {{pay}}.",
+                  "benefits": "Salon benefits: {{benefits}}.",
+                  "team": "We are looking for a careful, collaborative teammate.",
+                  "phoneClosing": "Please contact {{contact}} at {{phone}} to discuss the role.",
+                  "chatClosing": "Please message through the NailHub inbox to discuss the schedule and role.",
+                  "manager": "the salon manager"
+                }
+              },
+              "visibility": {
+                "title": "Salon information & visibility",
+                "description": "Choose which details appear publicly in the posting.",
+                "question": "What can job seekers see?",
+                "presets": {
+                  "ShowAll": "Show all",
+                  "ChatOnly": "Chat only",
+                  "HideNameAndContact": "Hide name & contact"
+                },
+                "summary": {
+                  "ShowAll": "Show all",
+                  "ChatOnly": "Show some",
+                  "HideNameAndContact": "Hide name & contact",
+                  "Custom": "Show some"
+                },
+                "businessName": "Salon name and photo",
+                "businessNameHint": "Disable to use “{{name}}” in the posting.",
+                "address": "Full street address",
+                "addressHint": "Disable to show only {{location}}.",
+                "addressHintUnknown": "Disable to hide the full street address.",
+                "contactName": "Contact person's name",
+                "contactNameHint": "Disable to keep the manager's name private.",
+                "phone": "Phone number",
+                "phoneHint": "Disable to receive messages through the inbox.",
+                "publicLocationNote": "The {{location}} area remains public. Hidden information does not reappear when a job seeker signs in.",
+                "publicLocationUnknown": "The salon area is not set yet. Hidden information does not reappear when a job seeker signs in.",
+                "leakDescription": "The title or content still contains hidden {{fields}}. Edit it before previewing and publishing.",
+                "pausedTag": "Review content",
+                "pausedTitle": "Hidden information remains in the posting",
+                "pausedDescription": "Edit the title and content to remove {{fields}} before previewing.",
+                "pausedNote": "The salon identity remains saved in the management profile.",
+                "leakFields": {
+                  "businessName": "salon name",
+                  "address": "street address",
+                  "zipCode": "ZIP code",
+                  "contactName": "contact name",
+                  "phone": "phone number"
+                },
+                "salonFallback": "Salon profile",
+                "addressFallback": "No saved address",
+                "sourceNote": "Source information remains in the management profile. The posting only shows the fields you enabled; also review anything you wrote yourself."
+              },
+              "servicePicker": {
+                "eyebrow": "SERVICES → SKILLS",
+                "title": "Choose from the salon menu",
+                "description": "Choose the services you are hiring for. Services with the same skills are grouped together.",
+                "close": "Close service picker",
+                "searchLabel": "Search services",
+                "searchPlaceholder": "Service name or skill...",
+                "categoryLabel": "Service group",
+                "allCategories": "All groups",
+                "empty": "No services found. Try another name or select all groups.",
+                "selectedCount": "{{count}} services selected",
+                "skillSuggestions": "Suggested: {{skills}}",
+                "selectionHint": "Choose services from the list to begin.",
+                "serviceSuggestion": "Suggested: {{skills}}",
+                "cancel": "Cancel",
+                "apply": "Apply selection"
+              },
+              "review": {
+                "ready": "Ready to preview",
+                "title": "Post from POS to NailHub",
+                "salon": "Posting salon",
+                "destination": "Destination",
+                "destinationValue": "NailHub · Nail technician wanted",
+                "contact": "Contact",
+                "hidden": "Hidden",
+                "confirm": "I reviewed the posting content and contact information.",
+                "publish": "Post to NailHub ↗",
+                "update": "Update on NailHub ↗",
+                "publishing": "Posting…",
+                "back": "Back to edit"
+              },
+              "result": {
+                "title": "Posting sent for review",
+                "description": "NailHub reviews the posting before it is public. POS shows the current review status.",
+                "viewPost": "View posting on NailHub ↗",
+                "backToList": "Back to job postings"
+              },
+              "validation": {
+                "title": "Please enter a posting title.",
+                "draftTitle": "Enter a title to save the draft.",
+                "headcount": "Enter between 1 and 50 openings.",
+                "skills": "Select at least one desired skill.",
+                "deadline": "Select the last day to receive applications.",
+                "payAmount": "Enter pay greater than $0, up to $100,000.",
+                "body": "Content must contain at least 20 characters.",
+                "contactName": "Enter the contact person.",
+                "phone": "Enter a 10-digit phone number, optionally with country code 1.",
+                "privacy": "Please remove hidden {{fields}} from the title or content."
+              }
+            }
           }
         },
         "PackageManagementView": {
@@ -8929,6 +9490,20 @@
       "loadFailed": "We couldn't load the demo workspace.",
       "campaignRequired": "Enter a campaign name and message.",
       "landingRequired": "Choose a published demo landing page."
+    }
+  },
+  "community_jobs_demo": {
+    "owner": {
+      "title": "Recruitment",
+      "description": "Post openings to NailHub, then track, edit and close them — all from Bitcoin Nail Bar's dashboard."
+    },
+    "readOnly": {
+      "banner": "You're viewing Community Jobs as a guest. Switch to Jessica to apply or send messages.",
+      "actionHint": "Choose \"Jessica · staff\" in the top bar to apply or message."
+    },
+    "chat": {
+      "sampleSalonHint": "This is a sample salon posting for the demo — no real chat is available here.",
+      "dmFailed": "Couldn't start the chat. Please try again."
     }
   }
 }

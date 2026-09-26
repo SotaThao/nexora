@@ -13,8 +13,10 @@ import {
 import { useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { COMMUNITY_DEMO_PERSONAS, useCommunityAuth } from '../CommunityAuth'
 import { CommunityChatInboxTrigger } from '../CommunityChatDock'
 import { CommunityNotificationBell } from '../CommunityNotifications'
+import { JOB_CHAT_ACCOUNT_NAMES } from '../jobChatTarget'
 import AppDownloadLinks from '../../ui/AppDownloadLinks'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import MenuIcon from '../../ui/MenuIcon'
@@ -44,6 +46,36 @@ const communitySubmenuItems = [
 ] as const
 const homepageMenuItem = { id: 'homepage', icon: Home }
 
+type DemoProfile = { name: string; initial: string }
+
+const DEFAULT_DEMO_PROFILE: DemoProfile = { name: 'Kayla Le', initial: 'K' }
+
+function resolveDemoProfile(email: string | null | undefined, isAnonymous: boolean): DemoProfile {
+  if (isAnonymous || !email) return { name: 'Khách', initial: 'K' }
+  const normalizedEmail = email.toLowerCase()
+  const persona = COMMUNITY_DEMO_PERSONAS.find(
+    (candidate) => candidate.email.toLowerCase() === normalizedEmail,
+  )
+  if (persona?.id === 'jessica') return { name: JOB_CHAT_ACCOUNT_NAMES.jessica, initial: 'J' }
+  if (persona?.id === 'linh') return { name: 'Linh', initial: 'L' }
+  if (persona?.id === 'kayla') return DEFAULT_DEMO_PROFILE
+  return { name: 'Khách', initial: 'K' }
+}
+
+// Resolves the active community persona (Jessica/Linh/guest/Kayla) into the display
+// name + avatar initial shown across the sidebar and header. The design-demo route
+// (`/design-demo/community`) mounts this shell outside CommunityAuthProvider, so
+// useCommunityAuth() throws there — fall back to the static Kayla Le identity that
+// route has always shown.
+function useDemoProfile(): DemoProfile {
+  try {
+    const { user, isAnonymous } = useCommunityAuth()
+    return resolveDemoProfile(user?.email, isAnonymous)
+  } catch {
+    return DEFAULT_DEMO_PROFILE
+  }
+}
+
 type DemoStaffShellProps = {
   children: ReactNode
   onDemoNavigation: () => void
@@ -53,11 +85,12 @@ type DemoSidebarProps = {
   isOpen: boolean
   onClose: () => void
   onDemoNavigation: () => void
+  profile: DemoProfile
 }
 
 // Demo-local replica of staff-dashboard/layout/StaffSidebar.tsx.
 // The production component cannot be mounted here because it reads StaffAccount and query-backed URL state.
-function DemoSidebar({ isOpen, onClose, onDemoNavigation }: DemoSidebarProps) {
+function DemoSidebar({ isOpen, onClose, onDemoNavigation, profile }: DemoSidebarProps) {
   const { t } = useTranslation()
   const { pathname, search } = useLocation()
   const isCommunityRoute = pathname === '/community' || pathname.startsWith('/community/')
@@ -110,10 +143,10 @@ function DemoSidebar({ isOpen, onClose, onDemoNavigation }: DemoSidebarProps) {
         >
           <span className="flex min-w-0 items-center gap-3">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10 text-base font-extrabold">
-              K
+              {profile.initial}
             </span>
             <span className="min-w-0">
-              <span className="block truncate text-sm font-bold text-white">Kayla Le</span>
+              <span className="block truncate text-sm font-bold text-white">{profile.name}</span>
               <span className="mt-0.5 block truncate text-[11px] text-white/65">
                 {t('staff_dashboard.staff_id')}: NX-2481
               </span>
@@ -307,11 +340,12 @@ type DemoHeaderProps = {
   onDemoNavigation: () => void
   showCommunityActions: boolean
   isChatRoute: boolean
+  profile: DemoProfile
 }
 
 // Demo-local replica of StaffHeader.mobile.tsx and StaffHeader.desktop.tsx.
 // Community routes mount the shared notification data and Messenger controls; design demos keep visual-only controls.
-function DemoHeader({ onOpenMobileMenu, onDemoNavigation, showCommunityActions, isChatRoute }: DemoHeaderProps) {
+function DemoHeader({ onOpenMobileMenu, onDemoNavigation, showCommunityActions, isChatRoute, profile }: DemoHeaderProps) {
   return (
     <header className={`safe-area-top sticky z-20 border-b border-nexoraBorder bg-nexoraSurface ${isChatRoute ? 'top-0 lg:top-[52px]' : 'top-[52px]'}`}>
       <div className="flex items-center justify-between gap-2 px-4 py-3 lg:hidden">
@@ -349,11 +383,11 @@ function DemoHeader({ onOpenMobileMenu, onDemoNavigation, showCommunityActions, 
           </button>}
           <button
             type="button"
-            aria-label="Hồ sơ Kayla Le"
+            aria-label={`Hồ sơ ${profile.name}`}
             onClick={onDemoNavigation}
             className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-sm font-bold text-white shadow-sm transition hover:opacity-90"
           >
-            K
+            {profile.initial}
             <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-nexoraSuccess" />
           </button>
         </div>
@@ -390,11 +424,11 @@ function DemoHeader({ onOpenMobileMenu, onDemoNavigation, showCommunityActions, 
           </button>}
           <button
             type="button"
-            aria-label="Hồ sơ Kayla Le"
+            aria-label={`Hồ sơ ${profile.name}`}
             onClick={onDemoNavigation}
             className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-sm font-bold text-white shadow-sm transition hover:opacity-90"
           >
-            K
+            {profile.initial}
             <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-nexoraSuccess" />
           </button>
         </div>
@@ -464,6 +498,7 @@ function DemoBottomNav({ onDemoNavigation }: DemoBottomNavProps) {
 export default function DemoStaffShell({ children, onDemoNavigation }: DemoStaffShellProps) {
   const { t } = useTranslation()
   const { pathname } = useLocation()
+  const profile = useDemoProfile()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const showCommunityActions = pathname === '/community' || pathname.startsWith('/community/')
   const isChatRoute =
@@ -478,6 +513,7 @@ export default function DemoStaffShell({ children, onDemoNavigation }: DemoStaff
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         onDemoNavigation={onDemoNavigation}
+        profile={profile}
       />
 
       <div
@@ -490,6 +526,7 @@ export default function DemoStaffShell({ children, onDemoNavigation }: DemoStaff
           onDemoNavigation={onDemoNavigation}
           showCommunityActions={showCommunityActions}
           isChatRoute={isChatRoute}
+          profile={profile}
         />
         <main
           className={`mx-auto w-full max-w-[1088px] flex-1 ${
