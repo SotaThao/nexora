@@ -6940,7 +6940,8 @@
                 "emptyFile": "File “{name}” has no data rows.",
                 "missingPhoneColumn": "File “{name}” must include at least one phone number column (for example Phone, Mobile, or Tel).",
                 "readFailed": "Could not read “{name}”. Please try another .xlsx or .csv file.",
-                "importFailed": "Could not import customers. Please try again."
+                "importFailed": "Could not import customers. Please try again.",
+                "importTimeout": "The import is taking longer than expected. Some customers may already be imported — refresh the list before trying again."
               },
               "requirements": {
                 "title": "File requirements",
