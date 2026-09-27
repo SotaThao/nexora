@@ -1,7 +1,8 @@
 // Adapted for Community demo
 import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { ExternalLink, Plus } from 'lucide-react'
 
 import { JobPostingStatus } from '../../../../../constants/posRecruitment'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
@@ -31,7 +32,8 @@ type CreateFlow = 'picker' | 'quick' | null
 export default function PosStaffRecruitmentView({ businessId }: PosStaffRecruitmentViewProps) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
-  const { businessInfo, currentUserName, services, categories } = useCommunityJobsDemo()
+  const navigate = useNavigate()
+  const { businessInfo, currentUserName, services, categories, surface } = useCommunityJobsDemo()
   const [composer, setComposer] = useState<ComposerState | null>(null)
   const [createFlow, setCreateFlow] = useState<CreateFlow>(null)
   const [previewPosting, setPreviewPosting] = useState<PosJobPosting | null>(null)
@@ -87,6 +89,25 @@ export default function PosStaffRecruitmentView({ businessId }: PosStaffRecruitm
         <div>
           <h1 className="text-2xl font-black tracking-tight text-nexoraText">{t('community_jobs_demo.owner.title')}</h1>
           <p className="mt-1 text-sm font-medium text-nexoraMuted">{t('community_jobs_demo.owner.description')}</p>
+          {surface === 'community' ? (
+            <button
+              type="button"
+              onClick={() => navigate('/pos/staff?staffView=recruitment')}
+              className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-xs font-bold text-nexoraBrand hover:underline"
+            >
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+              {t('community_jobs_demo.owner.openInPos')}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => navigate('/community?tab=jobs')}
+              className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-xs font-bold text-nexoraBrand hover:underline"
+            >
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+              {t('community_jobs_demo.pos.viewOnCommunity')}
+            </button>
+          )}
         </div>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <button type="button" onClick={openCreatePicker} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 text-xs font-black text-white shadow-nexora-soft hover:bg-nexoraBrandDark"><Plus className="h-4 w-4" aria-hidden />{t(`${TK}.recruitStaff`)}</button>

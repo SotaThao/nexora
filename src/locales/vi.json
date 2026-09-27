@@ -9490,7 +9490,8 @@
   "community_jobs_demo": {
     "owner": {
       "title": "Tuyển dụng",
-      "description": "Đăng tin tuyển thợ lên NailHub, rồi theo dõi, sửa và đóng tin — ngay trong dashboard của Bitcoin Nail Bar."
+      "description": "Đăng tin tuyển thợ lên NailHub, rồi theo dõi, sửa và đóng tin — ngay trong dashboard của Bitcoin Nail Bar.",
+      "openInPos": "Mở trong POS"
     },
     "readOnly": {
       "banner": "Bạn đang xem Việc làm cộng đồng với vai trò khách. Chuyển sang Jessica để ứng tuyển hoặc nhắn tin.",
@@ -9499,6 +9500,16 @@
     "chat": {
       "sampleSalonHint": "Đây là tin đăng minh hoạ của một tiệm mẫu — không có trò chuyện thật ở đây.",
       "dmFailed": "Không thể bắt đầu trò chuyện. Vui lòng thử lại."
+    },
+    "pos": {
+      "viewOnCommunity": "Xem trên Community"
+    },
+    "posNav": {
+      "services": "Dịch vụ",
+      "staffRecruitment": "Nhân viên & Tuyển dụng"
+    },
+    "posStaff": {
+      "staffReadOnlyHint": "Đây là danh sách nhân viên mẫu cho bản demo — quản lý đội ngũ thật nằm ở dashboard thật."
     }
   }
 }

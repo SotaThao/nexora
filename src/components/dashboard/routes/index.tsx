@@ -354,11 +354,23 @@ export function SubscriptionsRoute() {
 
 const PosServicesView = React.lazy(() => import('../views/pos/PosServicesView'))
 const SiteEditorView = React.lazy(() => import('../views/site/SiteEditorView'))
+const PosStaffPage = React.lazy(() => import('../views/pos/staff/PosStaffPage'))
 
 export function PosServicesRoute() {
   return (
     <React.Suspense fallback={<div className="p-8 text-center text-slate-400">Đang tải POS Services...</div>}>
       <PosServicesView />
+    </React.Suspense>
+  )
+}
+
+// Public POS Admin demo (#589 follow-up): Staff & Recruitment, reachable at /pos/staff
+// without a community persona session — see PosPublicLayout/PosAdminDemoNav in
+// src/components/pos-demo/ and PosOwnerJobsDemoProvider in CommunityJobsDemoContext.tsx.
+export function PosStaffRoute() {
+  return (
+    <React.Suspense fallback={<div className="p-8 text-center text-slate-400">Đang tải Nhân viên & Tuyển dụng...</div>}>
+      <PosStaffPage />
     </React.Suspense>
   )
 }
