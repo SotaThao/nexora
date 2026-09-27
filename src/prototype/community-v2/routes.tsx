@@ -4,11 +4,18 @@ import { Badge, Button, Card, EmptyState, PlaceholderImage, Skeleton, StatusTime
 import { type CommunityRole, type ScreenDefinition } from "./store/types";
 import { CommunityShell } from "./modules/m00-foundation/shell";
 import { useCommunityGate } from "./modules/m00-foundation/gates";
+import { screens as adminScreens } from "./modules/m00-admin";
+import { screens as feedScreens } from "./modules/m01-feed";
+import { screens as jobScreens } from "./modules/m02-jobs";
+import { screens as shiftScreens } from "./modules/m03-shifts";
+import { screens as dealScreens } from "./modules/m04-deals";
+import { screens as messageScreens } from "./modules/m05-messages";
 
 const all: CommunityRole[] = ["guest", "tech", "owner", "client", "admin"];
 const member: CommunityRole[] = ["tech", "owner", "client", "admin"];
 const tech: CommunityRole[] = ["tech"]; const owner: CommunityRole[] = ["owner"]; const admin: CommunityRole[] = ["admin"];
 const screen = (id: string, title: string, module: string, path: string, roles: CommunityRole[], status: string): ScreenDefinition => ({ id, title, module, path, roles, status });
+const registry = { ...adminScreens, ...feedScreens, ...jobScreens, ...shiftScreens, ...dealScreens, ...messageScreens };
 
 export const SCREENS: ScreenDefinition[] = [
   screen("S00-01", "Shell Community", "M00", "/community-v2/shell", all, "Theo từng vai (mục ẩn/hiện theo bảng menu doc 00)"),
@@ -81,5 +88,87 @@ export const SCREENS: ScreenDefinition[] = [
 export function PlaceholderScreen({ id, title, module, status }: Pick<ScreenDefinition, "id" | "title" | "module" | "status">) { const location = useLocation(); return <div className="mx-auto max-w-4xl space-y-5"><div><div className="flex flex-wrap items-center gap-2"><Badge tone="brand">{id}</Badge><Badge tone="neutral">{module}</Badge>{location.pathname.includes("/pos/") && <Badge tone="warning">POS</Badge>}</div><h2 className="mt-3 text-2xl font-bold text-nexoraText">{title}</h2><p className="mt-1 text-nexoraMuted">Màn hình đã được đăng ký để các stream song song thay thế an toàn.</p></div><div className="grid gap-5 md:grid-cols-[1.2fr_.8fr]"><Card className="overflow-hidden"><PlaceholderImage label={`${module} · đang xây dựng`} /><div className="p-5"><p className="text-sm font-bold">Trạng thái cần có</p><p className="mt-2 text-sm leading-6 text-nexoraMuted">{status}</p></div></Card><div className="space-y-4"><Card className="p-4"><p className="text-sm font-bold">Chuẩn bị cho stream sở hữu</p><StatusTimeline statuses={["Route đã sẵn sàng", "Dữ liệu seed đã có", "Thay placeholder bằng module riêng"]} /></Card><Skeleton className="h-24" /></div></div></div>; }
 function FeedPlaceholder() { return <div className="mx-auto max-w-5xl"><PlaceholderScreen {...SCREENS.find((screen) => screen.id === "S01-01")!} /></div>; }
 function GateDemo() { const { requireAccount } = useCommunityGate(); const toast = useToast(); const actions = ["Mở khung soạn bài", "thích bài", "tham gia nhóm", "tạo nhóm", "Mở soạn tin tìm việc", "Đăng tin tuyển", "ứng tuyển", "mời phỏng vấn", "đồng ý/từ chối chia sẻ SĐT", "Đăng ca", "nhận ca/ứng tuyển", "hỏi thợ", "mời vào ca", "Lấy coupon", "phát hành coupon", "Gửi tin", "gửi ghi âm", "gọi thoại/video", "gọi nhóm", "gọi lại", "tham gia nhóm", "chấp nhận lời mời nhắn tin", "tham gia cuộc gọi đang diễn ra"]; return <div className="mx-auto max-w-4xl"><Card className="p-5"><div className="flex items-center gap-3"><LockKeyhole className="text-nexoraBrand" /><div><h2 className="text-xl font-bold">Demo cổng tài khoản</h2><p className="text-sm text-nexoraMuted">Mỗi nút dùng requireAccount(actionId, run).</p></div></div><div className="mt-5 grid gap-2 sm:grid-cols-2">{actions.map((action, index) => <Button key={`${action}-${index}`} variant="secondary" className="justify-between text-left" onClick={() => requireAccount(action, () => toast(`Đã tiếp tục: ${action}`, "success"))}>{action}<ArrowRight size={16} /></Button>)}</div></Card></div>; }
-function FoundationRoute({ screen }: { screen: ScreenDefinition }) { const { requireAccount, openTerms } = useCommunityGate(); const toast = useToast(); if (screen.id === "S00-01") return <PlaceholderScreen {...screen} />; if (screen.id === "S00-04" || screen.id === "S00-05") return <Card className="mx-auto max-w-2xl p-6"><FileText className="text-nexoraBrand" /><h2 className="mt-3 text-xl font-bold">{screen.title}</h2><p className="mt-2 text-nexoraMuted">Mở điều khoản tương tác, cuộn hết và chọn đủ các xác nhận.</p><Button className="mt-4" variant="gradient" onClick={openTerms}>Mở điều khoản</Button></Card>; if (screen.id === "S00-02" || screen.id === "S00-03") return <Card className="mx-auto max-w-2xl p-6"><h2 className="text-xl font-bold">{screen.title}</h2><p className="mt-2 text-nexoraMuted">Đây là biến thể trong cổng tài khoản.</p><Button className="mt-4" variant="gradient" onClick={() => requireAccount("foundation-preview", () => toast("Bạn đã là thành viên"))}>Mở bản xem trước</Button></Card>; return <PlaceholderScreen {...screen} />; }
-export default function CommunityV2Routes() { return <Routes><Route element={<CommunityShell />}><Route index element={<Navigate to="feed" replace />} /><Route path="demo/gate" element={<GateDemo />} />{SCREENS.map((definition) => <Route key={definition.id} path={definition.path.replace("/community-v2/", "")} element={definition.id === "S01-01" ? <FeedPlaceholder /> : definition.module === "M00" ? <FoundationRoute screen={definition} /> : <PlaceholderScreen {...definition} />} />)}<Route path="learning" element={<EmptyState title="Học tập" body="Giữ nguyên module hiện có trong app" />} /><Route path="events" element={<EmptyState title="Sự kiện" body="Giữ nguyên module hiện có trong app" />} /></Route></Routes>; }
+function FoundationRoute({ screen }: { screen: ScreenDefinition }) {
+  const { requireAccount, openTerms } = useCommunityGate();
+  const toast = useToast();
+
+  if (screen.id === "S00-01") {
+    return <PlaceholderScreen {...screen} />;
+  }
+
+  if (screen.id === "S00-04" || screen.id === "S00-05") {
+    return (
+      <Card className="mx-auto max-w-2xl p-6">
+        <FileText className="text-nexoraBrand" />
+        <h2 className="mt-3 text-xl font-bold">{screen.title}</h2>
+        <p className="mt-2 text-nexoraMuted">
+          Mở điều khoản tương tác, cuộn hết và chọn đủ các xác nhận.
+        </p>
+        <Button className="mt-4" variant="gradient" onClick={openTerms}>
+          Mở điều khoản
+        </Button>
+      </Card>
+    );
+  }
+
+  if (screen.id === "S00-02" || screen.id === "S00-03") {
+    return (
+      <Card className="mx-auto max-w-2xl p-6">
+        <h2 className="text-xl font-bold">{screen.title}</h2>
+        <p className="mt-2 text-nexoraMuted">Đây là biến thể trong cổng tài khoản.</p>
+        <Button
+          className="mt-4"
+          variant="gradient"
+          onClick={() => requireAccount("foundation-preview", () => toast("Bạn đã là thành viên"))}
+        >
+          Mở bản xem trước
+        </Button>
+      </Card>
+    );
+  }
+
+  return <PlaceholderScreen {...screen} />;
+}
+
+function renderScreen(definition: ScreenDefinition) {
+  const Registered = registry[definition.id];
+  if (Registered) {
+    return <Registered screen={definition} />;
+  }
+  if (definition.id === "S01-01") {
+    return <FeedPlaceholder />;
+  }
+  if (definition.module === "M00") {
+    return <FoundationRoute screen={definition} />;
+  }
+  return <PlaceholderScreen {...definition} />;
+}
+
+function routePath(definition: ScreenDefinition) {
+  const relative = definition.path.replace("/community-v2/", "");
+  // Routes without a `:param` segment get a trailing `/*` so a registered
+  // screen can own its own nested sub-paths (e.g. messages/new?to=<id>).
+  return relative.includes(":") ? relative : `${relative}/*`;
+}
+
+export default function CommunityV2Routes() {
+  return (
+    <Routes>
+      <Route element={<CommunityShell />}>
+        <Route index element={<Navigate to="feed" replace />} />
+        <Route path="demo/gate" element={<GateDemo />} />
+        {SCREENS.map((definition) => (
+          <Route key={definition.id} path={routePath(definition)} element={renderScreen(definition)} />
+        ))}
+        <Route
+          path="learning"
+          element={<EmptyState title="Học tập" body="Giữ nguyên module hiện có trong app" />}
+        />
+        <Route
+          path="events"
+          element={<EmptyState title="Sự kiện" body="Giữ nguyên module hiện có trong app" />}
+        />
+      </Route>
+    </Routes>
+  );
+}
