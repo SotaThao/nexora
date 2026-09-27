@@ -20,6 +20,10 @@ const SECTION_MODULE: Record<PosVisitSection, OneQrModuleKey> = {
 const isPosVisitSection = (value?: string): value is PosVisitSection =>
   Object.values(PosVisitSection).includes(value as PosVisitSection)
 
+const SAFE_HREF_PATTERN = /^(?:https?:\/\/|\/(?!\/))/i
+
+const isSafeHref = (href: string | null): href is string => Boolean(href) && SAFE_HREF_PATTERN.test(href as string)
+
 export default function VisitLinkPage() {
   const { t } = useTranslation()
   const { token, section } = useParams<{ token: string; section?: string }>()
@@ -92,7 +96,7 @@ function VisitBlock({ visit, isAfterVisit }: { visit: PosVisitApiDto; isAfterVis
       { href: visit.tipUrl, label: t(`${K}.addTip`), Icon: Wallet },
       { href: visit.feedbackUrl, label: t(`${K}.privateFeedback`), Icon: MessageCircle },
       { href: visit.receiptUrl, label: t(`${K}.receipt`), Icon: FileText },
-    ].filter((shortcut): shortcut is typeof shortcut & { href: string } => Boolean(shortcut.href))
+    ].filter((shortcut): shortcut is typeof shortcut & { href: string } => isSafeHref(shortcut.href))
 
     return (
       <section className="mx-3 mt-3 rounded-xl border border-nexoraBorder bg-nexoraBrandSoft/20 px-3 py-3 sm:mx-5">
