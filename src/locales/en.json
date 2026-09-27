@@ -9495,7 +9495,8 @@
   "community_jobs_demo": {
     "owner": {
       "title": "Recruitment",
-      "description": "Post openings to NailHub, then track, edit and close them — all from Bitcoin Nail Bar's dashboard."
+      "description": "Post openings to NailHub, then track, edit and close them — all from Bitcoin Nail Bar's dashboard.",
+      "openInPos": "Open in POS"
     },
     "readOnly": {
       "banner": "You're viewing Community Jobs as a guest. Switch to Jessica to apply or send messages.",
@@ -9504,6 +9505,16 @@
     "chat": {
       "sampleSalonHint": "This is a sample salon posting for the demo — no real chat is available here.",
       "dmFailed": "Couldn't start the chat. Please try again."
+    },
+    "pos": {
+      "viewOnCommunity": "View on Community"
+    },
+    "posNav": {
+      "services": "Services",
+      "staffRecruitment": "Staff & Recruitment"
+    },
+    "posStaff": {
+      "staffReadOnlyHint": "This is a sample staff list for the demo — team management lives in the real dashboard."
     }
   }
 }

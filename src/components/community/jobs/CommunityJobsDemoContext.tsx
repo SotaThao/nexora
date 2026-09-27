@@ -26,10 +26,15 @@ import {
 
 export type CommunityJobsDemoPersonaId = 'kayla' | 'jessica' | 'linh'
 export type CommunityJobsDemoMode = 'owner' | 'staff' | 'readOnly'
+/** Which route tree rendered the provider — lets shared components (e.g. the
+ *  recruitment shell header) show the right cross-link ("Mở trong POS" from
+ *  Community, "Xem trên Community" from POS) without duplicating components. */
+export type CommunityJobsDemoSurface = 'community' | 'pos'
 
 interface CommunityJobsDemoValue {
   mode: CommunityJobsDemoMode
   personaId: CommunityJobsDemoPersonaId | null
+  surface: CommunityJobsDemoSurface
   businessId: string
   businessInfo: MerchantBusinessInfo
   currentUserName: string
@@ -115,6 +120,7 @@ export function CommunityJobsDemoProvider({ children }: { children: ReactNode })
   const value = useMemo<CommunityJobsDemoValue>(() => ({
     mode,
     personaId,
+    surface: 'community',
     businessId: BNB_BUSINESS_ID,
     businessInfo: BNB_BUSINESS_INFO,
     currentUserName: BNB_OWNER_NAME,
@@ -126,6 +132,48 @@ export function CommunityJobsDemoProvider({ children }: { children: ReactNode })
     openInbox,
     openBusinessChat,
   }), [mode, personaId, staffKey, staffAccount, linkedBusinessIds, openInbox, openBusinessChat])
+
+  return <CommunityJobsDemoContext.Provider value={value}>{children}</CommunityJobsDemoContext.Provider>
+}
+
+/** Owner-only variant used by the public /pos/staff route (#589 follow-up): the same
+ *  BNB_BUSINESS_ID mock store as CommunityJobsDemoProvider (so a posting made here shows
+ *  up in Kayla's /community?tab=jobs feed and vice versa), but WITHOUT depending on
+ *  CommunityAuthProvider or the community chat dock — neither is mounted on /pos routes.
+ *  "Messages" always navigates to the full-page community inbox since there is no dock
+ *  to open here. Owner mode never calls openBusinessChat; it's implemented the same way
+ *  purely to satisfy the shared context shape. */
+export function PosOwnerJobsDemoProvider({ children }: { children: ReactNode }) {
+  if (!hasPrimedOwnerStore) {
+    hasPrimedOwnerStore = true
+    primePosRecruitmentMockSalon(toRecruitmentSalon(BNB_BUSINESS_INFO), BNB_BUSINESS_ID)
+  }
+
+  const navigate = useNavigate()
+
+  const openInbox = useCallback(() => {
+    navigate('/community/chat')
+  }, [navigate])
+
+  const openBusinessChat = useCallback(async () => {
+    navigate('/community/chat')
+  }, [navigate])
+
+  const value = useMemo<CommunityJobsDemoValue>(() => ({
+    mode: 'owner',
+    personaId: 'kayla',
+    surface: 'pos',
+    businessId: BNB_BUSINESS_ID,
+    businessInfo: BNB_BUSINESS_INFO,
+    currentUserName: BNB_OWNER_NAME,
+    services: DEMO_POS_SERVICES,
+    categories: DEMO_POS_CATEGORIES,
+    staffKey: undefined,
+    staffAccount: DEMO_STAFF_ACCOUNTS.jessica,
+    linkedBusinessIds: new Set<string>(),
+    openInbox,
+    openBusinessChat,
+  }), [openInbox, openBusinessChat])
 
   return <CommunityJobsDemoContext.Provider value={value}>{children}</CommunityJobsDemoContext.Provider>
 }

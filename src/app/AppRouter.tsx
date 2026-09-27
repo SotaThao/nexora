@@ -18,6 +18,7 @@ import {
   MarketingRoute,
   OverviewRoute,
   PosServicesRoute,
+  PosStaffRoute,
   SiteEditorRoute,
   ReportsRoute,
   ReviewsRoute,
@@ -31,6 +32,7 @@ import {
 } from "../components/dashboard/routes";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import GlobalDemoQuickNav from "../components/ui/GlobalDemoQuickNav";
+import PosPublicLayout from "../components/pos-demo/PosPublicLayout";
 import { isDemoToolsEnabled } from "./demoTools";
 import lazyWithRetry from "./lazyWithRetry";
 import LoadingScreen from "./LoadingScreen";
@@ -287,11 +289,13 @@ export default function AppRouter() {
           <Route path="/booking/:businessSlug" element={<PublicPosBookingPage />} />
 
           {/* POS & Menu Preview Routes */}
-          <Route path="/pos" element={<PosServicesRoute />} />
-          <Route path="/pos/services" element={<PosServicesRoute />} />
-          <Route path="/pos-services" element={<PosServicesRoute />} />
-          <Route path="/services" element={<PosServicesRoute />} />
-          <Route path="/preview/pos" element={<PosServicesRoute />} />
+          <Route path="/pos" element={<PosPublicLayout><PosServicesRoute /></PosPublicLayout>} />
+          <Route path="/pos/services" element={<PosPublicLayout><PosServicesRoute /></PosPublicLayout>} />
+          <Route path="/pos-services" element={<PosPublicLayout><PosServicesRoute /></PosPublicLayout>} />
+          <Route path="/services" element={<PosPublicLayout><PosServicesRoute /></PosPublicLayout>} />
+          <Route path="/preview/pos" element={<PosPublicLayout><PosServicesRoute /></PosPublicLayout>} />
+          <Route path="/pos/staff" element={<PosPublicLayout><PosStaffRoute /></PosPublicLayout>} />
+          <Route path="/pos/recruitment" element={<Navigate to="/pos/staff?staffView=recruitment" replace />} />
           <Route path="/preview/menu" element={<PosMenuUpsellPreviewPage />} />
           <Route path="/booking/preview" element={<PosMenuUpsellPreviewPage />} />
           <Route path="/menu" element={<PosMenuUpsellPreviewPage />} />
