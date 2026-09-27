@@ -392,7 +392,185 @@
     "onboarding_banner_description": "Thêm thông tin liên hệ và, nếu muốn, phương thức nhận tiền để sẵn sàng khi cần.",
     "onboarding_banner_description_payment": "Thiết lập ít nhất một phương thức nhận tiền để có thể nhận tip.",
     "complete_onboarding_now": "Hoàn tất thiết lập",
-    "dismiss_onboarding_banner": "Ẩn lời nhắc hoàn thiện hồ sơ"
+    "dismiss_onboarding_banner": "Ẩn lời nhắc hoàn thiện hồ sơ",
+    "community": {
+      "jobs": {
+        "pageTitle": "Việc làm cộng đồng",
+        "pageDescription": "Xem tin tuyển dụng từ các tiệm, hoặc đăng tin \"tìm việc\" để tiệm chủ động liên hệ bạn.",
+        "simulatedNotice": "Dữ liệu mô phỏng",
+        "chatFallbackHint": "Chat trực tiếp với tiệm sẽ bật khi bạn được liên kết với tiệm đó. Chúng tôi đã mở hộp thư chat của bạn thay thế.",
+        "tabs": {
+          "ariaLabel": "Các mục việc làm cộng đồng",
+          "browse": "Duyệt tin",
+          "mine": "Bài của tôi",
+          "applied": "Đã ứng tuyển"
+        },
+        "filters": {
+          "keywordLabel": "Từ khóa",
+          "keywordPlaceholder": "vd: Bột, Dip, Toàn thời gian",
+          "cityLabel": "Thành phố",
+          "cityPlaceholder": "vd: Austin",
+          "stateLabel": "Bang",
+          "statePlaceholder": "vd: TX",
+          "workTypeLabel": "Hình thức làm việc",
+          "workTypeAll": "Tất cả hình thức",
+          "skillLabel": "Kỹ năng",
+          "skillAll": "Tất cả kỹ năng",
+          "clear": "Xóa bộ lọc"
+        },
+        "feed": {
+          "title": "Tin tuyển dụng",
+          "emptyTitle": "Không có tin tuyển dụng phù hợp bộ lọc",
+          "emptyDescription": "Thử xóa bớt bộ lọc hoặc quay lại sau — tiệm đăng tin mới thường xuyên.",
+          "loadError": "Không thể tải tin tuyển dụng. Vui lòng thử lại.",
+          "retry": "Thử lại"
+        },
+        "card": {
+          "postedOn": "Đăng {{date}}",
+          "alreadyApplied": "Bạn đã ứng tuyển",
+          "messageAction": "Nhắn tin",
+          "viewDetail": "Xem chi tiết",
+          "applyAction": "Ứng tuyển",
+          "headcountOne": "{{count}} vị trí",
+          "headcountOther": "{{count}} vị trí"
+        },
+        "detail": {
+          "eyebrow": "Tin tuyển dụng",
+          "title": "Chi tiết công việc",
+          "close": "Đóng",
+          "chatAction": "Nhắn tin cho tiệm",
+          "applyAction": "Ứng tuyển ngay"
+        },
+        "apply": {
+          "title": "Ứng tuyển công việc này",
+          "subtitle": "Đơn ứng tuyển của bạn sẽ gửi tới {{business}}.",
+          "noteLabel": "Lời nhắn tới tiệm",
+          "notePlaceholder": "vd: Tôi có 3 năm kinh nghiệm làm bột và dip, có thể bắt đầu tuần sau.",
+          "attachSeekingLabel": "Đính kèm bài tìm việc",
+          "attachSeekingNone": "Không đính kèm",
+          "optional": "không bắt buộc",
+          "sharePhoneLabel": "Chia sẻ số điện thoại của tôi với tiệm này",
+          "cancel": "Hủy",
+          "submit": "Gửi đơn ứng tuyển",
+          "submitting": "Đang gửi…",
+          "close": "Đóng",
+          "successTitle": "Đã gửi đơn ứng tuyển",
+          "successDescription": "Đơn ứng tuyển của bạn tới {{business}} đã được gửi.",
+          "messageBusiness": "Nhắn tin cho tiệm",
+          "viewApplied": "Xem đơn đã ứng tuyển",
+          "alreadyAppliedError": "Bạn đã ứng tuyển tin này rồi.",
+          "genericError": "Không thể gửi đơn ứng tuyển. Vui lòng thử lại."
+        },
+        "applied": {
+          "emptyTitle": "Chưa có đơn ứng tuyển nào",
+          "emptyDescription": "Các công việc bạn ứng tuyển sẽ hiện ở đây.",
+          "loadError": "Không thể tải đơn ứng tuyển của bạn. Vui lòng thử lại.",
+          "retry": "Thử lại",
+          "appliedOn": "Đã ứng tuyển {{date}}",
+          "messageAction": "Nhắn tin",
+          "postingUnavailable": "Tin không còn khả dụng"
+        },
+        "applicationStatus": {
+          "Submitted": "Đã nộp"
+        },
+        "composer": {
+          "title": "Đăng tin tìm việc",
+          "editTitle": "Sửa bài tìm việc",
+          "close": "Đóng",
+          "titleLabel": "Tiêu đề",
+          "experienceLabel": "Kinh nghiệm",
+          "availableFromLabel": "Có thể bắt đầu từ",
+          "optional": "không bắt buộc",
+          "workTypesLabel": "Hình thức làm việc",
+          "skillsLabel": "Kỹ năng",
+          "locationPaySection": "Địa điểm & thu nhập",
+          "cityLabel": "Thành phố",
+          "stateLabel": "Bang",
+          "payTypeLabel": "Mức thu nhập mong muốn",
+          "payAmountLabel": "Số tiền (USD)",
+          "payUnitLabel": "Đơn vị",
+          "payTextLabel": "Mức lương cụ thể",
+          "contactSection": "Liên hệ",
+          "displayNameLabel": "Tên của bạn",
+          "phoneLabel": "Số điện thoại",
+          "showFullNameLabel": "Hiển thị công khai tên đầy đủ của tôi",
+          "showPhoneLabel": "Hiển thị công khai số điện thoại của tôi",
+          "bodyLabel": "Giới thiệu bản thân",
+          "phoneLeakWarning": "Số điện thoại của bạn xuất hiện trong nội dung ở trên nhưng bạn đã chọn ẩn số — hãy xóa số khỏi nội dung hoặc bật \"Hiển thị công khai số điện thoại của tôi\".",
+          "previewLabel": "Xem trước trực tiếp",
+          "placeholders": {
+            "title": "vd: Thợ nail có kinh nghiệm tìm việc toàn thời gian",
+            "city": "vd: Austin",
+            "state": "vd: TX",
+            "payAmount": "vd: 25",
+            "payText": "vd: $25/giờ + tip",
+            "displayName": "vd: Nguyễn Thị Lan",
+            "body": "vd: 3 năm kinh nghiệm làm bột, dip và gel-x. Đáng tin cậy, đúng giờ và thân thiện với khách."
+          },
+          "validation": {
+            "title": "Vui lòng nhập tiêu đề.",
+            "skills": "Chọn ít nhất một kỹ năng.",
+            "workTypes": "Chọn ít nhất một hình thức làm việc.",
+            "body": "Giới thiệu bản thân phải từ 20 đến 2.000 ký tự.",
+            "displayName": "Vui lòng nhập tên của bạn.",
+            "phone": "Nhập số điện thoại Mỹ hợp lệ gồm 10 chữ số.",
+            "draftTitle": "Thêm tiêu đề trước khi lưu nháp."
+          },
+          "saveDraft": "Lưu nháp",
+          "publish": "Đăng tin",
+          "publishing": "Đang đăng…",
+          "draftSaved": "Đã lưu nháp.",
+          "saveFailed": "Không thể lưu nháp.",
+          "publishSuccess": "Bài tìm việc của bạn đã được gửi để duyệt.",
+          "publishFailed": "Không thể đăng bài.",
+          "unsavedTitle": "Hủy thay đổi?",
+          "unsavedConfirm": "Bạn có thay đổi chưa lưu. Rời đi mà không lưu?",
+          "unsavedStay": "Tiếp tục chỉnh sửa",
+          "unsavedLeave": "Hủy bỏ",
+          "preview": {
+            "badge": "Đang tìm việc",
+            "category": "Cộng đồng · Tìm việc",
+            "titleFallback": "Tiêu đề của bạn ở đây",
+            "bodyFallback": "Nội dung giới thiệu của bạn ở đây.",
+            "contact": "Liên hệ",
+            "chatOnly": "Nhắn tin để liên hệ",
+            "availableFrom": "Có thể bắt đầu từ {{date}}",
+            "anonymousName": "Ứng viên",
+            "pendingNotice": "Bài viết của bạn đang chờ duyệt và tiệm chưa thấy được."
+          }
+        },
+        "myPosts": {
+          "title": "Bài tìm việc của tôi",
+          "description": "Để các tiệm tìm thấy bạn — đăng một lần và chỉnh sửa bất cứ lúc nào.",
+          "createAction": "Đăng bài tìm việc mới",
+          "emptyTitle": "Bạn chưa đăng bài nào",
+          "emptyDescription": "Tạo bài tìm việc để các tiệm có thể tìm và nhắn tin cho bạn.",
+          "loadError": "Không thể tải bài viết của bạn. Vui lòng thử lại.",
+          "retry": "Thử lại",
+          "continueDraft": "Tiếp tục nháp",
+          "edit": "Sửa",
+          "closeAction": "Đóng",
+          "closeSuccess": "Đã đóng bài viết.",
+          "closeFailed": "Không thể đóng bài viết.",
+          "closeConfirmTitle": "Đóng bài viết này?",
+          "closeConfirmBody": "\"{{title}}\" sẽ không còn hiển thị với các tiệm.",
+          "closeConfirmCancel": "Hủy",
+          "closeConfirmAction": "Đóng bài viết"
+        },
+        "seekingStatus": {
+          "Draft": "Nháp",
+          "Pending": "Đang chờ duyệt",
+          "Published": "Đang hiển thị với tiệm",
+          "Closed": "Đã đóng"
+        },
+        "experience": {
+          "UnderOneYear": "Dưới 1 năm",
+          "OneToThreeYears": "1–3 năm",
+          "ThreeToFiveYears": "3–5 năm",
+          "FivePlusYears": "Trên 5 năm"
+        }
+      }
+    }
   },
   "common": {
     "close": "Đóng",
@@ -4858,6 +5036,389 @@
             "scanConfirmClockOut": "Kết thúc ca? Bạn đã làm {{hours}}.",
             "scanClockedIn": "Đã vào ca lúc {{time}}.",
             "scanClockedOut": "Đã ra ca lúc {{time}} — làm {{hours}}."
+          },
+          "recruitment": {
+            "enums": {
+              "status": {
+                "Draft": "Bản nháp",
+                "Pending": "Chờ duyệt",
+                "Published": "Đang tuyển",
+                "Closed": "Đã đóng",
+                "Filled": "Đã tuyển đủ"
+              },
+              "position": {
+                "NailTechnician": "Thợ nail",
+                "AcrylicDipTechnician": "Thợ bột / Dip",
+                "ManicurePedicureTechnician": "Thợ tay chân nước",
+                "Receptionist": "Lễ tân",
+                "SalonManager": "Quản lý tiệm"
+              },
+              "workType": {
+                "FullTime": "Toàn thời gian",
+                "PartTime": "Bán thời gian",
+                "Flexible": "Linh hoạt"
+              },
+              "payType": {
+                "Negotiable": "Thỏa thuận",
+                "Fixed": "Lương cố định",
+                "Commission": "Ăn chia"
+              },
+              "payUnit": {
+                "Hour": "giờ",
+                "Day": "ngày",
+                "Week": "tuần",
+                "Month": "tháng",
+                "Year": "năm"
+              },
+              "skill": {
+                "Acrylic": "Acrylic",
+                "Dip": "Dip",
+                "Gel": "Gel",
+                "Manicure": "Manicure",
+                "Pedicure": "Pedicure",
+                "NailArt": "Nail Art",
+                "French": "French",
+                "GelX": "Gel X",
+                "BuilderGel": "Builder Gel",
+                "ThreeDNailArt": "3D Nail Art",
+                "HeadSpa": "Head Spa",
+                "Lash": "Nối mi",
+                "Waxing": "Waxing"
+              },
+              "benefit": {
+                "FlexibleSchedule": "Lịch linh hoạt",
+                "AdditionalTraining": "Đào tạo thêm",
+                "HousingSupport": "Hỗ trợ chỗ ở"
+              }
+            },
+            "shell": {
+              "title": "Nhân viên & tuyển dụng",
+              "description": "Quản lý đội ngũ, tìm thêm người phù hợp.",
+              "addStaff": "Thêm Staff",
+              "recruitStaff": "Đăng tuyển nhân viên",
+              "staffCtaTitle": "Đội ngũ cần thêm người?",
+              "staffCtaDescription": "Tạo tin tuyển dụng và quản lý ngay tại đây.",
+              "subtabsAriaLabel": "Các màn nhân viên và tuyển dụng",
+              "staffTab": "Nhân viên",
+              "recruitmentTab": "Tuyển dụng",
+              "closeConfirmTitle": "Đóng tin tuyển dụng?",
+              "closeConfirmBody": "Tin “{{title}}” sẽ chuyển sang Đã đóng. Anh có thể chỉnh sửa và đăng lại.",
+              "closeConfirmCancel": "Quay lại",
+              "closeConfirmAction": "Đã tuyển đủ · Đóng tin",
+              "closeSuccess": "Đã đóng tin.",
+              "closeFailed": "Không thể đóng tin. Vui lòng thử lại."
+            },
+            "list": {
+              "bridgeTitle": "Từ POS đến cộng đồng NailHub",
+              "bridgeDescription": "Đăng một lần. Theo dõi và đóng tuyển ngay trong POS.",
+              "postingChannel": "Kênh đăng bài tuyển dụng",
+              "title": "Tin tuyển dụng",
+              "filterAriaLabel": "Lọc tin tuyển dụng",
+              "filters": {
+                "all": "Tất cả",
+                "draft": "Nháp"
+              },
+              "searchLabel": "Tìm tin tuyển dụng",
+              "searchPlaceholder": "Tìm tin tuyển dụng...",
+              "loadError": "Không tải được tin tuyển dụng.",
+              "retry": "Thử lại",
+              "emptyTitle": "Chưa có tin phù hợp",
+              "emptyDescription": "Thử đổi bộ lọc hoặc tạo một tin tuyển dụng mới.",
+              "showAll": "Hiện tất cả tin",
+              "notSent": "Chưa gửi sang NailHub",
+              "nailhubStatus": "NailHub",
+              "closedStatus": "Đã ngừng tuyển",
+              "messages": "Tin nhắn",
+              "viewPost": "Xem bài",
+              "continueDraft": "Tiếp tục soạn",
+              "edit": "Sửa",
+              "closeRecruitment": "Đóng tuyển",
+              "previewDialogEyebrow": "Góc nhìn người tìm việc",
+              "previewDialogTitle": "Bài trên NailHub",
+              "closePreview": "Đóng xem trước",
+              "connectionTitle": "Kết nối tuyển dụng",
+              "nexoraDescription": "Soạn & quản lý tin",
+              "nailhubDescription": "Tiếp cận cộng đồng thợ nail",
+              "connectionDescription": "Mỗi tin có một bài gốc trên NailHub. Trạng thái được trả về POS.",
+              "ownerStepsTitle": "Chủ tiệm thao tác",
+              "ownerStep1Title": "Soạn tin",
+              "ownerStep1Description": "Dùng sẵn thông tin tiệm",
+              "ownerStep2Title": "Xem trước",
+              "ownerStep2Description": "Kiểm tra nội dung công khai",
+              "ownerStep3Title": "Đăng & quản lý",
+              "ownerStep3Description": "Sửa tin, đóng khi tuyển đủ",
+              "ownerHint": "Thử đăng một tin mới →"
+            },
+            "preview": {
+              "salonFallback": "Tiệm nail",
+              "hiddenSalon": "Tiệm nail tại {{location}}",
+              "hiddenSalonFallback": "Tiệm nail",
+              "titleFallback": "Tiêu đề tin tuyển dụng",
+              "bodyFallback": "Nội dung tuyển dụng sẽ hiển thị tại đây.",
+              "headcount": "{{count}} người",
+              "fixedPay": "{{amount}} / {{unit}}",
+              "locationContact": "Nơi làm việc & liên hệ",
+              "category": "CẦN THỢ NAIL",
+              "negotiablePay": "Lương thỏa thuận",
+              "commissionPay": "Ăn chia · trao đổi trực tiếp",
+              "fixedPayMissing": "Mức lương chưa nhập",
+              "selectedServices": "Dịch vụ cần thực hiện",
+              "deadline": "Nhận liên hệ đến: {{date}}",
+              "contactAction": "Liên hệ {{contact}}",
+              "managerFallback": "Quản lý tiệm",
+              "chatAction": "Nhắn tin qua hộp thư NailHub",
+              "chatHelper": "Trao đổi qua hộp thư. Tiệm chủ động chia sẻ thêm thông tin khi cần.",
+              "closedAction": "Tin đã đóng",
+              "pendingNotice": "Bài đang chờ duyệt, chưa công khai.",
+              "hiddenCoverNote": "Tên và ảnh tiệm được ẩn",
+              "urgentBadge": "Cần gấp",
+              "benefits": "Điều tiệm hỗ trợ",
+              "liveUpdate": "Nội dung xem trước tự cập nhật."
+            },
+            "modePicker": {
+              "title": "Chọn cách đăng tin",
+              "close": "Đóng chọn cách đăng tin",
+              "quickTitle": "Đăng nhanh",
+              "quickDescription": "Vài trường cơ bản, đăng trong khoảng 1 phút.",
+              "advancedTitle": "Soạn nâng cao",
+              "advancedDescription": "Chọn dịch vụ từ menu, quyền hiển thị chi tiết, xem trước từng bước."
+            },
+            "quick": {
+              "title": "Đăng tin tuyển thợ",
+              "userFallback": "Chủ tiệm",
+              "close": "Đóng biểu mẫu đăng nhanh",
+              "rolePrefix": "Vai trò hiện tại: {{name}} ·",
+              "ownerRole": "Chủ salon",
+              "roleMiddle": "→ tin sẽ đăng dạng",
+              "postType": "Tuyển thợ",
+              "roleSuffix": "Không đổi được loại tin theo vai trò đang đăng nhập.",
+              "urgentLabel": "Đánh dấu \"Cần gấp\"",
+              "urgentHint": "(hiển thị nổi bật hơn trong danh sách)",
+              "salonName": "Tên salon",
+              "location": "Khu vực",
+              "scheduleIncome": "Lịch làm & thu nhập",
+              "workTypeLabel": "Hình thức",
+              "payTextLabel": "Mức trả cụ thể",
+              "optional": "(không bắt buộc)",
+              "showBenefits": "+ Thêm điều tiệm hỗ trợ (tuỳ chọn)",
+              "benefitsLabel": "Điều tiệm hỗ trợ",
+              "salonDetails": "Điều thợ cần biết về tiệm",
+              "salonPhoto": "Ảnh salon",
+              "changePhoto": "Đổi ảnh",
+              "messageLabel": "Lời nhắn thêm",
+              "writeWithAi": "✨ Viết bằng AI",
+              "previewTitle": "Xem trước tin đăng",
+              "workerBadge": "Tuyển thợ",
+              "skillFallback": "Chọn tay nghề",
+              "incomeFallback": "Mức thu nhập",
+              "timingFallback": "Chọn thời điểm",
+              "cancel": "Huỷ",
+              "publish": "Đăng tin",
+              "publishing": "Đang đăng…",
+              "success": "Tin đã được gửi chờ duyệt.",
+              "publishFailed": "Không thể gửi tin. Vui lòng thử lại.",
+              "imageTooLarge": "Chọn ảnh có dung lượng không quá 5 MB.",
+              "imageInvalidType": "Vui lòng chọn một tệp hình ảnh.",
+              "businessLoading": "Thông tin salon vẫn đang tải.",
+              "businessLoadError": "Không tải được thông tin salon.",
+              "businessRetry": "Thử lại",
+              "unsavedTitle": "Đóng biểu mẫu đăng nhanh?",
+              "unsavedConfirm": "Nội dung đã thay đổi chưa được đăng.",
+              "unsavedStay": "Tiếp tục soạn",
+              "unsavedLeave": "Bỏ thay đổi",
+              "autoTitle": "Tuyển thợ nail {{workType}}",
+              "workType": {
+                "FullTime": "full-time",
+                "PartTime": "part-time"
+              },
+              "workTypeDisplay": {
+                "FullTime": "Full-time",
+                "PartTime": "Part-time"
+              },
+              "placeholders": {
+                "salonName": "VD: Luxury Nails & Spa",
+                "location": "VD: Houston, TX",
+                "payText": "VD: $1,000 - $1,300/tuần",
+                "message": "VD: Tiệm đông khách, có khách quen và môi trường làm việc thoải mái…"
+              },
+              "validation": {
+                "salonName": "Vui lòng nhập tên salon.",
+                "titleLength": "Rút gọn khu vực để tiêu đề tin tuyển dụng không vượt quá 120 ký tự.",
+                "message": "Lời nhắn không được vượt quá 500 ký tự."
+              }
+            },
+            "composer": {
+              "title": "Đăng tuyển nhân viên",
+              "editTitle": "Chỉnh sửa tin tuyển dụng",
+              "description": "Thông tin tiệm có sẵn. Anh chỉ cần bổ sung nhu cầu tuyển.",
+              "backToRecruitment": "Tin tuyển dụng",
+              "steps": {
+                "compose": "Soạn tin",
+                "review": "Xem trước",
+                "result": "Kết quả"
+              },
+              "quickPreview": "Xem nhanh",
+              "quickPreviewNote": "Người tìm việc xem bài trên NailHub. Chủ tiệm quản lý ngay trong POS.",
+              "saveDraft": "Lưu nháp",
+              "previewAction": "Xem trước bài đăng",
+              "draftSaved": "Đã lưu bản nháp.",
+              "suggestedApplied": "Đã điền nội dung mẫu theo lựa chọn hiển thị. Anh có thể sửa lại.",
+              "saveFailed": "Không thể lưu bản nháp. Vui lòng thử lại.",
+              "publishFailed": "Không thể gửi tin. Vui lòng thử lại.",
+              "unsavedTitle": "Rời màn hình soạn tin?",
+              "unsavedConfirm": "Nội dung đang soạn chưa được lưu.",
+              "unsavedCancel": "Quay lại",
+              "unsavedLeave": "Rời màn hình",
+              "needs": {
+                "title": "Nhu cầu tuyển dụng",
+                "description": "Giúp người tìm việc hiểu ngay tiệm đang cần gì.",
+                "servicesTitle": "Dịch vụ cần tuyển",
+                "servicesDescription": "Chọn những dịch vụ tiệm muốn giao cho người mới.",
+                "chooseServices": "Chọn từ menu của tiệm",
+                "changeServices": "Đổi dịch vụ đã chọn",
+                "menuSourceTag": "Từ menu",
+                "servicesEmpty": "Chọn dịch vụ để nhận gợi ý kỹ năng.",
+                "servicesSummary": "{{serviceCount}} dịch vụ → {{skillCount}} kỹ năng gợi ý",
+                "clearServices": "Bỏ chọn dịch vụ",
+                "skillsHint": "Kiểm tra gợi ý từ menu, bỏ hoặc thêm kỹ năng phù hợp với vị trí tuyển.",
+                "skillsSelected": "{{count}} kỹ năng đã chọn",
+                "benefitsTitle": "Điều tiệm hỗ trợ",
+                "urgentHint": "Tin sẽ nổi bật hơn trong danh sách."
+              },
+              "fields": {
+                "title": "Tiêu đề tin",
+                "position": "Vị trí",
+                "headcount": "Số lượng cần tuyển",
+                "workType": "Thời gian làm việc",
+                "deadline": "Nhận liên hệ đến ngày",
+                "skills": "Kỹ năng mong muốn",
+                "payType": "Cách trả lương",
+                "payAmount": "Mức lương (USD)",
+                "payUnit": "Đơn vị",
+                "payText": "Mức trả cụ thể",
+                "urgent": "Đánh dấu cần gấp",
+                "body": "Nội dung",
+                "contactName": "Người nhận liên hệ trong hồ sơ",
+                "phone": "Số điện thoại trong hồ sơ"
+              },
+              "placeholders": {
+                "title": "Ví dụ: Cần tuyển thợ Acrylic / Dip có kinh nghiệm",
+                "headcount": "Ví dụ: 2",
+                "deadline": "Ví dụ: 2026-10-15",
+                "payAmount": "Ví dụ: 25",
+                "payText": "VD: $1,000 - $1,300/tuần",
+                "body": "Ví dụ: Mô tả công việc, lịch làm, môi trường tiệm và cách liên hệ.",
+                "contactName": "Ví dụ: Quản lý tiệm"
+              },
+              "content": {
+                "title": "Nội dung bài đăng",
+                "description": "Mô tả công việc, lịch làm và cách liên hệ.",
+                "useSuggested": "Dùng nội dung mẫu",
+                "bodyHint": "Từ 20 đến 4.000 ký tự",
+                "template": {
+                  "introWithLocation": "{{salon}} cần tuyển {{count}} {{position}} tại {{location}}.",
+                  "intro": "{{salon}} cần tuyển {{count}} {{position}}.",
+                  "details": "Kỹ năng mong muốn: {{skills}}. Thời gian làm việc: {{workType}}. {{pay}}.",
+                  "detailsWithoutSkills": "Thời gian làm việc: {{workType}}. {{pay}}.",
+                  "benefits": "Điều tiệm hỗ trợ: {{benefits}}.",
+                  "team": "Mong muốn đồng nghiệp làm việc cẩn thận, có tinh thần hợp tác.",
+                  "phoneClosing": "Vui lòng liên hệ {{contact}} qua {{phone}} để trao đổi.",
+                  "chatClosing": "Vui lòng nhắn tin qua hộp thư NailHub để trao đổi lịch làm và công việc.",
+                  "manager": "quản lý tiệm"
+                }
+              },
+              "visibility": {
+                "title": "Thông tin tiệm & quyền hiển thị",
+                "description": "Chọn thông tin được công khai trong bài tuyển.",
+                "question": "Người tìm việc được thấy gì?",
+                "presets": {
+                  "ShowAll": "Hiện đầy đủ",
+                  "ChatOnly": "Chỉ nhận qua chat",
+                  "HideNameAndContact": "Ẩn tên & liên hệ"
+                },
+                "summary": {
+                  "ShowAll": "Hiện đầy đủ",
+                  "ChatOnly": "Hiện một phần",
+                  "HideNameAndContact": "Ẩn tên & liên hệ",
+                  "Custom": "Hiện một phần"
+                },
+                "businessName": "Tên tiệm và ảnh tiệm",
+                "businessNameHint": "Tắt để bài dùng tên “{{name}}”.",
+                "address": "Địa chỉ cụ thể",
+                "addressHint": "Tắt để chỉ hiện {{location}}.",
+                "addressHintUnknown": "Tắt để ẩn địa chỉ cụ thể.",
+                "contactName": "Tên người liên hệ",
+                "contactNameHint": "Tắt để không hiện tên người nhận liên hệ.",
+                "phone": "Số điện thoại",
+                "phoneHint": "Tắt để nhận trao đổi qua hộp thư.",
+                "publicLocationNote": "Khu vực {{location}} vẫn công khai. Thông tin đã ẩn không tự hiện lại khi người tìm việc đăng nhập.",
+                "publicLocationUnknown": "Khu vực của tiệm chưa được thiết lập. Thông tin đã ẩn không tự hiện lại khi người tìm việc đăng nhập.",
+                "leakDescription": "Tiêu đề hoặc nội dung vẫn chứa {{fields}} đã ẩn. Hãy sửa trước khi xem trước và đăng.",
+                "pausedTag": "Kiểm tra nội dung",
+                "pausedTitle": "Thông tin đã ẩn còn nằm trong bài viết",
+                "pausedDescription": "Hãy sửa tiêu đề và nội dung để bỏ {{fields}} trước khi xem trước.",
+                "pausedNote": "Danh tính tiệm vẫn được lưu trong hồ sơ quản lý.",
+                "leakFields": {
+                  "businessName": "tên tiệm",
+                  "address": "địa chỉ",
+                  "zipCode": "mã ZIP",
+                  "contactName": "tên liên hệ",
+                  "phone": "số điện thoại"
+                },
+                "salonFallback": "Hồ sơ tiệm",
+                "addressFallback": "Chưa có địa chỉ",
+                "sourceNote": "Thông tin gốc được giữ trong hồ sơ quản lý. Bài tuyển chỉ hiện những mục anh đã bật; kiểm tra cả nội dung tự viết trước khi đăng."
+              },
+              "servicePicker": {
+                "eyebrow": "DỊCH VỤ → KỸ NĂNG",
+                "title": "Chọn từ menu của tiệm",
+                "description": "Chọn dịch vụ cần tuyển. Các dịch vụ cùng kỹ năng sẽ được gom lại.",
+                "close": "Đóng danh sách dịch vụ",
+                "searchLabel": "Tìm dịch vụ",
+                "searchPlaceholder": "Tên dịch vụ hoặc kỹ năng...",
+                "categoryLabel": "Nhóm dịch vụ",
+                "allCategories": "Tất cả nhóm",
+                "empty": "Không tìm thấy dịch vụ. Thử tên khác hoặc chọn tất cả nhóm.",
+                "selectedCount": "{{count}} dịch vụ đã chọn",
+                "skillSuggestions": "Gợi ý: {{skills}}",
+                "selectionHint": "Chọn dịch vụ trong danh sách để bắt đầu.",
+                "serviceSuggestion": "Gợi ý: {{skills}}",
+                "cancel": "Hủy",
+                "apply": "Áp dụng lựa chọn"
+              },
+              "review": {
+                "ready": "Sẵn sàng xem thử",
+                "title": "Đăng từ POS lên NailHub",
+                "salon": "Tiệm đăng",
+                "destination": "Nơi xuất hiện",
+                "destinationValue": "NailHub · Cần thợ nail",
+                "contact": "Người liên hệ",
+                "hidden": "Đã ẩn",
+                "confirm": "Tôi đã kiểm tra nội dung và thông tin liên hệ.",
+                "publish": "Đăng lên NailHub ↗",
+                "update": "Cập nhật lên NailHub ↗",
+                "publishing": "Đang đăng…",
+                "back": "Quay lại chỉnh sửa"
+              },
+              "result": {
+                "title": "Tin đã được gửi chờ duyệt",
+                "description": "NailHub cần duyệt bài trước khi công khai. POS hiển thị đúng trạng thái chờ.",
+                "viewPost": "Xem bài trên NailHub ↗",
+                "backToList": "Về tin tuyển dụng"
+              },
+              "validation": {
+                "title": "Vui lòng nhập tiêu đề tin.",
+                "draftTitle": "Nhập tiêu đề để lưu bản nháp.",
+                "headcount": "Số lượng cần tuyển từ 1 đến 50 người.",
+                "skills": "Chọn ít nhất một kỹ năng mong muốn.",
+                "deadline": "Chọn ngày kết thúc nhận liên hệ.",
+                "payAmount": "Nhập mức lương lớn hơn 0, tối đa 100.000 USD.",
+                "body": "Nội dung cần ít nhất 20 ký tự.",
+                "contactName": "Nhập người nhận liên hệ.",
+                "phone": "Nhập số điện thoại gồm 10 chữ số, có thể kèm mã quốc gia 1.",
+                "privacy": "Vui lòng bỏ {{fields}} đã ẩn khỏi tiêu đề hoặc nội dung."
+              }
+            }
           }
         },
         "PackageManagementView": {
@@ -8924,6 +9485,20 @@
       "loadFailed": "Chưa tải được không gian mẫu.",
       "campaignRequired": "Nhập tên và nội dung campaign.",
       "landingRequired": "Chọn một landing page mẫu đã xuất bản."
+    }
+  },
+  "community_jobs_demo": {
+    "owner": {
+      "title": "Tuyển dụng",
+      "description": "Đăng tin tuyển thợ lên NailHub, rồi theo dõi, sửa và đóng tin — ngay trong dashboard của Bitcoin Nail Bar."
+    },
+    "readOnly": {
+      "banner": "Bạn đang xem Việc làm cộng đồng với vai trò khách. Chuyển sang Jessica để ứng tuyển hoặc nhắn tin.",
+      "actionHint": "Chọn “Jessica · thợ” ở thanh trên để ứng tuyển/nhắn tin"
+    },
+    "chat": {
+      "sampleSalonHint": "Đây là tin đăng minh hoạ của một tiệm mẫu — không có trò chuyện thật ở đây.",
+      "dmFailed": "Không thể bắt đầu trò chuyện. Vui lòng thử lại."
     }
   }
 }

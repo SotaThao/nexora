@@ -168,6 +168,11 @@ body:not(.homepage-active) a:focus-visible {
     @apply rounded-xl border border-nexoraBorder bg-nexoraSurface shadow-nexora-card;
   }
 
+  .nexora-modal-card[role='dialog'] {
+    max-height: 90vh;
+    max-height: 90dvh;
+  }
+
   .nexora-icon-button {
     @apply inline-flex h-10 w-10 items-center justify-center rounded-lg text-nexoraText transition hover:bg-nexoraSurfaceMuted;
   }

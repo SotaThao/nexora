@@ -79,6 +79,9 @@ export const qk = {
   merchantBusinessHours: ()    => ['merchantSettings', 'businessHours'],
   // POS Owner Setup — Roles & Permissions (US-015)
   merchantPosRoles: ()         => ['merchantSettings', 'posRoles'],
+  // POS Owner Setup — Staff recruitment (US-114; mock client until the backend ships).
+  merchantPosJobPostings: (businessId?: string) =>
+    ['merchantSettings', 'posJobPostings', businessId ?? ''],
   // POS Owner Setup — Categories (US-016)
   merchantPosCategories: ()    => ['merchantSettings', 'posCategories'],
   // POS Owner Setup — Services (US-017)
@@ -496,6 +499,12 @@ export const qk = {
   merchantVoiceUsageActivity: (filters = EMPTY) => ['merchantVoice', 'usage', 'activity', filters],
   /** Prefix — invalidate all usage-activity filter variants. */
   merchantVoiceUsageActivityRoot: () => ['merchantVoice', 'usage', 'activity'] as const,
+
+  // Staff Community Jobs (browse hiring feed + own seeking posts + applications)
+  staffCommunityJobsRoot: () => ['staffCommunityJobs'] as const,
+  staffCommunityJobFeed: (filters = EMPTY) => ['staffCommunityJobs', 'feed', filters],
+  staffCommunitySeekingPosts: (staffKey?: string) => ['staffCommunityJobs', 'mySeekingPosts', staffKey ?? ''],
+  staffCommunityJobApplications: (staffKey?: string) => ['staffCommunityJobs', 'myApplications', staffKey ?? ''],
 
   // Nexora Voice trial (merchant)
   voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],
