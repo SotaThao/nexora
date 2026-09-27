@@ -151,6 +151,9 @@ const CommunityDesignDemo = lazyWithRetry(
 const CommunityBusinessDemo = lazyWithRetry(
   () => import("../components/community/demo/CommunityBusinessDemo"),
 );
+const CommunityV2Prototype = lazyWithRetry(
+  () => import("../prototype/community-v2/routes"),
+);
 const TemplateBuilderPreviewPage = lazyWithRetry(
   () => import("../components/public/builder/TemplateBuilderPreviewPage"),
 );
@@ -307,6 +310,7 @@ export default function AppRouter() {
             path="/design-demo/community-business"
             element={<CommunityBusinessDemo />}
           />
+          <Route path="/community-v2/*" element={<CommunityV2Prototype />} />
           <Route path="/community" element={<CommunityRouteRoot />}>
             <Route index element={<CommunityHome />} />
             <Route path="chat" element={<CommunityChatInbox />} />
@@ -412,7 +416,7 @@ export default function AppRouter() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
-      <GlobalDemoQuickNav />
+      {!location.pathname.startsWith("/community-v2") && <GlobalDemoQuickNav />}
     </ErrorBoundary>
   );
 }

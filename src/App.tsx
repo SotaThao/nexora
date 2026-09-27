@@ -8,7 +8,7 @@ import { useAuth } from './auth/useAuth'
 export default function App() {
   const location = useLocation()
   const isPublicHome = location.pathname === '/'
-  const isCommunity = location.pathname === '/community' || location.pathname.startsWith('/community/')
+  const isCommunity = location.pathname === '/community' || location.pathname.startsWith('/community/') || location.pathname === '/community-v2' || location.pathname.startsWith('/community-v2/')
 
   useEffect(() => {
     initStorage()
