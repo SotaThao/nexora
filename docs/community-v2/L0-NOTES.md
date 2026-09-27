@@ -3,7 +3,22 @@
 L0 owns the following shared runtime resources. Later streams should import and extend them; do not create competing copies.
 
 - `store/types.ts` owns all shared domain types. `store/seed/index.ts` merges the complete fixed demo seed from M00–M05.
-- `store/index.ts` is the dependency-free React external store. It persists under `nxc2:state`; call `storeActions.resetDemo()` to restore the seed. Add a module action in `store/slices/<module>.ts` and use `useStore(selector)` in UI.
+- `store/index.ts` is the dependency-free React external store. It persists under `nxc2:state`; call `storeActions.resetDemo()` to restore the seed. Add a module action in `store/slices/<module>.ts` and use `useStore(selector)` in UI. Beyond the built-in actions, use the generic write seam — `getState()` to read the current snapshot and `storeActions.update(mutator)` to publish the next one:
+
+  ```ts
+  // store/slices/m04.ts
+  import { getState, storeActions } from "../index";
+
+  export function pauseProgram(id: string) {
+    storeActions.update((s) => ({
+      ...s,
+      promotions: s.promotions.map((p) => (p.id === id ? { ...p, status: "paused" } : p)),
+    }));
+  }
+  ```
+
+  A slice may only change the state keys owned by its own module (`M00State`…`M05State` in
+  `store/types/mXX.ts`) — it may freely read any other keys via `getState()`.
 - `routes.tsx` owns the 65-item `SCREENS` registry and route mapping. A stream replaces only its own placeholder element/module implementation; it must not make a parallel registry.
 
 ### How to mount your screen
