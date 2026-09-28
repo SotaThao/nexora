@@ -497,7 +497,8 @@ export default function PosOrderWorkspace({
     markServiceLineDone.isPending ||
     setTip.isPending ||
     setStaffTipSplit.isPending ||
-    completeOrder.isPending
+    completeOrder.isPending ||
+    vlinkPayPaymentUrl.isPending
   const { busySurface, isBusy, startTicketAction, endTicketAction } = useTicketActionLock(isMutationPending)
   const isAddingLine =
     busySurface === TicketBusySurface.AddLine || addServiceLine.isPending || addCustomServiceLine.isPending
@@ -513,7 +514,9 @@ export default function PosOrderWorkspace({
     updateProductQuantity.isPending ||
     setServiceLineDiscount.isPending
   const isTipBusy = busySurface === TicketBusySurface.Tip || setTip.isPending || setStaffTipSplit.isPending
-  const isCompleteBusy = busySurface === TicketBusySurface.Complete || completeOrder.isPending
+  const isOpeningVlinkPayFrame = vlinkPayPaymentUrl.isPending
+  const isCompleteBusy =
+    busySurface === TicketBusySurface.Complete || completeOrder.isPending || isOpeningVlinkPayFrame
 
   const [showPaymentSection, setShowPaymentSection] = useState(false)
 
@@ -2822,7 +2825,7 @@ export default function PosOrderWorkspace({
                   }
                   className="h-11 w-full rounded-lg bg-nexoraBrand text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
                 >
-                  {completeOrder.isPending ? (
+                  {completeOrder.isPending || isOpeningVlinkPayFrame ? (
                     <Loader2 className="mx-auto h-4 w-4 animate-spin" />
                   ) : (
                     t('components.dashboard.views.pos.PosOrderWorkspace.completeButton', {
