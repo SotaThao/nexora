@@ -114,6 +114,7 @@ import { buildServiceOrderItems } from "./bookingSettingsServiceOrder";
 const TK = "components.dashboard.views.BookingHubView.settings";
 const TK_HUB = "components.dashboard.views.BookingHubView";
 const SHOW_ASSISTANT_ONLY_MODE = false;
+const SHOW_AI_LANGUAGE_AUTO = false;
 
 const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 type DayKey = (typeof DAY_KEYS)[number];
@@ -567,9 +568,13 @@ function mergeFlatServicesIntoCategories(
 
 const AI_LANGUAGE_OPTIONS = [
   MerchantVoiceUiLanguage.Auto,
-  MerchantVoiceUiLanguage.Vi,
   MerchantVoiceUiLanguage.En,
+  MerchantVoiceUiLanguage.Vi,
 ] as const;
+
+const VISIBLE_AI_LANGUAGE_OPTIONS = SHOW_AI_LANGUAGE_AUTO
+  ? AI_LANGUAGE_OPTIONS
+  : AI_LANGUAGE_OPTIONS.filter((lang) => lang !== MerchantVoiceUiLanguage.Auto);
 
 const PROMO_MAX_LENGTH = 1000;
 // Mirrors Constants.VoiceTenantContentLimits on the backend: both columns are unbounded text and
@@ -4111,7 +4116,7 @@ export default function BookingSettingsPanel() {
                 role="group"
                 aria-label={t(`${TK}.aiLanguage`)}
               >
-                {AI_LANGUAGE_OPTIONS.map((lang) => (
+                {VISIBLE_AI_LANGUAGE_OPTIONS.map((lang) => (
                   <button
                     key={lang}
                     className={`settings-language-card ${language === lang ? "is-active" : ""}`}

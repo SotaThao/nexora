@@ -6513,10 +6513,10 @@
               "en": "English is active: AI greets and answers customers in English."
             },
             "languageLabels": {
-              "auto": "VI + EN Auto",
+              "auto": "Vietnamese + English Auto",
               "autoShort": "Auto",
-              "vi": "VI",
-              "en": "EN"
+              "vi": "Vietnamese - VI",
+              "en": "English - EN"
             },
             "saveCopy": "💾 Save once and every module updates instantly: AI Voice, SMS, landing page, Schema, and AI Hub.",
             "saveButton": "Save Settings",
