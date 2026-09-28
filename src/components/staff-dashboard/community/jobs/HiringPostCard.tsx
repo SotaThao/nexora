@@ -1,5 +1,6 @@
-import { Briefcase, CheckCircle2, MapPin, MessagesSquare, Users } from 'lucide-react'
+import { MapPin } from 'lucide-react'
 
+import { JobPostingStatus } from '../../../../constants/posRecruitment'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import {
   formatRecruitmentDate,
@@ -8,76 +9,82 @@ import {
   getRecruitmentPayLabel,
 } from '../../../dashboard/views/pos/recruitment/recruitmentModel'
 import type { PosJobPosting } from '../../../../types/posRecruitment'
-import { getHeadcountLabel } from './staffJobsModel'
+import { formatSalaryCardLabel } from './salaryCardLabel'
 
 const TK = 'staff_dashboard.community.jobs.card'
-const ENUM_TK = 'components.dashboard.views.pos.recruitment.enums'
-// Grid-tile card: full-height, own border/shadow (no inter-tile divider lines), actions
-// pinned to the bottom via the flex-1 footer below.
-const cardClass = 'flex h-full flex-col rounded-xl border border-nexoraBorder bg-white p-4 shadow-nexora-card sm:p-5'
-const footerClass = 'mt-4 flex flex-1 flex-col justify-end gap-2 border-t border-dashed border-nexoraRule pt-3 text-xs'
+const RECRUITMENT_TK = 'components.dashboard.views.pos.recruitment'
+const THUMBNAIL = '/assets/images/marketing/nail/nail_rose_quartz.jpg'
 
 interface HiringPostCardProps {
   posting: PosJobPosting
   alreadyApplied: boolean
   onOpenDetail: (posting: PosJobPosting) => void
-  onApply: (posting: PosJobPosting) => void
-  onChat: (posting: PosJobPosting) => void
 }
 
-export default function HiringPostCard({ posting, alreadyApplied, onOpenDetail, onApply, onChat }: HiringPostCardProps) {
+export default function HiringPostCard({ posting, alreadyApplied, onOpenDetail }: HiringPostCardProps) {
   const { t, currentLanguage } = useTranslation()
   const businessLabel = getPublicSalonLabel(posting, t)
   const location = formatRecruitmentLocation(posting.city, posting.state)
-  const pay = getRecruitmentPayLabel(posting, t)
+  const pay = formatSalaryCardLabel(
+    getRecruitmentPayLabel(posting, t),
+    t(`${TK}.salaryNegotiable`),
+  )
   const posted = formatRecruitmentDate(posting.publishedAt || posting.createdAt, currentLanguage)
 
   return (
-    <article className={cardClass}>
-      <div className="flex items-start justify-between gap-3">
-        <button type="button" onClick={() => onOpenDetail(posting)} className="min-w-0 flex-1 text-left">
-          <h3 className="line-clamp-2 font-black leading-snug text-nexoraText hover:underline">{posting.title}</h3>
-          <p className="mt-1 text-xs font-medium text-nexoraMuted">{businessLabel} · {t(`${TK}.postedOn`, { date: posted })}</p>
-        </button>
-        {posting.isUrgent ? <span className="shrink-0 rounded-md bg-rose-500 px-2 py-1 text-[10px] font-black text-white">{t('components.dashboard.views.pos.recruitment.preview.urgentBadge')}</span> : null}
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs font-medium text-nexoraMuted">
-        {location ? <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" aria-hidden />{location}</span> : null}
-        <span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" aria-hidden />{t(`${ENUM_TK}.workType.${posting.workType}`)}</span>
-        <span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" aria-hidden />{getHeadcountLabel(posting.headcount, t)}</span>
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center gap-1.5">
-        {posting.skills.map((skill) => (
-          <span key={skill} className="rounded-md border border-nexoraBorder bg-nexoraSurfaceMuted px-2 py-1 text-[10px] font-semibold text-nexoraMuted">
-            {t(`${ENUM_TK}.skill.${skill}`)}
-          </span>
-        ))}
-        <span className="rounded-md border border-emerald-100 bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-800">{pay}</span>
-      </div>
-
-      <footer className={footerClass}>
-        {alreadyApplied ? (
-          <span className="inline-flex items-center gap-1.5 font-bold text-emerald-700"><CheckCircle2 className="h-4 w-4" aria-hidden />{t(`${TK}.alreadyApplied`)}</span>
-        ) : null}
-        <div className="flex flex-wrap items-center gap-1">
-          <button type="button" onClick={() => onChat(posting)} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 font-bold text-nexoraBrand hover:bg-nexoraBrandSoft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand">
-            <MessagesSquare className="h-4 w-4" aria-hidden />{t(`${TK}.messageAction`)}
-          </button>
-          <button type="button" onClick={() => onOpenDetail(posting)} className="min-h-11 rounded-lg px-3 font-bold text-nexoraBrand hover:bg-nexoraBrandSoft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand">
-            {t(`${TK}.viewDetail`)}
-          </button>
-          <button
-            type="button"
-            disabled={alreadyApplied}
-            onClick={() => onApply(posting)}
-            className="min-h-11 rounded-lg bg-nexoraBrand px-3 font-bold text-white hover:bg-nexoraBrandDark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {t(`${TK}.applyAction`)}
-          </button>
+    <article
+      role="button"
+      tabIndex={0}
+      aria-label={`${t(`${TK}.viewDetail`)}: ${posting.title}`}
+      onClick={() => onOpenDetail(posting)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onOpenDetail(posting)
+        }
+      }}
+      className="h-full cursor-pointer rounded-xl border border-nexoraBorder bg-nexoraSurface p-2.5 text-left shadow-nexora-card transition-colors hover:border-nexoraBrand hover:bg-nexoraBrandSoft/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2"
+    >
+      <div className="flex items-start gap-2.5">
+        <img src={THUMBNAIL} alt="" width={56} height={56} loading="lazy" className="h-14 w-14 shrink-0 rounded-xl object-cover" />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {posting.isUrgent ? (
+              <span className="shrink-0 rounded-md bg-nexoraDanger px-2 py-0.5 text-xs font-extrabold text-white">
+                {t(`${RECRUITMENT_TK}.preview.urgentBadge`)}
+              </span>
+            ) : null}
+            {pay ? (
+              <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-nexoraSuccess/40 bg-nexoraSuccess/10 px-2 py-0.5 text-xs font-extrabold text-nexoraText" title={pay}>
+                <span className="h-1.5 w-1.5 rounded-full bg-nexoraSuccess" aria-hidden="true" />
+                {pay}
+              </span>
+            ) : null}
+            {posting.status !== JobPostingStatus.Published ? (
+              <span className="rounded-md bg-nexoraSurfaceMuted px-2 py-0.5 text-xs font-extrabold text-nexoraMuted">
+                {t(`${RECRUITMENT_TK}.enums.status.${posting.status}`)}
+              </span>
+            ) : null}
+            {alreadyApplied ? (
+              <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-extrabold text-emerald-700">{t(`${TK}.alreadyApplied`)}</span>
+            ) : null}
+          </div>
+          <h3 className="mt-1 line-clamp-2 text-base font-bold leading-snug text-nexoraText">{posting.title}</h3>
         </div>
-      </footer>
+      </div>
+      <p className="mt-1 flex min-w-0 items-center gap-1 truncate text-sm text-nexoraMuted">
+        <span className="min-w-0 truncate font-semibold text-nexoraBrand">{businessLabel}</span>
+        {location ? (
+          <>
+            <span aria-hidden="true">·</span>
+            <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
+            <span className="truncate">{location}</span>
+          </>
+        ) : null}
+        <span aria-hidden="true">·</span>
+        <span className="shrink-0">{posted}</span>
+      </p>
+      <p className="mt-2 min-h-[63px] line-clamp-3 text-sm leading-relaxed text-nexoraMuted">{posting.body}</p>
     </article>
   )
 }

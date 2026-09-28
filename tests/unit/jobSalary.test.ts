@@ -1,5 +1,38 @@
 import { describe, expect, it } from 'vitest'
 import { formatSalaryChip } from '../../src/components/community/jobSalary'
+import { JobPayUnit } from '../../src/constants/posRecruitment'
+import { createDefaultJobDraft } from '../../src/components/dashboard/views/pos/recruitment/recruitmentModel'
+import { formatSalaryCardLabel } from '../../src/components/staff-dashboard/community/jobs/salaryCardLabel'
+import { createDefaultSeekingDraft } from '../../src/components/staff-dashboard/community/jobs/staffJobsModel'
+
+describe('formatSalaryCardLabel', () => {
+  it('keeps only dollar amounts and ranges', () => {
+    expect(formatSalaryCardLabel('$400 - $500 / week', 'Negotiable')).toBe('$400-$500')
+    expect(formatSalaryCardLabel('$1,000–1,200/tuần', 'Thương lượng')).toBe('$1,000-$1,200')
+    expect(formatSalaryCardLabel('Up to $1,600+', 'Negotiable')).toBe('$1,600+')
+  })
+
+  it('shows weekly pay only', () => {
+    expect(formatSalaryCardLabel('$22 / hour', 'Negotiable')).toBeNull()
+    expect(formatSalaryCardLabel('$180/ngày', 'Negotiable')).toBeNull()
+    expect(formatSalaryCardLabel('$4,000 per month', 'Negotiable')).toBeNull()
+    expect(formatSalaryCardLabel('$52,000/year', 'Negotiable')).toBeNull()
+  })
+
+  it('localizes negotiable pay and hides unsupported text', () => {
+    expect(formatSalaryCardLabel('Pay negotiable', 'Negotiable')).toBe('Negotiable')
+    expect(formatSalaryCardLabel('Lương thỏa thuận', 'Thương lượng')).toBe('Thương lượng')
+    expect(formatSalaryCardLabel('60/40 commission split', 'Negotiable')).toBeNull()
+    expect(formatSalaryCardLabel(null, 'Negotiable')).toBeNull()
+  })
+})
+
+describe('recruitment salary defaults', () => {
+  it('defaults new job postings to weekly pay', () => {
+    expect(createDefaultJobDraft().payUnit).toBe(JobPayUnit.Week)
+    expect(createDefaultSeekingDraft().payUnit).toBe(JobPayUnit.Week)
+  })
+})
 
 describe('formatSalaryChip', () => {
   it('formats a hyphen range with unit suffix and thousands separators', () => {

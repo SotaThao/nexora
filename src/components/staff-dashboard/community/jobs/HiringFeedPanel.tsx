@@ -13,10 +13,7 @@ const ENUM_TK = 'components.dashboard.views.pos.recruitment.enums'
 const ALL_WORK_TYPES = 'all' as const
 const ALL_SKILLS = 'all' as const
 const fieldClass = 'min-h-11 w-full rounded-lg border border-nexoraBorder bg-white px-3 text-sm font-medium text-nexoraText outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrandSoft'
-// Fluid grid (Apple HIG adaptive layout): column count follows the real content width instead
-// of a hardcoded breakpoint — 1 col on phones, 2 on tablets/narrow desktop, 3+ on wide screens.
-const gridColsClass = '[grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr))]'
-const feedGridClass = `grid grid-cols-1 gap-4 p-4 sm:p-5 md:gap-5 ${gridColsClass}`
+const feedGridClass = 'grid grid-cols-1 gap-4 p-4 sm:grid-cols-[repeat(auto-fill,minmax(18rem,1fr))] sm:p-5 md:gap-5'
 
 interface HiringFeedPanelProps {
   filters: HiringFeedFilters
@@ -39,8 +36,6 @@ export default function HiringFeedPanel({
   isError,
   appliedPostingIds,
   onOpenDetail,
-  onApply,
-  onChat,
   onRetry,
 }: HiringFeedPanelProps) {
   const { t } = useTranslation()
@@ -185,8 +180,6 @@ export default function HiringFeedPanel({
               posting={posting}
               alreadyApplied={appliedPostingIds.has(posting.id)}
               onOpenDetail={onOpenDetail}
-              onApply={onApply}
-              onChat={onChat}
             />
           ))}
         </div>
