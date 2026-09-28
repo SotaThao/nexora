@@ -729,6 +729,7 @@ export interface MerchantVoiceConfigDto {
   sendSmsPromoEnabled: boolean
   timeZone: string
   language: string
+  assistantOnlyMode?: boolean
   welcomeGreeting: string
   operatingHours: MerchantVoiceOperatingHourDto[]
 }
@@ -755,6 +756,7 @@ export interface UpdateMerchantVoiceConfigRequest {
   sendSmsPromoEnabled: boolean
   timeZone: string | null
   language: MerchantVoiceConfigLanguage
+  assistantOnlyMode?: boolean
   welcomeGreeting: string
   operatingHours: Array<{
     dayOfWeek: number
@@ -906,6 +908,7 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
       sendSmsPromoEnabled: true,
       timeZone: '',
       language: MerchantVoiceConfigLanguage.EnUS,
+      assistantOnlyMode: false,
       welcomeGreeting: '',
       voiceSelections: [],
       operatingHours: [],
@@ -967,6 +970,7 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
     sendSmsPromoEnabled: readBool(body.sendSmsPromoEnabled, true),
     timeZone: readConfigString(body.timeZone),
     language: String(body.language ?? MerchantVoiceConfigLanguage.EnUS),
+    assistantOnlyMode: body.assistantOnlyMode === true,
     welcomeGreeting,
     voiceSelections: normalizeVoiceSelections(body.voiceSelections),
     operatingHours,
