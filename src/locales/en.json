@@ -3876,7 +3876,9 @@
           },
           "pdfViewer": {
             "loading": "Loading document...",
+            "slowLoading": "This document is large and is taking longer than expected. You can keep waiting or open it in a new tab.",
             "error": "Unable to display this document.",
+            "retry": "Retry",
             "pageAria": "Page {page} of {total}"
           },
           "iouRewardPolicy": {
