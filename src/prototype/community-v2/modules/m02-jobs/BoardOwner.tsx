@@ -5,8 +5,7 @@ import { Button, Card, EmptyState } from "../../components";
 import { useStore } from "../../store";
 import { selectProfile } from "../../store/slices/m02";
 import type { DemoState, JobPost } from "../../store/types";
-import { ALL_AREAS, BoardFilters, CardGridSkeleton, filterBoard, useFakeLoading } from "./boardParts";
-import { InviteAction } from "./invite";
+import { ALL_AREAS, BoardFilters, CardGridSkeleton, filterBoard, JOB_CARD_GRID_STYLE, useFakeLoading } from "./boardParts";
 import { SeekingCard } from "./cards";
 import { SeekingSheet } from "./SeekingSheet";
 import { PageHeader, POS_JOBS, salonName, useJobsViewer } from "./shared";
@@ -92,10 +91,9 @@ export function OwnerBoard() {
           {loading ? (
             <CardGridSkeleton />
           ) : seekers.length ? (
-            <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+            <div className="grid gap-4" style={JOB_CARD_GRID_STYLE}>
               {seekers.map((post) => (
-                <SeekingCard key={post.id} job={post} onOpen={() => setOpen(post)}
-                  action={post.seekerId && <InviteAction techId={post.seekerId} salonId={salonId} />} />
+                <SeekingCard key={post.id} job={post} onOpen={() => setOpen(post)} />
               ))}
             </div>
           ) : (

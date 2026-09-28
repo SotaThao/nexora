@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { Search } from "lucide-react";
 import { Input, SegmentedPills, Select, Skeleton } from "../../components";
 import type { DemoState, JobPost } from "../../store/types";
@@ -7,6 +7,15 @@ import { salonName, techPublicName } from "./shared";
 
 export const FILTERS = ["Tất cả", "Tìm việc", "Tuyển thợ"] as const;
 export const ALL_AREAS = "Tất cả khu vực";
+
+/**
+ * HARD CONSTRAINT (S02-01 Bảng việc làm): keep the card GRID design, but column count must follow the actual
+ * content width instead of a device breakpoint. Match the main Jobs grid's
+ * auto-fill 18rem minimum in TechBoard, CardGridSkeleton and OwnerBoard.
+ */
+export const JOB_CARD_GRID_STYLE: CSSProperties = {
+  gridTemplateColumns: "repeat(auto-fill, minmax(18rem, 1fr))",
+};
 
 export function useFakeLoading(ms = 350) {
   const [loading, setLoading] = useState(true);
@@ -62,7 +71,7 @@ export function BoardFilters(props: {
 
 export function CardGridSkeleton() {
   return (
-    <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+    <div className="grid gap-4" style={JOB_CARD_GRID_STYLE}>
       {[0, 1, 2, 3].map((item) => <Skeleton key={item} className="h-52" />)}
     </div>
   );

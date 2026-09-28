@@ -7,7 +7,7 @@ import type { JobPost, ScreenDefinition } from "../../store/types";
 import { useCommunityGate } from "../m00-foundation/gates";
 import { BoardRail, MobileQuickLinks } from "./BoardRail";
 import { OwnerBoard } from "./BoardOwner";
-import { ALL_AREAS, BoardFilters, CardGridSkeleton, filterBoard, useFakeLoading } from "./boardParts";
+import { ALL_AREAS, BoardFilters, CardGridSkeleton, filterBoard, JOB_CARD_GRID_STYLE, useFakeLoading } from "./boardParts";
 import { HiringCard, SeekingCard } from "./cards";
 import { SeekingSheet } from "./SeekingSheet";
 import { JOBS, PageHeader, useJobsViewer } from "./shared";
@@ -50,14 +50,14 @@ function TechBoard({ screen }: { screen: ScreenDefinition }) {
         )}
       />
       {role === "tech" && <MobileQuickLinks />}
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div className="min-w-0 space-y-4">
           <BoardFilters {...{ kind, setKind, area, setArea, query, setQuery }} />
           <p className="text-sm text-nexoraMuted">{loading ? "Đang tải…" : `${posts.length} tin phù hợp`}</p>
           {loading ? (
             <CardGridSkeleton />
           ) : posts.length ? (
-            <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+            <div className="grid gap-4" style={JOB_CARD_GRID_STYLE}>
               {posts.map((item, index) =>
                 item.kind === "hiring" ? (
                   <HiringCard key={item.id} job={item} index={index} />
