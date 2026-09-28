@@ -3761,7 +3761,9 @@
           },
           "pdfViewer": {
             "loading": "Đang tải tài liệu...",
+            "slowLoading": "Tài liệu này có dung lượng lớn và cần nhiều thời gian hơn dự kiến. Bạn có thể tiếp tục chờ hoặc mở trong tab mới.",
             "error": "Không thể hiển thị tài liệu này.",
+            "retry": "Thử lại",
             "pageAria": "Trang {page} trên {total}"
           },
           "iouRewardPolicy": {
