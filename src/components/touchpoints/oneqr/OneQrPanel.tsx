@@ -22,6 +22,7 @@ import {
   OneQrAudience,
   OneQrIdentityPolicy,
   OneQrModuleKey,
+  isOneQrModuleVisibleForAudience,
 } from '../../../constants/oneQr'
 import OneQrAudienceTabs from './OneQrAudienceTabs'
 import OneQrCodeCard from './OneQrCodeCard'
@@ -38,6 +39,7 @@ import {
   dirtyAudiences,
   disabledByAdminModules,
   isAudienceDirty,
+  prioritizeEnabledModules,
   resolveModuleLabel,
   toSaveModulesVars,
   type DraftModule,
@@ -99,6 +101,16 @@ export default function OneQrPanel({
   isDirtyRef.current = dirtyList.length > 0 || isNameDirty
 
   const audienceDraft = draft.byAudience[audience]
+  const visibleModules = audienceDraft.modules.filter((module) => {
+    const definition = catalog.find(
+      (item) => item.moduleKey === module.moduleKey,
+    )
+    return isOneQrModuleVisibleForAudience(
+      module.moduleKey,
+      audience,
+      definition?.primaryAudience,
+    )
+  })
   const isAudienceEdited =
     isAudienceDirty(audienceDraft, baseline.byAudience[audience]) || isNameDirty
 
@@ -115,16 +127,36 @@ export default function OneQrPanel({
   }
 
   const handleReorder = (modules: DraftModule[]) => {
-    updateAudienceDraft((current) => ({ ...current, modules }))
+    updateAudienceDraft((current) => ({
+      ...current,
+      modules: (() => {
+        const orderedVisible = prioritizeEnabledModules(modules)
+        let visibleIndex = 0
+        return current.modules.map((module) => {
+          const definition = catalog.find(
+            (item) => item.moduleKey === module.moduleKey,
+          )
+          return isOneQrModuleVisibleForAudience(
+            module.moduleKey,
+            audience,
+            definition?.primaryAudience,
+          )
+            ? orderedVisible[visibleIndex++]
+            : module
+        })
+      })(),
+    }))
   }
 
   const handleToggleModule = (localId: string) => {
     updateAudienceDraft((current) => ({
       ...current,
-      modules: current.modules.map((module) =>
-        module.localId === localId
-          ? { ...module, isEnabled: !module.isEnabled }
-          : module,
+      modules: prioritizeEnabledModules(
+        current.modules.map((module) =>
+          module.localId === localId
+            ? { ...module, isEnabled: !module.isEnabled }
+            : module,
+        ),
       ),
     }))
   }
@@ -172,10 +204,10 @@ export default function OneQrPanel({
   const handleAddModule = (moduleKey: string, customUrl: string | null) => {
     updateAudienceDraft((current) => ({
       ...current,
-      modules: [
+      modules: prioritizeEnabledModules([
         ...current.modules,
         createDraftModule(audience, moduleKey, current.modules.length, customUrl),
-      ],
+      ]),
     }))
     setAddingModule(false)
   }
@@ -231,13 +263,13 @@ export default function OneQrPanel({
   const isSaving =
     updateName.isPending || saveRoleConfig.isPending || saveModules.isPending
 
-  const hasEnabledModules = audienceDraft.modules.some(
+  const hasEnabledModules = visibleModules.some(
     (module) => module.isEnabled,
   )
   // `hasActiveTouchPoint` is computed by the backend and shipped with the
   // config — no need to cross-read the touchpoint list from here. Both TipAndPay
   // and Review resolve through a TouchPoint, so either one triggers the warning.
-  const touchPointDependentEnabled = audienceDraft.modules
+  const touchPointDependentEnabled = visibleModules
     .filter((module) => module.isEnabled)
     .map((module) => module.moduleKey)
     .filter(
@@ -251,7 +283,7 @@ export default function OneQrPanel({
   // Rows the platform admin turned off system-wide. They stay visible, but the
   // API rejects a save that still contains them, so `toSaveModulesVars` drops
   // them — warn first rather than letting a row disappear silently.
-  const disabledModules = disabledByAdminModules(audienceDraft.modules)
+  const disabledModules = disabledByAdminModules(visibleModules)
 
   if (isLoading) {
     return (
@@ -290,6 +322,8 @@ export default function OneQrPanel({
         oneQr={oneQr}
         onToggleActive={() => toggleOneQr.mutate()}
         isToggling={toggleOneQr.isPending}
+        previewAudience={audience}
+        onPreviewAudienceChange={setAudience}
       />
 
       {touchPointWarning ? (
@@ -343,7 +377,7 @@ export default function OneQrPanel({
           />
 
           <OneQrModuleList
-            modules={audienceDraft.modules}
+            modules={visibleModules}
             catalog={catalog}
             onReorder={handleReorder}
             onToggle={handleToggleModule}
@@ -390,7 +424,7 @@ export default function OneQrPanel({
           <OneQrPreview
             businessName={businessName}
             businessLogoUrl={businessLogoUrl}
-            audienceDraft={audienceDraft}
+            audienceDraft={{ ...audienceDraft, modules: visibleModules }}
             catalog={catalog}
             isPaused={!oneQr.isActive}
           />

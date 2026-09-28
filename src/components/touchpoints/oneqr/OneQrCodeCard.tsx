@@ -28,18 +28,27 @@ export default function OneQrCodeCard({
   oneQr,
   onToggleActive,
   isToggling,
+  previewAudience: controlledPreviewAudience,
+  onPreviewAudienceChange,
 }: {
   oneQr: OneQr
   onToggleActive: () => void
   isToggling: boolean
+  previewAudience?: OneQrAudience
+  onPreviewAudienceChange?: (audience: OneQrAudience) => void
 }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const [copied, setCopied] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
-  const [previewAudience, setPreviewAudience] = useState<OneQrAudience>(
+  const [localPreviewAudience, setLocalPreviewAudience] = useState<OneQrAudience>(
     OneQrAudience.Customer,
   )
+  const previewAudience = controlledPreviewAudience ?? localPreviewAudience
+  const setPreviewAudience = (next: OneQrAudience) => {
+    if (controlledPreviewAudience === undefined) setLocalPreviewAudience(next)
+    onPreviewAudienceChange?.(next)
+  }
 
   const shareUrl = useMemo(() => buildShareUrl(oneQr), [oneQr])
 

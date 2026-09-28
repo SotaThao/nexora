@@ -8,6 +8,7 @@ import {
   OneQrModuleKey,
   ONEQR_FIELD_LIMITS,
   ONEQR_MODULE_CATALOG_BY_KEY,
+  isOneQrModuleVisibleForAudience,
   isValidOneQrCustomUrl,
 } from '../../../constants/oneQr'
 import type { OneQrModuleCatalogItem } from '../../../types/oneQr'
@@ -45,7 +46,15 @@ export default function AddOneQrModuleModal({
   const choices = useMemo<CatalogChoice[]>(
     () =>
       catalog
-        .filter((item) => item.allowedAudiences.includes(audience))
+        .filter(
+          (item) =>
+            item.allowedAudiences.includes(audience) &&
+            isOneQrModuleVisibleForAudience(
+              item.moduleKey,
+              audience,
+              item.primaryAudience,
+            ),
+        )
         .map((item) => {
           const bundled = ONEQR_MODULE_CATALOG_BY_KEY[item.moduleKey]
           return {
