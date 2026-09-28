@@ -6,11 +6,12 @@
 import { useState, type ReactNode } from 'react'
 import { Menu } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
-import { BNB_BUSINESS_INFO } from '../community/jobs/communityJobsDemoData'
 import PosSidebar from './PosSidebar'
 import PosSidebarDrawer from './PosSidebarDrawer'
 import PosContentHeader from './PosContentHeader'
 
+// Mobile header mirrors DashboardHeader.mobile.tsx's <=lg bar (hamburger + Nexora logo);
+// query-backed search/notifications/avatar controls are omitted as demo-unsafe.
 export default function PosPublicLayout({ children }: { children: ReactNode }) {
   const { t } = useTranslation()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
@@ -22,34 +23,24 @@ export default function PosPublicLayout({ children }: { children: ReactNode }) {
 
       <header
         className={
-          'sticky top-0 z-20 flex min-h-16 items-center gap-3 bg-nexoraSidebar px-4 text-white lg:hidden'
+          'safe-area-top sticky top-0 z-20 border-b border-nexoraBorder ' +
+          'bg-nexoraSurface/90 backdrop-blur-md lg:hidden'
         }
       >
-        <button
-          type="button"
-          onClick={() => setIsDrawerOpen(true)}
-          aria-label={t('components.pos_demo.PosSidebarNav.openMenuAria')}
-          className={
-            'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/15 ' +
-            'bg-white/5 text-white transition hover:bg-white/10'
-          }
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-nexoraBrand text-sm font-black">
-          N
-        </span>
-        <span className="min-w-0 leading-tight">
-          <span className="block truncate text-sm font-black tracking-wide">
-            {t('components.pos_demo.PosSidebarNav.brandName')}
-          </span>
-        </span>
-        <span className="ml-auto min-w-0 text-right leading-tight">
-          <span className="block truncate text-xs font-bold text-white">{BNB_BUSINESS_INFO.name}</span>
-          <span className="block truncate text-[10px] text-white/60">
-            {String(BNB_BUSINESS_INFO.city)} · {t('components.pos_demo.PosSidebarNav.sampleBranch')}
-          </span>
-        </span>
+        <div className="flex min-h-16 items-center gap-2 px-4">
+          <button
+            type="button"
+            onClick={() => setIsDrawerOpen(true)}
+            aria-label={t('components.pos_demo.PosSidebarNav.openMenuAria')}
+            className={
+              'flex h-11 w-11 items-center justify-center rounded-xl border border-nexoraBorder ' +
+              'bg-white text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted'
+            }
+          >
+            <Menu className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-9 w-9 shrink-0 object-contain" />
+        </div>
       </header>
 
       <PosContentHeader />

@@ -1,7 +1,7 @@
-// POS Admin demo (#589 follow-up) — nav config shared by the desktop PosSidebar and the
-// mobile PosSidebarDrawer. Mirrors the approved reference (OneQR pack, "Recruitment · POS
-// -> NailHub" screen): a POS group expanded under a fixed dark sidebar, with items that
-// have no real page in this public demo rendered inert (see PosSidebarNavList).
+// POS Admin demo (#589 follow-up) — path helpers shared by the desktop PosSidebar and the
+// mobile PosSidebarDrawer. The sidebar itself is a demo-local replica of the REAL Nexora
+// owner sidebar (src/components/dashboard/layout/DashboardSidebar.tsx in vlink-nexora-fe) —
+// see PosSidebarNav for the menu content.
 const SERVICES_PATHS = ['/pos', '/pos/services', '/pos-services', '/services', '/preview/pos']
 
 export function isPosServicesPath(pathname: string): boolean {
@@ -21,15 +21,4 @@ export function isSalonSettingsActive(pathname: string): boolean {
   return isPosStaffPath(pathname) || isPosServicesPath(pathname)
 }
 
-export const SALON_SETTINGS_DEFAULT_PATH = '/pos/services'
-
-export type PosInertItemKey = 'overview' | 'oneQr' | 'frontDesk' | 'supplies' | 'report' | 'promotions'
-
-export const POS_INERT_ITEM_KEYS: PosInertItemKey[] = [
-  'overview',
-  'oneQr',
-  'frontDesk',
-  'supplies',
-  'report',
-  'promotions',
-]
+export const SALON_SETTINGS_DEFAULT_PATH = '/pos/staff?staffView=recruitment'

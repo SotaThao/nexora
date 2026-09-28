@@ -895,7 +895,14 @@
       "pos_products": "Products",
       "pos_staff": "Staff Profiles",
       "pos_board": "Front Desk",
-      "news_library": "News & Library"
+      "news_library": "News & Library",
+      "one_qr": "One QR",
+      "pos_salon_settings": "Salon Settings",
+      "pos_report": "Report",
+      "pos_promotions": "Promotions",
+      "pos_public_checkin": "QR Self Check-in",
+      "pos_devices": "Self Check-in Device",
+      "pos_printer": "Printer"
     },
     "header": {
       "search_placeholder": "Search staff, reviews, or tips...",
@@ -4456,6 +4463,16 @@
           }
         },
         "pos": {
+          "PosSalonSettingsView": {
+            "tabs": {
+              "ariaLabel": "Salon settings",
+              "salonInformation": "Salon Information",
+              "staff": "Staff",
+              "services": "Services",
+              "rolesPermissions": "Roles & Permissions",
+              "staffLevels": "Staff Levels"
+            }
+          },
           "PosOnboardingRequiredPage": {
             "title": "Finish setting up your business",
             "description": "Complete onboarding to unlock POS for your business.",
@@ -5534,35 +5551,18 @@
     },
     "pos_demo": {
       "PosSidebarNav": {
-        "brandName": "NEXORA",
-        "brandSub": "TOUCH",
         "sampleBranch": "Sample branch",
         "navAriaLabel": "POS navigation",
-        "overview": "OneQR overview",
-        "oneQr": "One QR",
-        "pos": "POS",
-        "frontDesk": "Front Desk",
-        "supplies": "Inventory & Ordering",
-        "salonSettings": "Salon Settings",
-        "report": "Report",
-        "promotions": "Promotions",
-        "nailHubName": "NailHub",
-        "nailHubTagline": "Recruitment channel in this demo",
-        "ownerRole": "Business owner",
-        "ownerSpace": "Management space",
+        "businessSwitcherAria": "Switch business",
+        "planLabel": "Professional Plan",
+        "planDetail": "Active",
         "comingSoon": "Not available in this demo",
         "openMenuAria": "Open navigation menu",
         "closeMenuAria": "Close navigation menu"
       },
       "PosContentHeader": {
         "crumbPos": "POS",
-        "crumbSalonSettings": "Salon Settings",
-        "crumbStaff": "Staff",
-        "crumbServices": "Services",
-        "tabSalonInformation": "Salon Information",
-        "tabStaff": "Staff",
-        "tabServices": "Services",
-        "tabRolesPermissions": "Roles & Permissions"
+        "crumbSalonSettings": "Salon Settings"
       }
     },
     "register": {
