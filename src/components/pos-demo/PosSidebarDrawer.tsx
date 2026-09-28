@@ -5,6 +5,7 @@
 import { useEffect, useRef } from 'react'
 import { ChevronLeft } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
+import { SIDEBAR_MOBILE_DRAWER_CLASS } from '../ui/sidebarMenuStyles'
 import PosSidebarNav from './PosSidebarNav'
 
 type PosSidebarDrawerProps = {
@@ -71,10 +72,7 @@ export default function PosSidebarDrawer({ isOpen, onClose }: PosSidebarDrawerPr
         role="dialog"
         aria-modal="true"
         aria-label={t('components.pos_demo.PosSidebarNav.navAriaLabel')}
-        className={
-          'mobile-drawer-safe relative flex h-full w-[min(84vw,320px)] flex-col bg-nexoraSidebar ' +
-          'px-5 py-7 text-white shadow-2xl animate-scaleIn'
-        }
+        className={`${SIDEBAR_MOBILE_DRAWER_CLASS} py-6`}
       >
         <button
           ref={closeButtonRef}

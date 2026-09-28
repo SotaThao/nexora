@@ -1,18 +1,38 @@
-// POS Admin demo (#589 follow-up) — shared sidebar nav content for the public /pos*
-// preview routes, rendered inside both the fixed desktop PosSidebar and the mobile
-// PosSidebarDrawer. Matches the approved reference (OneQR pack, "Recruitment · POS ->
-// NailHub" screen): NEXORA TOUCH brand block, business card, POS group (expanded,
-// gradient-active) with Front Desk / Vật tư & Đặt hàng / Salon Settings / Report /
-// Promotions children, then the NailHub + owner cards pinned to the bottom.
+// POS Admin demo (#589 follow-up) — demo-local replica of the REAL Nexora owner sidebar
+// (src/components/dashboard/layout/DashboardSidebar.tsx + MobileMenuDrawer.tsx in
+// vlink-nexora-fe), rendered inside both the fixed desktop PosSidebar and the mobile
+// PosSidebarDrawer. The production shell cannot be mounted on this public, auth-less route
+// (it consumes auth/query state — see community/demo/DemoMerchantShell.tsx for the same
+// pattern), so this rebuilds only its visual structure: business card, Home, menu rows
+// (Payments & Payouts / AI Hub / Gift Card Center reuse the real shared component +
+// constants), the POS group (the only real link is "Salon Settings"), plan card, sign-out.
+import { Fragment, useState } from 'react'
+import { ChevronDown, ChevronUp, Home, LogOut } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { useNotification } from '../../contexts/NotificationContext'
 import { BNB_BUSINESS_INFO } from '../community/jobs/communityJobsDemoData'
+import PaymentsPayoutsMenuSection from '../dashboard/layout/PaymentsPayoutsMenuSection'
+import MenuIcon from '../ui/MenuIcon'
+import SidebarPlanCard from '../ui/SidebarPlanCard'
 import {
-  isPosGroupActive,
-  isSalonSettingsActive,
-  SALON_SETTINGS_DEFAULT_PATH,
-} from './posSidebarNavConfig'
+  SIDEBAR_NAV_CLASS,
+  SIDEBAR_PROFILE_CARD_CLASS,
+  SIDEBAR_AVATAR_FALLBACK_CLASS,
+  SIDEBAR_SIGN_OUT_WRAP_CLASS,
+  SIDEBAR_SUBMENU_WRAP_CLASS,
+  sidebarMenuItemBetweenClass,
+  sidebarMenuItemClass,
+  sidebarSubmenuItemClass,
+} from '../ui/sidebarMenuStyles'
+import {
+  AI_HUB_SUBMENU,
+  GIFT_CARD_CENTER_SUBMENU,
+  POS_DEMO_SIDEBAR_MENU_ITEMS,
+  POS_DEMO_SUBMENU,
+  POS_SALON_SETTINGS_CHILD_ID,
+} from './posRealSidebarMenu'
+import { isPosGroupActive, isSalonSettingsActive, SALON_SETTINGS_DEFAULT_PATH } from './posSidebarNavConfig'
 
 const TK = 'components.pos_demo.PosSidebarNav'
 
@@ -29,139 +49,184 @@ export default function PosSidebarNav({ onNavigate }: PosSidebarNavProps) {
   const isPosActive = isPosGroupActive(pathname)
   const isSalonSettingsChildActive = isSalonSettingsActive(pathname)
 
-  const showComingSoon = () => {
+  const [isPaymentsExpanded, setIsPaymentsExpanded] = useState(false)
+  const [isAiHubExpanded, setIsAiHubExpanded] = useState(false)
+  const [isPosExpanded, setIsPosExpanded] = useState(true)
+  const [isGiftCardExpanded, setIsGiftCardExpanded] = useState(false)
+
+  const handleInert = () => {
     showToast(t(`${TK}.comingSoon`), 'info')
   }
 
-  const handleSalonSettingsClick = () => {
-    navigate(SALON_SETTINGS_DEFAULT_PATH)
-    onNavigate?.()
-  }
-
-  const inertRowClass =
-    'flex h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-bold text-white/60 ' +
-    'transition hover:bg-white/5 hover:text-white/80'
-  const inertSubRowClass =
-    'flex h-9 w-full items-center rounded-lg px-3 text-left text-xs font-bold text-white/50 ' +
-    'transition hover:bg-white/5 hover:text-white/70'
-
   return (
     <>
-      <Link
-        to="/"
-        onClick={onNavigate}
-        className="flex items-center gap-3 rounded-lg px-1 py-1 text-white"
-        aria-label={t(`${TK}.brandName`)}
-      >
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-nexoraBrand text-lg font-black">
-          N
-        </span>
-        <span className="leading-tight">
-          <span className="block text-lg font-black tracking-wide">{t(`${TK}.brandName`)}</span>
-          <span className="block text-[10px] font-bold tracking-[0.3em] text-white/60">{t(`${TK}.brandSub`)}</span>
-        </span>
-      </Link>
-
-      <div className="mt-6 flex shrink-0 items-center gap-2.5 rounded-xl border border-white/15 px-3 py-3">
-        <span
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/10 text-sm font-bold text-white"
+      <div className={SIDEBAR_PROFILE_CARD_CLASS}>
+        <button
+          type="button"
+          onClick={handleInert}
+          aria-label={t(`${TK}.businessSwitcherAria`)}
+          className="flex min-h-11 w-full items-center justify-between text-left"
         >
-          {BNB_BUSINESS_INFO.name.charAt(0)}
-        </span>
-        <span className="min-w-0">
-          <span className="block truncate text-sm font-bold text-white">{BNB_BUSINESS_INFO.name}</span>
-          <span className="block truncate text-xs text-white/60">
-            {String(BNB_BUSINESS_INFO.city)} · {t(`${TK}.sampleBranch`)}
+          <span className="flex min-w-0 items-center gap-3">
+            <span className={`${SIDEBAR_AVATAR_FALLBACK_CLASS} shrink-0 bg-amber-400/20 text-amber-300`}>
+              {BNB_BUSINESS_INFO.name.charAt(0)}
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-bold text-white">{BNB_BUSINESS_INFO.name}</span>
+            </span>
           </span>
-        </span>
+          <span className="ml-2 shrink-0 text-white/85">
+            <ChevronDown className="h-4 w-4" aria-hidden="true" />
+          </span>
+        </button>
       </div>
 
-      <nav
-        aria-label={t(`${TK}.navAriaLabel`)}
-        className="mt-5 flex-1 space-y-1 overflow-y-auto pr-1"
-      >
-        <button type="button" onClick={showComingSoon} className={inertRowClass}>
-          <span aria-hidden="true">⌂</span>
-          <span className="truncate">{t(`${TK}.overview`)}</span>
-        </button>
-        <button type="button" onClick={showComingSoon} className={inertRowClass}>
-          <span aria-hidden="true">▦</span>
-          <span className="truncate">{t(`${TK}.oneQr`)}</span>
+      <nav className={SIDEBAR_NAV_CLASS} aria-label={t(`${TK}.navAriaLabel`)}>
+        <button type="button" onClick={handleInert} className={`${sidebarMenuItemClass(false)} border-0`}>
+          <MenuIcon item={{ icon: Home }} active={false} />
+          <span className="truncate">{t('dashboard.menu.home')}</span>
         </button>
 
-        <div
-          aria-current={isPosActive ? 'true' : undefined}
-          className={
-            'flex h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-bold text-white ' +
-            'bg-gradient-to-r from-nexoraElectric to-nexoraViolet shadow-lg shadow-nexoraElectric/20'
+        {POS_DEMO_SIDEBAR_MENU_ITEMS.map((item) => {
+          const isPos = item.id === 'pos'
+          const isAiHub = item.id === 'ai-hub'
+          const isGiftCard = item.id === 'product-management'
+          const isActive = isPos && isPosActive
+
+          const isExpanded = isPos ? isPosExpanded : isAiHub ? isAiHubExpanded : isGiftCard ? isGiftCardExpanded : false
+
+          const handleClick = () => {
+            if (isPos) {
+              setIsPosExpanded((prev) => !prev)
+            } else if (isAiHub) {
+              setIsAiHubExpanded((prev) => !prev)
+            } else if (isGiftCard) {
+              setIsGiftCardExpanded((prev) => !prev)
+            }
+            handleInert()
           }
-        >
-          <span aria-hidden="true">▣</span>
-          <span className="truncate">{t(`${TK}.pos`)}</span>
-          <span className="ml-auto text-white/80" aria-hidden="true">
-            ⌃
-          </span>
-        </div>
 
-        <div className="ml-4 mt-1 space-y-0.5 border-l border-white/15 pl-3">
-          <button type="button" onClick={showComingSoon} className={inertSubRowClass}>
-            <span className="truncate">{t(`${TK}.frontDesk`)}</span>
-          </button>
-          <button type="button" onClick={showComingSoon} className={inertSubRowClass}>
-            <span className="truncate">{t(`${TK}.supplies`)}</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleSalonSettingsClick}
-            className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
-              isSalonSettingsChildActive ? 'text-brandCyan' : 'text-white/75 hover:bg-white/5 hover:text-white'
-            }`}
-          >
-            <span
-              className={`h-1.5 w-1.5 rounded-full ${
-                isSalonSettingsChildActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'
-              }`}
-              aria-hidden="true"
-            />
-            <span className="truncate">{t(`${TK}.salonSettings`)}</span>
-          </button>
-          <button type="button" onClick={showComingSoon} className={inertSubRowClass}>
-            <span className="truncate">{t(`${TK}.report`)}</span>
-          </button>
-          <button type="button" onClick={showComingSoon} className={inertSubRowClass}>
-            <span className="truncate">{t(`${TK}.promotions`)}</span>
-          </button>
-        </div>
+          return (
+            <Fragment key={item.id}>
+              <button
+                type="button"
+                aria-expanded={item.expandable ? isExpanded : undefined}
+                onClick={handleClick}
+                className={sidebarMenuItemBetweenClass(isActive)}
+              >
+                <span className="flex min-w-0 items-center gap-3">
+                  <MenuIcon item={item} active={isActive} />
+                  <span className="truncate">{t(item.labelKey)}</span>
+                </span>
+                {item.expandable ? (
+                  <span className="ml-auto shrink-0 text-white/50">
+                    {isExpanded ? (
+                      <ChevronUp className="h-4 w-4" aria-hidden="true" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                    )}
+                  </span>
+                ) : null}
+              </button>
+
+              {item.id === 'overview' ? (
+                <PaymentsPayoutsMenuSection
+                  activeMenu="pos"
+                  tabParam={null}
+                  isExpanded={isPaymentsExpanded}
+                  onToggle={() => {
+                    setIsPaymentsExpanded((prev) => !prev)
+                    handleInert()
+                  }}
+                  onNavigate={handleInert}
+                />
+              ) : null}
+
+              {isAiHub && isAiHubExpanded ? (
+                <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
+                  {AI_HUB_SUBMENU.map((sub) => (
+                    <button key={sub.id} type="button" onClick={handleInert} className={sidebarSubmenuItemClass(false)}>
+                      <span className="h-1.5 w-1.5 rounded-full bg-white/30" />
+                      <span>{t(sub.labelKey)}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+
+              {isGiftCard && isGiftCardExpanded ? (
+                <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
+                  {GIFT_CARD_CENTER_SUBMENU.map((sub) => (
+                    <button key={sub.id} type="button" onClick={handleInert} className={sidebarSubmenuItemClass(false)}>
+                      <span className="h-1.5 w-1.5 rounded-full bg-white/30" />
+                      <span>{t(sub.labelKey)}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+
+              {isPos && isPosExpanded ? (
+                <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
+                  {POS_DEMO_SUBMENU.map((sub) => {
+                    const isSalonSettings = sub.id === POS_SALON_SETTINGS_CHILD_ID
+                    const isSubActive = isSalonSettings && isSalonSettingsChildActive
+
+                    if (isSalonSettings) {
+                      return (
+                        <Link
+                          key={sub.id}
+                          to={SALON_SETTINGS_DEFAULT_PATH}
+                          onClick={() => onNavigate?.()}
+                          aria-current={isSubActive ? 'page' : undefined}
+                          className={sidebarSubmenuItemClass(isSubActive)}
+                        >
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${
+                              isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'
+                            }`}
+                          />
+                          <span>{t(sub.labelKey)}</span>
+                        </Link>
+                      )
+                    }
+
+                    return (
+                      <button
+                        key={sub.id}
+                        type="button"
+                        onClick={handleInert}
+                        className={sidebarSubmenuItemClass(false)}
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-white/30" />
+                        <span>{t(sub.labelKey)}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              ) : null}
+            </Fragment>
+          )
+        })}
       </nav>
 
       <div className="mt-auto shrink-0 space-y-3 pt-3">
-        <div className="flex items-center gap-2.5 border-t border-white/15 px-1 pt-4">
-          <span
-            className={
-              'grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-emerald-50 ' +
-              'text-sm font-black italic text-emerald-700'
-            }
-          >
-            nh
-          </span>
-          <span className="min-w-0">
-            <span className="block truncate text-sm font-bold text-white">{t(`${TK}.nailHubName`)}</span>
-            <span className="block truncate text-xs text-white/60">{t(`${TK}.nailHubTagline`)}</span>
-          </span>
-        </div>
+        <SidebarPlanCard
+          subscriptionCopy={{ planLabel: t(`${TK}.planLabel`), detailLabel: t(`${TK}.planDetail`) }}
+          onManagePlan={handleInert}
+          t={t}
+        />
 
-        <div className="flex items-center gap-2.5 px-1">
-          <span
+        <div className={`${SIDEBAR_SIGN_OUT_WRAP_CLASS} border-t-0 pt-0`}>
+          <button
+            type="button"
+            onClick={handleInert}
             className={
-              'grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-xs font-bold text-white'
+              'flex min-h-11 w-full items-center gap-2 px-3 py-2 text-sm font-bold text-white/65 ' +
+              'transition hover:text-white'
             }
           >
-            BN
-          </span>
-          <span className="min-w-0">
-            <span className="block truncate text-sm font-bold text-white">{t(`${TK}.ownerRole`)}</span>
-            <span className="block truncate text-xs text-white/60">{t(`${TK}.ownerSpace`)}</span>
-          </span>
+            <LogOut className="h-4 w-4" aria-hidden="true" />
+            {t('dashboard.sidebar.sign_out')}
+          </button>
         </div>
       </div>
     </>

@@ -12,6 +12,10 @@ import { getHeadcountLabel } from './staffJobsModel'
 
 const TK = 'staff_dashboard.community.jobs.card'
 const ENUM_TK = 'components.dashboard.views.pos.recruitment.enums'
+// Grid-tile card: full-height, own border/shadow (no inter-tile divider lines), actions
+// pinned to the bottom via the flex-1 footer below.
+const cardClass = 'flex h-full flex-col rounded-xl border border-nexoraBorder bg-white p-4 shadow-nexora-card sm:p-5'
+const footerClass = 'mt-4 flex flex-1 flex-col justify-end gap-2 border-t border-dashed border-nexoraRule pt-3 text-xs'
 
 interface HiringPostCardProps {
   posting: PosJobPosting
@@ -29,10 +33,10 @@ export default function HiringPostCard({ posting, alreadyApplied, onOpenDetail, 
   const posted = formatRecruitmentDate(posting.publishedAt || posting.createdAt, currentLanguage)
 
   return (
-    <article className="border-t border-nexoraRule px-4 py-5 first:border-t-0 sm:px-5">
+    <article className={cardClass}>
       <div className="flex items-start justify-between gap-3">
         <button type="button" onClick={() => onOpenDetail(posting)} className="min-w-0 flex-1 text-left">
-          <h3 className="font-black leading-snug text-nexoraText hover:underline">{posting.title}</h3>
+          <h3 className="line-clamp-2 font-black leading-snug text-nexoraText hover:underline">{posting.title}</h3>
           <p className="mt-1 text-xs font-medium text-nexoraMuted">{businessLabel} · {t(`${TK}.postedOn`, { date: posted })}</p>
         </button>
         {posting.isUrgent ? <span className="shrink-0 rounded-md bg-rose-500 px-2 py-1 text-[10px] font-black text-white">{t('components.dashboard.views.pos.recruitment.preview.urgentBadge')}</span> : null}
@@ -53,11 +57,11 @@ export default function HiringPostCard({ posting, alreadyApplied, onOpenDetail, 
         <span className="rounded-md border border-emerald-100 bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-800">{pay}</span>
       </div>
 
-      <footer className="mt-4 flex flex-col gap-2 border-t border-dashed border-nexoraRule pt-3 text-xs sm:flex-row sm:items-center sm:justify-between">
+      <footer className={footerClass}>
         {alreadyApplied ? (
           <span className="inline-flex items-center gap-1.5 font-bold text-emerald-700"><CheckCircle2 className="h-4 w-4" aria-hidden />{t(`${TK}.alreadyApplied`)}</span>
-        ) : <span />}
-        <div className="flex flex-wrap items-center gap-1 sm:justify-end">
+        ) : null}
+        <div className="flex flex-wrap items-center gap-1">
           <button type="button" onClick={() => onChat(posting)} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 font-bold text-nexoraBrand hover:bg-nexoraBrandSoft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand">
             <MessagesSquare className="h-4 w-4" aria-hidden />{t(`${TK}.messageAction`)}
           </button>

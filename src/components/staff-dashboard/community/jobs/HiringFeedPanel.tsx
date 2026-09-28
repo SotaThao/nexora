@@ -13,6 +13,10 @@ const ENUM_TK = 'components.dashboard.views.pos.recruitment.enums'
 const ALL_WORK_TYPES = 'all' as const
 const ALL_SKILLS = 'all' as const
 const fieldClass = 'min-h-11 w-full rounded-lg border border-nexoraBorder bg-white px-3 text-sm font-medium text-nexoraText outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrandSoft'
+// Fluid grid (Apple HIG adaptive layout): column count follows the real content width instead
+// of a hardcoded breakpoint — 1 col on phones, 2 on tablets/narrow desktop, 3+ on wide screens.
+const gridColsClass = '[grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr))]'
+const feedGridClass = `grid grid-cols-1 gap-4 p-4 sm:p-5 md:gap-5 ${gridColsClass}`
 
 interface HiringFeedPanelProps {
   filters: HiringFeedFilters
@@ -151,7 +155,13 @@ export default function HiringFeedPanel({
       </header>
 
       {isLoading ? (
-        <div className="p-5"><SkeletonList count={3} lines={3} showAvatar /></div>
+        <div className={feedGridClass}>
+          {Array.from({ length: 3 }, (_, index) => (
+            <div key={index} className="h-full rounded-xl border border-nexoraBorder bg-white p-4 shadow-nexora-card">
+              <SkeletonList count={1} lines={3} showAvatar />
+            </div>
+          ))}
+        </div>
       ) : isError ? (
         <div className="flex flex-col items-center gap-3 px-4 py-12 text-center">
           <p className="font-bold text-nexoraText">{t(`${TK}.feed.loadError`)}</p>
@@ -168,7 +178,7 @@ export default function HiringFeedPanel({
           </div>
         </div>
       ) : (
-        <div>
+        <div className={feedGridClass}>
           {postings.map((posting) => (
             <HiringPostCard
               key={posting.id}
