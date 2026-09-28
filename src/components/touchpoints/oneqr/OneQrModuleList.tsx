@@ -208,34 +208,56 @@ function SortableModuleRow({
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`relative grid min-w-0 grid-cols-[32px_68px_minmax(0,1fr)_auto] items-start gap-x-1.5 gap-y-2 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-2 sm:grid-cols-[36px_68px_minmax(0,1fr)_auto] sm:gap-2 sm:p-3 ${
+      className={`relative flex min-w-0 flex-col gap-2 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-2 sm:grid sm:grid-cols-[36px_68px_minmax(0,1fr)_auto] sm:items-start sm:gap-2 sm:p-3 ${
         isDragging ? 'z-10 shadow-nexora-card' : ''
       }`}
     >
-      <button
-        type="button"
-        className="col-start-1 row-start-1 grid h-8 w-8 shrink-0 cursor-grab touch-none place-items-center rounded-lg text-nexoraMuted hover:bg-nexoraSurfaceMuted active:cursor-grabbing sm:h-9 sm:w-9"
-        aria-label={t('oneqr.builder.drag_handle', { module: label })}
-        {...attributes}
-        {...listeners}
-      >
-        <GripVertical className="h-4 w-4" aria-hidden />
-      </button>
+      <div className="flex w-full items-start justify-between gap-2 sm:contents">
+        <div className="flex items-start gap-1 sm:contents">
+          <button
+            type="button"
+            className="grid h-8 w-8 shrink-0 cursor-grab touch-none place-items-center rounded-lg text-nexoraMuted hover:bg-nexoraSurfaceMuted active:cursor-grabbing sm:col-start-1 sm:row-start-1 sm:h-9 sm:w-9"
+            aria-label={t('oneqr.builder.drag_handle', { module: label })}
+            {...attributes}
+            {...listeners}
+          >
+            <GripVertical className="h-4 w-4" aria-hidden />
+          </button>
 
-      <div className="col-start-2 row-start-1 flex w-[68px] shrink-0 flex-col items-center gap-1">
-        <span className="grid h-9 w-9 place-items-center rounded-lg bg-nexoraSurfaceMuted text-nexoraBrand">
-          <OneQrModuleIcon name={icon} />
-        </span>
-        <button
-          type="button"
-          onClick={() => setShowIcons(true)}
-          className="w-full rounded-md border border-nexoraBorder bg-nexoraSurface px-1 py-0.5 text-[10px] font-bold leading-tight text-nexoraMuted transition hover:border-nexoraLavender hover:text-nexoraBrand"
-        >
-          {t('oneqr.builder.change_icon_action')}
-        </button>
+          <div className="flex w-[64px] shrink-0 flex-col items-center gap-0.5 sm:col-start-2 sm:row-start-1 sm:w-[68px] sm:gap-1">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-nexoraSurfaceMuted text-nexoraBrand sm:h-9 sm:w-9">
+              <OneQrModuleIcon name={icon} />
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowIcons(true)}
+              className="w-full rounded-md border border-nexoraBorder bg-nexoraSurface px-1 py-0.5 text-[10px] font-bold leading-none text-nexoraMuted transition hover:border-nexoraLavender hover:text-nexoraBrand sm:leading-tight"
+            >
+              {t('oneqr.builder.change_icon_action')}
+            </button>
+          </div>
+        </div>
+
+        <div className="flex shrink-0 flex-col items-center gap-1.5 sm:col-start-4 sm:row-start-1 sm:gap-2.5">
+          <ToggleSwitch
+            checked={module.isEnabled}
+            onChange={onToggle}
+            activeColor="bg-nexoraBrand"
+            inactiveColor="bg-nexoraBorder"
+            ariaLabel={t('oneqr.builder.toggle_module', { module: label })}
+          />
+          <button
+            type="button"
+            onClick={onRemove}
+            className="rounded-md border border-nexoraBorder bg-nexoraSurface px-2 py-0.5 text-[10px] font-bold leading-tight text-nexoraMuted transition-colors hover:border-nexoraDanger hover:bg-red-50 hover:text-nexoraDanger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraDanger/20"
+            aria-label={t('oneqr.builder.remove_module', { module: label })}
+          >
+            {t('oneqr.builder.remove_action')}
+          </button>
+        </div>
       </div>
 
-      <div className="col-span-full row-start-2 min-w-0 space-y-1.5 sm:col-span-1 sm:col-start-3 sm:row-start-1">
+      <div className="w-full min-w-0 space-y-1.5 sm:col-span-1 sm:col-start-3 sm:row-start-1">
         <div className="flex min-w-0 items-center gap-1.5">
           <input
             type="text"
@@ -308,24 +330,6 @@ function SortableModuleRow({
             <span className="min-w-0 break-words">{unavailableText}</span>
           </p>
         ) : null}
-      </div>
-
-      <div className="col-start-4 row-start-1 flex shrink-0 flex-col items-center gap-2.5">
-        <ToggleSwitch
-          checked={module.isEnabled}
-          onChange={onToggle}
-          activeColor="bg-nexoraBrand"
-          inactiveColor="bg-nexoraBorder"
-          ariaLabel={t('oneqr.builder.toggle_module', { module: label })}
-        />
-        <button
-          type="button"
-          onClick={onRemove}
-          className="rounded-md border border-nexoraBorder bg-nexoraSurface px-2 py-0.5 text-[10px] font-bold leading-tight text-nexoraMuted transition-colors hover:border-nexoraDanger hover:bg-red-50 hover:text-nexoraDanger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraDanger/20"
-          aria-label={t('oneqr.builder.remove_module', { module: label })}
-        >
-          {t('oneqr.builder.remove_action')}
-        </button>
       </div>
 
       {showIcons ? (
