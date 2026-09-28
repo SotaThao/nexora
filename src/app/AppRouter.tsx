@@ -55,6 +55,7 @@ import RootRedirect from "./RootRedirect";
 import { VoiceCallPlanRoute } from "../data/voiceTrial/domain";
 import { PUBLIC_BOOKING_ROUTE } from "../components/public/booking/constants";
 import { ONEQR_ROUTE } from "../constants/oneQr";
+import { POS_VISIT_ROUTE } from "../constants/posSmsSettings";
 
 const OneQrArtworkPage = lazyWithRetry(() => import("../components/touchpoints/oneqr/OneQrArtworkPage"));
 
@@ -158,6 +159,9 @@ const QrRedirectPage = lazyWithRetry(
 );
 const OneQrLandingPage = lazyWithRetry(
   () => import("../components/public/oneqr/OneQrLandingPage"),
+);
+const VisitLinkPage = lazyWithRetry(
+  () => import("../components/public/visit/VisitLinkPage"),
 );
 const PublicServiceMenuPage = lazyWithRetry(
   () => import("../components/public/menu/PublicServiceMenuPage"),
@@ -355,6 +359,8 @@ export default function AppRouter() {
           <Route path="/qr/:code" element={<QrRedirectPage />} />
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
           <Route path={ONEQR_ROUTE.path} element={<OneQrLandingPage />} />
+          <Route path={POS_VISIT_ROUTE.path} element={<VisitLinkPage />} />
+          <Route path={POS_VISIT_ROUTE.sectionPath} element={<VisitLinkPage />} />
           <Route path="/menu/:businessSlug" element={<PublicServiceMenuPage />} />
           <Route path={PUBLIC_BOOKING_ROUTE.path} element={<PublicBookingPage />} />
           <Route path="/booking/:businessSlug" element={<PublicPosBookingPage />} />

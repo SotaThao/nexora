@@ -2861,6 +2861,14 @@
     "return_merchant": "Go to Personal Dashboard"
   },
   "errors": {
+    "pos_sms_body_required": "Message is required.",
+    "pos_sms_body_too_long": "Message is too long.",
+    "pos_sms_placeholder_not_allowed": "The message contains a field that is not available for this SMS.",
+    "pos_sms_invalid_send_mode": "Choose a valid send mode.",
+    "pos_sms_invalid_visit_link_ttl": "Choose one of the available link availability options.",
+    "pos_sms_test_phone_required": "Enter a phone number for the test message.",
+    "pos_sms_test_phone_invalid": "The test phone number is not valid.",
+    "pos_sms_visit_link_not_found": "This link is not valid.",
     "TIP_AMOUNT_TOO_HIGH": "Tip amount is too high.",
     "TIP_CRYPTO_SYMBOL_REQUIRED": "Select a VLINKPAY token (USDV or USDT) before tipping.",
     "TIP_CRYPTO_ADDRESS_NOT_FOUND": "No VLINKPAY wallet address found for the selected token.",
@@ -3834,6 +3842,106 @@
             "description": "Complete onboarding to unlock POS for your business.",
             "cta": "Complete Onboarding"
           },
+          "PosSmsSettings": {
+            "loading": "Loading SMS settings…",
+            "loadFailed": "Could not load SMS settings.",
+            "aiHub": {
+              "inactive": "This salon has no active AI Hub, so Welcome SMS and test messages will not be sent. Settings can still be saved.",
+              "noCredit": "This salon is out of SMS Credit, so automatic messages will be skipped until credit is added. Settings can still be saved."
+            },
+            "tabs": {
+              "ariaLabel": "SMS settings",
+              "welcome": "Welcome SMS",
+              "afterCheckout": "After Checkout",
+              "link": "Link Settings"
+            },
+            "welcome": {
+              "title": "Welcome SMS Setup",
+              "previewTitle": "Customer preview",
+              "enableLabel": "Enable welcome message after check-in",
+              "sendModeAutomatic": "Automatic after check-in",
+              "save": "Save Welcome Setup"
+            },
+            "afterCheckout": {
+              "title": "After Checkout Setup",
+              "previewTitle": "After Checkout preview",
+              "enableLabel": "Enable message after checkout",
+              "sendModeAutomatic": "Automatic after checkout",
+              "save": "Save After Checkout Setup"
+            },
+            "sendMode": {
+              "label": "Send mode",
+              "manual": "Manual",
+              "manualNote": "Manual messages are prepared but not sent automatically. They wait for staff to send them."
+            },
+            "quickTemplate": {
+              "label": "Quick template",
+              "welcomeMessage": "Welcome message",
+              "checkInConfirmed": "Check-in confirmed",
+              "ticketReceipt": "Ticket receipt",
+              "reviewRequest": "Review request",
+              "tipFollowUp": "Tip follow-up",
+              "privateFeedback": "Private feedback",
+              "bookNextVisit": "Book next visit"
+            },
+            "message": {
+              "label": "Message",
+              "insert": "Insert:",
+              "placeholder": "Type your message…",
+              "estimateHint": "Estimate uses sample customer details; actual length may vary",
+              "estimate": "{chars} chars — ~{segments} SMS ({encoding})",
+              "encodingGsm7": "GSM-7",
+              "encodingUnicode": "Unicode",
+              "required": "Message is required.",
+              "multiSegmentWarning": "This message is sent as {segments} SMS segments and uses {segments} credits per guest."
+            },
+            "chips": {
+              "customerName": "Customer Name",
+              "shopName": "Shop Name",
+              "visitLink": "OneQR Link",
+              "phoneNumber": "Phone Number",
+              "ticketNumber": "Ticket Number",
+              "ticketTotal": "Ticket Total",
+              "reviewLink": "Review Link",
+              "tipLink": "Tip Link",
+              "feedbackLink": "Feedback Link",
+              "bookingLink": "Booking Link",
+              "receiptLink": "Receipt Link"
+            },
+            "preview": {
+              "messages": "Messages",
+              "linkActive": "Visit link remains active for {period} after checkout.",
+              "disabled": "This message is turned off and will not be sent."
+            },
+            "marketingConsent": {
+              "title": "Marketing consent required:",
+              "body": "If OneQR highlights a promotional offer, the customer must have valid marketing consent. Without consent, the same link opens the standard OneQR menu and existing customer benefits only."
+            },
+            "customerProtection": {
+              "title": "Customer protection:",
+              "body": "Never ask for a second tip when one was already completed. Do not reward only positive public reviews. Marketing messages require valid consent."
+            },
+            "test": {
+              "phoneLabel": "Test phone number",
+              "send": "Send Test",
+              "sending": "Sending…",
+              "sent": "Test message sent.",
+              "failed": "The test message could not be sent.",
+              "noAiHub": "Test messages need an active AI Hub."
+            },
+            "link": {
+              "title": "Visit link settings",
+              "description": "One expiry for the OneQR visit link in every SMS. Active during the visit; the countdown starts at checkout or cancellation. Sending the link again does not restart it.",
+              "descriptionLinks": "After checkout, the same link opens the after-visit page. Tip, Review and Feedback links expire with it; Receipt and Booking links do not expire.",
+              "availabilityLabel": "Link availability",
+              "afterCheckoutOption": "{period} after checkout",
+              "oneDay": "1 day",
+              "days": "{count} days",
+              "exampleOneDay": "Example: check in at 10:00, check out at 11:00 → the visit link expires at 11:00 the next day.",
+              "exampleDays": "Example: check in at 10:00, check out at 11:00 → the visit link expires at 11:00, {count} days later.",
+              "save": "Save link settings"
+            }
+          },
           "PosSalonSettingsView": {
             "title": "Salon Settings",
             "description": "Manage salon information, staff, services, roles, and permissions.",
@@ -3843,7 +3951,8 @@
               "staff": "Staff",
               "services": "Services",
               "rolesPermissions": "Roles & Permissions",
-              "staffLevels": "Staff Levels"
+              "staffLevels": "Staff Levels",
+              "sms": "SMS Settings"
             }
           },
           "PosGeneralSettingsView": {
@@ -8641,6 +8750,24 @@
     "stampExpired": "Expired"
   },
   "public": {
+    "posVisit": {
+      "notFoundTitle": "Link not found",
+      "notFoundDesc": "This link is not valid. Please check the message you received.",
+      "expiredTitle": "This link has expired",
+      "expiredSectionDesc": "This link is no longer available. You can still visit {business}’s page.",
+      "openSalonPage": "Open salon page",
+      "expiredNotice": "This visit link has expired.",
+      "leaveReview": "Leave a Review",
+      "addTip": "Add a Tip",
+      "privateFeedback": "Private Feedback",
+      "receipt": "Receipt",
+      "thanks": "Thanks for visiting, {name}!",
+      "ticket": "Ticket {number}",
+      "checkedIn": "Hi {name}, you’re checked in",
+      "statusWaiting": "Waiting for service",
+      "statusInService": "In service",
+      "services": "Services: {services}"
+    },
     "certificate": {
       "notFoundTitle": "No certificate with this ID",
       "notFoundBody": "We could not find a certificate matching {{code}}. Check it against the printed certificate — upper and lower case do not matter, but every dash does.",
