@@ -90,23 +90,25 @@ export default function OneQrModuleList({
           setQuickUrl('')
         }}
       >
-        <div className="flex min-h-10 items-center gap-1.5 rounded-lg border border-nexoraLavender bg-nexoraSurface p-1 pl-2.5 shadow-sm focus-within:border-nexoraBrand focus-within:ring-2 focus-within:ring-nexoraBrand/10">
-          <Link2 className="h-3.5 w-3.5 shrink-0 text-nexoraBrand" aria-hidden />
-          <input
-            type="url"
-            inputMode="url"
-            autoComplete="url"
-            value={quickUrl}
-            maxLength={ONEQR_FIELD_LIMITS.customUrl}
-            onChange={(event) => setQuickUrl(event.target.value)}
-            aria-label={t('oneqr.builder.quick_link_aria')}
-            placeholder={t('oneqr.builder.quick_link_placeholder')}
-            className="h-8 min-w-0 flex-1 bg-transparent text-xs text-nexoraText outline-none placeholder:text-nexoraMuted"
-          />
+        <div className="grid min-h-10 grid-cols-1 gap-1.5 rounded-lg border border-nexoraLavender bg-nexoraSurface p-1 shadow-sm focus-within:border-nexoraBrand focus-within:ring-2 focus-within:ring-nexoraBrand/10 sm:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="flex min-w-0 items-center gap-1.5 px-1.5 sm:px-0 sm:pl-1.5">
+            <Link2 className="h-3.5 w-3.5 shrink-0 text-nexoraBrand" aria-hidden />
+            <input
+              type="url"
+              inputMode="url"
+              autoComplete="url"
+              value={quickUrl}
+              maxLength={ONEQR_FIELD_LIMITS.customUrl}
+              onChange={(event) => setQuickUrl(event.target.value)}
+              aria-label={t('oneqr.builder.quick_link_aria')}
+              placeholder={t('oneqr.builder.quick_link_placeholder')}
+              className="h-8 min-w-0 flex-1 bg-transparent text-xs text-nexoraText outline-none placeholder:text-nexoraMuted"
+            />
+          </div>
           <button
             type="submit"
             disabled={!isValidOneQrCustomUrl(quickUrl)}
-            className="inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-nexoraBrand px-3 text-[11px] font-bold text-white transition hover:bg-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-8 w-full shrink-0 items-center justify-center rounded-md bg-nexoraBrand px-3 text-[11px] font-bold text-white transition hover:bg-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           >
             {t('oneqr.builder.quick_link_add')}
           </button>
@@ -206,13 +208,13 @@ function SortableModuleRow({
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`relative flex min-w-0 items-start gap-1.5 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-2.5 sm:gap-2 sm:p-3 ${
+      className={`relative grid min-w-0 grid-cols-[32px_68px_minmax(0,1fr)_auto] items-start gap-x-1.5 gap-y-2 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-2 sm:grid-cols-[36px_68px_minmax(0,1fr)_auto] sm:gap-2 sm:p-3 ${
         isDragging ? 'z-10 shadow-nexora-card' : ''
       }`}
     >
       <button
         type="button"
-        className="grid h-8 w-8 shrink-0 cursor-grab touch-none place-items-center rounded-lg text-nexoraMuted hover:bg-nexoraSurfaceMuted active:cursor-grabbing sm:h-9 sm:w-9"
+        className="col-start-1 row-start-1 grid h-8 w-8 shrink-0 cursor-grab touch-none place-items-center rounded-lg text-nexoraMuted hover:bg-nexoraSurfaceMuted active:cursor-grabbing sm:h-9 sm:w-9"
         aria-label={t('oneqr.builder.drag_handle', { module: label })}
         {...attributes}
         {...listeners}
@@ -220,7 +222,7 @@ function SortableModuleRow({
         <GripVertical className="h-4 w-4" aria-hidden />
       </button>
 
-      <div className="flex w-[68px] shrink-0 flex-col items-center gap-1">
+      <div className="col-start-2 row-start-1 flex w-[68px] shrink-0 flex-col items-center gap-1">
         <span className="grid h-9 w-9 place-items-center rounded-lg bg-nexoraSurfaceMuted text-nexoraBrand">
           <OneQrModuleIcon name={icon} />
         </span>
@@ -233,7 +235,7 @@ function SortableModuleRow({
         </button>
       </div>
 
-      <div className="min-w-0 flex-1 space-y-1.5">
+      <div className="col-span-full row-start-2 min-w-0 space-y-1.5 sm:col-span-1 sm:col-start-3 sm:row-start-1">
         <div className="flex min-w-0 items-center gap-1.5">
           <input
             type="text"
@@ -308,7 +310,7 @@ function SortableModuleRow({
         ) : null}
       </div>
 
-      <div className="flex shrink-0 flex-col items-center gap-2.5">
+      <div className="col-start-4 row-start-1 flex shrink-0 flex-col items-center gap-2.5">
         <ToggleSwitch
           checked={module.isEnabled}
           onChange={onToggle}
