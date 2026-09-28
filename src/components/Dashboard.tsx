@@ -208,9 +208,9 @@ export default function Dashboard({
   )
 
   const reviewsThisWeekCount = reviewsWeekPage?.totalCount ?? null
-  // All-time reviews summary — shared by Overview + Reviews so KPI numbers match.
+  // All-time reviews summary for /dashboard/reviews KPI cards (not date-scoped).
   const { data: reviewsSummary } = useDashboardReviewsSummary({
-    enabled: isReviewsTab || activeMenu === 'overview',
+    enabled: isReviewsTab,
   })
   const { data: apiUnreadCount = 0 } = useUnreadCount()
   const { data: notificationsData, isLoading: isNotificationsLoading, isFetching: isNotificationsFetching } = useNotifications({
