@@ -5532,6 +5532,39 @@
         }
       }
     },
+    "pos_demo": {
+      "PosSidebarNav": {
+        "brandName": "NEXORA",
+        "brandSub": "TOUCH",
+        "sampleBranch": "Sample branch",
+        "navAriaLabel": "POS navigation",
+        "overview": "OneQR overview",
+        "oneQr": "One QR",
+        "pos": "POS",
+        "frontDesk": "Front Desk",
+        "supplies": "Inventory & Ordering",
+        "salonSettings": "Salon Settings",
+        "report": "Report",
+        "promotions": "Promotions",
+        "nailHubName": "NailHub",
+        "nailHubTagline": "Recruitment channel in this demo",
+        "ownerRole": "Business owner",
+        "ownerSpace": "Management space",
+        "comingSoon": "Not available in this demo",
+        "openMenuAria": "Open navigation menu",
+        "closeMenuAria": "Close navigation menu"
+      },
+      "PosContentHeader": {
+        "crumbPos": "POS",
+        "crumbSalonSettings": "Salon Settings",
+        "crumbStaff": "Staff",
+        "crumbServices": "Services",
+        "tabSalonInformation": "Salon Information",
+        "tabStaff": "Staff",
+        "tabServices": "Services",
+        "tabRolesPermissions": "Roles & Permissions"
+      }
+    },
     "register": {
       "hooks": {
         "useRegisterForm": {
