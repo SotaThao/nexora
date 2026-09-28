@@ -143,10 +143,7 @@ function Overview({
   isLoading = false,
   isTransactionsLoading = false,
   isTouchpointsLoading = false,
-  reviewsPage = null,
-  isReviewsPending = false,
   reviewsThisWeekCount = null,
-  reviewsKpiSummary = null,
 }) {
   const { currentLanguage, t } = useTranslation()
   const { showToast } = useNotification()
@@ -159,15 +156,8 @@ function Overview({
   const [copiedPaymentLinkId, setCopiedPaymentLinkId] = useState(null)
   const dropdownRef = useRef(null)
 
-  const reviewsSummary = useMemo(() => {
-    const items = reviewsPage?.items ?? []
-    // Prefer all-time overview summary (same source as /dashboard/reviews KPIs).
-    const totalCount =
-      reviewsKpiSummary?.totalReviews
-      ?? reviewsPage?.totalCount
-      ?? items.length
-    return { totalCount, items }
-  }, [reviewsPage, reviewsKpiSummary])
+  // Total Reviews KPI follows the selected chart date range (same overview API as tips KPIs).
+  const totalReviewsCount = Number(metrics?.totalReviews ?? 0)
 
   // The "Master Store QR" (general pool tips) must point to a REAL backing
   // touch point — there is no store-level "general" touch page on the API
@@ -310,14 +300,12 @@ function Overview({
     return opt ? opt.label : dateRangeOptions[0].label;
   }, [chartRange, chartStartDate, chartEndDate, dateRangeOptions, currentLanguage]);
 
-  // Google / Yelp cards share labels with /dashboard/reviews — use the same
-  // all-time click counts (not chart-scoped platformReviews ratings).
+  // Google / Yelp / response cards use the date-scoped overview metrics
+  // (same DateFrom/DateTo as the tips KPIs and chart range).
   const reviewMetrics = useMemo(() => {
-    const googleClicks = reviewsKpiSummary?.googleClicks ?? metrics.googleClicks ?? 0
-    const yelpClicks = reviewsKpiSummary?.yelpClicks ?? metrics.yelpClicks ?? 0
     return {
-      googleClicks,
-      yelpClicks,
+      googleClicks: metrics.googleClicks ?? 0,
+      yelpClicks: metrics.yelpClicks ?? 0,
       // Keep platform ratings as secondary context when the API provides them.
       googleRating: metrics.googleAvgRating ?? 0,
       yelpRating: metrics.yelpAvgRating ?? 0,
@@ -326,7 +314,7 @@ function Overview({
       returningCustomers: metrics.returningCustomerRate ?? 0,
       returningCustomersDelta: metrics.returningCustomerRateChangeVsLastWeek ?? 0,
     }
-  }, [metrics, reviewsKpiSummary])
+  }, [metrics])
 
   const hasMasterGateway = Boolean(masterTouchpoint)
 
@@ -452,7 +440,7 @@ function Overview({
             />
             <KpiCard
               label={t('dashboard.kpi.total_reviews')}
-              value={reviewsSummary.totalCount.toString()}
+              value={totalReviewsCount.toString()}
               deltaPercent={kpiDeltas?.totalReviews ?? null}
               noDeltaFallback={NO_DELTA_FALLBACK.WEEKLY_COUNT}
               weeklyCount={reviewsThisWeekCount ?? 0}
@@ -550,7 +538,7 @@ function Overview({
         />
       </div>
 
-      {/* Review metrics — same Google/Yelp click counts as /dashboard/reviews */}
+      {/* Review metrics — scoped to the selected overview date range */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <ReviewMetricCard
           label={t('dashboard.review_kpi.google_reviews')}
