@@ -431,6 +431,7 @@
           "messageAction": "Nhắn tin",
           "viewDetail": "Xem chi tiết",
           "applyAction": "Ứng tuyển",
+          "salaryNegotiable": "Thương lượng",
           "headcountOne": "{{count}} vị trí",
           "headcountOther": "{{count}} vị trí"
         },

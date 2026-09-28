@@ -431,6 +431,7 @@
           "messageAction": "Message",
           "viewDetail": "View details",
           "applyAction": "Apply",
+          "salaryNegotiable": "Negotiable",
           "headcountOne": "1 opening",
           "headcountOther": "{{count}} openings"
         },

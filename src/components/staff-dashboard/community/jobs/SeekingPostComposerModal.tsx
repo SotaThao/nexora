@@ -235,7 +235,7 @@ export default function SeekingPostComposerModal({
                     </label>
                     <label className="block text-xs font-bold text-nexoraText">
                       {t(`${TK}.payUnitLabel`)}
-                      <select disabled={isLocked} value={draft.payUnit ?? JobPayUnit.Hour} onChange={(event) => updateDraft({ payUnit: event.target.value as JobPayUnit })} className={`${fieldClass} mt-1.5 bg-white`}>
+                      <select disabled={isLocked} value={draft.payUnit ?? JobPayUnit.Week} onChange={(event) => updateDraft({ payUnit: event.target.value as JobPayUnit })} className={`${fieldClass} mt-1.5 bg-white`}>
                         {Object.values(JobPayUnit).map((payUnit) => (
                           <option key={payUnit} value={payUnit}>{t(`${ENUM_TK}.payUnit.${payUnit}`)}</option>
                         ))}

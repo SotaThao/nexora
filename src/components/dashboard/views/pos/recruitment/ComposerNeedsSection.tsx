@@ -92,7 +92,7 @@ export default function ComposerNeedsSection({ draft, errors, disabled, onChange
           {draft.payType === JobPayType.Fixed ? (
             <div className="grid grid-cols-[minmax(0,1fr)_130px] gap-2">
               <label className="text-xs font-bold text-nexoraText">{t(`${TK}.composer.fields.payAmount`)} *<input id="recruitment-field-payAmount" type="number" min="0.01" max="100000" step="0.01" disabled={disabled} value={draft.payAmount ?? ''} onChange={(event) => onChange({ payAmount: event.target.value ? Number(event.target.value) : null })} placeholder={t(`${TK}.composer.placeholders.payAmount`)} className={`${fieldClass} mt-1.5 ${errors.payAmount ? 'border-rose-400' : ''}`} /></label>
-              <label className="text-xs font-bold text-nexoraText">{t(`${TK}.composer.fields.payUnit`)}<select disabled={disabled} value={draft.payUnit ?? JobPayUnit.Hour} onChange={(event) => onChange({ payUnit: event.target.value as JobPayUnit })} className={`${fieldClass} mt-1.5`}>{COMPOSER_PAY_UNITS.map((value) => <option key={value} value={value}>{t(`${TK}.enums.payUnit.${value}`)}</option>)}</select></label>
+              <label className="text-xs font-bold text-nexoraText">{t(`${TK}.composer.fields.payUnit`)}<select disabled={disabled} value={draft.payUnit ?? JobPayUnit.Week} onChange={(event) => onChange({ payUnit: event.target.value as JobPayUnit })} className={`${fieldClass} mt-1.5`}>{COMPOSER_PAY_UNITS.map((value) => <option key={value} value={value}>{t(`${TK}.enums.payUnit.${value}`)}</option>)}</select></label>
               {errors.payAmount ? <span className="col-span-2 text-[11px] font-semibold text-rose-600">{errors.payAmount}</span> : null}
             </div>
           ) : <div />}
