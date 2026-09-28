@@ -14,11 +14,6 @@ export const PosCheckoutPaymentMethod = {
   PayPal: PayoutApiType.PayPal,
 } as const
 
-// Gift Card checkout is temporarily switched off: the money leg runs through VlinkPay and is
-// paused, so the chip stays visible but unusable and Gift Card is kept out of Split Pay.
-// Flip back to true to restore it — nothing else has to change.
-export const POS_CHECKOUT_GIFT_CARD_ENABLED = false
-
 export type PosCheckoutPaymentMethodType =
   (typeof PosCheckoutPaymentMethod)[keyof typeof PosCheckoutPaymentMethod]
 
