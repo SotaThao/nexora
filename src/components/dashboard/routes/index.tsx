@@ -119,10 +119,7 @@ export function OverviewRoute() {
       isLoading={ctx.isOverviewLoading}
       isTransactionsLoading={ctx.isTransactionsLoading}
       isTouchpointsLoading={ctx.isTouchpointsLoading}
-      reviewsPage={ctx.reviewsPage}
-      isReviewsPending={ctx.isReviewsPending}
       reviewsThisWeekCount={ctx.reviewsThisWeekCount}
-      reviewsKpiSummary={ctx.reviewsSummary}
       metricsMonth={ctx.metricsMonth}
       metricsYear={ctx.metricsYear}
     />
