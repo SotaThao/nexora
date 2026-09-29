@@ -79,18 +79,21 @@ export function useMerchantStaff({
   pageNumber = 1,
   pageSize = 10,
   keyword,
+  isLocalStaff,
   enabled = true,
 }: {
   statusFilter?: string
   pageNumber?: number
   pageSize?: number
   keyword?: string
+  /** Server-side filter (before paging); omit to include both local and account staff. */
+  isLocalStaff?: boolean
   enabled?: boolean
 } = {}) {
   const trimmedKeyword = keyword?.trim() || undefined
   return useQuery<StaffListPage>({
-    queryKey: qk.merchantStaff(statusFilter, pageNumber, pageSize, trimmedKeyword),
-    queryFn: () => merchantStaffRepository.list(statusFilter, pageNumber, pageSize, trimmedKeyword),
+    queryKey: qk.merchantStaff(statusFilter, pageNumber, pageSize, trimmedKeyword, isLocalStaff),
+    queryFn: () => merchantStaffRepository.list(statusFilter, pageNumber, pageSize, trimmedKeyword, isLocalStaff),
     enabled,
     placeholderData: keepPreviousData,
     refetchOnMount: true,

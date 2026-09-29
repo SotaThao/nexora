@@ -6,6 +6,8 @@
  */
 import httpClient from '../../lib/httpClient'
 import type {
+  AssignBookingServiceLineStaffPayload,
+  BookingAssignmentCandidateApiDto,
   BookingDetailApiDto,
   BookingListFilters,
   BookingListResultApiDto,
@@ -14,6 +16,7 @@ import type {
   CreateBookingPayload,
   PosCheckInResultApiDto,
   RescheduleBookingPayload,
+  UnassignedBookingAssignmentApiDto,
 } from '../../types/repositories'
 
 type HttpClient = typeof httpClient
@@ -105,6 +108,41 @@ export function createPosBookingRepository(client: HttpClient = httpClient) {
 
     async rescheduleBooking(businessId: string, bookingId: string, payload: RescheduleBookingPayload): Promise<void> {
       await client.post<void>(`/api/v1/merchant/pos/${businessId}/bookings/${bookingId}/reschedule`, payload)
+    },
+
+    async getUnassignedAssignments(
+      businessId: string,
+      filters: { dateFrom?: string; dateTo?: string } = {},
+    ): Promise<UnassignedBookingAssignmentApiDto[]> {
+      const params = new URLSearchParams()
+      if (filters.dateFrom) params.set('dateFrom', filters.dateFrom)
+      if (filters.dateTo) params.set('dateTo', filters.dateTo)
+      const query = params.toString()
+      return await client.get<UnassignedBookingAssignmentApiDto[]>(
+        `/api/v1/merchant/pos/${businessId}/bookings/assignments/unassigned${query ? `?${query}` : ''}`,
+      )
+    },
+
+    async getAssignmentCandidates(
+      businessId: string,
+      bookingId: string,
+      serviceLineId: string,
+    ): Promise<BookingAssignmentCandidateApiDto[]> {
+      return await client.get<BookingAssignmentCandidateApiDto[]>(
+        `/api/v1/merchant/pos/${businessId}/bookings/${bookingId}/service-lines/${serviceLineId}/assignment-candidates`,
+      )
+    },
+
+    async assignServiceLineStaff(
+      businessId: string,
+      bookingId: string,
+      serviceLineId: string,
+      payload: AssignBookingServiceLineStaffPayload,
+    ): Promise<void> {
+      await client.put<void>(
+        `/api/v1/merchant/pos/${businessId}/bookings/${bookingId}/service-lines/${serviceLineId}/staff`,
+        payload,
+      )
     },
   }
 }

@@ -96,6 +96,7 @@ export function createDraftModule(
     isEnabled: true,
     customLabel: null,
     customIcon: null,
+    customIconUrl: null,
     customUrl,
     defaultLabel: null,
     defaultIcon: null,
@@ -146,6 +147,7 @@ export function toSaveModulesVars(
         isEnabled: module.isEnabled,
         customLabel: module.customLabel,
         customIcon: module.customIcon,
+        customIconUrl: module.customIconUrl,
         customUrl:
           module.moduleKey === OneQrModuleKey.CustomLink ? module.customUrl : null,
       })),
@@ -168,6 +170,17 @@ export function resolveModuleIcon(
     ONEQR_MODULE_CATALOG_BY_KEY[module.moduleKey]?.defaultIcon ??
     'square'
   )
+}
+
+/**
+ * A merchant-uploaded icon image, when set. Unlike `resolveModuleIcon`, there
+ * is no registry/bundle fallback here — only a merchant's own upload ever
+ * carries a URL, so `null` means "render the resolved icon name instead."
+ */
+export function resolveModuleIconUrl(
+  module: Pick<DraftModule, 'customIconUrl'>,
+): string | null {
+  return module.customIconUrl
 }
 
 /**
@@ -199,6 +212,7 @@ function sameModules(a: DraftModule[], b: DraftModule[]): boolean {
       module.isEnabled === other.isEnabled &&
       module.customLabel === other.customLabel &&
       module.customIcon === other.customIcon &&
+      module.customIconUrl === other.customIconUrl &&
       module.customUrl === other.customUrl
     )
   })

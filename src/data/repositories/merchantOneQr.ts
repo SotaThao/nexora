@@ -148,6 +148,7 @@ function normalizeModule(
     isEnabled: raw.isEnabled !== false,
     customLabel: nullableStr(raw.customLabel),
     customIcon: nullableStr(raw.customIcon),
+    customIconUrl: nullableStr(raw.customIconUrl),
     customUrl: nullableStr(raw.customUrl),
     defaultLabel: nullableStr(raw.defaultLabel),
     defaultIcon: nullableStr(raw.defaultIcon),
@@ -376,6 +377,7 @@ export function createMerchantOneQrRepository(client: HttpClient = httpClient) {
           isEnabled: module.isEnabled,
           customLabel: module.customLabel ?? null,
           customIcon: module.customIcon ?? null,
+          customIconUrl: module.customIconUrl ?? null,
           customUrl: module.customUrl ?? null,
         })),
       })

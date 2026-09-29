@@ -25,14 +25,23 @@ export function useDashboardOverview(params: DateRangeParams = EMPTY_PARAMS) {
 }
 
 /**
- * All-time review summary for the Reviews tab KPI cards / filter counts.
- * Sourced from the overview endpoint's `reviewsSummary` (no date filter),
- * separate from the date-scoped overview used by the Overview tab.
+ * All-time review summary for the Reviews tab KPI cards.
+ * Overview API defaults to the last 30 days when DateFrom/DateTo are omitted,
+ * so we pass an explicit wide range to match the unscoped reviews list.
  */
+export function reviewsSummaryAllTimeRange(): { dateFrom: string; dateTo: string } {
+  const now = new Date()
+  const y = now.getFullYear()
+  const m = String(now.getMonth() + 1).padStart(2, '0')
+  const d = String(now.getDate()).padStart(2, '0')
+  return { dateFrom: '2000-01-01', dateTo: `${y}-${m}-${d}` }
+}
+
 export function useDashboardReviewsSummary({ enabled = true } = {}) {
+  const range = reviewsSummaryAllTimeRange()
   return useQuery<DashboardReviewsSummary | null>({
-    queryKey: [...qk.dashboardOverview(), 'reviews-summary'],
-    queryFn: () => dashboardRepository.getReviewsSummary(),
+    queryKey: [...qk.dashboardOverview(), 'reviews-summary', range.dateFrom, range.dateTo],
+    queryFn: () => dashboardRepository.getReviewsSummary(range),
     enabled,
     staleTime: 30_000,
   })

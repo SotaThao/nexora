@@ -1,15 +1,20 @@
 import { useState } from 'react'
-import { X } from 'lucide-react'
+import { Loader2, Upload, X } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import OneQrModuleIcon, {
   ONEQR_ICON_CHOICES,
 } from '../../oneqr/OneQrModuleIcon'
+import ImageFileInput from '../../ui/ImageFileInput'
 import {
   OneQrModuleKey,
   ONEQR_FIELD_LIMITS,
+  ONEQR_ICON_UPLOAD_MAX_DIMENSION_PX,
+  ONEQR_ICON_UPLOAD_MAX_BYTES,
   isValidOneQrCustomUrl,
 } from '../../../constants/oneQr'
 import type { OneQrModuleCatalogItem } from '../../../types/oneQr'
+import { compressImageFile, normalizeAllowedImageFile } from '../../../utils/imageFile'
+import { imagesRepository } from '../../../data/repositories/images'
 import {
   resolveModuleIcon,
   resolveModuleLabel,
@@ -19,6 +24,7 @@ import {
 export type EditedModuleFields = {
   customLabel: string | null
   customIcon: string | null
+  customIconUrl: string | null
   customUrl: string | null
 }
 
@@ -36,6 +42,9 @@ export default function EditOneQrModuleModal({
   const { t } = useTranslation()
   const [label, setLabel] = useState(module.customLabel ?? '')
   const [icon, setIcon] = useState(module.customIcon ?? '')
+  const [iconUrl, setIconUrl] = useState(module.customIconUrl ?? '')
+  const [iconUploading, setIconUploading] = useState(false)
+  const [iconUploadError, setIconUploadError] = useState<string | null>(null)
   const [url, setUrl] = useState(module.customUrl ?? '')
   const [urlTouched, setUrlTouched] = useState(false)
 
@@ -50,13 +59,44 @@ export default function EditOneQrModuleModal({
   )
   const previewIcon = icon || resolveModuleIcon({ ...module, customIcon: null }, catalog)
 
+  // A library icon and an uploaded image are mutually exclusive — picking one clears the other.
+  const pickLibraryIcon = (name: string) => {
+    setIcon(name)
+    setIconUrl('')
+    setIconUploadError(null)
+  }
+
+  const handleIconFilePick = async (file: File) => {
+    setIconUploadError(null)
+    const normalized = normalizeAllowedImageFile(file)
+    if (!normalized) {
+      setIconUploadError(t('oneqr.builder.icon_upload_invalid'))
+      return
+    }
+    setIconUploading(true)
+    try {
+      const compressed = await compressImageFile(normalized, {
+        maxDimension: ONEQR_ICON_UPLOAD_MAX_DIMENSION_PX,
+        maxBytes: ONEQR_ICON_UPLOAD_MAX_BYTES,
+      })
+      const uploadedUrl = await imagesRepository.uploadAndGetUrl(compressed)
+      setIconUrl(uploadedUrl)
+      setIcon('')
+    } catch {
+      setIconUploadError(t('oneqr.builder.icon_upload_error'))
+    } finally {
+      setIconUploading(false)
+    }
+  }
+
   const handleSubmit = () => {
     setUrlTouched(true)
-    if (!isUrlValid) return
+    if (!isUrlValid || iconUploading) return
     onSave({
       // Empty means "fall back to the registry default", not "blank label".
       customLabel: label.trim() || null,
       customIcon: icon.trim() || null,
+      customIconUrl: iconUrl.trim() || null,
       customUrl: isCustomLink ? url.trim() : null,
     })
   }
@@ -115,21 +155,64 @@ export default function EditOneQrModuleModal({
             <div className="flex flex-wrap gap-1.5">
               <button
                 type="button"
-                onClick={() => setIcon('')}
-                aria-pressed={icon === ''}
+                onClick={() => {
+                  setIcon('')
+                  setIconUrl('')
+                  setIconUploadError(null)
+                }}
+                aria-pressed={icon === '' && iconUrl === ''}
                 className={`grid h-9 min-w-9 place-items-center rounded-lg border px-2 text-[10px] font-bold transition ${
-                  icon === ''
+                  icon === '' && iconUrl === ''
                     ? 'border-nexoraBrand bg-nexoraBrand text-white'
                     : 'border-nexoraBorder bg-nexoraSurface text-nexoraMuted hover:bg-nexoraSurfaceMuted'
                 }`}
               >
                 {t('oneqr.builder.icon_default')}
               </button>
+
+              {iconUrl ? (
+                <div className="relative">
+                  <span
+                    aria-label={t('oneqr.builder.icon_uploaded')}
+                    className="grid h-9 w-9 place-items-center overflow-hidden rounded-lg border-2 border-nexoraBrand"
+                  >
+                    <img src={iconUrl} alt="" className="h-full w-full object-cover" />
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIconUrl('')}
+                    aria-label={t('oneqr.builder.icon_remove')}
+                    className="absolute -right-1.5 -top-1.5 grid h-4 w-4 place-items-center rounded-full bg-nexoraDanger text-white"
+                  >
+                    <X className="h-2.5 w-2.5" aria-hidden />
+                  </button>
+                </div>
+              ) : (
+                <ImageFileInput
+                  as="label"
+                  accept="image/png,image/jpeg,image/webp"
+                  disabled={iconUploading}
+                  inputAriaLabel={t('oneqr.builder.icon_upload')}
+                  onPickFile={handleIconFilePick}
+                  className={`grid h-9 w-9 place-items-center rounded-lg border border-dashed border-nexoraBorder text-nexoraMuted transition ${
+                    iconUploading
+                      ? 'cursor-not-allowed opacity-50'
+                      : 'cursor-pointer hover:bg-nexoraSurfaceMuted'
+                  }`}
+                >
+                  {iconUploading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                  ) : (
+                    <Upload className="h-4 w-4" aria-hidden />
+                  )}
+                </ImageFileInput>
+              )}
+
               {ONEQR_ICON_CHOICES.map((name) => (
                 <button
                   key={name}
                   type="button"
-                  onClick={() => setIcon(name)}
+                  onClick={() => pickLibraryIcon(name)}
                   aria-pressed={icon === name}
                   aria-label={name}
                   className={`grid h-9 w-9 place-items-center rounded-lg border transition ${
@@ -142,6 +225,15 @@ export default function EditOneQrModuleModal({
                 </button>
               ))}
             </div>
+            {iconUploadError ? (
+              <p className="mt-1 text-[11px] font-bold text-nexoraDanger">
+                {iconUploadError}
+              </p>
+            ) : (
+              <p className="mt-1 text-[11px] font-medium text-nexoraMuted">
+                {t('oneqr.builder.icon_upload_hint')}
+              </p>
+            )}
           </div>
 
           {isCustomLink ? (
@@ -174,7 +266,7 @@ export default function EditOneQrModuleModal({
 
           <div className="flex items-center gap-3 rounded-xl bg-nexoraSurfaceMuted p-3">
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white text-nexoraBrand">
-              <OneQrModuleIcon name={previewIcon} />
+              <OneQrModuleIcon name={previewIcon} iconUrl={iconUrl || null} />
             </span>
             <span className="min-w-0 truncate text-sm font-bold text-nexoraText">
               {label.trim() || defaultLabel}
@@ -193,7 +285,8 @@ export default function EditOneQrModuleModal({
           <button
             type="button"
             onClick={handleSubmit}
-            className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white transition hover:bg-nexoraBrandDark"
+            disabled={iconUploading}
+            className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white transition hover:bg-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-50"
           >
             {t('common.save')}
           </button>

@@ -18,6 +18,7 @@ import {
 import OneQrModuleIcon from '../../oneqr/OneQrModuleIcon'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import { resolveOneQrModuleLabel } from '../../oneqr/oneQrModuleLabel'
+import { resolveOneQrModuleIconColor } from '../../oneqr/oneQrModuleIconColor'
 import { resolveOneQrModuleHref } from './oneQrModuleHref'
 import {
   ONEQR_ROUTE,
@@ -29,6 +30,10 @@ import type {
   OneQrLandingBusiness,
   OneQrLandingModule,
 } from '../../../types/oneQr'
+import {
+  rememberOneQrReturnAudience,
+  withOneQrReturnAudience,
+} from '../../../utils/oneQrReturnAudience'
 
 /**
  * The session id identifies one scan for analytics dedupe. It is generated in
@@ -69,6 +74,11 @@ export default function OneQrLandingPage() {
     viewAs,
   })
   const trackClick = useTrackOneQrModuleClick()
+  const landingAudience = data?.audience
+
+  useEffect(() => {
+    if (landingAudience) rememberOneQrReturnAudience(landingAudience)
+  }, [landingAudience])
 
   useEffect(() => {
     document.body.classList.add('oneqr-landing-active')
@@ -239,6 +249,7 @@ export default function OneQrLandingPage() {
               // CustomLink may repeat, so the key needs the position too.
               key={`${module.moduleKey}-${index}`}
               module={module}
+              audience={data.audience}
               label={resolveOneQrModuleLabel(
                 // The landing DTO ships one merged `label`. For a CustomLink
                 // that string is the merchant's own wording — there is no
@@ -330,10 +341,12 @@ function BusinessFooter({ business }: { business: OneQrLandingBusiness }) {
 
 function ModuleTile({
   module,
+  audience,
   label,
   onClick,
 }: {
   module: OneQrLandingModule
+  audience: OneQrAudience
   /** Resolved from the locale files, not `module.label` — see oneQrModuleLabel. */
   label: string
   onClick: () => void
@@ -341,16 +354,11 @@ function ModuleTile({
   // Destinations come from the backend registry and may be either an in-app
   // path or an external CustomLink, so this is a plain anchor rather than a
   // react-router <Link>; external targets additionally get noopener.
-  const url = resolveOneQrModuleHref(module)
+  const url = withOneQrReturnAudience(resolveOneQrModuleHref(module), audience)
   const isExternal = /^https?:\/\//i.test(url)
   const isInternal = url.startsWith('/')
   const safeHref = isExternal || isInternal ? url : '#'
-  const iconColor = {
-    [OneQrModuleKey.CheckIn]: 'bg-nexoraTeal/10 text-nexoraTealAlt',
-    [OneQrModuleKey.Payment]: 'bg-nexoraElectric/10 text-nexoraElectric',
-    [OneQrModuleKey.Booking]: 'bg-nexoraViolet/10 text-nexoraViolet',
-    [OneQrModuleKey.Rewards]: 'bg-nexoraTeal/10 text-nexoraTealAlt',
-  }[module.moduleKey] ?? 'bg-nexoraBrandSoft/70 text-nexoraBrand'
+  const iconColor = resolveOneQrModuleIconColor(module.moduleKey)
 
   return (
     <a
@@ -364,7 +372,7 @@ function ModuleTile({
     >
       <span className="flex w-full items-start justify-between gap-2">
         <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${iconColor}`}>
-          <OneQrModuleIcon name={module.icon} className="h-4 w-4" />
+          <OneQrModuleIcon name={module.icon} iconUrl={module.iconUrl} className="h-4 w-4" />
         </span>
         <ArrowUpRight className="mt-1 h-4 w-4 text-nexoraSubtle transition group-hover:text-nexoraBrand motion-reduce:transition-none" aria-hidden />
       </span>

@@ -28,6 +28,7 @@ import ToggleSwitch from '../../ui/ToggleSwitch'
 import OneQrModuleIcon, {
   ONEQR_ICON_CHOICES,
 } from '../../oneqr/OneQrModuleIcon'
+import { resolveOneQrModuleIconColor } from '../../oneqr/oneQrModuleIconColor'
 import {
   OneQrModuleKey,
   ONEQR_FIELD_LIMITS,
@@ -36,6 +37,7 @@ import {
 import type { OneQrModuleCatalogItem } from '../../../types/oneQr'
 import {
   resolveModuleIcon,
+  resolveModuleIconUrl,
   resolveModuleLabel,
   type DraftModule,
 } from './oneQrDraft'
@@ -47,7 +49,12 @@ type ModuleListProps = {
   onToggle: (localId: string) => void
   onUpdate: (
     localId: string,
-    fields: Partial<Pick<DraftModule, 'customLabel' | 'customIcon' | 'customUrl'>>,
+    fields: Partial<
+      Pick<
+        DraftModule,
+        'customLabel' | 'customIcon' | 'customIconUrl' | 'customUrl'
+      >
+    >,
   ) => void
   onRemove: (localId: string) => void
   onAdd: () => void
@@ -171,7 +178,12 @@ function SortableModuleRow({
   catalog: OneQrModuleCatalogItem[]
   onToggle: () => void
   onUpdate: (
-    fields: Partial<Pick<DraftModule, 'customLabel' | 'customIcon' | 'customUrl'>>,
+    fields: Partial<
+      Pick<
+        DraftModule,
+        'customLabel' | 'customIcon' | 'customIconUrl' | 'customUrl'
+      >
+    >,
   ) => void
   onRemove: () => void
 }) {
@@ -184,6 +196,7 @@ function SortableModuleRow({
 
   const label = resolveModuleLabel(module, catalog, t)
   const icon = resolveModuleIcon(module, catalog)
+  const iconUrl = resolveModuleIconUrl(module)
   const isCustomLink = module.moduleKey === OneQrModuleKey.CustomLink
   const readOnlyUrl = module.resolvedUrl ?? module.urlTemplate
   const isUrlValid = !isCustomLink || isValidOneQrCustomUrl(urlValue)
@@ -224,8 +237,10 @@ function SortableModuleRow({
         </button>
 
         <div className="col-start-2 row-start-1 flex w-auto shrink-0 flex-row items-center justify-self-center gap-1.5 sm:w-[68px] sm:flex-col sm:gap-1">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-nexoraSurfaceMuted text-nexoraBrand sm:h-9 sm:w-9">
-            <OneQrModuleIcon name={icon} />
+          <span
+            className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg sm:h-9 sm:w-9 ${resolveOneQrModuleIconColor(module.moduleKey)}`}
+          >
+            <OneQrModuleIcon name={icon} iconUrl={iconUrl} />
           </span>
           <button
             type="button"
@@ -362,7 +377,7 @@ function SortableModuleRow({
               <button
                 type="button"
                 onClick={() => {
-                  onUpdate({ customIcon: null })
+                  onUpdate({ customIcon: null, customIconUrl: null })
                   setShowIcons(false)
                 }}
                 aria-label={t('oneqr.builder.icon_default')}
@@ -381,7 +396,7 @@ function SortableModuleRow({
                   key={name}
                   type="button"
                   onClick={() => {
-                    onUpdate({ customIcon: name })
+                    onUpdate({ customIcon: name, customIconUrl: null })
                     setShowIcons(false)
                   }}
                   aria-label={name}

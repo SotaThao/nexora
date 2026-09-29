@@ -182,8 +182,17 @@ export const ONEQR_FIELD_LIMITS = {
   welcomeMessage: 200,
   customLabel: 60,
   customIcon: 40,
+  customIconUrl: 500,
   customUrl: 500,
 } as const
+
+/**
+ * Client-side compression target for an uploaded module icon. Tiles render at
+ * 36px (builder grid/preview), so 128px covers up to ~3x pixel density while
+ * keeping the upload small — see `compressImageFile` in `utils/imageFile.ts`.
+ */
+export const ONEQR_ICON_UPLOAD_MAX_DIMENSION_PX = 128
+export const ONEQR_ICON_UPLOAD_MAX_BYTES = 80 * 1024
 
 export const ONEQR_ROUTE = {
   path: '/o/:businessSlug',

@@ -161,9 +161,66 @@ body.public-booking-active #root {
 }
 
 .public-booking-root .promotion-list {
+  /*
+   * Spacing between banners MUST use slide margin (see .promotion-banner-slide),
+   * never flex `gap`. Embla’s loop clones copy margins but not container gap, so
+   * last→first would sit flush (~0–1px) for any promotion count ≥ 3.
+   */
+  --promotion-slide-gap: 0px;
+  --promotion-slides-per-view: 1;
   display: flex;
   align-items: stretch;
-  gap: 10px;
+  gap: 0;
+}
+
+.public-booking-root .promotion-banner-slide {
+  display: grid;
+  box-sizing: border-box;
+  min-width: 0;
+  /*
+   * Width formula scales to any N:
+   *   W = (100% - (perView - 1) * gap) / perView
+   * Mobile perView=1 → 100%, margin 0 (one card, no side-by-side seam).
+   * Desktop overrides perView=2 + gap>0 so every pair (incl. loop seam) stays spaced.
+   */
+  flex: 0 0 calc(
+    (100% - (var(--promotion-slides-per-view) - 1) * var(--promotion-slide-gap))
+      / var(--promotion-slides-per-view)
+  );
+  margin-inline-end: var(--promotion-slide-gap);
+  gap: 8px;
+  padding: 8px;
+  overflow: hidden;
+  border: 2px solid #b8c2d1;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+/* Slide already has the card chrome — drop the inner art border so edges don't double up. */
+.public-booking-root .promotion-banner-slide [data-promotion-banner] {
+  border: none;
+  border-radius: 12px;
+}
+
+.public-booking-root .promotion-banner-caption {
+  margin: 0;
+  padding: 0 2px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #111827;
+}
+
+.public-booking-root .promotion-banner-schedule {
+  margin: 0;
+  padding: 0 2px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #6b7280;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .public-booking-root .promotion-card {
@@ -266,14 +323,14 @@ body.public-booking-active #root {
   padding: 0;
   border: 0;
   border-radius: 999px;
-  background: #b8acd0;
-  opacity: .55;
+  background: #c5c8e0;
+  opacity: 1;
   transition: width .18s, background .18s, opacity .18s;
 }
 
 .public-booking-root .promotion-bullet.is-active {
   width: 20px;
-  background: var(--pink);
+  background: #4648d8;
   opacity: 1;
 }
 
@@ -1873,9 +1930,21 @@ body.public-booking-active #root {
     margin-bottom: 18px;
   }
 
-  .public-booking-root .promotion-card {
-    flex: 0 0 calc(50% - 5px);
+  .public-booking-root .promotion-list {
+    /* Two banners per view; margin on every slide → spacing holds for any N. */
+    --promotion-slide-gap: 20px;
+    --promotion-slides-per-view: 2;
   }
+
+  .public-booking-root .promotion-card {
+    flex: 0 0 calc(
+      (100% - (var(--promotion-slides-per-view) - 1) * var(--promotion-slide-gap))
+        / var(--promotion-slides-per-view)
+    );
+    margin-inline-end: var(--promotion-slide-gap);
+  }
+
+  /* Inherits the same width/margin formula from the base slide rule via CSS vars. */
 
   .public-booking-root .app-card {
     padding: 28px;
@@ -2128,3 +2197,55 @@ body.public-booking-active #root {
 body.service-description-open {
   overflow: hidden;
 }
+
+/* Pair tablet: reuse booking banner art, but always one full-width slide (not booking's 2-up).
+   Do NOT inherit booking's full-page shell (100vh + lavender gradient) — that left a long empty strip. */
+.public-booking-root.pos-device-pair-promotions {
+  min-height: 0;
+  min-width: 0;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+}
+
+.public-booking-root.pos-device-pair-promotions .promotion-section {
+  margin: 0;
+}
+
+.public-booking-root.pos-device-pair-promotions .promotion-list {
+  --promotion-slide-gap: 0px;
+  --promotion-slides-per-view: 1;
+  gap: 0;
+}
+
+.public-booking-root.pos-device-pair-promotions .promotion-banner-slide {
+  flex: 0 0 100%;
+  margin-inline-end: 0;
+}
+
+/* Pair dots: Nexora brand purple (same as check-in strip), not booking pink/lavender. */
+.public-booking-root.pos-device-pair-promotions .promotion-pagination {
+  margin-top: 12px;
+  gap: 8px;
+}
+
+.public-booking-root.pos-device-pair-promotions .promotion-bullet {
+  width: 8px;
+  height: 8px;
+  background: #c5c8e0;
+  opacity: 1;
+}
+
+.public-booking-root.pos-device-pair-promotions .promotion-bullet.is-active {
+  width: 22px;
+  background: #4648d8;
+  opacity: 1;
+}
+
+@media (min-width: 640px) {
+  .public-booking-root.pos-device-pair-promotions .promotion-banner-slide {
+    flex: 0 0 100%;
+    margin-inline-end: 0;
+  }
+}
+

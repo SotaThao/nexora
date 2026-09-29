@@ -71,6 +71,10 @@ interface CommunityChatMessageApiDto {
   ChatSessionId?: string
   senderId?: string
   SenderId?: string
+  senderName?: string | null
+  SenderName?: string | null
+  senderAvatarUrl?: string | null
+  SenderAvatarUrl?: string | null
   content?: string
   Content?: string
   messageType?: string
@@ -193,6 +197,8 @@ export function normalizeCommunityChatMessage(
     id: String(dto.id ?? dto.Id ?? '').trim(),
     chatSessionId: String(dto.chatSessionId ?? dto.ChatSessionId ?? '').trim(),
     senderId: String(dto.senderId ?? dto.SenderId ?? '').trim(),
+    senderName: String(dto.senderName ?? dto.SenderName ?? '').trim() || null,
+    senderAvatarUrl: String(dto.senderAvatarUrl ?? dto.SenderAvatarUrl ?? '').trim() || null,
     content: String(dto.content ?? dto.Content ?? ''),
     messageType: normalizeMessageType(dto.messageType ?? dto.MessageType),
     sentAt: normalizeCommunityChatTimestamp(dto.sentAt ?? dto.SentAt) ?? '',

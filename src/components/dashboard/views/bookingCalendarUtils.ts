@@ -12,6 +12,8 @@ import { parseApiDateTime } from '../utils'
 
 export type BookingCalendarSource = {
   id: string
+  /** Set when one booking is split into several events (one per technician); defaults to `id`. */
+  bookingId?: string
   name: string
   tech: string
   date: string
@@ -20,6 +22,8 @@ export type BookingCalendarSource = {
   statusGroup?: BookingCalendarStatusGroup
   startAtUtc: string | null
   endAtUtc: string | null
+  /** When endAtUtc is missing, calendar block length comes from this (service sum). */
+  durationMinutes?: number | null
   /** Pre-resolved local wall clock for APIs that encode salon-local time as a UTC-looking value. */
   startAtWallClock?: string | null
 }
@@ -46,6 +50,7 @@ export type BookingCalendarEvent = {
   cssClass: string
   html: string
   toolTip: string
+  tags: { bookingId: string }
 }
 
 export function escapeBookingCalendarHtml(value: string) {
@@ -143,13 +148,19 @@ function colorForResource(resourceId: string, columns: BookingCalendarColumn[]):
 }
 
 function resolveEventWindow(booking: BookingCalendarSource, calendarDate: string) {
+  const fallbackDurationMs = (
+    booking.durationMinutes && booking.durationMinutes > 0
+      ? booking.durationMinutes
+      : BOOKING_CALENDAR_DEFAULT_DURATION_MINUTES
+  ) * 60_000
+
   const wallClockStart = parseWallClockDateTime(booking.startAtWallClock)
   if (wallClockStart) {
     const utcStart = booking.startAtUtc ? parseApiDateTime(booking.startAtUtc) : null
     const utcEnd = booking.endAtUtc ? parseApiDateTime(booking.endAtUtc) : null
     const durationMs = utcStart && utcEnd && utcEnd > utcStart
       ? utcEnd.getTime() - utcStart.getTime()
-      : BOOKING_CALENDAR_DEFAULT_DURATION_MINUTES * 60_000
+      : fallbackDurationMs
     return {
       start: wallClockStart,
       end: new Date(wallClockStart.getTime() + durationMs),
@@ -163,16 +174,45 @@ function resolveEventWindow(booking: BookingCalendarSource, calendarDate: string
     const endRaw = booking.endAtUtc ? parseApiDateTime(booking.endAtUtc) : null
     const end = endRaw && endRaw > start
       ? endRaw
-      : new Date(start.getTime() + BOOKING_CALENDAR_DEFAULT_DURATION_MINUTES * 60_000)
+      : new Date(start.getTime() + fallbackDurationMs)
     return { start, end }
   }
 
-  // Fallback when API has no start: place a 60-minute block at business open (local).
+  // Fallback when API has no start: place a block at business open (local).
   const startFallback = new Date(`${calendarDate}T09:00:00`)
-  const endFallback = new Date(
-    startFallback.getTime() + BOOKING_CALENDAR_DEFAULT_DURATION_MINUTES * 60_000,
-  )
+  const endFallback = new Date(startFallback.getTime() + fallbackDurationMs)
   return { start: startFallback, end: endFallback }
+}
+
+/** Compact duration label — tall multi-service tickets read better as "9h 32m" than "572 min". */
+export function formatBookingCalendarDuration(minutes: number) {
+  const safe = Math.max(0, Math.round(minutes))
+  if (safe < 60) return `${safe} min`
+  const hours = Math.floor(safe / 60)
+  const mins = safe % 60
+  if (mins === 0) return `${hours}h`
+  return `${hours}h ${mins}m`
+}
+
+function buildBookingCalendarServicesHtml(services: ReadonlyArray<string>) {
+  const items = services.filter((item) => item && item !== BOOKING_HUB_EMPTY_CELL)
+  if (items.length === 0) {
+    return (
+      `<div class="booking-calendar-event-services">`
+      + `<span class="booking-calendar-event-service-item">${escapeBookingCalendarHtml(BOOKING_HUB_EMPTY_CELL)}</span>`
+      + `</div>`
+    )
+  }
+  return (
+    `<div class="booking-calendar-event-services">`
+    + items
+      .map(
+        (item) =>
+          `<span class="booking-calendar-event-service-item">${escapeBookingCalendarHtml(item)}</span>`,
+      )
+      .join('')
+    + `</div>`
+  )
 }
 
 export function buildBookingCalendarEvents(
@@ -192,8 +232,8 @@ export function buildBookingCalendarEvents(
         15,
         Math.round((end.getTime() - start.getTime()) / 60_000),
       )
-      const service = booking.services.filter((item) => item && item !== BOOKING_HUB_EMPTY_CELL).join(' · ')
-        || BOOKING_HUB_EMPTY_CELL
+      const serviceItems = booking.services.filter((item) => item && item !== BOOKING_HUB_EMPTY_CELL)
+      const serviceTooltip = serviceItems.join(' · ') || BOOKING_HUB_EMPTY_CELL
       const name = booking.name?.trim() && booking.name !== BOOKING_HUB_EMPTY_CELL
         ? booking.name
         : BOOKING_HUB_EMPTY_CELL
@@ -213,11 +253,12 @@ export function buildBookingCalendarEvents(
         html: (
           `<div class="booking-calendar-event">`
           + `<div class="booking-calendar-event-name pos-customer-name">${escapeBookingCalendarHtml(name)}</div>`
-          + `<div class="booking-calendar-event-service">${escapeBookingCalendarHtml(service)}</div>`
-          + `<div class="booking-calendar-event-meta">${minutes} min · ${escapeBookingCalendarHtml(booking.statusLabel)}</div>`
+          + buildBookingCalendarServicesHtml(serviceItems)
+          + `<div class="booking-calendar-event-meta">${formatBookingCalendarDuration(minutes)} · ${escapeBookingCalendarHtml(booking.statusLabel)}</div>`
           + `</div>`
         ),
-        toolTip: `${name} · ${service}`,
+        toolTip: `${name} · ${serviceTooltip}`,
+        tags: { bookingId: booking.bookingId ?? booking.id },
       }
     })
 }
