@@ -6,18 +6,26 @@ import { useState } from 'react'
 import { Check, Copy, ExternalLink } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
+import { useMerchantVoiceTenantIdentity } from '../../../../../data/hooks/useMerchantVoiceBookings'
 import { copyTextToClipboard } from '../../../../../utils/clipboard'
-import { getWebUrlOrigin } from '../../../../../utils/webUrlBase'
+import { buildPublicBookingFormUrl } from '../../../../../utils/publicBookingUrl'
 
-export default function BookingLinkShare({ businessSlug }: { businessSlug?: string }) {
+type BookingLinkShareProps = {
+  /** Keeps the link scoped to POS views that have an active business context. */
+  businessSlug?: string
+}
+
+export default function BookingLinkShare({ businessSlug }: BookingLinkShareProps) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
+  const { data: tenant } = useMerchantVoiceTenantIdentity()
   const [isCopied, setIsCopied] = useState(false)
   const p = 'components.dashboard.views.pos.BookingLinkShare.'
 
   if (!businessSlug) return null
 
-  const url = `${getWebUrlOrigin()}/booking/${businessSlug}`
+  const url = buildPublicBookingFormUrl(tenant?.businessKey)
+  if (!url) return null
 
   const handleCopy = async () => {
     try {
