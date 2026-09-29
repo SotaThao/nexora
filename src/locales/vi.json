@@ -5635,6 +5635,7 @@
             "chooseFile": "Chọn ảnh",
             "currentImage": "Ảnh banner hiện tại",
             "uploadHint": "PNG / JPG / WebP · tối đa 8 MB · tối đa 8 banner",
+            "uploadRatioHint": "Để banner hiển thị đẹp, nên dùng ảnh tỷ lệ 3:1 (ví dụ: 1200 × 400 px).",
             "previewUntitled": "Tên chương trình",
             "invalidPreview": "Nhập mức giảm hợp lệ",
             "saveNote": "Chương trình mới được lưu ở trạng thái tắt.",

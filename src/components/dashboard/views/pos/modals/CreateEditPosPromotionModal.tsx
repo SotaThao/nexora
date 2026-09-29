@@ -921,6 +921,7 @@ export default function CreateEditPosPromotionModal({
               <input
                 id={uploadInputId}
                 type="file"
+                aria-describedby={`${uploadInputId}-hint ${uploadInputId}-ratio-hint`}
                 accept="image/png,image/jpeg,image/jpg,image/webp,.png,.jpg,.jpeg,.webp"
                 onChange={(e) => {
                   handleUpload(e.target.files?.[0] ?? null)
@@ -928,7 +929,8 @@ export default function CreateEditPosPromotionModal({
                 }}
               />
             </label>
-            <p className="promo-note">{t(`${K}.uploadHint`)}</p>
+            <p id={`${uploadInputId}-hint`} className="promo-note">{t(`${K}.uploadHint`)}</p>
+            <p id={`${uploadInputId}-ratio-hint`} className="promo-note">{t(`${K}.uploadRatioHint`)}</p>
 
             <button
               type="button"

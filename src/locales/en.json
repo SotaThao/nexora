@@ -5634,6 +5634,7 @@
             "chooseFile": "Choose an image",
             "currentImage": "Current banner image",
             "uploadHint": "PNG / JPG / WebP · up to 8 MB · up to 8 banners",
+            "uploadRatioHint": "For the best display, use a 3:1 image (e.g., 1200 × 400 px).",
             "previewUntitled": "Promotion name",
             "invalidPreview": "Enter a valid discount",
             "saveNote": "New promotions are saved disabled.",
