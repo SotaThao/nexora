@@ -39,9 +39,9 @@ export const POS_VISIT_ROUTE = {
 
 export const PosSmsPlaceholder = {
   CustomerName: '[Customer Name]',
-  SalonName: '[Salon Name]',
+  SalonName: '[Shop Name]',
   VisitLink: '[OneQR Link]',
-  SalonPhone: '[Salon Phone]',
+  SalonPhone: '[Phone Number]',
   TicketNumber: '[Ticket Number]',
   TicketTotal: '[Ticket Total]',
   ReceiptLink: '[Receipt Link]',
@@ -80,39 +80,39 @@ export const POS_SMS_QUICK_TEMPLATES: Record<PosSmsTemplateType, PosSmsQuickTemp
     {
       id: 'welcomeMessage',
       labelKey: 'welcomeMessage',
-      body: 'Hi [Customer Name], welcome to [Salon Name]! You\'re checked in. View your visit: [OneQR Link]',
+      body: 'Hi [Customer Name], welcome to [Shop Name]! You\'re checked in. View your visit: [OneQR Link]',
     },
     {
       id: 'checkInConfirmed',
       labelKey: 'checkInConfirmed',
-      body: 'Hi [Customer Name], you\'re checked in at [Salon Name]. Follow your visit: [OneQR Link]',
+      body: 'Hi [Customer Name], you\'re checked in at [Shop Name]. Follow your visit: [OneQR Link]',
     },
   ],
   [PosSmsTemplateType.AfterCheckout]: [
     {
       id: 'ticketReceipt',
       labelKey: 'ticketReceipt',
-      body: 'Thanks for visiting [Salon Name]! Ticket [Ticket Number]: [Ticket Total]. Receipt: [Receipt Link]',
+      body: 'Thanks for visiting [Shop Name]! Ticket [Ticket Number]: [Ticket Total]. Receipt: [Receipt Link]',
     },
     {
       id: 'reviewRequest',
       labelKey: 'reviewRequest',
-      body: 'Thanks for visiting [Salon Name]! How was your visit? Leave a review: [Review Link]',
+      body: 'Thanks for visiting [Shop Name]! How was your visit? Leave a review: [Review Link]',
     },
     {
       id: 'tipFollowUp',
       labelKey: 'tipFollowUp',
-      body: 'Thanks for visiting [Salon Name]! If you haven\'t tipped yet, add one here: [Tip Link]',
+      body: 'Thanks for visiting [Shop Name]! If you haven\'t tipped yet, add one here: [Tip Link]',
     },
     {
       id: 'privateFeedback',
       labelKey: 'privateFeedback',
-      body: 'Thanks for visiting [Salon Name]! Share private feedback: [Feedback Link]',
+      body: 'Thanks for visiting [Shop Name]! Share private feedback: [Feedback Link]',
     },
     {
       id: 'bookNextVisit',
       labelKey: 'bookNextVisit',
-      body: 'Thanks for visiting [Salon Name]! Book your next visit: [Booking Link]',
+      body: 'Thanks for visiting [Shop Name]! Book your next visit: [Booking Link]',
     },
   ],
 }
@@ -121,7 +121,7 @@ export const POS_SMS_PREVIEW_VALUES: Record<PosSmsPlaceholder, string> = {
   [PosSmsPlaceholder.CustomerName]: 'Sarah',
   [PosSmsPlaceholder.SalonName]: '',
   [PosSmsPlaceholder.VisitLink]: 'nexora.app/q/••••',
-  [PosSmsPlaceholder.SalonPhone]: '(713) 555-0123',
+  [PosSmsPlaceholder.SalonPhone]: '+1 (713) 555-0123',
   [PosSmsPlaceholder.TicketNumber]: '#12',
   [PosSmsPlaceholder.TicketTotal]: '$45.00',
   [PosSmsPlaceholder.ReceiptLink]: 'nexora.app/receipt/••••',
