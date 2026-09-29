@@ -22,6 +22,7 @@ import {
   OneQrAudience,
   OneQrIdentityPolicy,
   OneQrModuleKey,
+  isOneQrModuleVisibleForAudience,
 } from '../../../constants/oneQr'
 import OneQrAudienceTabs from './OneQrAudienceTabs'
 import OneQrCodeCard from './OneQrCodeCard'
@@ -29,15 +30,13 @@ import OneQrConfigForm from './OneQrConfigForm'
 import OneQrModuleList from './OneQrModuleList'
 import OneQrPreview from './OneQrPreview'
 import AddOneQrModuleModal from './AddOneQrModuleModal'
-import EditOneQrModuleModal, {
-  type EditedModuleFields,
-} from './EditOneQrModuleModal'
 import {
   buildDraft,
   createDraftModule,
   dirtyAudiences,
   disabledByAdminModules,
   isAudienceDirty,
+  prioritizeEnabledModules,
   resolveModuleLabel,
   toSaveModulesVars,
   type DraftModule,
@@ -73,7 +72,6 @@ export default function OneQrPanel({
   const [draft, setDraft] = useState<OneQrDraft>(() => buildDraft(null))
   const [baseline, setBaseline] = useState<OneQrDraft>(() => buildDraft(null))
   const [addingModule, setAddingModule] = useState(false)
-  const [editingModule, setEditingModule] = useState<DraftModule | null>(null)
 
   const isDirtyRef = useRef(false)
 
@@ -99,6 +97,16 @@ export default function OneQrPanel({
   isDirtyRef.current = dirtyList.length > 0 || isNameDirty
 
   const audienceDraft = draft.byAudience[audience]
+  const visibleModules = audienceDraft.modules.filter((module) => {
+    const definition = catalog.find(
+      (item) => item.moduleKey === module.moduleKey,
+    )
+    return isOneQrModuleVisibleForAudience(
+      module.moduleKey,
+      audience,
+      definition?.primaryAudience,
+    )
+  })
   const isAudienceEdited =
     isAudienceDirty(audienceDraft, baseline.byAudience[audience]) || isNameDirty
 
@@ -115,16 +123,36 @@ export default function OneQrPanel({
   }
 
   const handleReorder = (modules: DraftModule[]) => {
-    updateAudienceDraft((current) => ({ ...current, modules }))
+    updateAudienceDraft((current) => ({
+      ...current,
+      modules: (() => {
+        const orderedVisible = prioritizeEnabledModules(modules)
+        let visibleIndex = 0
+        return current.modules.map((module) => {
+          const definition = catalog.find(
+            (item) => item.moduleKey === module.moduleKey,
+          )
+          return isOneQrModuleVisibleForAudience(
+            module.moduleKey,
+            audience,
+            definition?.primaryAudience,
+          )
+            ? orderedVisible[visibleIndex++]
+            : module
+        })
+      })(),
+    }))
   }
 
   const handleToggleModule = (localId: string) => {
     updateAudienceDraft((current) => ({
       ...current,
-      modules: current.modules.map((module) =>
-        module.localId === localId
-          ? { ...module, isEnabled: !module.isEnabled }
-          : module,
+      modules: prioritizeEnabledModules(
+        current.modules.map((module) =>
+          module.localId === localId
+            ? { ...module, isEnabled: !module.isEnabled }
+            : module,
+        ),
       ),
     }))
   }
@@ -172,24 +200,24 @@ export default function OneQrPanel({
   const handleAddModule = (moduleKey: string, customUrl: string | null) => {
     updateAudienceDraft((current) => ({
       ...current,
-      modules: [
+      modules: prioritizeEnabledModules([
         ...current.modules,
         createDraftModule(audience, moduleKey, current.modules.length, customUrl),
-      ],
+      ]),
     }))
     setAddingModule(false)
   }
 
-  const handleEditModule = (fields: EditedModuleFields) => {
-    const target = editingModule
-    if (!target) return
+  const handleUpdateModule = (
+    localId: string,
+    fields: Partial<Pick<DraftModule, 'customLabel' | 'customIcon' | 'customUrl'>>,
+  ) => {
     updateAudienceDraft((current) => ({
       ...current,
       modules: current.modules.map((module) =>
-        module.localId === target.localId ? { ...module, ...fields } : module,
+        module.localId === localId ? { ...module, ...fields } : module,
       ),
     }))
-    setEditingModule(null)
   }
 
   /**
@@ -231,13 +259,13 @@ export default function OneQrPanel({
   const isSaving =
     updateName.isPending || saveRoleConfig.isPending || saveModules.isPending
 
-  const hasEnabledModules = audienceDraft.modules.some(
+  const hasEnabledModules = visibleModules.some(
     (module) => module.isEnabled,
   )
   // `hasActiveTouchPoint` is computed by the backend and shipped with the
   // config — no need to cross-read the touchpoint list from here. Both TipAndPay
   // and Review resolve through a TouchPoint, so either one triggers the warning.
-  const touchPointDependentEnabled = audienceDraft.modules
+  const touchPointDependentEnabled = visibleModules
     .filter((module) => module.isEnabled)
     .map((module) => module.moduleKey)
     .filter(
@@ -251,7 +279,7 @@ export default function OneQrPanel({
   // Rows the platform admin turned off system-wide. They stay visible, but the
   // API rejects a save that still contains them, so `toSaveModulesVars` drops
   // them — warn first rather than letting a row disappear silently.
-  const disabledModules = disabledByAdminModules(audienceDraft.modules)
+  const disabledModules = disabledByAdminModules(visibleModules)
 
   if (isLoading) {
     return (
@@ -290,6 +318,8 @@ export default function OneQrPanel({
         oneQr={oneQr}
         onToggleActive={() => toggleOneQr.mutate()}
         isToggling={toggleOneQr.isPending}
+        previewAudience={audience}
+        onPreviewAudienceChange={setAudience}
       />
 
       {touchPointWarning ? (
@@ -323,7 +353,7 @@ export default function OneQrPanel({
       ) : null}
 
       {/* 3-up only from xl — with the sidebar, lg is too narrow for module rows + 4 audience tabs. */}
-      <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,300px)]">
+      <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(0,1.35fr)_minmax(260px,0.65fr)] xl:grid-cols-[minmax(0,1.4fr)_minmax(260px,0.75fr)_minmax(0,300px)]">
         <section className="nexora-card min-w-0 space-y-3 p-3 sm:p-4">
           <div className="flex items-center justify-between gap-2">
             <h3 className="min-w-0 text-sm font-black text-nexoraText">
@@ -343,13 +373,16 @@ export default function OneQrPanel({
           />
 
           <OneQrModuleList
-            modules={audienceDraft.modules}
+            modules={visibleModules}
             catalog={catalog}
             onReorder={handleReorder}
             onToggle={handleToggleModule}
-            onEdit={setEditingModule}
+            onUpdate={handleUpdateModule}
             onRemove={handleRemoveModule}
             onAdd={() => setAddingModule(true)}
+            onAddCustomLink={(url) =>
+              handleAddModule(OneQrModuleKey.CustomLink, url)
+            }
           />
         </section>
 
@@ -390,7 +423,7 @@ export default function OneQrPanel({
           <OneQrPreview
             businessName={businessName}
             businessLogoUrl={businessLogoUrl}
-            audienceDraft={audienceDraft}
+            audienceDraft={{ ...audienceDraft, modules: visibleModules }}
             catalog={catalog}
             isPaused={!oneQr.isActive}
           />
@@ -407,14 +440,6 @@ export default function OneQrPanel({
         />
       ) : null}
 
-      {editingModule ? (
-        <EditOneQrModuleModal
-          module={editingModule}
-          catalog={catalog}
-          onSave={handleEditModule}
-          onClose={() => setEditingModule(null)}
-        />
-      ) : null}
     </div>
   )
 }
