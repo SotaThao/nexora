@@ -38,32 +38,36 @@ export default function PosPromotionBannerArt({
   promotion,
   index = 0,
   specialOfferFallback,
+  savingLabel,
+  imageLayout = 'banner',
   className = '',
 }: {
   promotion: PromotionBannerSource
   index?: number
   specialOfferFallback: string
+  savingLabel?: string
+  imageLayout?: 'banner' | 'detail'
   className?: string
 }) {
   const imageUrl = promotionBannerImageUrl(promotion)
   const colorHex = promotionBannerColorHex(promotion)
   const matchedTheme = themeFromColorHex(colorHex)
   const theme = matchedTheme ?? (colorHex ? null : promoArtThemeForIndex(index))
-  const artSaving = formatPromotionArtSaving(promotion.discountType, promotion.discountValue)
+  const artSaving = savingLabel ?? formatPromotionArtSaving(promotion.discountType, promotion.discountValue)
 
   if (imageUrl) {
     return (
       <div
-        className={`aspect-[3/1] w-full overflow-hidden rounded-xl border border-nexoraBorder bg-[#edf0f6] ${className}`}
+        className={`${imageLayout === 'detail' ? 'w-full overflow-hidden rounded-xl bg-nexoraSurfaceMuted' : 'promo-art image-art aspect-[3/1] w-full overflow-hidden rounded-xl border border-nexoraBorder bg-[#edf0f6]'} ${className}`}
         data-promotion-banner="image"
       >
         <img
           src={imageUrl}
-          alt=""
+          alt={imageLayout === 'detail' ? promotion.name || specialOfferFallback : ''}
           width={600}
           height={200}
-          className="h-full w-full object-cover"
-          loading="lazy"
+          className={imageLayout === 'detail' ? 'h-auto max-h-[55dvh] w-full object-contain' : 'h-full w-full object-contain'}
+          loading={imageLayout === 'detail' ? 'eager' : 'lazy'}
         />
       </div>
     )
@@ -78,17 +82,17 @@ export default function PosPromotionBannerArt({
 
   return (
     <div
-      className={`flex aspect-[3/1] w-full flex-col justify-center gap-1 overflow-hidden rounded-xl border border-nexoraBorder px-3 py-2.5 sm:gap-1.5 sm:px-4 sm:py-3 ${className}`}
+      className={`promo-art${theme ? ` theme-${theme}` : ''} flex aspect-[3/1] w-full flex-col justify-center gap-1 overflow-hidden rounded-xl border border-nexoraBorder px-3 py-2.5 sm:gap-1.5 sm:px-4 sm:py-3 ${className}`}
       style={{ background, color }}
       data-promotion-banner="theme"
     >
-      <span className="inline-flex w-fit max-w-full truncate rounded-md bg-white/85 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-nexoraText sm:text-[10px]">
+      <span className="art-badge inline-flex w-fit max-w-full truncate rounded-md bg-white/85 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-nexoraText sm:text-[10px]">
         {promotion.badgeLabel || specialOfferFallback}
       </span>
       <h3 className="line-clamp-2 text-sm font-black leading-tight text-nexoraText sm:text-base">
         {promotion.name || '—'}
       </h3>
-      <strong className="block text-sm font-black leading-none sm:text-base">{artSaving}</strong>
+      <strong className="art-saving block text-sm font-black leading-none sm:text-base">{artSaving}</strong>
     </div>
   )
 }

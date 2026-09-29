@@ -34,7 +34,7 @@ export default function SinglePageCheckInLayout({
   businessName: string
   onCancel: () => void
   compactTechnicianCards?: boolean
-  /** Front desk only — loads active promotions under the service catalog. */
+  /** Front desk only — loads active promotions at the end of the form. */
   businessId?: string
   /** Door-QR public page — promotions from the page payload. */
   promotions?: PosPromotionApiDto[]
@@ -49,6 +49,7 @@ export default function SinglePageCheckInLayout({
       source="inline"
       promotions={promotions}
       variant={appearance === 'public' ? 'strip' : 'panel'}
+      twoUpOnDesktop
     />
   ) : null
 
@@ -117,7 +118,6 @@ export default function SinglePageCheckInLayout({
             isSubmitting={session.isSubmitting}
           />
 
-          {promotionsSection}
         </div>
 
         <aside className="min-w-0 space-y-4 lg:sticky lg:top-4 lg:self-start">
@@ -149,6 +149,7 @@ export default function SinglePageCheckInLayout({
           </button>
         </aside>
       </div>
+      {promotionsSection}
     </div>
   )
 }

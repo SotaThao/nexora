@@ -8501,6 +8501,9 @@
         "notePlaceholder": "Anything we should know?"
       },
       "CheckInActivePromotionsSection": {
+        "scheduleLabel": "Offer availability",
+        "viewDetails": "View offer details",
+        "closeDetails": "Close offer details",
         "title": "Active promotions",
         "subtitle": "Offers on now (today's hours). View only — apply at checkout if the visit qualifies.",
         "specialOffer": "SPECIAL OFFER",

@@ -34,6 +34,7 @@ import {
   promotionBannerImageUrl,
   themeFromColorHex,
 } from '../posPromotionBanner'
+import PosPromotionBannerArt from '../PosPromotionBannerArt'
 import { printPosPromoPoster } from '../printPosPromoPoster'
 import '../pos-promotions.css'
 
@@ -547,19 +548,21 @@ export default function CreateEditPosPromotionModal({
 
   const renderArt = (banner: EditorBanner | undefined, large = false) => {
     if (!banner) return null
-    if (bannerHasImage(banner) && banner.imageUrl) {
-      return (
-        <div className={`promo-art image-art${large ? ' poster-art' : ''}`}>
-          <img src={banner.imageUrl} alt="" width={large ? 640 : 400} height={large ? 400 : 250} />
-        </div>
-      )
-    }
     return (
-      <div className={`promo-art theme-${banner.theme}${large ? ' poster-art' : ''}`}>
-        <span className="art-badge">{previewBadge}</span>
-        <h3>{previewName}</h3>
-        <strong className="art-saving">{previewRate}</strong>
-      </div>
+      <PosPromotionBannerArt
+        promotion={{
+          name: previewName,
+          badgeLabel: previewBadge,
+          discountType,
+          discountValue: parsedValue,
+          primaryBannerImageUrl: bannerHasImage(banner) ? banner.imageUrl : null,
+          photoUrl: null,
+          primaryBannerColorHex: bannerHasImage(banner) ? null : colorHexFromTheme(banner.theme),
+        }}
+        specialOfferFallback={t(`${K}.specialOffer`)}
+        savingLabel={previewRate}
+        className={large ? 'poster-art' : ''}
+      />
     )
   }
 

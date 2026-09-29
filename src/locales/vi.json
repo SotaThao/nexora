@@ -8497,6 +8497,9 @@
         "notePlaceholder": "Bạn muốn nhắn gì thêm không?"
       },
       "CheckInActivePromotionsSection": {
+        "scheduleLabel": "Thời gian áp dụng ưu đãi",
+        "viewDetails": "Xem chi tiết ưu đãi",
+        "closeDetails": "Đóng chi tiết ưu đãi",
         "title": "Ưu đãi đang áp dụng",
         "subtitle": "Ưu đãi trong khung ngày/giờ hiện tại. Chỉ xem — áp dụng khi thanh toán nếu đơn đủ điều kiện.",
         "specialOffer": "ƯU ĐÃI ĐẶC BIỆT",

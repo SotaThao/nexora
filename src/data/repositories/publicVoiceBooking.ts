@@ -234,6 +234,7 @@ function normalizePromotion(raw: unknown): PublicBookingPromotion | null {
     id,
     name,
     badgeLabel: String(readField(dto, 'badgeLabel', 'BadgeLabel') ?? '').trim(),
+    description: String(readField(dto, 'description', 'Description') ?? '').trim() || null,
     discountType,
     discountValue,
     daysOfWeek: [...daysOfWeek],
