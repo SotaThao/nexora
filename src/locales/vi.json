@@ -1618,6 +1618,7 @@
       "payment_body": "Quét mã để thanh toán cho {{businessName}}.",
       "referral_title": "Liên kết giới thiệu",
       "referral_body": "Mời thành viên mới tham gia mạng lưới của bạn.",
+      "referral_link_placeholder": "Liên kết giới thiệu sẽ hiện ở đây",
       "btn_open": "Xem Mã QR",
       "btn_download": "Tải",
       "btn_copy_link": "Sao chép",

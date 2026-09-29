@@ -166,14 +166,16 @@ export default function Dashboard({
   const needsTouchpointsList =
     (activeMenu === 'overview' || hasSearchQuery) && !isTouchpointsTab
 
-  const touchpointsListQuery = useMemo(() => {
-    const trimmedName = searchQuery.trim()
-    return {
+  // Keep this query stable while typing in the header search. Name filtering
+  // here emptied/replaced the overview touchpoints list and made the Store QR
+  // Codes card flash empty/skeleton. Header suggestions already filter client-side.
+  const touchpointsListQuery = useMemo(
+    () => ({
       PageNumber: 1,
       PageSize: STAFF_FILTER_LIST_PAGE_SIZE,
-      ...(trimmedName ? { Name: trimmedName } : {}),
-    }
-  }, [searchQuery])
+    }),
+    [],
+  )
 
   // ---------------------------------------------------------------------------
   // Server-state hooks (TanStack Query) — lazy per active tab where possible

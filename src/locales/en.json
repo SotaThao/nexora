@@ -1618,6 +1618,7 @@
       "payment_body": "Scan to pay {{businessName}}.",
       "referral_title": "Referral Link",
       "referral_body": "Invite new members to join your network.",
+      "referral_link_placeholder": "Your referral link will appear here",
       "btn_open": "Open QR",
       "btn_download": "Download",
       "btn_copy_link": "Copy",
