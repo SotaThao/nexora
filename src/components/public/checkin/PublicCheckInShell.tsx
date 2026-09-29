@@ -1,5 +1,5 @@
 // Full-viewport chrome for public check-in: background, watermark, language.
-// The keypad card (logo + salon name + pad) lives in PhoneCheckInStep (appearance="public").
+// The keypad card (salon name + pad) lives in PhoneCheckInStep (appearance="public").
 import type { ReactNode } from 'react'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 
@@ -43,12 +43,12 @@ export default function PublicCheckInShell({ children }: { children: ReactNode }
         N
       </div>
 
-      <div className="relative z-10 flex min-h-dvh flex-col px-5 py-6 sm:px-8 lg:px-12 lg:py-10">
-        <div className="flex flex-1 items-center justify-center py-8">{children}</div>
-
-        <div className="shrink-0 lg:absolute lg:bottom-10 lg:left-12">
+      <div className="relative z-10 flex min-h-dvh flex-col px-3 py-1 sm:px-8 sm:py-6 lg:px-12 lg:py-10">
+        <div className="flex h-8 shrink-0 justify-end">
           <LanguageSwitcher variant="public" />
         </div>
+
+        <div className="flex flex-1 items-center justify-center py-1 sm:py-8">{children}</div>
       </div>
     </div>
   )

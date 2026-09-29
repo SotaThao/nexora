@@ -8,7 +8,7 @@
 // shared check-in module not existing yet; it does now, so that reason is gone.
 //
 // What is genuinely public-only lives here, not in the shared module: the dark landing chrome
-// (logo + salon name sit on the keypad card), and the "see my place in line" link, which exists
+// (salon name sits on the keypad card), and the "see my place in line" link, which exists
 // only because this guest is not standing in the salon and cannot simply ask.
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'

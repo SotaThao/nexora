@@ -42,7 +42,7 @@ export default function LanguageSwitcher({ className = '', variant = 'header' })
         className={isSidebar
           ? 'flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold text-white/75 transition hover:bg-white/5 hover:text-white'
           : isPublic
-            ? 'flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2.5 text-sm font-medium text-white backdrop-blur-md transition hover:bg-white/15'
+            ? 'flex h-8 w-8 flex-col items-center justify-center rounded-lg border border-white/25 bg-white/10 p-0 leading-none text-white backdrop-blur-md transition hover:bg-white/15'
             : isHeaderPlain
             ? 'flex flex-col items-center justify-center rounded-lg px-2 py-1 leading-none text-nexoraText transition hover:bg-nexoraCanvas'
             : 'flex flex-col items-center justify-center rounded-lg border border-nexoraBorder bg-nexoraSurfaceMuted px-2 py-1 leading-none text-nexoraText transition hover:bg-nexoraCanvas'}
@@ -57,9 +57,10 @@ export default function LanguageSwitcher({ className = '', variant = 'header' })
           </>
         ) : isPublic ? (
           <>
-            <Globe className="h-4 w-4 text-white/80" />
-            <span>{currentLanguageLabel}</span>
-            <ChevronDown className={`h-3.5 w-3.5 text-white/70 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            <Globe className="h-3.5 w-3.5 text-white/80" />
+            <span className="mt-0.5 text-[9px] font-bold uppercase tracking-wide">
+              {currentLanguage.toUpperCase()}
+            </span>
           </>
         ) : (
           <>
@@ -76,7 +77,7 @@ export default function LanguageSwitcher({ className = '', variant = 'header' })
           aria-label={t('staff_dashboard.profile.menu_language')}
           className={`absolute z-50 min-w-[160px] overflow-hidden rounded-xl border shadow-lg animate-fadeIn ${
             isPublic
-              ? 'bottom-full left-0 mb-2 border-white/20 bg-[#1a1460]/95'
+              ? 'right-0 top-full mt-2 border-white/20 bg-[#1a1460]/95'
               : `top-full mt-1.5 border-nexoraBorder bg-white dark:bg-nexoraSidebar dark:border-white/10 ${
                   isSidebar ? 'left-0 right-0' : 'right-0'
                 }`

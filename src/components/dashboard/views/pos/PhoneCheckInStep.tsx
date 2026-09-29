@@ -97,7 +97,7 @@ export default function PhoneCheckInStep({
   }, [digits])
 
   const keypad = (
-    <div className="grid grid-cols-3 gap-3">
+    <div className={`grid grid-cols-3 ${isPublic ? 'gap-2 sm:gap-3' : 'gap-3'}`}>
       {KEYPAD_ROWS.flat().map((digit) => (
         <button
           key={digit}
@@ -158,41 +158,27 @@ export default function PhoneCheckInStep({
   if (isPublic) {
     return (
       <div ref={rootRef} className="public-checkin-card">
-        <div className="mb-4 flex flex-col items-center">
-          <img
-            src="/homepage/assets/images/icon-nexora.png"
-            alt="NEXORA TOUCH"
-            width={64}
-            height={64}
-            className="h-14 w-14 sm:h-16 sm:w-16"
-          />
-          <p className="mt-1.5 text-[11px] font-extrabold tracking-[0.32em] text-white">NEXORA</p>
-          <p className="bg-gradient-to-r from-[#c084fc] to-brandCyan bg-clip-text text-[9px] font-bold tracking-[0.38em] text-transparent">
-            TOUCH
-          </p>
-        </div>
-
         {businessName ? (
           <p className="bg-gradient-to-r from-[#4ecbff] via-[#7b8cff] to-[#c084fc] bg-clip-text text-xl font-extrabold text-transparent sm:text-2xl">
             {businessName}
           </p>
         ) : null}
 
-        <h1 className="mt-2 text-xl font-extrabold text-white sm:text-2xl">
+        <h1 className="mt-1.5 text-xl font-extrabold text-white sm:mt-2 sm:text-2xl">
           {t(`${TK}.welcomeTitlePublic`)}
         </h1>
-        <p className="mt-1.5 text-sm text-white/65">{t(`${TK}.subtitle`)}</p>
+        <p className="mt-1 text-sm text-white/65 sm:mt-1.5">{t(`${TK}.subtitle`)}</p>
 
-        <div className="mt-5">
+        <div className="mt-3 sm:mt-5">
           <span className="font-mono text-xl font-medium tracking-[0.28em] text-white/80 sm:text-2xl sm:tracking-[0.35em]">
             {renderDigitSlots(digits)}
           </span>
-          <div className="mx-auto mt-3 h-[2px] w-full bg-gradient-to-r from-brandCyan via-[#7c5cff] to-floxVividRose" />
+          <div className="mx-auto mt-2 h-[2px] w-full bg-gradient-to-r from-brandCyan via-[#7c5cff] to-floxVividRose sm:mt-3" />
         </div>
 
-        <div className="mt-5">{keypad}</div>
+        <div className="mt-3 sm:mt-5">{keypad}</div>
 
-        <div className="mt-6 flex flex-col items-center gap-1">
+        <div className="mt-3 flex flex-col items-center gap-1 sm:mt-6">
           <p className="flex items-center gap-1.5 text-sm font-semibold text-white">
             <ShieldCheck className="h-4 w-4 text-brandCyan" />
             {t(`${TK}.secureTitle`)}

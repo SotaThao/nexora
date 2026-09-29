@@ -28,11 +28,13 @@ export default function WizardCheckInLayout({
   businessName,
   onCancel,
   compactTechnicianCards = false,
+  appearance = 'default',
 }: {
   session: CheckInSession
   businessName: string
   onCancel: () => void
   compactTechnicianCards?: boolean
+  appearance?: 'default' | 'public'
 }) {
   const { t } = useTranslation()
   const [step, setStep] = useState<WizardStep>('name')
@@ -43,9 +45,13 @@ export default function WizardCheckInLayout({
         <button
           type="button"
           onClick={onCancel}
-          className="flex h-11 items-center gap-1.5 rounded-lg border border-nexoraBorder bg-nexoraSurface px-4 text-sm font-bold text-nexoraMuted hover:border-nexoraBrand"
+          className={`flex items-center rounded-lg border border-nexoraBorder bg-nexoraSurface font-bold text-nexoraMuted hover:border-nexoraBrand ${
+            appearance === 'public'
+              ? 'absolute left-3 top-1 h-8 gap-0.5 px-2.5 text-[11px] sm:left-8 sm:top-6 lg:left-12 lg:top-10'
+              : 'h-11 gap-1.5 px-4 text-sm'
+          }`}
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className={appearance === 'public' ? 'h-3 w-3' : 'h-4 w-4'} />
           {t(`${K}.back`)}
         </button>
       </div>
