@@ -332,7 +332,7 @@ export default function TouchpointsView({
               id="touchpoint-section-panel-one-qr"
               role="tabpanel"
               aria-labelledby="touchpoint-section-tab-one-qr"
-              className="space-y-4"
+              className="min-w-0 space-y-4"
             >
               <p className="text-xs leading-relaxed text-nexoraMuted">
                 {t('dashboard.touchpoints.stations_sections.one_qr_desc')}

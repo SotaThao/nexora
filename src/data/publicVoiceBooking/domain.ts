@@ -211,6 +211,12 @@ export interface PublicBookingPromotion {
   daysOfWeek: BookingDayOfWeek[]
   startTime: string
   endTime: string
+  /** Cover banner tint from the studio primary banner (3:1 art fallback). */
+  primaryBannerColorHex: string | null
+  /** Cover banner image when uploaded; else `photoUrl`. */
+  primaryBannerImageUrl: string | null
+  /** Legacy mirror of the primary banner image. */
+  photoUrl: string | null
 }
 
 export interface PublicBookingCustomer {

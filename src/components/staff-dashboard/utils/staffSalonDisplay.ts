@@ -90,8 +90,11 @@ export function getSalonDisplayStatus(
   }
 }
 
-export function sortSalonBusinesses(businesses: StaffBusinessLink[]) {
+export function sortSalonBusinesses(businesses: StaffBusinessLink[], clockedInBusinessIds?: ReadonlySet<string>) {
   return [...businesses].sort((a, b) => {
+    const clockOrder = Number(clockedInBusinessIds?.has(b.businessId) ?? false)
+      - Number(clockedInBusinessIds?.has(a.businessId) ?? false)
+    if (clockOrder !== 0) return clockOrder
     const aStatus = resolveStaffBusinessLinkStatusLabel(a).toLowerCase()
     const bStatus = resolveStaffBusinessLinkStatusLabel(b).toLowerCase()
     const aOrder = STATUS_SORT_ORDER[aStatus] ?? 99

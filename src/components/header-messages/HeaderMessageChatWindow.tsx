@@ -6,31 +6,41 @@ import {
   Lock,
   MessagesSquare,
   Minus,
+  Pencil,
   Phone,
   Send,
   Sparkles,
   User,
+  Users,
   Video,
   X,
 } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactElement } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type ReactElement } from 'react'
 import { createPortal } from 'react-dom'
+import { formatCallDuration } from '../../calls/callFormat'
+import { buildCallMediaConstraints } from '../../calls/webrtc'
+import useCall from '../../calls/useCall'
 import {
   CommunityChatType,
+  COMMUNITY_CHAT_GROUP_TITLE_MAX_LENGTH,
   COMMUNITY_CHAT_IMAGE_ACCEPT,
   COMMUNITY_CHAT_MAX_MESSAGE_LENGTH,
   isAllowedCommunityChatImageFile,
   isPendingCommunityChatSessionId,
 } from '../../constants/communityChat'
+import { CommunityCallEndReason, CommunityCallType } from '../../constants/communityCall'
 import { useCommunityChatMessagesInfinite } from '../../data/hooks/useCommunityChatMessageThread'
 import {
   useMarkCommunityChatSessionRead,
+  useRenameCommunityChatSession,
   useSendCommunityChatImage,
   useSendCommunityChatMessage,
 } from '../../data/hooks/useCommunityChat'
+import useIceServers from '../../data/hooks/useIceServers'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { resolveTranslatedApiError } from '../../utils/resolveTranslatedApiError'
+import { logger } from '../../utils/logger'
 import {
   HEADER_MESSAGES_CHAT_I18N,
   HEADER_MESSAGES_I18N,
@@ -52,7 +62,9 @@ import { useCommunityChatHubSendErrorToast } from './useCommunityChatHubSendErro
 import { useCommunityChatSessionOpen } from './useCommunityChatSessionOpen'
 import { useCommunityChatThreadScroll } from './useCommunityChatThreadScroll'
 import { sendCommunityChatOutboundText } from './sendCommunityChatOutboundText'
+import { isSameCommunityChatProfileId } from '../../data/communityChatSessionUtils'
 import {
+  getHeaderMessageContactInitials,
   mapCommunityChatMessageToThreadMessage,
   sortThreadMessagesForDisplay,
 } from './headerMessagesMappers'
@@ -77,24 +89,74 @@ interface HeaderMessageChatWindowProps {
   ensureSessionId?: () => Promise<string>
   /** Cover the whole viewport including app header (staff page open on mobile). */
   immersive?: boolean
+  /** Salon owner can rename group chats from the header. */
+  canRenameGroup?: boolean
   onToggleMinimize: () => void
   onClose: () => void
   onBack?: () => void
 }
 
 
+/**
+ * Localized label for a `MessageType.Call` bubble — never falls back to `message.content` (raw
+ * English text from the backend, US-06 AC). Busy/Failed/NetworkError reuse the call-state labels
+ * (`callBusy`/`callNetworkError`) since the ticket's i18n list only names one key per outcome for
+ * Missed/Declined/Cancelled/Answered.
+ */
+function getCallMessageBodyText(
+  callMeta: NonNullable<HeaderChatThreadMessage['callMeta']>,
+  t: (key: string, vars?: Record<string, string | number>) => string,
+  chatTk: string,
+): string {
+  switch (callMeta.endReason) {
+    case CommunityCallEndReason.Missed:
+      return t(`${chatTk}.chatSystemMessageMissedCall`)
+    case CommunityCallEndReason.Declined:
+      return t(`${chatTk}.chatSystemMessageCallDeclined`)
+    case CommunityCallEndReason.Cancelled:
+      return t(`${chatTk}.chatSystemMessageCallCancelled`)
+    case CommunityCallEndReason.Busy:
+      return t(`${chatTk}.callBusy`)
+    case CommunityCallEndReason.Answered:
+      return t(`${chatTk}.chatSystemMessageCallEnded`, {
+        duration: formatCallDuration(callMeta.durationSeconds),
+      })
+    // Failed / NetworkError
+    default:
+      return t(`${chatTk}.callNetworkError`)
+  }
+}
+
 function getMessageBodyText(
   message: HeaderChatThreadMessage,
-  t: (key: string) => string,
+  t: (key: string, vars?: Record<string, string | number>) => string,
   chatTk: string,
 ): string {
   if (message.isDeleted) {
     return t(`${chatTk}.messageDeleted`)
   }
+  if (message.callMeta) {
+    return getCallMessageBodyText(message.callMeta, t, chatTk)
+  }
   return message.bodyText || (message.bodyKey ? t(`${chatTk}.${message.bodyKey}`) : '')
 }
 
 
+
+/** First incoming bubble of a run — in group chats a sender change also starts a new run (#1819). */
+function isIncomingRunStart(
+  messages: HeaderChatThreadMessage[],
+  index: number,
+  isGroupChat: boolean,
+): boolean {
+  const message = messages[index]
+  if (message.direction !== HeaderChatMessageDirection.Incoming) return false
+
+  const previous = messages[index - 1]
+  if (!previous || previous.direction !== HeaderChatMessageDirection.Incoming) return true
+
+  return isGroupChat && !isSameCommunityChatProfileId(previous.senderId, message.senderId)
+}
 
 function getOutgoingReceiptStatus(
   message: HeaderChatThreadMessage,
@@ -189,6 +251,7 @@ function NewDirectChatWelcome({
   onPickStarter: (text: string) => void
 }) {
   const nameVars = { name: conversation.name }
+  const isGroupChat = conversation.chatType === CommunityChatType.Group
 
   return (
     <div className="header-message-chat-new-welcome" role="status">
@@ -200,12 +263,16 @@ function NewDirectChatWelcome({
         {t(`${chatTk}.newChatWelcomeTitle`, nameVars)}
       </p>
       <p className="header-message-chat-new-subtitle">
-        {t(`${chatTk}.newChatWelcomeSubtitle`)}
+        {t(`${chatTk}.${isGroupChat ? 'newChatWelcomeSubtitleGroup' : 'newChatWelcomeSubtitle'}`)}
       </p>
 
       <div className="header-message-chat-new-badge">
-        <User className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-        <span>{t(`${chatTk}.directChatSubtitle`)}</span>
+        {isGroupChat ? (
+          <Users className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        ) : (
+          <User className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        )}
+        <span>{t(`${chatTk}.${isGroupChat ? 'groupChatSubtitle' : 'directChatSubtitle'}`)}</span>
       </div>
 
       <p className="header-message-chat-new-hint">
@@ -233,7 +300,7 @@ function NewDirectChatWelcome({
 
       <p className="header-message-chat-new-privacy">
         <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-        <span>{t(`${chatTk}.newChatPrivacy`, nameVars)}</span>
+        <span>{t(`${chatTk}.${isGroupChat ? 'newChatPrivacyGroup' : 'newChatPrivacy'}`, nameVars)}</span>
       </p>
     </div>
   )
@@ -250,6 +317,7 @@ function HeaderMessageChatWindow({
   isConversationLoading = false,
   ensureSessionId,
   immersive = false,
+  canRenameGroup = false,
   onToggleMinimize,
   onClose,
   onBack,
@@ -262,10 +330,13 @@ function HeaderMessageChatWindow({
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null)
   const [isSending, setIsSending] = useState(false)
   const [menuMessageId, setMenuMessageId] = useState<string | null>(null)
+  const [isRenaming, setIsRenaming] = useState(false)
+  const [renameDraft, setRenameDraft] = useState('')
 
   const sessionId = conversation.id
   const isPendingSession = isPendingCommunityChatSessionId(sessionId)
   const isGroupChat = conversation.chatType === CommunityChatType.Group
+  const canRename = canRenameGroup && isGroupChat && !isPendingSession
 
   const {
     messages: rawMessages,
@@ -281,6 +352,7 @@ function HeaderMessageChatWindow({
   const sendMessageMutation = useSendCommunityChatMessage(isPendingSession ? '' : sessionId)
   const sendImageMutation = useSendCommunityChatImage(isPendingSession ? '' : sessionId)
   const markReadMutation = useMarkCommunityChatSessionRead()
+  const renameMutation = useRenameCommunityChatSession(isPendingSession ? '' : sessionId)
   const { deletingMessageId, deleteMessage } = useCommunityChatDeleteMessage({
     sessionId: isPendingSession ? null : sessionId,
     onDeleted: () => setMenuMessageId(null),
@@ -295,6 +367,66 @@ function HeaderMessageChatWindow({
   const chatTk = HEADER_MESSAGES_CHAT_I18N
   const isFloating = layout === HeaderMessageChatLayout.Floating
   const isMobileFullscreen = layout === HeaderMessageChatLayout.Fullscreen
+
+  // Voice/video call (US-06/US-07) — available on desktop and mobile alike;
+  // incoming/answer works everywhere via the global banner regardless.
+  const canStartCall = !isGroupChat && !isPendingSession
+  const { phase: callPhase, startOutgoingCall } = useCall()
+  // Prefetched as soon as this 1:1 chat window opens (Technical Notes #2), not at click time —
+  // `getUserMedia` below must be the very first call in the click handler with no prior `await`.
+  const { data: iceServers } = useIceServers({ enabled: canStartCall })
+
+  const startCall = (callType: CommunityCallType) => {
+    if (!canStartCall || callPhase !== 'idle') return
+    if (!iceServers?.length) {
+      showToast(t(`${chatTk}.callNetworkError`), 'error')
+      return
+    }
+    navigator.mediaDevices
+      .getUserMedia(buildCallMediaConstraints(callType === CommunityCallType.Video))
+      .then((stream) => {
+        void startOutgoingCall({
+          chatSessionId: sessionId,
+          peerUserProfileId: conversation.peerUserProfileId ?? '',
+          peerName: conversation.name,
+          peerAvatarUrl: conversation.peerAvatarUrl ?? null,
+          callType,
+          localStream: stream,
+          iceServers,
+        })
+      })
+      .catch((error: unknown) => {
+        logger.warn('Community call: getUserMedia failed for outgoing call', error)
+        const deviceMissing = error instanceof DOMException && error.name === 'NotFoundError'
+        showToast(t(`${chatTk}.${deviceMissing ? 'callNoDeviceFound' : 'callMicPermissionDenied'}`), 'error')
+      })
+  }
+
+  const callActionButtons = (
+    <>
+      <button
+        type="button"
+        className="header-message-chat-icon-btn"
+        aria-label={t(`${chatTk}.call`)}
+        title={t(`${chatTk}.call`)}
+        disabled={!canStartCall || callPhase !== 'idle'}
+        onClick={() => startCall(CommunityCallType.Voice)}
+      >
+        <Phone className="h-4 w-4" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        className="header-message-chat-icon-btn"
+        aria-label={t(`${chatTk}.videoCall`)}
+        title={t(`${chatTk}.videoCall`)}
+        disabled={!canStartCall || callPhase !== 'idle'}
+        onClick={() => startCall(CommunityCallType.Video)}
+      >
+        <Video className="h-4 w-4" aria-hidden="true" />
+      </button>
+    </>
+  )
+
   const isThreadLoading = isConversationLoading || isLoading
 
   const localMessages = useMemo(
@@ -328,6 +460,7 @@ function HeaderMessageChatWindow({
     setDraft('')
     setPreviewImageUrl(null)
     setMenuMessageId(null)
+    setIsRenaming(false)
   }, [conversation.id])
 
   useEffect(() => {
@@ -380,6 +513,38 @@ function HeaderMessageChatWindow({
     } finally {
       setIsSending(false)
     }
+  }
+
+  const startRename = () => {
+    setRenameDraft(conversation.name)
+    setIsRenaming(true)
+  }
+
+  const submitRename = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (renameMutation.isPending) return
+
+    const title = renameDraft.trim()
+    if (!title) {
+      showToast(t(`${chatTk}.renameGroupEmpty`), 'error')
+      return
+    }
+    if (title === conversation.name) {
+      setIsRenaming(false)
+      return
+    }
+
+    try {
+      await renameMutation.mutateAsync({ title })
+      showToast(t(`${chatTk}.renameGroupSuccess`), 'success')
+      setIsRenaming(false)
+    } catch (error) {
+      showToast(resolveTranslatedApiError(t, error, `${chatTk}.renameGroupError`), 'error')
+    }
+  }
+
+  const handleRenameKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape') setIsRenaming(false)
   }
 
   const handleMarkAsRead = () => {
@@ -491,14 +656,25 @@ function HeaderMessageChatWindow({
     )
   }
 
+  const resolveIncomingSenderName = (message: HeaderChatThreadMessage) => (
+    (isGroupChat && message.senderName?.trim()) || conversation.name
+  )
+
+  const resolveIncomingAvatarInitials = (message: HeaderChatThreadMessage) => (
+    isGroupChat ? getHeaderMessageContactInitials(resolveIncomingSenderName(message)) : conversation.initials
+  )
+
   const renderMessageBubble = (
     message: HeaderChatThreadMessage,
-    options: { mobile?: boolean } = {},
+    options: { mobile?: boolean; isRunStart?: boolean } = {},
   ) => {
     const mobile = Boolean(options.mobile)
     const isOutgoing = message.direction === HeaderChatMessageDirection.Outgoing
     const bodyText = getMessageBodyText(message, t, chatTk)
     const isImage = Boolean(message.imageUrl)
+    // Group images have no bubble background, so they always carry the sender name (#1821).
+    const showSenderLabel = !isOutgoing
+      && (isGroupChat ? Boolean(options.isRunStart) || isImage : !isImage && mobile)
 
     return (
       <div
@@ -509,8 +685,8 @@ function HeaderMessageChatWindow({
           isImage ? 'is-image' : '',
         ].filter(Boolean).join(' ')}
       >
-        {!isOutgoing && !isImage && mobile ? (
-          <span className="header-message-chat-bubble-sender">{conversation.name}</span>
+        {showSenderLabel ? (
+          <span className="header-message-chat-bubble-sender">{resolveIncomingSenderName(message)}</span>
         ) : null}
         {message.replyTo ? renderQuote(message.replyTo) : null}
         {renderBubbleBody(message, bodyText)}
@@ -522,8 +698,7 @@ function HeaderMessageChatWindow({
   const desktopMessageNodes = useMemo(
     () => localMessages.map((message, index) => {
       const isOutgoing = message.direction === HeaderChatMessageDirection.Outgoing
-      const showAvatar = !isOutgoing
-        && (index === 0 || localMessages[index - 1]?.direction !== HeaderChatMessageDirection.Incoming)
+      const showAvatar = isIncomingRunStart(localMessages, index, isGroupChat)
 
       return (
         <div
@@ -535,16 +710,16 @@ function HeaderMessageChatWindow({
               className={`header-message-chat-row-avatar${showAvatar ? '' : ' is-spacer'}`}
               aria-hidden="true"
             >
-              {showAvatar ? conversation.initials : ''}
+              {showAvatar ? resolveIncomingAvatarInitials(message) : ''}
             </span>
           )}
           {isOutgoing ? renderMessageMenu(message) : null}
-          {renderMessageBubble(message)}
+          {renderMessageBubble(message, { isRunStart: showAvatar })}
         </div>
       )
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [chatTk, conversation.initials, conversation.name, currentLanguage, deletingMessageId, isSending, localMessages, menuMessageId, t],
+    [chatTk, conversation.initials, conversation.name, currentLanguage, deletingMessageId, isGroupChat, isSending, localMessages, menuMessageId, t],
   )
 
   const mobileMessageNodes = useMemo(() => {
@@ -553,7 +728,8 @@ function HeaderMessageChatWindow({
 
     localMessages.forEach((message, index) => {
       const dayKey = formatHeaderMessageLocalDayKey(message.sentAt)
-      if (dayKey !== lastDayKey) {
+      const isNewDay = dayKey !== lastDayKey
+      if (isNewDay) {
         lastDayKey = dayKey
         nodes.push(
           <div key={`sep-${dayKey}-${index}`} className="header-message-chat-date-sep">
@@ -563,8 +739,7 @@ function HeaderMessageChatWindow({
       }
 
       const isOutgoing = message.direction === HeaderChatMessageDirection.Outgoing
-      const showAvatar = !isOutgoing
-        && (index === 0 || localMessages[index - 1]?.direction !== HeaderChatMessageDirection.Incoming)
+      const showAvatar = !isOutgoing && (isNewDay || isIncomingRunStart(localMessages, index, isGroupChat))
 
       nodes.push(
         <div
@@ -576,18 +751,18 @@ function HeaderMessageChatWindow({
               className={`header-message-chat-row-avatar${showAvatar ? '' : ' is-spacer'}`}
               aria-hidden="true"
             >
-              {showAvatar ? conversation.initials : ''}
+              {showAvatar ? resolveIncomingAvatarInitials(message) : ''}
             </span>
           )}
           {isOutgoing ? renderMessageMenu(message) : null}
-          {renderMessageBubble(message, { mobile: true })}
+          {renderMessageBubble(message, { mobile: true, isRunStart: showAvatar })}
         </div>,
       )
     })
 
     return nodes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chatTk, conversation.initials, conversation.name, currentLanguage, deletingMessageId, isSending, localMessages, menuMessageId, t])
+  }, [chatTk, conversation.initials, conversation.name, currentLanguage, deletingMessageId, isGroupChat, isSending, localMessages, menuMessageId, t])
 
   const isThreadEmpty = !isThreadLoading && !isMessagesError && localMessages.length === 0
 
@@ -696,31 +871,61 @@ function HeaderMessageChatWindow({
           <span className="header-message-chat-head-avatar" aria-hidden="true">
             {conversation.initials}
           </span>
-          <div className="header-message-chat-head-copy">
-            <span className="header-message-chat-head-name">{conversation.name}</span>
-          </div>
+          {isRenaming ? (
+            <form className="header-message-chat-rename-form" onSubmit={submitRename}>
+              <input
+                type="text"
+                value={renameDraft}
+                maxLength={COMMUNITY_CHAT_GROUP_TITLE_MAX_LENGTH}
+                onChange={(event) => setRenameDraft(event.target.value)}
+                onKeyDown={handleRenameKeyDown}
+                placeholder={t(`${chatTk}.renameGroupPlaceholder`)}
+                aria-label={t(`${chatTk}.renameGroupPlaceholder`)}
+                className="header-message-chat-rename-input"
+                disabled={renameMutation.isPending}
+                autoFocus
+              />
+              <button
+                type="submit"
+                className="header-message-chat-icon-btn"
+                aria-label={t(`${chatTk}.renameGroupSave`)}
+                title={t(`${chatTk}.renameGroupSave`)}
+                disabled={renameMutation.isPending}
+              >
+                <Check className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className="header-message-chat-icon-btn"
+                aria-label={t(`${chatTk}.renameGroupCancel`)}
+                title={t(`${chatTk}.renameGroupCancel`)}
+                disabled={renameMutation.isPending}
+                onClick={() => setIsRenaming(false)}
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </form>
+          ) : (
+            <div className="header-message-chat-head-copy">
+              <span className="header-message-chat-head-name" title={conversation.name}>{conversation.name}</span>
+              {canRename ? (
+                <button
+                  type="button"
+                  className="header-message-chat-rename-btn"
+                  aria-label={t(`${chatTk}.renameGroup`)}
+                  title={t(`${chatTk}.renameGroup`)}
+                  onClick={startRename}
+                >
+                  <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+              ) : null}
+            </div>
+          )}
         </div>
 
         {isFloating ? (
           <div className="header-message-chat-head-actions">
-            <button
-              type="button"
-              className="header-message-chat-icon-btn"
-              aria-label={t(`${chatTk}.callUnavailable`)}
-              title={t(`${chatTk}.callUnavailable`)}
-              disabled
-            >
-              <Phone className="h-4 w-4" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              className="header-message-chat-icon-btn"
-              aria-label={t(`${chatTk}.videoCallUnavailable`)}
-              title={t(`${chatTk}.videoCallUnavailable`)}
-              disabled
-            >
-              <Video className="h-4 w-4" aria-hidden="true" />
-            </button>
+            {callActionButtons}
             <button
               type="button"
               className="header-message-chat-icon-btn"
@@ -740,6 +945,7 @@ function HeaderMessageChatWindow({
           </div>
         ) : immersive ? (
           <div className="header-message-chat-head-actions">
+            {callActionButtons}
             <button
               type="button"
               className="header-message-chat-icon-btn header-message-chat-icon-btn--close"
@@ -749,7 +955,11 @@ function HeaderMessageChatWindow({
               <X className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
-        ) : null}
+        ) : (
+          <div className="header-message-chat-head-actions">
+            {callActionButtons}
+          </div>
+        )}
       </div>
 
       <div

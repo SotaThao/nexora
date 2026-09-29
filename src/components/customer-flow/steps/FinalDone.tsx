@@ -3,8 +3,9 @@ import { Heart } from 'lucide-react'
 import BackToDashboardButton from '../BackToDashboardButton'
 import { useBackToDashboard } from '../useBackToDashboard'
 import { getNexoraHomeUrl } from '../../../utils/nexoraHomeUrl'
+import BackToOneQrMenuButton from '../../public/BackToOneQrMenuButton'
 
-export default function FinalDone({ t, handleReset, rating = 5 }) {
+export default function FinalDone({ t, handleReset = null, rating = 5, businessSlug = null }) {
   const { canBackToDashboard } = useBackToDashboard()
   const isPrivateFeedback = rating < 4
 
@@ -26,6 +27,7 @@ export default function FinalDone({ t, handleReset, rating = 5 }) {
       </div>
 
       <div className="w-full mt-4 space-y-3">
+        <BackToOneQrMenuButton businessSlug={businessSlug} />
         <BackToDashboardButton />
         {handleReset ? (
           <button

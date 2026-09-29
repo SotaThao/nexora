@@ -21,6 +21,42 @@ html.capacitor-native {
   text-transform: uppercase;
 }
 
+html:has(body.pos-front-desk-fullscreen),
+body.pos-front-desk-fullscreen {
+  overflow: hidden;
+  scrollbar-gutter: auto;
+}
+
+.pos-front-desk-expanded {
+  @apply bg-nexoraCanvas;
+  position: fixed;
+  inset: 0;
+  z-index: 41;
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
+  overflow: auto;
+  padding: max(12px, var(--app-safe-area-top)) max(16px, var(--app-safe-area-right)) max(16px, var(--app-safe-area-bottom)) max(16px, var(--app-safe-area-left));
+}
+
+.pos-front-desk-expanded > * {
+  flex-shrink: 0;
+}
+
+.pos-fullscreen-control {
+  opacity: 0.45;
+}
+
+.pos-fullscreen-control:is(:focus-visible, :active, [data-dragging]) {
+  opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pos-fullscreen-control:hover {
+    opacity: 1;
+  }
+}
+
 /* POS Front Desk interaction contract. Keep every actionable control visibly
    discoverable without changing its existing semantic/status color. */
 body:has(.pos-front-desk-action-surface)
@@ -141,6 +177,115 @@ body:has(.pos-front-desk-action-surface)
   .mobile-drawer-safe {
     padding-top: calc(1.5rem + var(--app-safe-area-top));
     padding-bottom: calc(1.5rem + var(--app-safe-area-bottom));
+  }
+
+  /*
+   * Mobile sidebar overlay — keyframe slide + backdrop fade (not CSS transition).
+   * Keyframes run on first paint when the node mounts with `.is-open`, which is
+   * more reliable on mobile Safari than transition + delayed class toggle.
+   * Durations must match MOBILE_SIDEBAR_DURATION_MS / MOBILE_SIDEBAR_EXIT_MS.
+   * z-index 130 sits above header messenger (100) and elevated sticky header (110).
+   */
+  .mobile-sidebar-overlay {
+    --mobile-sidebar-open-duration: 360ms;
+    --mobile-sidebar-exit-duration: 280ms;
+    --mobile-sidebar-open-ease: cubic-bezier(0.32, 0.72, 0, 1);
+    --mobile-sidebar-exit-ease: cubic-bezier(0.4, 0, 1, 1);
+    position: fixed;
+    inset: 0;
+    z-index: 130;
+    overflow: hidden;
+    pointer-events: auto;
+  }
+
+  .mobile-sidebar-overlay__backdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    padding: 0;
+    @apply bg-nexoraText/60;
+    opacity: 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-sidebar-overlay.is-open .mobile-sidebar-overlay__backdrop {
+    animation: mobile-sidebar-backdrop-in var(--mobile-sidebar-open-duration)
+      var(--mobile-sidebar-open-ease) both;
+  }
+
+  .mobile-sidebar-overlay.is-closing .mobile-sidebar-overlay__backdrop {
+    animation: mobile-sidebar-backdrop-out var(--mobile-sidebar-exit-duration)
+      var(--mobile-sidebar-exit-ease) both;
+  }
+
+  .mobile-sidebar-overlay__panel {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    max-width: 100%;
+    transform: translate3d(-100%, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .mobile-sidebar-overlay.is-open .mobile-sidebar-overlay__panel {
+    animation: mobile-sidebar-panel-in var(--mobile-sidebar-open-duration)
+      var(--mobile-sidebar-open-ease) both;
+  }
+
+  .mobile-sidebar-overlay.is-closing .mobile-sidebar-overlay__panel {
+    animation: mobile-sidebar-panel-out var(--mobile-sidebar-exit-duration)
+      var(--mobile-sidebar-exit-ease) both;
+  }
+
+  @keyframes mobile-sidebar-backdrop-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes mobile-sidebar-backdrop-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes mobile-sidebar-panel-in {
+    from {
+      transform: translate3d(-100%, 0, 0);
+    }
+    to {
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  @keyframes mobile-sidebar-panel-out {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-100%, 0, 0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-sidebar-overlay {
+      --mobile-sidebar-open-duration: 1ms;
+      --mobile-sidebar-exit-duration: 1ms;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .mobile-sidebar-overlay {
+      display: none;
+    }
   }
 
   /* Docks the staff beep surfaces (the sheet and its minimised bell) just above StaffBottomNav:
@@ -312,13 +457,14 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Global text-based input focus ring styling — skip marketing homepage */
-body:not(.homepage-active) input[type="text"]:focus,
+/* Global text-based input focus ring styling — skip marketing homepage.
+   `.promo-search-input` is excluded so the promo list search keeps a plain gray field chrome. */
+body:not(.homepage-active) input[type="text"]:not(.promo-search-input):focus,
 body:not(.homepage-active) input[type="email"]:focus,
 body:not(.homepage-active) input[type="password"]:focus,
 body:not(.homepage-active) input[type="tel"]:focus,
 body:not(.homepage-active) input[type="number"]:focus,
-body:not(.homepage-active) input[type="search"]:focus,
+body:not(.homepage-active) input[type="search"]:not(.promo-search-input):focus,
 body:not(.homepage-active) textarea:focus,
 body:not(.homepage-active) select:focus {
   outline: none !important;
@@ -389,7 +535,7 @@ body:not(.homepage-active):not(.public-booking-active) input.vlinkpay-address-in
   body:not(.homepage-active):not(.public-booking-active) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
   body:not(.homepage-active):not(.public-booking-active) textarea,
   body:not(.homepage-active):not(.public-booking-active) select {
-    font-size: 16px !important;
+    font-size: 12px;
   }
 
   /* VLINKPAY wallet-address inputs — keep compact height; 16px prevents iOS focus zoom. */
@@ -410,6 +556,16 @@ body:not(.homepage-active):not(.public-booking-active) input.vlinkpay-address-in
     font-size: 12px !important;
     font-weight: 400;
   }
+
+  /* POS Promotions list chrome — keep compact vs HTML (not the 16px iOS floor). */
+  body:not(.homepage-active):not(.public-booking-active) .pos-promotions-page .promo-language select {
+    font-size: 11px !important;
+  }
+
+  body:not(.homepage-active):not(.public-booking-active) .pos-promotions-page .promo-search input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+  body:not(.homepage-active):not(.public-booking-active) .pos-promotions-page .promo-toolbar select {
+    font-size: 12px !important;
+  }
 }
 
 /* Prevent zoom on all other mobile browsers on narrow viewports */
@@ -417,7 +573,7 @@ body:not(.homepage-active):not(.public-booking-active) input.vlinkpay-address-in
   body:not(.homepage-active):not(.public-booking-active) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
   body:not(.homepage-active):not(.public-booking-active) textarea,
   body:not(.homepage-active):not(.public-booking-active) select {
-    font-size: 16px !important;
+    font-size: 12px;
   }
 
   body:not(.homepage-active):not(.public-booking-active) .booking-hub-view .cust-modal input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
@@ -431,6 +587,16 @@ body:not(.homepage-active):not(.public-booking-active) input.vlinkpay-address-in
   body:not(.homepage-active):not(.public-booking-active) .booking-hub-view .settings-service-dialog.is-overview textarea.settings-input {
     font-size: 12px !important;
     font-weight: 400;
+  }
+
+  /* POS Promotions list chrome — keep compact vs HTML (not the 16px iOS floor). */
+  body:not(.homepage-active):not(.public-booking-active) .pos-promotions-page .promo-language select {
+    font-size: 11px !important;
+  }
+
+  body:not(.homepage-active):not(.public-booking-active) .pos-promotions-page .promo-search input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+  body:not(.homepage-active):not(.public-booking-active) .pos-promotions-page .promo-toolbar select {
+    font-size: 12px !important;
   }
 }
 
@@ -505,7 +671,25 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
       max-height: calc(100vh - 120px);
       max-height: calc(100dvh - 120px);
       overflow-y: auto;
-      overscroll-behavior-y: contain;
+    }
+  }
+
+  .pos-estimate-lines {
+    container-type: inline-size;
+  }
+
+  @container (min-width: 24rem) {
+    .pos-estimate-lines .pos-estimate-line,
+    .pos-estimate-lines .pos-estimate-line-header {
+      grid-template-columns: minmax(0, 1fr) 6rem 5.5rem 2.75rem;
+    }
+
+    .pos-estimate-lines .pos-estimate-line-header {
+      display: grid;
+    }
+
+    .pos-estimate-lines .pos-estimate-line-price {
+      justify-self: start;
     }
   }
 
@@ -1231,16 +1415,17 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 /* Print styles for QR Code Stand
    Scoped so other print surfaces (e.g. AI Voice setup guide) are not wiped blank. */
 @media print {
-  /* Hide all screen-only parts of the dashboard and other components */
-  body:not(.printing-ai-voice-guide) aside,
-  body:not(.printing-ai-voice-guide) .lg\:pl-72,
-  body:not(.printing-ai-voice-guide) main,
-  body:not(.printing-ai-voice-guide) header,
-  body:not(.printing-ai-voice-guide) footer,
-  body:not(.printing-ai-voice-guide) .no-print,
-  body:not(.printing-ai-voice-guide) button,
-  body:not(.printing-ai-voice-guide) a,
-  body:not(.printing-ai-voice-guide) .fixed.bottom-4 {
+  /* Hide all screen-only parts of the dashboard and other components.
+     Skip dedicated print body classes (invoice / report / promo poster / AI voice). */
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) aside,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) .lg\:pl-72,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) main,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) header,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) footer,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) .no-print,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) button,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) a,
+  body:not(.printing-ai-voice-guide):not(.printing-pos-promo-poster) .fixed.bottom-4 {
     display: none !important;
   }
 
@@ -1266,7 +1451,8 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
     color: #000000 !important;
   }
 
-  body.printing-pos-invoice .pos-receipt-ink-black .pos-receipt-line-discount {
+  body.printing-pos-invoice .pos-receipt-ink-black .pos-receipt-line-discount,
+  body.printing-pos-invoice .pos-receipt-ink-black .pos-receipt-discount {
     color: #f43f5e !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;

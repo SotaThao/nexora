@@ -41,6 +41,8 @@ export const WORK_ORDERS_I18N = {
   selectTicket: 'staff_dashboard.work_orders.select_ticket',
   selectTicketHint: 'staff_dashboard.work_orders.select_ticket_hint',
   removeService: 'staff_dashboard.work_orders.remove_service',
+  removeServiceConfirmTitle: 'staff_dashboard.work_orders.remove_service_confirm_title',
+  removeServiceConfirmBody: 'staff_dashboard.work_orders.remove_service_confirm_body',
   durationStation: 'staff_dashboard.work_orders.duration_station',
   emptySalons: 'staff_dashboard.work_orders.empty_salons',
   emptySalonsBody: 'staff_dashboard.work_orders.empty_salons_body',
@@ -107,6 +109,8 @@ export const WORK_ORDERS_I18N = {
   pickerConfirmAddCountOne: 'staff_dashboard.work_orders.picker_confirm_add_count_one',
   pickerConfirmEdit: 'staff_dashboard.work_orders.picker_confirm_edit',
   pickerClose: 'staff_dashboard.work_orders.picker_close',
+  pickerAlreadyOnTicket: 'staff_dashboard.work_orders.picker_already_on_ticket',
+  pickerRequiresApproval: 'staff_dashboard.work_orders.picker_requires_approval',
   customTitle: 'staff_dashboard.work_orders.custom_title',
   customSubtitle: 'staff_dashboard.work_orders.custom_subtitle',
   customNameLabel: 'staff_dashboard.work_orders.custom_name_label',
@@ -407,7 +411,10 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   pickerRadioSelected: 'border-nexoraBrand after:block after:h-2 after:w-2 after:rounded-full after:bg-nexoraBrand',
   pickerCheckbox: 'inline-flex h-[18px] w-[18px] items-center justify-center rounded-[5px] border-2 border-[#BBC4D4]',
   pickerCheckboxSelected: 'border-nexoraBrand bg-nexoraBrand after:block after:h-1 after:w-2 after:-translate-y-px after:rotate-[-45deg] after:border-b-2 after:border-l-2 after:border-white',
-  pickerOptionName: 'block text-sm font-extrabold text-nexoraText',
+  pickerOptionName: 'block min-w-0 truncate text-sm font-extrabold text-nexoraText',
+  pickerOptionNameRow: 'flex min-w-0 flex-wrap items-center gap-1.5',
+  pickerAlreadyOnTicket:
+    'inline-flex shrink-0 items-center gap-0.5 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700',
   pickerOptionMeta: 'mt-0.5 block text-sm font-medium text-nexoraSubtle',
   pickerOptionPrice: 'text-sm font-black tabular-nums text-nexoraText',
   pickerEmpty: 'px-3 py-8 text-center text-sm font-medium text-nexoraSubtle',
@@ -557,6 +564,7 @@ export const STAFF_HOME_PATH = '/staff'
 
 export enum StaffWorkOrdersViewKind {
   Redirect = 'redirect',
+  Entry = 'entry',
   Tickets = 'tickets',
   Detail = 'detail',
 }

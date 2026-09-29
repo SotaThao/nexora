@@ -24,6 +24,8 @@ import {
   ONEQR_AUDIENCE_ORDER,
   ONEQR_MODULE_CATALOG,
   ONEQR_MODULE_CATALOG_BY_KEY,
+  getDefaultOneQrIdentityPolicy,
+  getDefaultOneQrModulePrimaryAudience,
 } from '../../constants/oneQr'
 import type {
   OneQr,
@@ -86,6 +88,7 @@ const AUDIENCE_MEMBERS = [
   OneQrAudience.Customer,
   OneQrAudience.Staff,
   OneQrAudience.Owner,
+  OneQrAudience.AIVoice,
 ] as const
 
 const IDENTITY_POLICY_MEMBERS = [
@@ -145,6 +148,7 @@ function normalizeModule(
     isEnabled: raw.isEnabled !== false,
     customLabel: nullableStr(raw.customLabel),
     customIcon: nullableStr(raw.customIcon),
+    customIconUrl: nullableStr(raw.customIconUrl),
     customUrl: nullableStr(raw.customUrl),
     defaultLabel: nullableStr(raw.defaultLabel),
     defaultIcon: nullableStr(raw.defaultIcon),
@@ -174,7 +178,7 @@ function normalizeAudienceConfig(raw: Raw): OneQrRoleConfig {
 }
 
 /**
- * The backend seeds all three audiences at create time, but backfill anyway so
+ * The backend seeds every audience at create time, but backfill anyway so
  * the builder never renders a blank form for a role the server omitted.
  */
 function withAllAudiences(configs: OneQrRoleConfig[]): OneQrRoleConfig[] {
@@ -183,7 +187,7 @@ function withAllAudiences(configs: OneQrRoleConfig[]): OneQrRoleConfig[] {
       configs.find((config) => config.audience === audience) ?? {
         audience,
         welcomeMessage: null,
-        identityPolicy: OneQrIdentityPolicy.PublicFirst,
+        identityPolicy: getDefaultOneQrIdentityPolicy(audience),
         modules: [],
       },
   )
@@ -198,6 +202,11 @@ function normalizeCatalogItem(raw: Raw): OneQrModuleCatalogItem {
 
   return {
     moduleKey,
+    primaryAudience: Object.prototype.hasOwnProperty.call(raw, 'primaryAudience')
+      ? nullableStr(raw.primaryAudience)
+        ? toOneQrAudience(raw.primaryAudience)
+        : null
+      : getDefaultOneQrModulePrimaryAudience(moduleKey),
     defaultLabel: nullableStr(raw.defaultLabel),
     defaultIcon: nullableStr(raw.defaultIcon) ?? bundled?.defaultIcon ?? null,
     urlTemplate: nullableStr(raw.urlTemplate),
@@ -230,6 +239,7 @@ function normalizeCatalogItem(raw: Raw): OneQrModuleCatalogItem {
 export function buildOneQrFallbackCatalog(): OneQrModuleCatalogItem[] {
   return ONEQR_MODULE_CATALOG.map((entry) => ({
     moduleKey: entry.moduleKey,
+    primaryAudience: getDefaultOneQrModulePrimaryAudience(entry.moduleKey),
     defaultLabel: null,
     defaultIcon: entry.defaultIcon,
     // Routers live in the admin table; the bundle never guesses one.
@@ -367,6 +377,7 @@ export function createMerchantOneQrRepository(client: HttpClient = httpClient) {
           isEnabled: module.isEnabled,
           customLabel: module.customLabel ?? null,
           customIcon: module.customIcon ?? null,
+          customIconUrl: module.customIconUrl ?? null,
           customUrl: module.customUrl ?? null,
         })),
       })

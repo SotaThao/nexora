@@ -30,11 +30,20 @@ export enum OneQrAudience {
   Customer = 'Customer',
   Staff = 'Staff',
   Owner = 'Owner',
+  AIVoice = 'AIVoice',
 }
 
 export enum OneQrIdentityPolicy {
   PublicFirst = 'PublicFirst',
   AlwaysSignIn = 'AlwaysSignIn',
+}
+
+export function getDefaultOneQrIdentityPolicy(
+  audience: OneQrAudience,
+): OneQrIdentityPolicy {
+  return audience === OneQrAudience.Staff || audience === OneQrAudience.Owner
+    ? OneQrIdentityPolicy.AlwaysSignIn
+    : OneQrIdentityPolicy.PublicFirst
 }
 
 /**
@@ -52,9 +61,10 @@ export enum OneQrIdentityPolicy {
  * Never coerce an unknown key into a member of this enum — that would silently
  * rewrite an admin-authored module into something else on save.
  *
- * The numeric bands on the backend (0-9, 10-19, 20-29, 90+) only record which
- * role a module was originally designed for; they are NOT an access rule, since
- * every module is assignable to all three audiences (decision 3b).
+ * The numeric bands on the backend (0-9, 10-19, 20-29, 90+) record which role
+ * a built-in module was designed for. The builder uses the explicit groups
+ * below to keep Staff and Owner management actions out of lower-privilege
+ * audience tabs, while the backend remains the final authorization boundary.
  */
 export enum OneQrModuleKey {
   // Band 0-9 — originally Customer
@@ -84,6 +94,54 @@ export enum OneQrModuleKey {
   AIAssistant = 'AIAssistant',
 }
 
+const STAFF_ONLY_MODULE_KEYS = new Set<string>([
+  OneQrModuleKey.ClockIn,
+  OneQrModuleKey.TurnBoard,
+  OneQrModuleKey.MyTips,
+  OneQrModuleKey.StaffPortal,
+  OneQrModuleKey.ReceiveCustomer,
+  OneQrModuleKey.CompleteService,
+  OneQrModuleKey.RequestApproval,
+])
+
+const OWNER_ONLY_MODULE_KEYS = new Set<string>([
+  OneQrModuleKey.OwnerDashboard,
+  OneQrModuleKey.ManageBookings,
+  OneQrModuleKey.ManageServices,
+])
+
+export function getDefaultOneQrModulePrimaryAudience(
+  moduleKey: string,
+): OneQrAudience | null {
+  if (STAFF_ONLY_MODULE_KEYS.has(moduleKey)) return OneQrAudience.Staff
+  if (OWNER_ONLY_MODULE_KEYS.has(moduleKey)) return OneQrAudience.Owner
+  if (moduleKey === OneQrModuleKey.VoiceBooking) return OneQrAudience.AIVoice
+  if (moduleKey === OneQrModuleKey.CustomLink) return null
+  return isBuiltInOneQrModuleKey(moduleKey) ? OneQrAudience.Customer : null
+}
+
+/** Product-level visibility for catalog modules in the merchant builder. */
+export function isOneQrModuleVisibleForAudience(
+  moduleKey: string,
+  audience: OneQrAudience,
+  primaryAudience?: OneQrAudience | null,
+): boolean {
+  const moduleAudience =
+    primaryAudience === undefined
+      ? getDefaultOneQrModulePrimaryAudience(moduleKey)
+      : primaryAudience
+  if (audience === OneQrAudience.Customer) {
+    return (
+      moduleAudience !== OneQrAudience.Staff &&
+      moduleAudience !== OneQrAudience.Owner
+    )
+  }
+  if (audience === OneQrAudience.Staff) {
+    return moduleAudience !== OneQrAudience.Owner
+  }
+  return true
+}
+
 /**
  * Why a configured module cannot resolve right now. The backend sends this on
  * `OneQrModuleConfigDto.unavailableReason`; the builder shows the specific
@@ -99,6 +157,8 @@ export enum OneQrModuleUnavailableReason {
   MissingDefinition = 'MissingDefinition',
   /** CustomLink saved without an https URL — merchant fills it in. */
   MissingCustomUrl = 'MissingCustomUrl',
+  /** The tile points at a NexoraVoice page but this business has no Voice tenant. */
+  MissingVoiceTenant = 'MissingVoiceTenant',
   /** The admin's `urlTemplate` could not be resolved for this business. */
   InvalidTemplate = 'InvalidTemplate',
 }
@@ -108,6 +168,7 @@ export const ONEQR_AUDIENCE_ORDER = [
   OneQrAudience.Customer,
   OneQrAudience.Staff,
   OneQrAudience.Owner,
+  OneQrAudience.AIVoice,
 ] as const
 
 export const ONEQR_IDENTITY_POLICY_OPTIONS = [
@@ -121,8 +182,17 @@ export const ONEQR_FIELD_LIMITS = {
   welcomeMessage: 200,
   customLabel: 60,
   customIcon: 40,
+  customIconUrl: 500,
   customUrl: 500,
 } as const
+
+/**
+ * Client-side compression target for an uploaded module icon. Tiles render at
+ * 36px (builder grid/preview), so 128px covers up to ~3x pixel density while
+ * keeping the upload small — see `compressImageFile` in `utils/imageFile.ts`.
+ */
+export const ONEQR_ICON_UPLOAD_MAX_DIMENSION_PX = 128
+export const ONEQR_ICON_UPLOAD_MAX_BYTES = 80 * 1024
 
 export const ONEQR_ROUTE = {
   path: '/o/:businessSlug',
@@ -176,13 +246,14 @@ export type OneQrModuleCatalogEntry = {
 
 /**
  * Seed value for the fallback. Live `allowedAudiences` is per-definition and
- * admin-editable, so a module being open to all three roles is a *default*, not
+ * admin-editable, so a module being open to every role is a *default*, not
  * a rule the FE may assume.
  */
 const ALL_AUDIENCES = [
   OneQrAudience.Customer,
   OneQrAudience.Staff,
   OneQrAudience.Owner,
+  OneQrAudience.AIVoice,
 ]
 
 /**
@@ -235,6 +306,11 @@ export const ONEQR_MODULE_CATALOG: OneQrModuleCatalogEntry[] = [
     defaultIcon: 'crown',
     allowedAudiences: ALL_AUDIENCES,
     comingSoon: true,
+  },
+  {
+    moduleKey: OneQrModuleKey.VoiceBooking,
+    defaultIcon: 'calendar-clock',
+    allowedAudiences: ALL_AUDIENCES,
   },
   {
     moduleKey: OneQrModuleKey.StaffPortal,

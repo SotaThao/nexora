@@ -768,13 +768,21 @@ export function useSetOrderPaymentMethod(businessId?: string) {
 
 export function useSetOrderNote(businessId?: string) {
   const queryClient = useQueryClient()
-  return useMutation<boolean, Error, { orderId: string; note: string | null }, OrderMutationContext>({
-    mutationFn: ({ orderId, note }) =>
-      posCheckoutRepository.setOrderNote(businessId as string, orderId, note),
-    onMutate: async ({ orderId, note }) => {
+  return useMutation<
+    boolean,
+    Error,
+    { orderId: string; note: string | null; notePhotoUrls?: string[] | null },
+    OrderMutationContext
+  >({
+    mutationFn: ({ orderId, note, notePhotoUrls }) =>
+      posCheckoutRepository.setOrderNote(businessId as string, orderId, note, notePhotoUrls),
+    onMutate: async ({ orderId, note, notePhotoUrls }) => {
       const context = await snapshotOrderDetail(queryClient, businessId, orderId)
       if (context.previousOrder) {
-        queryClient.setQueryData<OrderDetailApiDto>(context.queryKey, { ...context.previousOrder, note })
+        queryClient.setQueryData<OrderDetailApiDto>(
+          context.queryKey,
+          { ...context.previousOrder, note, ...(notePhotoUrls !== undefined ? { notePhotoUrls } : {}) },
+        )
       }
       return context
     },

@@ -25,7 +25,6 @@ import HomepageLink from '../../ui/HomepageLink'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import {
   SIDEBAR_SHELL_CLASS,
-  SIDEBAR_MOBILE_DRAWER_CLASS,
   SIDEBAR_NAV_CLASS,
   SIDEBAR_PROFILE_CARD_CLASS,
   SIDEBAR_AVATAR_IMAGE_CLASS,
@@ -36,6 +35,7 @@ import {
   sidebarMenuItemBetweenClass,
   sidebarSubmenuItemClass,
 } from '../../ui/sidebarMenuStyles'
+import MobileSidebarOverlay from '../../ui/MobileSidebarOverlay'
 
 export default function StaffSidebar({ activeScreen, isHomeActive = false, mobileOnly = false, onNavigate, onLogout, isOpen, onClose }) {
   const { t } = useTranslation()
@@ -166,6 +166,16 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
       >
         <MenuIcon item={item} active={isActive} />
         <span className="truncate">{t(item.labelKey)}</span>
+        {item.id === STAFF_WORK_ORDERS_SCREEN && pendingAcceptanceCount > 0 ? (
+          <span
+            aria-label={t('components.dashboard.views.pos.serviceLineStatus.pendingBadge', {
+              count: pendingAcceptanceCount,
+            })}
+            className={`${STAFF_CALENDAR_LAYOUT_CLASS.navCount} ${STAFF_CALENDAR_LAYOUT_CLASS.navTicketsCount}`}
+          >
+            {pendingAcceptanceCount}
+          </span>
+        ) : null}
         {item.id === STAFF_CALENDAR_SCREEN && calendarTodayCount > 0 ? (
           <span
             className={`${STAFF_CALENDAR_LAYOUT_CLASS.navCount} ${
@@ -215,16 +225,6 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
               >
                 <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
                 <span>{t(item.labelKey)}</span>
-                {item.screen === STAFF_WORK_ORDERS_SCREEN && pendingAcceptanceCount > 0 ? (
-                  <span
-                    aria-label={t('components.dashboard.views.pos.serviceLineStatus.pendingBadge', {
-                      count: pendingAcceptanceCount,
-                    })}
-                    className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-400 px-1.5 text-xs font-semibold text-slate-900"
-                  >
-                    {pendingAcceptanceCount}
-                  </span>
-                ) : null}
               </button>
             )
           })}
@@ -373,19 +373,10 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
       </aside>
       )}
 
-      {isOpen && (
-        <div className="fixed inset-0 z-[100] lg:hidden" id="dashboard-mobile-menu">
-          <button
-            type="button"
-            className="absolute inset-0 bg-nexoraText/60"
-            aria-label="Close navigation menu"
-            onClick={onClose}
-          />
-          <aside className={SIDEBAR_MOBILE_DRAWER_CLASS}>
-            {renderContent(true)}
-          </aside>
-        </div>
-      )}
+      {/* Animated overlay — slides in/out above header messenger when open. */}
+      <MobileSidebarOverlay isOpen={isOpen} onClose={onClose}>
+        {renderContent(true)}
+      </MobileSidebarOverlay>
     </>
   )
 }

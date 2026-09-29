@@ -14,6 +14,7 @@ import { parseApiUtcDateTime } from '../../utils/localDate'
 import type {
   AddCommunityChatParticipantInput,
   CommunityChatMessage,
+  CommunityChatMessageCallMetadata,
   CommunityChatMessagesPage,
   CommunityChatParticipant,
   CommunityChatSession,
@@ -70,6 +71,10 @@ interface CommunityChatMessageApiDto {
   ChatSessionId?: string
   senderId?: string
   SenderId?: string
+  senderName?: string | null
+  SenderName?: string | null
+  senderAvatarUrl?: string | null
+  SenderAvatarUrl?: string | null
   content?: string
   Content?: string
   messageType?: string
@@ -80,6 +85,9 @@ interface CommunityChatMessageApiDto {
   EditedAt?: string | null
   isDeleted?: boolean
   IsDeleted?: boolean
+  /** JSON string (US-04 backend) — parsed by `normalizeCommunityChatMessageMetadata`. */
+  metadata?: string | null
+  Metadata?: string | null
 }
 
 interface CommunityChatMessagesPageApiDto {
@@ -109,6 +117,8 @@ function normalizeMessageType(raw: string | undefined): CommunityChatMessageType
       return CommunityChatMessageType.File
     case CommunityChatMessageType.System:
       return CommunityChatMessageType.System
+    case CommunityChatMessageType.Call:
+      return CommunityChatMessageType.Call
     default:
       return CommunityChatMessageType.Text
   }
@@ -127,6 +137,25 @@ function normalizeOptionalPreview(raw: string | null | undefined): string | null
   if (raw == null) return null
   const trimmed = String(raw).trim()
   return trimmed || null
+}
+
+/** `metadata` is a JSON string on the wire (US-04 backend) — parse defensively, never throw. */
+function normalizeCommunityChatMessageMetadata(
+  raw: string | null | undefined,
+): CommunityChatMessageCallMetadata | null {
+  if (!raw) return null
+  try {
+    const parsed = JSON.parse(raw) as Partial<CommunityChatMessageCallMetadata>
+    if (!parsed || typeof parsed !== 'object') return null
+    return {
+      callSessionId: String(parsed.callSessionId ?? '').trim(),
+      callType: String(parsed.callType ?? '').trim(),
+      endReason: String(parsed.endReason ?? '').trim(),
+      durationSeconds: Number(parsed.durationSeconds) || 0,
+    }
+  } catch {
+    return null
+  }
 }
 
 export function normalizeCommunityChatParticipant(
@@ -168,11 +197,14 @@ export function normalizeCommunityChatMessage(
     id: String(dto.id ?? dto.Id ?? '').trim(),
     chatSessionId: String(dto.chatSessionId ?? dto.ChatSessionId ?? '').trim(),
     senderId: String(dto.senderId ?? dto.SenderId ?? '').trim(),
+    senderName: String(dto.senderName ?? dto.SenderName ?? '').trim() || null,
+    senderAvatarUrl: String(dto.senderAvatarUrl ?? dto.SenderAvatarUrl ?? '').trim() || null,
     content: String(dto.content ?? dto.Content ?? ''),
     messageType: normalizeMessageType(dto.messageType ?? dto.MessageType),
     sentAt: normalizeCommunityChatTimestamp(dto.sentAt ?? dto.SentAt) ?? '',
     editedAt: normalizeCommunityChatTimestamp(dto.editedAt ?? dto.EditedAt),
     isDeleted: Boolean(dto.isDeleted ?? dto.IsDeleted),
+    metadata: normalizeCommunityChatMessageMetadata(dto.metadata ?? dto.Metadata),
   }
 }
 

@@ -1,5 +1,5 @@
 import { ChevronLeft, ClipboardX } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffWorkOrders } from '../../../data/hooks/useStaffWorkOrders'
@@ -19,6 +19,7 @@ import {
   type WorkOrderSalon,
   type WorkOrderTicketFilter,
 } from './constants'
+import { setStaffLastWorkOrderSalonId } from './myTicketsSalonPreference'
 import StaffWorkOrderDetail from './StaffWorkOrderDetail'
 import WorkOrderDatePicker from './WorkOrderDatePicker'
 import { WorkOrderErrorCard } from './WorkOrderQueryFeedback'
@@ -38,6 +39,7 @@ import {
   formatWorkOrderNumber,
   joinWorkOrderServiceNames,
   newestAssignedWorkOrder,
+  shouldShowAllForEmptyInitialWorkOrderFilter,
   sortWorkOrderTicketsByTime,
   workOrderTextOrPlaceholder,
   workOrderTicketMatchesFilter,
@@ -72,7 +74,12 @@ export default function StaffWorkOrderTickets({
   const tickets = workOrdersQuery.data ?? []
   const isListLoading = workOrdersQuery.data === undefined && !workOrdersQuery.isError
   const isDetailMode = Boolean(selectedTicketId)
+  const initialFilterHandledSalonRef = useRef<string | null>(null)
   const chromeClass = isDetailMode ? WORK_ORDERS_LAYOUT_CLASS.hideOnDetailMobile : ''
+
+  useEffect(() => {
+    setStaffLastWorkOrderSalonId(salon.id)
+  }, [salon.id])
 
   useEffect(() => {
     if (!workOrderListParamsNeedSync(searchParams, selectedDateIso, filter)) return
@@ -100,6 +107,21 @@ export default function StaffWorkOrderTickets({
       WORK_ORDER_NAVIGATE_REPLACE,
     )
   }
+
+  useEffect(() => {
+    if (initialFilterHandledSalonRef.current === salon.id || isListLoading) return
+    initialFilterHandledSalonRef.current = salon.id
+
+    if (!shouldShowAllForEmptyInitialWorkOrderFilter({
+      filter,
+      assignedCount: countWorkOrdersByFilter(tickets, WORK_ORDER_TICKET_FILTER.Assigned),
+      totalCount: tickets.length,
+      isLoading: isListLoading,
+      isDetailMode,
+    })) return
+
+    updateListParams(selectedDateIso, WORK_ORDER_TICKET_FILTER.All)
+  }, [filter, isDetailMode, isListLoading, salon.id, selectedDateIso, tickets])
 
   const featuredTicket = !isListLoading && filter === WORK_ORDER_TICKET_FILTER.Assigned
     ? newestAssignedWorkOrder(visibleTickets)

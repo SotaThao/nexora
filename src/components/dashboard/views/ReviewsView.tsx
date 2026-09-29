@@ -109,10 +109,8 @@ function ReviewsView({
     [hasCollected, collectedItems, reviews, filter, staff],
   )
 
-  // For the unfiltered ("All staff") view, KPI cards reflect all-time stats
-  // from the BE overview summary. When a specific staff is selected, the
-  // summary (which is global) no longer applies, so fall back to the
-  // current page's reviews.
+  // All-staff KPIs use the all-time overview summary (Reviews tab is not date-scoped).
+  // Collected list is only for staff filters and client-side source/star tabs.
   const useSummary = Boolean(summary) && filter === 'all'
 
   const stats = useMemo(() => {
@@ -121,26 +119,49 @@ function ReviewsView({
         avg: summary.averageRating > 0 ? summary.averageRating.toFixed(1) : '0.0',
         google: summary.googleClicks,
         yelp: summary.yelpClicks,
-        internal: summary.totalReviews,
+        internal: Math.max(0, summary.totalReviews - summary.googleClicks - summary.yelpClicks),
+      }
+    }
+
+    if (hasCollected) {
+      let sum = 0
+      let google = 0
+      let yelp = 0
+      let internal = 0
+      countPool.forEach((r) => {
+        sum += r.rating || 0
+        const isGoogle = matchesGoogleSource(r)
+        const isYelp = matchesYelpSource(r)
+        if (isGoogle) google++
+        if (isYelp) yelp++
+        if (!isGoogle && !isYelp) internal++
+      })
+      return {
+        avg: countPool.length > 0 ? (sum / countPool.length).toFixed(1) : '0.0',
+        google,
+        yelp,
+        internal,
       }
     }
 
     if (!reviewsByStaff || reviewsByStaff.length === 0) {
       return { avg: '0.0', google: 0, yelp: 0, internal: 0 }
     }
+
     let sum = 0
     let google = 0
     let yelp = 0
     let internal = 0
     reviewsByStaff.forEach((r) => {
       sum += r.rating || 0
-      const cat = r.category?.toLowerCase() || ''
-      if (cat.includes('google')) google++
-      else if (cat.includes('yelp')) yelp++
-      else internal++
+      const isGoogle = matchesGoogleSource(r)
+      const isYelp = matchesYelpSource(r)
+      if (isGoogle) google++
+      if (isYelp) yelp++
+      if (!isGoogle && !isYelp) internal++
     })
     return { avg: (sum / reviewsByStaff.length).toFixed(1), google, yelp, internal }
-  }, [useSummary, summary, reviewsByStaff])
+  }, [hasCollected, countPool, reviewsByStaff, useSummary, summary])
 
   const counts = useMemo(() => {
     const stars = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
@@ -158,14 +179,19 @@ function ReviewsView({
       if (matchesLowStars(r)) lowStars++
     })
 
+    // Prefer server all-time summary for All-staff tab badges.
+    const useSummaryBadges = Boolean(summary) && filter === 'all' && starFilter === 'all'
+
     return {
-      all: filter === 'all' && starFilter === 'all' ? totalCount : starMatchedCount,
-      google,
-      yelp,
+      all: useSummaryBadges
+        ? (summary.totalReviews ?? totalCount)
+        : (filter === 'all' && starFilter === 'all' ? totalCount : starMatchedCount),
+      google: useSummaryBadges ? summary.googleClicks : google,
+      yelp: useSummaryBadges ? summary.yelpClicks : yelp,
       lowStars,
       stars,
     }
-  }, [countPool, filter, starFilter, totalCount])
+  }, [countPool, filter, starFilter, totalCount, summary])
 
   const reviewLinks = useMemo(() => {
     const defaultLinks = {

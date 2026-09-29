@@ -112,7 +112,7 @@ export default function PosReceiptPrintDocument({
         {doc.totals.map((row) => (
           <div key={row.id} className={row.emphasis ? 'pos-receipt-total' : undefined}>
             <dt>{row.label}</dt>
-            <dd>{totalAmountText(row)}</dd>
+            <dd className={row.negative ? 'pos-receipt-discount' : undefined}>{totalAmountText(row)}</dd>
           </div>
         ))}
       </dl>

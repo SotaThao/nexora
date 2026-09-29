@@ -1,12 +1,17 @@
-// CustomerTab — Front Desk "Customer" tab (US-043): read-only, paginated view of this
-// business's shared Customer records, with a Name/Phone search and a Created-At sort toggle.
-// No date-range/status filter beyond that — this is a lookup surface, not a report.
+// CustomerTab — Front Desk "Customer" tab (US-043): paginated view of this business's shared
+// Customer records, with Name/Phone search, Created-At sort, and Excel/CSV import (US-112).
 import { useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Upload } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { usePagination } from '../../../../../hooks/usePagination'
 import { usePosCustomerList } from '../../../../../data/hooks/usePosCustomers'
+import { useMerchantVoiceTenantStatus } from '../../../../../data/hooks/useMerchantVoiceBookings'
+import { qk } from '../../../../../data/queryKeys'
+import { useSessionRole } from '../../../../../auth/useSessionRole'
 import { SkeletonList } from '../../../../ui/skeleton'
 import Pagination from '../../../../ui/Pagination'
+import BookingCustomerImportModal from '../../BookingCustomerImportModal'
 import CustomerTable from './CustomerTable'
 import CustomerDetailModal from './CustomerDetailModal'
 
@@ -15,12 +20,18 @@ const CUSTOMER_SEARCH_DEBOUNCE_MS = 300
 
 export default function CustomerTab({ businessId }: { businessId: string }) {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
   const p = 'components.dashboard.views.pos.CustomerTab.'
+
+  const { isOwner } = useSessionRole()
+  const { data: tenantStatus } = useMerchantVoiceTenantStatus({ enabled: isOwner })
+  const canEditCustomer = isOwner && tenantStatus?.hasVoiceTenant
 
   const [searchInput, setSearchInput] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
   const [sortDescending, setSortDescending] = useState(true)
-  const [viewCustomerId, setViewCustomerId] = useState<string | null>(null)
+  const [customerModal, setCustomerModal] = useState<{ id: string; initialEditing: boolean } | null>(null)
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
   const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({ pageSize: CUSTOMER_LIST_PAGE_SIZE })
 
   // Debounced server-side search, same pattern as BookingCustomersPanel — resets to page 1
@@ -38,7 +49,7 @@ export default function CustomerTab({ businessId }: { businessId: string }) {
     return () => window.clearTimeout(timer)
   }, [searchInput, resetPage])
 
-  const { data, isLoading, isFetching } = usePosCustomerList(businessId, {
+  const { data, isLoading, isFetching, refetch } = usePosCustomerList(businessId, {
     pageNumber,
     pageSize,
     searchTerm: appliedSearch || undefined,
@@ -67,18 +78,28 @@ export default function CustomerTab({ businessId }: { businessId: string }) {
             className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
           />
         </div>
-        <div className="w-full sm:w-48">
-          <label className="mb-1 block text-[10px] font-extrabold uppercase text-nexoraMuted">
-            {t(p + 'sortLabel')}
-          </label>
-          <select
-            value={sortDescending ? 'desc' : 'asc'}
-            onChange={(e) => handleSortChange(e.target.value === 'desc')}
-            className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-end">
+          <div className="w-full sm:w-48">
+            <label className="mb-1 block text-[10px] font-extrabold uppercase text-nexoraMuted">
+              {t(p + 'sortLabel')}
+            </label>
+            <select
+              value={sortDescending ? 'desc' : 'asc'}
+              onChange={(e) => handleSortChange(e.target.value === 'desc')}
+              className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
+            >
+              <option value="desc">{t(p + 'sortNewest')}</option>
+              <option value="asc">{t(p + 'sortOldest')}</option>
+            </select>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsImportModalOpen(true)}
+            className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-3 text-xs font-extrabold text-white shadow-sm transition hover:bg-nexoraBrandDark"
           >
-            <option value="desc">{t(p + 'sortNewest')}</option>
-            <option value="asc">{t(p + 'sortOldest')}</option>
-          </select>
+            <Upload className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>{t(p + 'importButton')}</span>
+          </button>
         </div>
       </div>
 
@@ -92,7 +113,11 @@ export default function CustomerTab({ businessId }: { businessId: string }) {
         </div>
       ) : (
         <div className={`overflow-hidden rounded-xl border border-nexoraBorder bg-white ${isFetching ? 'opacity-60' : ''}`}>
-          <CustomerTable customers={customers} onView={setViewCustomerId} />
+          <CustomerTable
+            customers={customers}
+            onView={(id) => setCustomerModal({ id, initialEditing: false })}
+            onEdit={canEditCustomer ? (id) => setCustomerModal({ id, initialEditing: true }) : undefined}
+          />
 
           {data && data.totalPages > 1 ? (
             <Pagination
@@ -110,11 +135,23 @@ export default function CustomerTab({ businessId }: { businessId: string }) {
         </div>
       )}
 
-      {viewCustomerId ? (
+      {customerModal ? (
         <CustomerDetailModal
           businessId={businessId}
-          customerId={viewCustomerId}
-          onClose={() => setViewCustomerId(null)}
+          customerId={customerModal.id}
+          initialEditing={customerModal.initialEditing}
+          onClose={() => setCustomerModal(null)}
+        />
+      ) : null}
+
+      {isImportModalOpen ? (
+        <BookingCustomerImportModal
+          businessId={businessId}
+          onClose={() => setIsImportModalOpen(false)}
+          onComplete={() => {
+            void queryClient.invalidateQueries({ queryKey: qk.merchantPosCustomerListRoot() })
+            void refetch()
+          }}
         />
       ) : null}
     </div>

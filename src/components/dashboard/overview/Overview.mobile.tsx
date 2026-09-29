@@ -290,8 +290,8 @@ function Overview({
   const pendingCount = (pendingStaff || []).filter(isMerchantConfirmablePending).length
   const displayPendingStaff = (pendingStaff || []).filter(isMerchantConfirmablePending).slice(0, 2)
   const displayStaffStatus = (staff || []).slice(0, 4)
-  const rating = Number(metrics.averageRating || 0)
-  const totalReviews = Number(metrics.totalReviews || 0)
+  const rating = Number(metrics.averageRating ?? 0)
+  const totalReviews = Number(metrics.totalReviews ?? 0)
 
   // Month-over-month trend percentages (mock for now — will come from API)
   const tipsTrend = metricsMonth?.tipsDeltaPercent

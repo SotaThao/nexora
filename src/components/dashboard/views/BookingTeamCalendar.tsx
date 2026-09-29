@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import { DayPilotCalendar } from '@daypilot/daypilot-lite-react'
 import type { DayPilot } from '@daypilot/daypilot-lite-react'
 import {
@@ -57,6 +57,10 @@ type BookingTeamCalendarProps = {
   columnsOverride?: ReadonlyArray<BookingCalendarColumn>
   hideBuiltInHeader?: boolean
   showHalfHourLabels?: boolean
+  /** Overrides DayPilot business window (from salon Business Hours when provided). */
+  businessBeginsHour?: number
+  businessEndsHour?: number
+  scrollToHour?: number
 }
 
 /** DayPilot cell times are wall-clock in ticks — use sortable string like the HTML mock. */
@@ -94,6 +98,9 @@ export default function BookingTeamCalendar({
   columnsOverride,
   hideBuiltInHeader = false,
   showHalfHourLabels = false,
+  businessBeginsHour = BOOKING_CALENDAR_BUSINESS_BEGINS_HOUR,
+  businessEndsHour = BOOKING_CALENDAR_BUSINESS_ENDS_HOUR,
+  scrollToHour = BOOKING_CALENDAR_DEFAULT_SCROLL_HOUR,
 }: BookingTeamCalendarProps) {
   const calendarRef = useRef<DayPilot.Calendar | null>(null)
 
@@ -113,8 +120,17 @@ export default function BookingTeamCalendar({
 
   const handleCalendarControlRef = useCallback((calendar: DayPilot.Calendar) => {
     calendarRef.current = calendar
-    calendar.scrollToHour(BOOKING_CALENDAR_DEFAULT_SCROLL_HOUR)
-  }, [])
+    calendar.scrollToHour(scrollToHour)
+  }, [scrollToHour])
+
+  // Keep the time axis scrolled to salon open when the selected day (or hours) changes.
+  useEffect(() => {
+    calendarRef.current?.scrollToHour(scrollToHour)
+  }, [scrollToHour, calendarDate, businessBeginsHour, businessEndsHour])
+
+  const halfHourCount = Math.max(0, businessEndsHour - businessBeginsHour)
+  const cellsPerHour = 60 / BOOKING_CALENDAR_CELL_DURATION_MINUTES
+  const hourBlockPx = cellsPerHour * BOOKING_CALENDAR_CELL_HEIGHT_PX
 
   return (
     <div className="booking-calendar-panel">
@@ -166,15 +182,14 @@ export default function BookingTeamCalendar({
             {showHalfHourLabels ? (
               <div className="booking-calendar-half-hour-labels" aria-hidden="true">
                 {Array.from(
-                  { length: BOOKING_CALENDAR_BUSINESS_ENDS_HOUR - BOOKING_CALENDAR_BUSINESS_BEGINS_HOUR },
+                  { length: halfHourCount },
                   (_, index) => {
-                    const cellsPerHour = 60 / BOOKING_CALENDAR_CELL_DURATION_MINUTES
                     const top = BOOKING_CALENDAR_HEADER_HEIGHT_PX
-                      + index * cellsPerHour * BOOKING_CALENDAR_CELL_HEIGHT_PX
-                      + (cellsPerHour / 2) * BOOKING_CALENDAR_CELL_HEIGHT_PX
+                      + index * hourBlockPx
+                      + hourBlockPx / 2
                     return (
                       <span
-                        key={BOOKING_CALENDAR_BUSINESS_BEGINS_HOUR + index}
+                        key={businessBeginsHour + index}
                         className="booking-calendar-half-hour-label"
                         style={{ top }}
                       >
@@ -187,6 +202,8 @@ export default function BookingTeamCalendar({
             ) : null}
             <DayPilotCalendar
               {...BOOKING_CALENDAR_DAYPILOT_OPTIONS}
+              businessBeginsHour={businessBeginsHour}
+              businessEndsHour={businessEndsHour}
               timeRangeSelectedHandling={onSlotSelect ? 'Enabled' : 'Disabled'}
               controlRef={handleCalendarControlRef}
               startDate={calendarDate}
@@ -206,8 +223,8 @@ export default function BookingTeamCalendar({
                 }
                 args.cell.properties.html = BOOKING_CREATE_CELL_ADD_HTML
               }}
-              onEventClick={(args: { e: { id: () => string | number } }) => {
-                onEventClick(String(args.e.id()))
+              onEventClick={(args: { e: { id: () => string | number; data: { tags?: { bookingId?: string } } } }) => {
+                onEventClick(String(args.e.data.tags?.bookingId ?? args.e.id()))
               }}
               onTimeRangeSelected={(args) => {
                 const { date, time } = dayPilotStartToLocalParts(args.start)

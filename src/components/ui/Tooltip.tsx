@@ -13,6 +13,7 @@ type TooltipProps = {
   content: ReactNode
   children?: ReactNode
   className?: string
+  triggerClassName?: string
   ariaLabel?: string
   align?: 'start' | 'center' | 'end'
   placement?: 'top' | 'bottom'
@@ -22,6 +23,7 @@ export default function Tooltip({
   content,
   children,
   className = '',
+  triggerClassName,
   ariaLabel = 'More information',
   align = 'center',
   placement = 'bottom',
@@ -118,9 +120,9 @@ export default function Tooltip({
         onBlur={() => setOpen(false)}
         onClick={(e) => {
           e.preventDefault()
-          setOpen((v) => !v)
+          setOpen(true)
         }}
-        className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-nexoraMuted transition hover:text-nexoraText"
+        className={triggerClassName || 'inline-flex h-4 w-4 shrink-0 items-center justify-center text-nexoraMuted transition hover:text-nexoraText'}
       >
         {children || <Info className="h-3.5 w-3.5" />}
       </button>

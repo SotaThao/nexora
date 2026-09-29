@@ -1,20 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import CountryCodeSelect, {
-  formatNationalNumber,
-  getNationalPhonePlaceholder,
-  isValidPhoneE164,
-  normalizePhoneE164,
-  normalizePhoneSearchTerm,
-  parsePhone,
-  PhoneDialCode,
-} from '../../CountryCodeSelect'
-import { BOOKING_HUB_EMPTY_CELL, BOOKING_HUB_PAGINATION_CLASSNAME, formatBookingHubDateTime, formatVoicePhoneDisplay, openNativeDateTimePicker } from './bookingHubFormatters'
-import { applyAiHubProgressiveValidation } from './bookingHubDialogValidation'
+import React, { useEffect, useMemo, useState } from 'react'
+import { normalizePhoneSearchTerm } from '../../CountryCodeSelect'
+import BookingCustomerModal from './BookingCustomerModal'
+import { BOOKING_HUB_EMPTY_CELL, BOOKING_HUB_PAGINATION_CLASSNAME, formatBookingHubDateTime, formatVoicePhoneDisplay } from './bookingHubFormatters'
 import BookingKeywordSearchField from './BookingKeywordSearchField'
 import BookingFilterPopover from './BookingFilterPopover'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { useNotification } from '../../../contexts/NotificationContext'
-import { getErrorI18nKey } from '../../../data/errorCodes'
 import {
   useCreateMerchantVoiceCustomer,
   useMerchantVoiceCustomerSummary,
@@ -26,18 +16,12 @@ import {
   isCustomerStatusActive,
   mapCustomerGroupToUiSegment,
   mapUiSegmentToApiGroup,
-  MerchantVoiceCustomerStatus,
-  MerchantVoiceCustomerType,
-  normalizeMerchantVoiceCustomerStatus,
   type MerchantVoiceCustomerDto,
 } from '../../../data/repositories/merchantVoice'
-import { getApiErrorCode } from '../../../types/domain'
-import { isValidEmail } from '../../../utils/validation'
 import { usePagination } from '../../../hooks/usePagination'
 import { BOOKING_HUB_PAGE_SIZE } from '../../../constants/pagination'
 import {
   CalendarEventIcon,
-  CheckLgIcon,
   ClockHistoryIcon,
   FireIcon,
   GemIcon,
@@ -50,80 +34,11 @@ import {
   SpinnerIcon,
   StarsIcon,
   UserPlusIcon,
-  XLgIcon,
 } from './BookingHubIcons'
 import { useBookingHubVoiceEnabled } from './BookingHubVoiceContext'
 import Pagination from '../../ui/Pagination'
 
 const TK = 'components.dashboard.views.BookingHubView.customers'
-const TK_HUB = 'components.dashboard.views.BookingHubView'
-
-enum CustomerModalMode {
-  Create = 'create',
-  Edit = 'edit',
-}
-
-interface CustomerDraft {
-  id: string | null
-  name: string
-  phone: string
-  email: string
-  address: string
-  dateOfBirth: string
-  type: MerchantVoiceCustomerType
-  status: MerchantVoiceCustomerStatus
-}
-
-interface CustomerFormErrors {
-  name?: string
-  phone?: string
-  email?: string
-  dateOfBirth?: string
-  address?: string
-  [key: string]: string | undefined
-}
-
-const EMAIL_MAX_LENGTH = 320
-const NAME_MAX_LENGTH = 200
-const ADDRESS_MAX_LENGTH = 300
-/** Reasonable customer age window for the date picker. */
-const DOB_MAX_AGE_YEARS = 120
-
-function toLocalDateInputValue(date = new Date()): string {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-function getDobBounds(now = new Date()) {
-  const max = toLocalDateInputValue(now)
-  const minDate = new Date(now.getFullYear() - DOB_MAX_AGE_YEARS, now.getMonth(), now.getDate())
-  return {
-    min: toLocalDateInputValue(minDate),
-    max,
-  }
-}
-
-/** Empty DOB is allowed; otherwise must be a real calendar date within the age window. */
-function isValidDateOfBirth(value: string, bounds = getDobBounds()): boolean {
-  const trimmed = value.trim()
-  if (!trimmed) return true
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return false
-
-  const [year, month, day] = trimmed.split('-').map(Number)
-  const date = new Date(year, month - 1, day)
-  if (
-    date.getFullYear() !== year
-    || date.getMonth() !== month - 1
-    || date.getDate() !== day
-  ) {
-    return false
-  }
-
-  return trimmed >= bounds.min && trimmed <= bounds.max
-}
-
 const SEGMENT_META: Record<CustomerUiSegment, { icon: React.ReactNode; color: string; labelKey: string }> = {
   [CustomerUiSegment.New]: { icon: <StarsIcon />, color: '#2b59ff', labelKey: 'segments.new' },
   [CustomerUiSegment.Day15]: { icon: <CalendarEventIcon />, color: '#00b873', labelKey: 'segments.day15' },
@@ -138,16 +53,6 @@ const SEGMENT_ORDER: CustomerUiSegment[] = [
   CustomerUiSegment.Day30,
   CustomerUiSegment.Day60,
   CustomerUiSegment.Vip,
-]
-
-/** PUT/POST customer type — VoiceCustomerType (not VoiceCustomerGroup). */
-const CUSTOMER_TYPE_OPTIONS: MerchantVoiceCustomerType[] = [
-  MerchantVoiceCustomerType.Individual,
-  MerchantVoiceCustomerType.Business,
-  MerchantVoiceCustomerType.Vip,
-  MerchantVoiceCustomerType.Guest,
-  MerchantVoiceCustomerType.Partner,
-  MerchantVoiceCustomerType.Internal,
 ]
 
 const SOURCE_DISPLAY_RULES: ReadonlyArray<{
@@ -184,47 +89,16 @@ function formatLastVisit(value: string | null, language: string): string {
   return formatBookingHubDateTime(value, language)
 }
 
-function emptyDraft(defaultDialCode: string): CustomerDraft {
-  return {
-    id: null,
-    name: '',
-    phone: defaultDialCode,
-    email: '',
-    address: '',
-    dateOfBirth: '',
-    type: MerchantVoiceCustomerType.Individual,
-    status: MerchantVoiceCustomerStatus.Active,
-  }
-}
-
-function toDraft(customer: MerchantVoiceCustomerDto): CustomerDraft {
-  return {
-    id: customer.id,
-    name: customer.name ?? '',
-    phone: customer.phoneNumber ?? '',
-    email: customer.email ?? '',
-    address: customer.address ?? '',
-    dateOfBirth: customer.dateOfBirth ? customer.dateOfBirth.slice(0, 10) : '',
-    type: customer.type,
-    status: normalizeMerchantVoiceCustomerStatus(customer.status),
-  }
-}
-
 export default function BookingCustomersPanel() {
   const { t, currentLanguage } = useTranslation()
-  const { showToast } = useNotification()
   const voiceEnabled = useBookingHubVoiceEnabled()
-  const defaultDialCode = PhoneDialCode.US
 
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [segmentFilter, setSegmentFilter] = useState<CustomerUiSegment | 'all'>('all')
-  const [modalMode, setModalMode] = useState<CustomerModalMode | null>(null)
-  const [draft, setDraft] = useState<CustomerDraft | null>(null)
-  const [formErrors, setFormErrors] = useState<CustomerFormErrors>({})
-  const [isSaving, setIsSaving] = useState(false)
-  const custModalRef = useRef<HTMLDivElement>(null)
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false)
+  const [editingCustomer, setEditingCustomer] = useState<MerchantVoiceCustomerDto | null>(null)
   const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({
     pageSize: BOOKING_HUB_PAGE_SIZE,
   })
@@ -256,13 +130,6 @@ export default function BookingCustomersPanel() {
 
   const isListLoading = isCustomersLoading || isCustomersFetching
   const customers = customersResponse?.items ?? []
-  const dobBounds = useMemo(() => getDobBounds(), [])
-  const phoneParsed = useMemo(
-    () => parsePhone(draft?.phone || defaultDialCode),
-    [draft?.phone, defaultDialCode],
-  )
-  const isCreateMode = modalMode === CustomerModalMode.Create
-
   const segmentCounts = useMemo(() => ({
     all: summary?.all ?? 0,
     [CustomerUiSegment.New]: summary?.new ?? 0,
@@ -273,129 +140,13 @@ export default function BookingCustomersPanel() {
   }), [summary])
 
   const openCreateModal = () => {
-    setModalMode(CustomerModalMode.Create)
-    setDraft(emptyDraft(defaultDialCode))
-    setFormErrors({})
+    setEditingCustomer(null)
+    setIsCustomerModalOpen(true)
   }
 
   const openEditModal = (customer: MerchantVoiceCustomerDto) => {
-    setModalMode(CustomerModalMode.Edit)
-    setDraft(toDraft(customer))
-    setFormErrors({})
-  }
-
-  const closeModal = () => {
-    setModalMode(null)
-    setDraft(null)
-    setFormErrors({})
-  }
-
-  useEffect(() => {
-    if (!modalMode) return undefined
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !isSaving) {
-        closeModal()
-      }
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [modalMode, isSaving])
-
-  const saveModal = async () => {
-    if (!draft || !modalMode) return
-
-    const trimmedEmail = draft.email.trim()
-    const trimmedName = draft.name.trim()
-    const trimmedAddress = draft.address.trim()
-    const nextErrors: CustomerFormErrors = {}
-    const dialCode = phoneParsed.countryCode
-
-    if (!trimmedName) {
-      nextErrors.name = t(`${TK}.invalidNameRequired`)
-    } else if (trimmedName.length > NAME_MAX_LENGTH) {
-      nextErrors.name = t(`${TK}.invalidNameMaxLength`)
-    }
-
-    let phoneForApi = ''
-    const hasPhoneInput = Boolean(phoneParsed.nationalNumber.trim())
-    if (!hasPhoneInput) {
-      nextErrors.phone = t(`${TK}.invalidPhoneRequired`)
-    } else {
-      phoneForApi = normalizePhoneE164(draft.phone, dialCode)
-      if (!isValidPhoneE164(phoneForApi, dialCode)) {
-        nextErrors.phone = t(`${TK}.invalidPhone`)
-      }
-    }
-
-    if (trimmedEmail) {
-      if (trimmedEmail.length > EMAIL_MAX_LENGTH) {
-        nextErrors.email = t(`${TK}.invalidEmailMaxLength`)
-      } else if (!isValidEmail(trimmedEmail)) {
-        nextErrors.email = t(`${TK}.invalidEmail`)
-      }
-    }
-
-    if (trimmedAddress.length > ADDRESS_MAX_LENGTH) {
-      nextErrors.address = t(`${TK}.invalidAddressMaxLength`)
-    }
-
-    if (draft.dateOfBirth.trim() && !isValidDateOfBirth(draft.dateOfBirth, dobBounds)) {
-      nextErrors.dateOfBirth = t(`${TK}.invalidBirthday`)
-    }
-
-    if (
-      applyAiHubProgressiveValidation({
-        allErrors: nextErrors,
-        root: custModalRef.current,
-        setErrors: setFormErrors,
-        showToast,
-        fieldLabels: {
-          name: t(`${TK}.fieldName`),
-          phone: t(`${TK}.fieldPhone`),
-          email: t(`${TK}.fieldEmail`),
-          dateOfBirth: t(`${TK}.fieldBirthday`),
-          address: t(`${TK}.fieldAddress`),
-        },
-        hubTk: TK_HUB,
-        t,
-      })
-    ) {
-      return
-    }
-
-    setIsSaving(true)
-    try {
-      const customerBody = {
-        phoneNumber: phoneForApi,
-        name: trimmedName || null,
-        email: trimmedEmail || null,
-        address: trimmedAddress || null,
-        dateOfBirth: draft.dateOfBirth.trim() || null,
-        type: draft.type,
-        status: draft.status,
-      }
-      if (isCreateMode) {
-        // POST /api/v1/merchant/nexora-voice/customers — CreateMerchantVoiceCustomerCommand
-        await createCustomerMutation.mutateAsync(customerBody)
-        showToast(t(`${TK}.createSuccess`), 'success')
-      } else if (draft.id) {
-        // PUT /api/v1/merchant/nexora-voice/customers/{id} — UpdateMerchantVoiceCustomerCommand
-        await updateCustomerMutation.mutateAsync({
-          id: draft.id,
-          body: customerBody,
-        })
-        showToast(t(`${TK}.saveSuccess`), 'success')
-      }
-      closeModal()
-    } catch (error) {
-      showToast(
-        t(getErrorI18nKey(getApiErrorCode(error)))
-          || t(isCreateMode ? `${TK}.createError` : `${TK}.saveError`),
-        'error',
-      )
-    } finally {
-      setIsSaving(false)
-    }
+    setEditingCustomer(customer)
+    setIsCustomerModalOpen(true)
   }
 
   return (
@@ -587,207 +338,14 @@ export default function BookingCustomersPanel() {
         </article>
       </div>
 
-      {modalMode && draft ? (
-        <div
-          className="cust-modal-overlay"
-          role="presentation"
-          onClick={(event) => {
-            if (event.target === event.currentTarget && !isSaving) closeModal()
-          }}
-        >
-          <div
-            ref={custModalRef}
-            className="cust-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="cust-modal-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="cust-modal-head">
-              <h3 id="cust-modal-title">
-                {isCreateMode ? t(`${TK}.createModalTitle`) : t(`${TK}.modalTitle`)}
-              </h3>
-              <button
-                className="cust-modal-close"
-                type="button"
-                aria-label={t(`${TK}.close`)}
-                onClick={closeModal}
-                disabled={isSaving}
-              >
-                <XLgIcon />
-              </button>
-            </div>
-
-            <div className="cust-modal-body">
-              <label className="cust-field cust-field-full" data-ai-hub-field="name">
-                <span className="cust-field-label">{t(`${TK}.fieldName`)}</span>
-                <input
-                  className={`booking-input ${formErrors.name ? 'has-error' : ''}`}
-                  type="text"
-                  value={draft.name}
-                  placeholder={t(`${TK}.fieldNamePlaceholder`)}
-                  autoComplete="name"
-                  aria-invalid={Boolean(formErrors.name)}
-                  onChange={(event) => {
-                    setDraft({ ...draft, name: event.target.value })
-                    if (formErrors.name) setFormErrors((prev) => ({ ...prev, name: undefined }))
-                  }}
-                />
-                {formErrors.name ? (
-                  <span className="cust-field-error" aria-live="polite">{formErrors.name}</span>
-                ) : null}
-              </label>
-
-              <label className="cust-field" data-ai-hub-field="phone">
-                <span className="cust-field-label">{t(`${TK}.fieldPhone`)}</span>
-                <span className="phone-input-shell">
-                  <CountryCodeSelect
-                    value={phoneParsed.countryCode}
-                    embedded
-                    disabled={isSaving}
-                    onChange={(nextCode) => {
-                      const formatted = formatNationalNumber(phoneParsed.nationalNumber, nextCode)
-                      setDraft({ ...draft, phone: `${nextCode} ${formatted}`.trim() })
-                      if (formErrors.phone) setFormErrors((prev) => ({ ...prev, phone: undefined }))
-                    }}
-                  />
-                  <input
-                    className={`booking-input phone-mask-input ${formErrors.phone ? 'has-error' : ''}`}
-                    type="tel"
-                    value={formatNationalNumber(phoneParsed.nationalNumber, phoneParsed.countryCode)}
-                    placeholder={getNationalPhonePlaceholder(phoneParsed.countryCode)}
-                    inputMode="numeric"
-                    autoComplete="tel-national"
-                    disabled={isSaving}
-                    aria-invalid={Boolean(formErrors.phone)}
-                    onChange={(event) => {
-                      const formatted = formatNationalNumber(event.target.value, phoneParsed.countryCode)
-                      setDraft({ ...draft, phone: `${phoneParsed.countryCode} ${formatted}`.trim() })
-                      if (formErrors.phone) setFormErrors((prev) => ({ ...prev, phone: undefined }))
-                    }}
-                  />
-                </span>
-                {formErrors.phone ? (
-                  <span className="cust-field-error" aria-live="polite">{formErrors.phone}</span>
-                ) : null}
-              </label>
-
-              <label className="cust-field" data-ai-hub-field="email">
-                <span className="cust-field-label">{t(`${TK}.fieldEmail`)}</span>
-                <input
-                  className={`booking-input ${formErrors.email ? 'has-error' : ''}`}
-                  type="email"
-                  value={draft.email}
-                  placeholder={t(`${TK}.fieldEmailPlaceholder`)}
-                  aria-invalid={Boolean(formErrors.email)}
-                  onChange={(event) => {
-                    setDraft({ ...draft, email: event.target.value })
-                    if (formErrors.email) setFormErrors((prev) => ({ ...prev, email: undefined }))
-                  }}
-                />
-                {formErrors.email ? (
-                  <span className="cust-field-error" aria-live="polite">{formErrors.email}</span>
-                ) : null}
-              </label>
-
-              <label className="cust-field cust-field-full cust-field-birthday" data-ai-hub-field="dateOfBirth">
-                <span className="cust-field-label">{t(`${TK}.fieldBirthday`)}</span>
-                <span className="cust-date-shell">
-                  <input
-                    className={`booking-input cust-date-input ${formErrors.dateOfBirth ? 'has-error' : ''}`}
-                    type="date"
-                    value={draft.dateOfBirth}
-                    min={dobBounds.min}
-                    max={dobBounds.max}
-                    aria-invalid={Boolean(formErrors.dateOfBirth)}
-                    onClick={(event) => openNativeDateTimePicker(event.currentTarget)}
-                    onChange={(event) => {
-                      const nextValue = event.target.value
-                      setDraft({ ...draft, dateOfBirth: nextValue })
-                      setFormErrors((prev) => ({
-                        ...prev,
-                        dateOfBirth: nextValue && !isValidDateOfBirth(nextValue, dobBounds)
-                          ? t(`${TK}.invalidBirthday`)
-                          : undefined,
-                      }))
-                    }}
-                  />
-                </span>
-                {formErrors.dateOfBirth ? (
-                  <span className="cust-field-error" aria-live="polite">{formErrors.dateOfBirth}</span>
-                ) : null}
-              </label>
-
-              <label className="cust-field cust-field-full" data-ai-hub-field="address">
-                <span className="cust-field-label">{t(`${TK}.fieldAddress`)}</span>
-                <input
-                  className={`booking-input ${formErrors.address ? 'has-error' : ''}`}
-                  type="text"
-                  value={draft.address}
-                  placeholder={t(`${TK}.fieldAddressPlaceholder`)}
-                  aria-invalid={Boolean(formErrors.address)}
-                  onChange={(event) => {
-                    setDraft({ ...draft, address: event.target.value })
-                    if (formErrors.address) setFormErrors((prev) => ({ ...prev, address: undefined }))
-                  }}
-                />
-                {formErrors.address ? (
-                  <span className="cust-field-error" aria-live="polite">{formErrors.address}</span>
-                ) : null}
-              </label>
-
-              <label className="cust-field cust-field-full">
-                <span className="cust-field-label">{t(`${TK}.fieldType`)}</span>
-                <select
-                  className="booking-input"
-                  value={draft.type}
-                  onChange={(event) => setDraft({
-                    ...draft,
-                    type: event.target.value as MerchantVoiceCustomerType,
-                  })}
-                >
-                  {CUSTOMER_TYPE_OPTIONS.map((type) => (
-                    <option key={type} value={type}>{t(`${TK}.types.${type}`)}</option>
-                  ))}
-                </select>
-              </label>
-
-              <div className="cust-status-row">
-                <span>{t(`${TK}.fieldStatus`)}</span>
-                <div className="cust-status-toggle">
-                  <button
-                    className={`toggle-pill ${draft.status === MerchantVoiceCustomerStatus.Active ? 'is-on' : ''}`}
-                    type="button"
-                    role="switch"
-                    aria-checked={draft.status === MerchantVoiceCustomerStatus.Active}
-                    aria-label={t(`${TK}.toggleStatusAria`)}
-                    onClick={() => setDraft({
-                      ...draft,
-                      status: draft.status === MerchantVoiceCustomerStatus.Active
-                        ? MerchantVoiceCustomerStatus.InActive
-                        : MerchantVoiceCustomerStatus.Active,
-                    })}
-                  />
-                  <span>
-                    {draft.status === MerchantVoiceCustomerStatus.Active
-                      ? t(`${TK}.statusActive`)
-                      : t(`${TK}.statusInactive`)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="cust-modal-foot">
-              <button className="booking-mini-button" type="button" onClick={closeModal} disabled={isSaving}>
-                {t(`${TK}.cancel`)}
-              </button>
-              <button className="booking-mini-button primary" type="button" onClick={saveModal} disabled={isSaving}>
-                {isSaving ? <SpinnerIcon className="booking-inline-spinner" /> : <CheckLgIcon />}
-                <span className="booking-mini-label">{t(`${TK}.save`)}</span>
-              </button>
-            </div>
-          </div>
-        </div>
+      {isCustomerModalOpen ? (
+        <BookingCustomerModal
+          customer={editingCustomer}
+          onClose={() => setIsCustomerModalOpen(false)}
+          onSave={(body) => editingCustomer
+            ? updateCustomerMutation.mutateAsync({ id: editingCustomer.id, body })
+            : createCustomerMutation.mutateAsync(body)}
+        />
       ) : null}
     </div>
   )

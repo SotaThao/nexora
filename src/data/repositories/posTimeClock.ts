@@ -14,6 +14,7 @@ import type {
   ClockQrTokenApiDto,
   ClockScanPreviewApiDto,
   ScanClockQrResultApiDto,
+  StaffClockStatusApiDto,
   TimeClockLogEntryApiDto,
   TimeClockRosterApiDto,
 } from '../../types/repositories'
@@ -69,6 +70,12 @@ export function createPosTimeClockRepository(client: HttpClient = httpClient) {
 
     async clockOut(businessStaffLinkId: string): Promise<void> {
       await client.post(`/api/v1/merchant/pos/staff-clock/${businessStaffLinkId}/clock-out`)
+    },
+
+    async getStaffClockStatus(businessStaffLinkId: string): Promise<StaffClockStatusApiDto> {
+      return client.get<StaffClockStatusApiDto>(
+        `/api/v1/staff/clock/${encodeURIComponent(businessStaffLinkId)}/status`,
+      )
     },
 
     // Tech's own screen after scanning the salon's QR.

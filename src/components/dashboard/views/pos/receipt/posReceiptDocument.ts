@@ -63,8 +63,7 @@ export interface PosReceiptDocumentInput {
   /** Totals-row copy, resolved by the caller so this stays free of `t`. */
   totalsLabels: {
     subtotal: string
-    discount: string
-    orderDiscount: string
+    totalDiscount: string
     salesTax: string
     tip: string
     total: string
@@ -231,19 +230,14 @@ export function buildPosReceiptDocument(
   if (!settings.printProducts && productsSubtotal > 0) {
     totals.push({ id: 'products', label: totalsLabels.products, amount: productsSubtotal })
   }
-  if (discountAmount > 0) {
+  // Line-level and order-level discounts print as one combined row — the customer cares about
+  // the total taken off, not which mechanism applied it.
+  const totalDiscountAmount = discountAmount + orderDiscountAmount
+  if (totalDiscountAmount > 0) {
     totals.push({
       id: 'discount',
-      label: totalsLabels.discount,
-      amount: discountAmount,
-      negative: true,
-    })
-  }
-  if (orderDiscountAmount > 0) {
-    totals.push({
-      id: 'orderDiscount',
-      label: order.appliedPromotionName?.trim() || totalsLabels.orderDiscount,
-      amount: orderDiscountAmount,
+      label: totalsLabels.totalDiscount,
+      amount: totalDiscountAmount,
       negative: true,
     })
   }

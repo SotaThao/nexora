@@ -32,6 +32,14 @@ export function formatCustomerPhone(
   return `${parsed.countryCode} ${national}`
 }
 
+export function maskCustomerPhone(phone?: string | null): string {
+  const value = phone?.trim() ?? ''
+  if (!value) return ''
+  const digits = value.replace(/\D/g, '')
+  if (digits.length <= 4 || !/^\+?[\d\s().-]+$/.test(value)) return '****'
+  return `***-***-${digits.slice(-4)}`
+}
+
 // DateOfBirth is a backend DateOnly ("YYYY-MM-DD", no time component) — a calendar date with
 // no timezone meaning. Never run it through a UTC-to-local Date conversion (see
 // feedback_frontend_datetime_timezone_naive): `new Date("2000-01-01")` is UTC midnight, which

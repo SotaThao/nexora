@@ -105,6 +105,8 @@ export const STAFF_CALENDAR_LAYOUT_CLASS = {
     'ml-auto inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-black',
   navCountIdle: 'bg-nexoraElectric/90 text-white',
   navCountActive: 'bg-white text-nexoraBrand',
+  /** Matches taxiq HTML shell `.staff-nav-item [data-staff-ticket-count]` (always red). */
+  navTicketsCount: 'bg-[#ef4b64] text-white',
 } as const
 
 export function calendarDayClass(isSelected: boolean) {

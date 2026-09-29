@@ -166,14 +166,16 @@ export default function Dashboard({
   const needsTouchpointsList =
     (activeMenu === 'overview' || hasSearchQuery) && !isTouchpointsTab
 
-  const touchpointsListQuery = useMemo(() => {
-    const trimmedName = searchQuery.trim()
-    return {
+  // Keep this query stable while typing in the header search. Name filtering
+  // here emptied/replaced the overview touchpoints list and made the Store QR
+  // Codes card flash empty/skeleton. Header suggestions already filter client-side.
+  const touchpointsListQuery = useMemo(
+    () => ({
       PageNumber: 1,
       PageSize: STAFF_FILTER_LIST_PAGE_SIZE,
-      ...(trimmedName ? { Name: trimmedName } : {}),
-    }
-  }, [searchQuery])
+    }),
+    [],
+  )
 
   // ---------------------------------------------------------------------------
   // Server-state hooks (TanStack Query) — lazy per active tab where possible
@@ -208,7 +210,10 @@ export default function Dashboard({
   )
 
   const reviewsThisWeekCount = reviewsWeekPage?.totalCount ?? null
-  const { data: reviewsSummary } = useDashboardReviewsSummary({ enabled: isReviewsTab })
+  // All-time reviews summary for /dashboard/reviews KPI cards (not date-scoped).
+  const { data: reviewsSummary } = useDashboardReviewsSummary({
+    enabled: isReviewsTab,
+  })
   const { data: apiUnreadCount = 0 } = useUnreadCount()
   const { data: notificationsData, isLoading: isNotificationsLoading, isFetching: isNotificationsFetching } = useNotifications({
     enabled: needsNotificationsList,
@@ -813,7 +818,7 @@ export default function Dashboard({
   )
 
   return (
-    <div className="min-h-dvh w-full overflow-x-hidden bg-nexoraCanvas font-sans text-nexoraText">
+    <div data-dashboard-shell className="min-h-dvh w-full overflow-x-hidden bg-nexoraCanvas font-sans text-nexoraText">
       <DashboardSidebar
         isOpen={isDesktopSidebarOpen}
         activeMenu={activeMenu}
@@ -832,7 +837,7 @@ export default function Dashboard({
         userRole={userRole}
       />
 
-      <div className={`flex w-full min-w-0 flex-col transition-[padding-left] duration-200 ${isPosFillViewportRoute ? 'h-dvh min-h-0' : 'min-h-dvh'} ${isDesktopSidebarOpen ? 'lg:pl-72' : ''}`}>
+      <div className={`flex w-full min-w-0 flex-col transition-[padding-left] duration-200 ${isPosFillViewportRoute ? 'min-h-dvh lg:h-dvh lg:min-h-0' : 'min-h-dvh'} ${isDesktopSidebarOpen ? 'lg:pl-72' : ''}`}>
         <DashboardHeader
           isSidebarOpen={isDesktopSidebarOpen}
           onToggleSidebar={() => setIsDesktopSidebarOpen((prev) => !prev)}
@@ -868,7 +873,7 @@ export default function Dashboard({
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        <main className={`w-full min-w-0 flex-1 overflow-x-hidden p-4 pb-6 sm:p-6 sm:pb-8 lg:p-7 lg:pb-7 ${isPosFillViewportRoute ? 'flex min-h-0 flex-col overflow-y-auto' : ''}`}>
+        <main className={`w-full min-w-0 flex-1 overflow-x-hidden p-4 pb-6 sm:p-6 sm:pb-8 lg:p-7 lg:pb-7 ${isPosFillViewportRoute ? 'lg:flex lg:min-h-0 lg:flex-col lg:overflow-y-auto' : ''}`}>
           {activeMenu !== 'overview' && activeMenuTitle ? (
             <div className="mb-3 flex min-w-0 items-center gap-3 sm:hidden">
               <h1 className="min-w-0 truncate text-lg font-extrabold text-nexoraText">

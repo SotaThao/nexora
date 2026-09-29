@@ -370,7 +370,7 @@ export default function CountryCodeSelect({
         disabled={disabled}
         onClick={() => !disabled && setIsOpen(!isOpen)}
         className={embedded
-          ? `min-h-0 flex-1 self-stretch flex items-center gap-2 px-3 border-0 border-r border-nexoraBorder rounded-none rounded-l-[9px] text-xs font-bold text-nexoraText transition-colors focus:outline-none select-none ${
+          ? `h-full min-h-0 flex-1 self-stretch flex items-center gap-2 px-3 border-0 border-r border-nexoraBorder rounded-none rounded-l-[9px] text-xs font-bold text-nexoraText transition-colors focus:outline-none select-none ${
             disabled ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed' : 'bg-transparent hover:bg-slate-50 cursor-pointer'
           }`
           : `h-10 flex items-center gap-2 px-3 border border-nexoraBorder border-r-0 rounded-l-lg text-xs font-bold text-nexoraText transition-colors focus:outline-none select-none

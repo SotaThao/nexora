@@ -10,6 +10,11 @@
 const EMPTY = {}
 
 export const qk = {
+  voiceKnowledge: (pageNumber?: number) =>
+    pageNumber === undefined
+      ? ['merchant-voice-knowledge']
+      : ['merchant-voice-knowledge', pageNumber],
+  voiceUnanswered: (from: string, to: string) => ['merchant-voice-unanswered', from, to],
   merchantSetup:    ()         => ['merchantSetup'],
   profileSettings:  ()         => ['profileSettings'],
   transactions:            () => ['transactions'],
@@ -50,12 +55,13 @@ export const qk = {
   kybRegister:              () => ['userProfile', 'kybRegister'],
 
   // Merchant Staff Management
-  merchantStaff:       (statusFilter?: string, pageNumber?: number, pageSize?: number, keyword?: string) => {
+  merchantStaff:       (statusFilter?: string, pageNumber?: number, pageSize?: number, keyword?: string, isLocalStaff?: boolean) => {
     const key: unknown[] = ['merchantStaff']
     if (statusFilter) key.push(statusFilter)
     if (pageNumber !== undefined || pageSize !== undefined || keyword) {
       key.push({ pageNumber, pageSize, keyword: keyword?.trim() || '' })
     }
+    if (isLocalStaff !== undefined) key.push({ isLocalStaff })
     return key
   },
   merchantStaffSearch: (q)     => ['merchantStaff', 'search', q],
@@ -221,6 +227,7 @@ export const qk = {
   merchantPosOrderSettings: (businessId?: string) => ['merchantSettings', 'posOrderSettings', businessId ?? ''],
   merchantPosTurnSettings: (businessId?: string) => ['merchantSettings', 'posTurnSettings', businessId ?? ''],
   staffPosPendingAcceptanceCount: () => ['staff', 'posPendingAcceptanceCount'],
+  staffMyTicketsEntryTarget: () => ['staff', 'myTicketsEntryTarget'] as const,
   // POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filtered.
   // `filters` is only appended when explicitly passed — omitting it (e.g. from an
   // invalidateQueries call after Complete/edit) yields a short prefix that matches every
@@ -259,11 +266,18 @@ export const qk = {
   posSelfCheckInActiveVisit: (phone?: string) => ['posSelfCheckIn', 'activeVisit', phone ?? ''],
   posSelfCheckInBooking: (phone?: string) => ['posSelfCheckIn', 'booking', phone ?? ''],
   posSelfCheckInTechnicians: () => ['posSelfCheckIn', 'technicians'],
+  // Scoped by device token so a re-pair to another salon cannot reuse a 5-minute stale cache.
+  posSelfCheckInPromotions: (deviceToken?: string | null) => [
+    'posSelfCheckIn',
+    'promotions',
+    deviceToken ?? '',
+  ],
   merchantPosCheckInTechnicians: (businessId?: string) => ['merchantSettings', 'posCheckInTechnicians', businessId ?? ''],
   merchantPosCheckInActiveVisit: (businessId?: string, phone?: string) => [
     'merchantSettings', 'posCheckInActiveVisit', businessId ?? '', phone ?? '',
   ],
   merchantPosCheckInSettings: (businessId?: string) => ['merchantSettings', 'posCheckInSettings', businessId ?? ''],
+  merchantPosSmsSettings: (businessId?: string) => ['merchantSettings', 'posSmsSettings', businessId ?? ''],
   merchantPosTimeClockQr: (businessId?: string) => ['merchantSettings', 'posTimeClockQr', businessId ?? ''],
   merchantPosTimeClockRoster: (businessId?: string, dayKey?: string) => {
     const key: unknown[] = ['merchantSettings', 'posTimeClockRoster', businessId ?? '']
@@ -305,6 +319,10 @@ export const qk = {
     ['staffWorkOrders', 'serviceCatalog', orderId ?? ''],
   staffClockScanPreview: (businessId?: string, token?: string) =>
     ['staffClockScanPreview', businessId ?? '', token ?? ''],
+  staffClockStatusesRoot: () => ['staffClockStatuses'] as const,
+  staffClockStatus: (businessId: string, businessStaffLinkId: string) =>
+    ['staffClockStatuses', businessId, businessStaffLinkId] as const,
+  staffActiveBusinessLinks: () => ['staffBusinesses', 'activeLinks'] as const,
   // POS Merchant Ops — Checkout (US-14 / US-025, refactored to Order in US-026)
   merchantPosInServiceOrders: (businessId?: string) => ['merchantSettings', 'posInServiceOrders', businessId ?? ''],
   merchantPosOrderDetail: (businessId?: string, orderId?: string) =>
@@ -313,6 +331,9 @@ export const qk = {
   // the eligible list depends on the order's check-in time, so it is keyed by orderId.
   merchantPosPromotions: (businessId?: string) =>
     ['merchantSettings', 'posPromotions', businessId ?? ''],
+  merchantPosPromotionDetail: (businessId?: string, promotionId?: string) =>
+    ['merchantSettings', 'posPromotionDetail', businessId ?? '', promotionId ?? ''],
+  merchantPosPromotionTemplates: () => ['merchantSettings', 'posPromotionTemplates'],
   merchantPosEligiblePromotions: (businessId?: string, orderId?: string) =>
     ['merchantSettings', 'posEligiblePromotions', businessId ?? '', orderId ?? ''],
   merchantPosCheckoutServiceCatalog: (businessId?: string) =>
@@ -356,7 +377,20 @@ export const qk = {
   },
   merchantPosBookingDetail: (businessId?: string, bookingId?: string) =>
     ['merchantSettings', 'posBookingDetail', businessId ?? '', bookingId ?? ''],
+  merchantPosUnassignedBookingAssignments: (businessId?: string, filters?: { dateFrom?: string; dateTo?: string }) => {
+    const key: unknown[] = ['merchantSettings', 'posUnassignedBookingAssignments', businessId ?? '']
+    if (filters?.dateFrom || filters?.dateTo) key.push(filters)
+    return key
+  },
+  merchantPosBookingAssignmentCandidates: (businessId?: string, bookingId?: string, serviceLineId?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posBookingAssignmentCandidates', businessId ?? '']
+    if (bookingId) key.push(bookingId)
+    if (serviceLineId) key.push(serviceLineId)
+    return key
+  },
   // POS Front Desk — Customer tab (US-043), read-only list/detail/order-history.
+  merchantPosCustomerListRoot: () => ['merchantSettings', 'posCustomerList'],
+  merchantPosCustomerDetailRoot: () => ['merchantSettings', 'posCustomerDetail'],
   merchantPosCustomerList: (businessId?: string, filters?: object) => {
     const key: unknown[] = ['merchantSettings', 'posCustomerList', businessId ?? '']
     if (filters) key.push(filters)
@@ -364,6 +398,8 @@ export const qk = {
   },
   merchantPosCustomerDetail: (businessId?: string, customerId?: string) =>
     ['merchantSettings', 'posCustomerDetail', businessId ?? '', customerId ?? ''],
+  merchantPosOrderCustomerId: (businessId?: string, orderId?: string, phoneE164?: string) =>
+    ['merchantSettings', 'posOrderCustomerId', businessId ?? '', orderId ?? '', phoneE164 ?? ''],
   merchantPosCustomerOrders: (businessId?: string, customerId?: string, filters?: object) => {
     const key: unknown[] = ['merchantSettings', 'posCustomerOrders', businessId ?? '', customerId ?? '']
     if (filters) key.push(filters)
@@ -470,6 +506,11 @@ export const qk = {
   staffDashboardSummary: ()    => ['staffDashboardSummary'],
   staffIncomeReport: (sessionId: string, params: unknown) => [
     'staffIncomeReport',
+    sessionId,
+    params,
+  ],
+  staffIncomeReportTickets: (sessionId: string, params: unknown) => [
+    'staffIncomeReportTickets',
     sessionId,
     params,
   ],
@@ -697,6 +738,9 @@ export const qk = {
   communityChatMessagesInfinite: (sessionId?: string | null, pageSize?: number) =>
     ['communityChat', 'messages', sessionId ?? '', 'infinite', pageSize ?? 20] as const,
 
+  // Community Call (US-02/US-05) — voice/video call TURN credentials.
+  communityCallIceServers: () => ['communityCall', 'iceServers'] as const,
+
   // Nexora Voice trial (merchant)
   voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],
 
@@ -709,6 +753,7 @@ export const qk = {
   publicStaffDirectPaymentPage: (staffProfileId: string) => ['publicStaffDirectPaymentPage', staffProfileId],
   // POS Booking — Public Booking Page discovery (Ticket 4)
   publicReceipt: (receiptToken?: string) => ['publicReceipt', receiptToken ?? ''],
+  publicPosVisit: (token?: string) => ['publicPosVisit', token ?? ''],
   // Certifications — public certificate page. Keyed on the uppercased code so the same certificate
   // reached in lower case reuses the cached answer instead of spending another rate-limited request.
   publicCertificate: (certificateId?: string) => ['publicCertificate', certificateId ?? ''],

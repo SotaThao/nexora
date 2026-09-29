@@ -12,7 +12,12 @@ import {
   removeCommunityChatMessageFromCache,
 } from '../../data/communityChatCache'
 import { normalizeCommunityChatMessage } from '../../data/repositories/communityChat'
-import type { CommunityChatMessage, CommunityChatMessageDeletedEvent } from '../../types/communityChat'
+import { qk } from '../../data/queryKeys'
+import type {
+  CommunityChatMessageDeletedEvent,
+  CommunityChatReceiveMessageEvent,
+  CommunityChatSessionRenamedEvent,
+} from '../../types/communityChat'
 import { logger } from '../../utils/logger'
 
 export const COMMUNITY_CHAT_HUB_MESSAGE_ERROR_EVENT = 'nexora:community-chat-message-error' as const
@@ -29,7 +34,7 @@ const joinedSessionRefCounts = new Map<string, number>()
 /** Track sessions that have been joined (including temp joins from ensureJoined). */
 const actuallyJoinedSessions = new Set<string>()
 
-function handleIncomingMessage(rawMessage: CommunityChatMessage) {
+function handleIncomingMessage(rawMessage: CommunityChatReceiveMessageEvent) {
   const message = normalizeCommunityChatMessage(rawMessage)
   const sessionId = message.chatSessionId
   if (!sessionId || !queryClientRef) return
@@ -52,6 +57,14 @@ function handleMessageDeleted(event: CommunityChatMessageDeletedEvent) {
 
   // Remove message from cache for real-time deletion across all clients
   removeCommunityChatMessageFromCache(queryClientRef, event.chatSessionId, event.messageId)
+}
+
+function handleChatSessionRenamed(event: CommunityChatSessionRenamedEvent) {
+  if (!event.chatSessionId || !queryClientRef) return
+
+  // Refetch so the list and any open window header pick up the new group title.
+  queryClientRef.invalidateQueries({ queryKey: qk.communityChatSessions() })
+  queryClientRef.invalidateQueries({ queryKey: qk.communityChatSession(event.chatSessionId) })
 }
 
 function emitHubMessageError(message: string) {
@@ -106,6 +119,7 @@ async function ensureHubStarted(): Promise<HubConnection | null> {
       handlers: {
         onReceiveMessage: handleIncomingMessage,
         onMessageDeleted: handleMessageDeleted,
+        onChatSessionRenamed: handleChatSessionRenamed,
         onMessageError: (message) => {
           logger.warn('Community chat hub send error', message)
           emitHubMessageError(message)

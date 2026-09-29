@@ -14,6 +14,7 @@ import {
   OneQrModuleUnavailableReason,
   ONEQR_AUDIENCE_ORDER,
   ONEQR_MODULE_CATALOG_BY_KEY,
+  getDefaultOneQrIdentityPolicy,
 } from '../../../constants/oneQr'
 import type {
   OneQr,
@@ -58,15 +59,26 @@ export function buildDraft(oneQr: OneQr | null): OneQrDraft {
     const config = oneQr?.audiences.find((item) => item.audience === audience)
     byAudience[audience] = {
       welcomeMessage: config?.welcomeMessage ?? '',
-      identityPolicy: config?.identityPolicy ?? OneQrIdentityPolicy.PublicFirst,
-      modules: (config?.modules ?? []).map((module) => ({
-        ...module,
-        localId: module.id || nextLocalId(),
-      })),
+      identityPolicy:
+        config?.identityPolicy ?? getDefaultOneQrIdentityPolicy(audience),
+      modules: prioritizeEnabledModules(
+        (config?.modules ?? []).map((module) => ({
+          ...module,
+          localId: module.id || nextLocalId(),
+        })),
+      ),
     }
   }
 
   return { name: oneQr?.name ?? '', byAudience }
+}
+
+/** Stable partition: enabled rows first, preserving order within both groups. */
+export function prioritizeEnabledModules(modules: DraftModule[]): DraftModule[] {
+  return [
+    ...modules.filter((module) => module.isEnabled),
+    ...modules.filter((module) => !module.isEnabled),
+  ]
 }
 
 export function createDraftModule(
@@ -84,6 +96,7 @@ export function createDraftModule(
     isEnabled: true,
     customLabel: null,
     customIcon: null,
+    customIconUrl: null,
     customUrl,
     defaultLabel: null,
     defaultIcon: null,
@@ -134,6 +147,7 @@ export function toSaveModulesVars(
         isEnabled: module.isEnabled,
         customLabel: module.customLabel,
         customIcon: module.customIcon,
+        customIconUrl: module.customIconUrl,
         customUrl:
           module.moduleKey === OneQrModuleKey.CustomLink ? module.customUrl : null,
       })),
@@ -156,6 +170,17 @@ export function resolveModuleIcon(
     ONEQR_MODULE_CATALOG_BY_KEY[module.moduleKey]?.defaultIcon ??
     'square'
   )
+}
+
+/**
+ * A merchant-uploaded icon image, when set. Unlike `resolveModuleIcon`, there
+ * is no registry/bundle fallback here — only a merchant's own upload ever
+ * carries a URL, so `null` means "render the resolved icon name instead."
+ */
+export function resolveModuleIconUrl(
+  module: Pick<DraftModule, 'customIconUrl'>,
+): string | null {
+  return module.customIconUrl
 }
 
 /**
@@ -187,6 +212,7 @@ function sameModules(a: DraftModule[], b: DraftModule[]): boolean {
       module.isEnabled === other.isEnabled &&
       module.customLabel === other.customLabel &&
       module.customIcon === other.customIcon &&
+      module.customIconUrl === other.customIconUrl &&
       module.customUrl === other.customUrl
     )
   })

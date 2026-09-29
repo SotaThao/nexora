@@ -47,6 +47,9 @@ export const HEADER_MESSAGE_CHAT_MENU_GAP_PX = 6
 export const HEADER_MESSAGE_CHAT_MENU_Z_INDEX = 100_000
 export const HEADER_MESSAGE_CHAT_MENU_OPEN_ABOVE_MIN_TOP_PX = 120
 
+/** Above the message-actions menu (100_000) and every floating chat window — always the topmost layer. */
+export const HEADER_MESSAGE_CREATE_GROUP_MODAL_Z_INDEX = 100_100
+
 export interface HeaderMessageConversation {
   id: string
   name: string
@@ -66,6 +69,8 @@ export interface HeaderMessageConversation {
   peerUserProfileId?: string | null
   /** Salon/business for staff-initiated create; merchant roster falls back to profile business. */
   businessId?: string | null
+  /** Peer avatar for 1:1 sessions (US-06 — outgoing call UI); null for group chats. */
+  peerAvatarUrl?: string | null
 }
 
 export interface HeaderChatMessageReplyTo {
@@ -77,6 +82,9 @@ export interface HeaderChatMessageReplyTo {
 export interface HeaderChatThreadMessage {
   id: string
   direction: HeaderChatMessageDirection
+  senderId?: string
+  senderName?: string | null
+  senderAvatarUrl?: string | null
   bodyKey?: string
   bodyText?: string
   imageUrl?: string
@@ -86,6 +94,8 @@ export interface HeaderChatThreadMessage {
   receiptStatus?: HeaderChatMessageReceiptStatus
   /** True if the message has been deleted. */
   isDeleted?: boolean
+  /** Present only for `MessageType.Call` — drives the localized call-history label (US-06). */
+  callMeta?: { callType: string; endReason: string; durationSeconds: number } | null
 }
 
 function applyMockOutgoingReceipts(messages: HeaderChatThreadMessage[]): HeaderChatThreadMessage[] {

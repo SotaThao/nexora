@@ -24,6 +24,8 @@ export interface OneQrModule {
   isEnabled: boolean
   customLabel: string | null
   customIcon: string | null
+  /** Merchant-uploaded icon image. Mutually exclusive with `customIcon` — takes priority when set. */
+  customIconUrl: string | null
   /** Only meaningful when `moduleKey === CustomLink`. */
   customUrl: string | null
   /**
@@ -55,11 +57,13 @@ export interface OneQrRoleConfig {
 
 export interface OneQrModuleCatalogItem {
   moduleKey: string
+  /** Admin-managed role classification used by the builder's visibility rules. */
+  primaryAudience?: OneQrAudience | null
   defaultLabel: string | null
   defaultIcon: string | null
   /** Admin-configured router with placeholders intact; null for CustomLink. */
   urlTemplate: string | null
-  /** Open by design — every module is assignable to all three audiences. */
+  /** Open by design — every module is assignable to every audience. */
   allowedAudiences: OneQrAudience[]
   /** TipAndPay and Review both need an active TouchPoint to point at. */
   requiresTouchPoint: boolean
@@ -81,7 +85,7 @@ export interface OneQr {
   createdAt: string | null
   /** Backend-computed: drives the TipAndPay warning without a second request. */
   hasActiveTouchPoint: boolean
-  /** Always three entries, in Customer / Staff / Owner order. */
+  /** Always four entries, in Customer / Staff / Owner / AIVoice order. */
   audiences: OneQrRoleConfig[]
   /** Registry catalog, shipped inline with the config. */
   catalog: OneQrModuleCatalogItem[]
@@ -96,6 +100,7 @@ export interface SaveOneQrModulesVars {
     isEnabled: boolean
     customLabel?: string | null
     customIcon?: string | null
+    customIconUrl?: string | null
     customUrl?: string | null
   }>
 }
@@ -115,6 +120,8 @@ export interface OneQrLandingModule {
   moduleKey: string
   label: string
   icon: string | null
+  /** Merchant-uploaded icon image. Takes priority over `icon` when set. */
+  iconUrl: string | null
   url: string
 }
 

@@ -1,10 +1,6 @@
-// PosGeneralSettingsView — lets the Owner view/update the salon's Business
-// Information and Business Hours from inside the POS section, without leaving
-// it to go to the general Settings page. Reuses BusinessInfoCard/
-// useBusinessInfoForm so Business Info is the same data and save logic as
-// Settings > Profile > Business Information. Business Hours was previously
-// its own POS screen/route (US-014); merged back into this single General
-// Settings screen per TL decision — reuses useBusinessHoursForm unchanged.
+// PosGeneralSettingsView — Owner Salon Information + hours inside POS.
+// Business Info edit-after-KYB is scoped to this screen only (allowEditAfterKyb);
+// Settings > Profile keeps the KYB lock. Saves remain Nexora-local (no SSO).
 import type { FormEvent } from 'react'
 import { Clock, Edit2 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
@@ -35,7 +31,12 @@ export default function PosGeneralSettingsView({
   const { t, currentLanguage } = useTranslation()
   const { data: setupData } = useMerchantSetup()
   const businessSlug = setupData?.businessInfo?.slug
-  const businessInfoForm = useBusinessInfoForm({ setupData, verificationStatus, includeReviewLinks: true })
+  const businessInfoForm = useBusinessInfoForm({
+    setupData,
+    verificationStatus,
+    includeReviewLinks: true,
+    allowEditAfterKyb: true,
+  })
   const {
     businessHours,
     isEditingHours,
@@ -105,6 +106,7 @@ export default function PosGeneralSettingsView({
           businessErrors={businessInfoForm.businessErrors}
           setBusinessErrors={businessInfoForm.setBusinessErrors}
           canEdit={businessInfoForm.canEditProfile}
+          verificationStatus={businessInfoForm.effectiveVerificationStatus}
           startEditBusiness={businessInfoForm.startEditBusiness}
           saveBusiness={saveBusiness}
         />

@@ -143,8 +143,6 @@ function Overview({
   isLoading = false,
   isTransactionsLoading = false,
   isTouchpointsLoading = false,
-  reviewsPage = null,
-  isReviewsPending = false,
   reviewsThisWeekCount = null,
 }) {
   const { currentLanguage, t } = useTranslation()
@@ -158,11 +156,8 @@ function Overview({
   const [copiedPaymentLinkId, setCopiedPaymentLinkId] = useState(null)
   const dropdownRef = useRef(null)
 
-  const reviewsSummary = useMemo(() => {
-    const items = reviewsPage?.items ?? []
-    const totalCount = reviewsPage?.totalCount ?? items.length
-    return { totalCount, items }
-  }, [reviewsPage])
+  // Total Reviews KPI follows the selected chart date range (same overview API as tips KPIs).
+  const totalReviewsCount = Number(metrics?.totalReviews ?? 0)
 
   // The "Master Store QR" (general pool tips) must point to a REAL backing
   // touch point — there is no store-level "general" touch page on the API
@@ -305,16 +300,21 @@ function Overview({
     return opt ? opt.label : dateRangeOptions[0].label;
   }, [chartRange, chartStartDate, chartEndDate, dateRangeOptions, currentLanguage]);
 
-  const reviewMetrics = useMemo(() => ({
-    googleRating: metrics.googleAvgRating ?? 0,
-    googleReviewCount: metrics.googleReviewCount ?? 0,
-    yelpRating: metrics.yelpAvgRating ?? 0,
-    yelpReviewCount: metrics.yelpReviewCount ?? 0,
-    responseRate: metrics.responseRate ?? 0,
-    responseRateLabel: metrics.responseRateLabel ?? null,
-    returningCustomers: metrics.returningCustomerRate ?? 0,
-    returningCustomersDelta: metrics.returningCustomerRateChangeVsLastWeek ?? 0,
-  }), [metrics])
+  // Google / Yelp / response cards use the date-scoped overview metrics
+  // (same DateFrom/DateTo as the tips KPIs and chart range).
+  const reviewMetrics = useMemo(() => {
+    return {
+      googleClicks: metrics.googleClicks ?? 0,
+      yelpClicks: metrics.yelpClicks ?? 0,
+      // Keep platform ratings as secondary context when the API provides them.
+      googleRating: metrics.googleAvgRating ?? 0,
+      yelpRating: metrics.yelpAvgRating ?? 0,
+      responseRate: metrics.responseRate ?? 0,
+      responseRateLabel: metrics.responseRateLabel ?? null,
+      returningCustomers: metrics.returningCustomerRate ?? 0,
+      returningCustomersDelta: metrics.returningCustomerRateChangeVsLastWeek ?? 0,
+    }
+  }, [metrics])
 
   const hasMasterGateway = Boolean(masterTouchpoint)
 
@@ -440,7 +440,7 @@ function Overview({
             />
             <KpiCard
               label={t('dashboard.kpi.total_reviews')}
-              value={reviewsSummary.totalCount.toString()}
+              value={totalReviewsCount.toString()}
               deltaPercent={kpiDeltas?.totalReviews ?? null}
               noDeltaFallback={NO_DELTA_FALLBACK.WEEKLY_COUNT}
               weeklyCount={reviewsThisWeekCount ?? 0}
@@ -538,31 +538,31 @@ function Overview({
         />
       </div>
 
-      {/* Review metrics — Google / Yelp / Response / Returning */}
+      {/* Review metrics — scoped to the selected overview date range */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <ReviewMetricCard
           label={t('dashboard.review_kpi.google_reviews')}
-          value={formatRatingValue(reviewMetrics.googleRating)}
-          footer={(
+          value={String(reviewMetrics.googleClicks)}
+          footer={reviewMetrics.googleRating > 0 ? (
             <>
               {renderStars(reviewMetrics.googleRating)}
               <div className="text-xs text-nexoraMuted">
-                {t('dashboard.review_kpi.reviews_count', { count: reviewMetrics.googleReviewCount })}
+                {formatRatingValue(reviewMetrics.googleRating)} ★
               </div>
             </>
-          )}
+          ) : null}
         />
         <ReviewMetricCard
           label={t('dashboard.review_kpi.yelp_reviews')}
-          value={formatRatingValue(reviewMetrics.yelpRating)}
-          footer={(
+          value={String(reviewMetrics.yelpClicks)}
+          footer={reviewMetrics.yelpRating > 0 ? (
             <>
               {renderStars(reviewMetrics.yelpRating)}
               <div className="text-xs text-nexoraMuted">
-                {t('dashboard.review_kpi.reviews_count', { count: reviewMetrics.yelpReviewCount })}
+                {formatRatingValue(reviewMetrics.yelpRating)} ★
               </div>
             </>
-          )}
+          ) : null}
         />
         <ReviewMetricCard
           label={t('dashboard.review_kpi.response_rate')}

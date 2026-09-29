@@ -7,7 +7,7 @@
  * distinct: paused (HTTP 200 + a polite notice, never an error page — the QR is
  * printed and in the wild), not found (404), and sign-in required.
  */
-import { useCallback, useEffect, useMemo, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowUpRight, Clock, Loader2, LogIn, MapPin, PauseCircle, Sparkles } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -18,9 +18,11 @@ import {
 import OneQrModuleIcon from '../../oneqr/OneQrModuleIcon'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import { resolveOneQrModuleLabel } from '../../oneqr/oneQrModuleLabel'
+import { resolveOneQrModuleIconColor } from '../../oneqr/oneQrModuleIconColor'
 import { resolveOneQrModuleHref } from './oneQrModuleHref'
 import {
   ONEQR_ROUTE,
+  OneQrAudience,
   OneQrModuleKey,
   buildOneQrPath,
 } from '../../../constants/oneQr'
@@ -28,6 +30,10 @@ import type {
   OneQrLandingBusiness,
   OneQrLandingModule,
 } from '../../../types/oneQr'
+import {
+  rememberOneQrReturnAudience,
+  withOneQrReturnAudience,
+} from '../../../utils/oneQrReturnAudience'
 
 /**
  * The session id identifies one scan for analytics dedupe. It is generated in
@@ -46,16 +52,31 @@ function useScanSessionId(): string {
   }, [fromUrl])
 }
 
-export default function OneQrLandingPage() {
+type OneQrLandingPageProps = {
+  businessSlugOverride?: string
+  topSlot?: ReactNode
+  autoOpenModuleKey?: OneQrModuleKey
+}
+
+export default function OneQrLandingPage({
+  businessSlugOverride,
+  topSlot,
+  autoOpenModuleKey,
+}: OneQrLandingPageProps = {}) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const params = useParams()
   const [searchParams] = useSearchParams()
-  const businessSlug = params[ONEQR_ROUTE.param] ?? ''
+  const businessSlug = businessSlugOverride ?? params[ONEQR_ROUTE.param] ?? ''
   const sessionId = useScanSessionId()
   // Forwarded verbatim: a printed code may carry `?as=staff`, and only the
   // backend can say whether this scanner is entitled to that view.
   const viewAs = searchParams.get(ONEQR_ROUTE.asQuery)
+  const [showAllModules, setShowAllModules] = useState(false)
+
+  useEffect(() => {
+    setShowAllModules(false)
+  }, [businessSlug, viewAs])
 
   const { data, isPending, isError } = usePublicOneQrLanding({
     businessSlug,
@@ -63,6 +84,11 @@ export default function OneQrLandingPage() {
     viewAs,
   })
   const trackClick = useTrackOneQrModuleClick()
+  const landingAudience = data?.audience
+
+  useEffect(() => {
+    if (landingAudience) rememberOneQrReturnAudience(landingAudience)
+  }, [landingAudience])
 
   useEffect(() => {
     document.body.classList.add('oneqr-landing-active')
@@ -82,6 +108,17 @@ export default function OneQrLandingPage() {
     },
     [businessSlug, data, sessionId, trackClick],
   )
+
+  const autoOpenModule = autoOpenModuleKey
+    ? data?.modules?.find((module) => module.moduleKey === autoOpenModuleKey)
+    : undefined
+
+  useEffect(() => {
+    if (!autoOpenModule) return
+    const href = resolveOneQrModuleHref(autoOpenModule)
+    if (href.startsWith('/')) navigate(href, { replace: true })
+    else if (/^https?:\/\//i.test(href)) window.location.replace(href)
+  }, [autoOpenModule, navigate])
 
   // No slug means there is nothing to look up — a real dead end, and the only
   // case where the query stays disabled forever. Checked before the pending
@@ -185,15 +222,22 @@ export default function OneQrLandingPage() {
   }
 
   // The backend decides who may switch views; the query value only hides the
-  // button once the switch has already been taken.
+  // button once the switch has already been taken. AI Voice replaces that
+  // switch with a local expand: the API list is already complete, so the page
+  // shows the first four in server order (ascending) until "View more".
+  const isAiVoice = data.audience === OneQrAudience.AIVoice
   const showViewAsCustomer =
-    viewAs !== ONEQR_ROUTE.asCustomerValue && data.canViewAsCustomer
+    !isAiVoice && viewAs !== ONEQR_ROUTE.asCustomerValue && data.canViewAsCustomer
+  const visibleModules =
+    isAiVoice && !showAllModules ? data.modules.slice(0, 4) : data.modules
+  const showViewMore = isAiVoice && !showAllModules && data.modules.length > 4
   const welcomeMessage = data.welcomeMessage?.trim().toLowerCase() === 'welcome to merchant'
     ? t('oneqr.landing.visit_message')
     : data.welcomeMessage
 
   return (
     <Shell business={data.business}>
+      {topSlot}
       {welcomeMessage ? (
         <div className="mx-3 mb-1 mt-3 flex items-center gap-2 rounded-lg bg-nexoraBrandSoft/40 px-3 py-2 text-xs font-medium leading-relaxed text-nexoraBrand sm:mx-5">
           <span className="grid h-5 w-5 shrink-0 place-items-center">
@@ -203,7 +247,7 @@ export default function OneQrLandingPage() {
         </div>
       ) : null}
 
-      {data.modules.length > 0 ? (
+      {visibleModules.length > 0 ? (
         <div className="px-3 pb-3 pt-3 sm:px-5">
           <h2 className="text-sm font-bold tracking-tight text-nexoraText">
             {t('oneqr.landing.actions_title')}
@@ -211,7 +255,7 @@ export default function OneQrLandingPage() {
         </div>
       ) : null}
 
-      {data.modules.length === 0 ? (
+      {visibleModules.length === 0 ? (
         <p className="px-5 py-12 text-center text-xs font-medium text-nexoraMuted">
           {t('oneqr.landing.no_modules')}
         </p>
@@ -222,11 +266,12 @@ export default function OneQrLandingPage() {
           })}
           className="grid grid-cols-2 gap-2.5 px-3 pb-3 sm:px-5"
         >
-          {data.modules.map((module, index) => (
+          {visibleModules.map((module, index) => (
             <ModuleTile
               // CustomLink may repeat, so the key needs the position too.
               key={`${module.moduleKey}-${index}`}
               module={module}
+              audience={data.audience}
               label={resolveOneQrModuleLabel(
                 // The landing DTO ships one merged `label`. For a CustomLink
                 // that string is the merchant's own wording — there is no
@@ -241,6 +286,18 @@ export default function OneQrLandingPage() {
           ))}
         </nav>
       )}
+
+      {showViewMore ? (
+        <div className="px-3 pb-3 sm:px-5">
+          <button
+            type="button"
+            onClick={() => setShowAllModules(true)}
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraMuted transition hover:text-nexoraText"
+          >
+            {t('oneqr.landing.view_more')}
+          </button>
+        </div>
+      ) : null}
 
       {showViewAsCustomer ? (
         <div className="px-3 pb-3 sm:px-5">
@@ -306,10 +363,12 @@ function BusinessFooter({ business }: { business: OneQrLandingBusiness }) {
 
 function ModuleTile({
   module,
+  audience,
   label,
   onClick,
 }: {
   module: OneQrLandingModule
+  audience: OneQrAudience
   /** Resolved from the locale files, not `module.label` — see oneQrModuleLabel. */
   label: string
   onClick: () => void
@@ -317,16 +376,11 @@ function ModuleTile({
   // Destinations come from the backend registry and may be either an in-app
   // path or an external CustomLink, so this is a plain anchor rather than a
   // react-router <Link>; external targets additionally get noopener.
-  const url = resolveOneQrModuleHref(module)
+  const url = withOneQrReturnAudience(resolveOneQrModuleHref(module), audience)
   const isExternal = /^https?:\/\//i.test(url)
   const isInternal = url.startsWith('/')
   const safeHref = isExternal || isInternal ? url : '#'
-  const iconColor = {
-    [OneQrModuleKey.CheckIn]: 'bg-nexoraTeal/10 text-nexoraTealAlt',
-    [OneQrModuleKey.Payment]: 'bg-nexoraElectric/10 text-nexoraElectric',
-    [OneQrModuleKey.Booking]: 'bg-nexoraViolet/10 text-nexoraViolet',
-    [OneQrModuleKey.Rewards]: 'bg-nexoraTeal/10 text-nexoraTealAlt',
-  }[module.moduleKey] ?? 'bg-nexoraBrandSoft/70 text-nexoraBrand'
+  const iconColor = resolveOneQrModuleIconColor(module.moduleKey)
 
   return (
     <a
@@ -340,7 +394,7 @@ function ModuleTile({
     >
       <span className="flex w-full items-start justify-between gap-2">
         <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${iconColor}`}>
-          <OneQrModuleIcon name={module.icon} className="h-4 w-4" />
+          <OneQrModuleIcon name={module.icon} iconUrl={module.iconUrl} className="h-4 w-4" />
         </span>
         <ArrowUpRight className="mt-1 h-4 w-4 text-nexoraSubtle transition group-hover:text-nexoraBrand motion-reduce:transition-none" aria-hidden />
       </span>

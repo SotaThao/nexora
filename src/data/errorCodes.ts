@@ -58,6 +58,11 @@ export const errorCodeToI18nKey = {
   PAYOUT_CONFIRM_NOT_ALLOWED: 'errors.payout_confirm_not_allowed',
   PAYOUT_AMOUNT_EXCEEDS_DEBT: 'errors.payout_amount_exceeds_debt',
 
+  // Income/Payout Categories (issue #584 / #1645) — shared TransactionCategory entity
+  TRANSACTION_CATEGORY_NAME_REQUIRED: 'errors.transaction_category_name_required',
+  TRANSACTION_CATEGORY_NAME_TOO_LONG: 'errors.transaction_category_name_too_long',
+  TRANSACTION_CATEGORY_NAME_DUPLICATE: 'errors.transaction_category_name_duplicate',
+
   // Image
   IMAGE_FILE_SIZE_EXCEEDED: 'errors.image_file_size_exceeded',
   IMAGE_UNSUPPORTED_FILE_TYPE: 'errors.image_unsupported_file_type',
@@ -140,6 +145,15 @@ export const errorCodeToI18nKey = {
   HOLIDAY_CLOSED_TIME_MUST_BE_NULL: 'errors.holiday_closed_time_must_be_null',
   HOLIDAY_DATE_IN_PAST: 'errors.holiday_date_in_past',
   HOLIDAY_ADJUSTED_TIME_ALREADY_PASSED: 'errors.holiday_adjusted_time_already_passed',
+
+  POS_SMS_BODY_REQUIRED: 'errors.pos_sms_body_required',
+  POS_SMS_BODY_TOO_LONG: 'errors.pos_sms_body_too_long',
+  POS_SMS_PLACEHOLDER_NOT_ALLOWED: 'errors.pos_sms_placeholder_not_allowed',
+  POS_SMS_INVALID_SEND_MODE: 'errors.pos_sms_invalid_send_mode',
+  POS_SMS_INVALID_VISIT_LINK_TTL: 'errors.pos_sms_invalid_visit_link_ttl',
+  POS_SMS_TEST_PHONE_REQUIRED: 'errors.pos_sms_test_phone_required',
+  POS_SMS_TEST_PHONE_INVALID: 'errors.pos_sms_test_phone_invalid',
+  POS_SMS_VISIT_LINK_NOT_FOUND: 'errors.pos_sms_visit_link_not_found',
 
   // POS Owner Setup — Roles & Permissions (US-015)
   POS_ROLE_NOT_FOUND: 'errors.pos_role_not_found',
@@ -294,6 +308,13 @@ export const errorCodeToI18nKey = {
   POS_PROMOTION_BADGE_TOO_LONG: 'errors.pos_promotion_badge_too_long',
   POS_PROMOTION_VALUE_INVALID: 'errors.pos_promotion_value_invalid',
   POS_PROMOTION_IN_USE: 'errors.pos_promotion_in_use',
+  POS_PROMOTION_DESCRIPTION_TOO_LONG: 'errors.pos_promotion_description_too_long',
+  POS_PROMOTION_PHOTO_INVALID_TYPE: 'errors.pos_promotion_photo_invalid_type',
+  POS_PROMOTION_TEMPLATE_CODE_INVALID: 'errors.pos_promotion_template_code_invalid',
+  POS_PROMOTION_BANNER_COUNT_INVALID: 'errors.pos_promotion_banner_count_invalid',
+  POS_PROMOTION_BANNER_COLOR_OR_IMAGE_REQUIRED: 'errors.pos_promotion_banner_color_or_image_required',
+  POS_PROMOTION_BANNER_COLOR_HEX_INVALID: 'errors.pos_promotion_banner_color_hex_invalid',
+  POS_PROMOTION_BANNER_IMAGE_INVALID_TYPE: 'errors.pos_promotion_banner_image_invalid_type',
   ORDER_NOT_IN_SERVICE: 'errors.pos_order_not_in_service',
   ORDER_ALREADY_COMPLETED: 'errors.pos_order_already_completed',
   POS_ORDER_HAS_NO_LINES: 'errors.pos_order_has_no_lines',
@@ -307,6 +328,10 @@ export const errorCodeToI18nKey = {
   SERVICE_LINE_NOT_STARTABLE: 'errors.pos_service_line_not_startable',
   POS_STAFF_SERVICE_LINE_EDIT_DISABLED: 'errors.pos_staff_service_line_edit_disabled',
   POS_CUSTOMER_VERIFICATION_FAILED: 'errors.pos_customer_verification_failed',
+  POS_CUSTOMER_IMPORT_FILE_TYPE_NOT_ALLOWED: 'errors.pos_customer_import_file_type_not_allowed',
+  POS_CUSTOMER_IMPORT_FILE_TOO_LARGE: 'errors.pos_customer_import_file_too_large',
+  POS_CUSTOMER_IMPORT_TOO_MANY_ROWS: 'errors.pos_customer_import_too_many_rows',
+  POS_OPERATIONS_ACCESS_DENIED: 'errors.pos_operations_access_denied',
   POS_CUSTOM_SERVICE_NAME_REQUIRED: 'errors.pos_custom_service_name_required',
   POS_CUSTOM_SERVICE_PRICE_INVALID: 'errors.pos_custom_service_price_invalid',
   POS_CUSTOM_SERVICE_DURATION_INVALID: 'errors.pos_custom_service_duration_invalid',
@@ -416,6 +441,7 @@ export const errorCodeToI18nKey = {
   POS_BOOKING_ADVANCE_LIMIT_EXCEEDED: 'errors.pos_booking_advance_limit_exceeded',
   POS_BOOKING_STAFF_OUTSIDE_SCHEDULE: 'errors.pos_booking_staff_outside_schedule',
   POS_BOOKING_SLOT_CONFLICT: 'errors.pos_booking_slot_conflict',
+  POS_BOOKING_INVALID_STATUS_FOR_ASSIGNMENT: 'errors.pos_booking_invalid_status_for_assignment',
   POS_BOOKING_PHONE_ALREADY_ACTIVE: 'errors.pos_booking_phone_already_active',
   POS_BOOKING_CUSTOMER_PHONE_REQUIRED: 'errors.pos_booking_customer_phone_required',
   POS_BOOKING_NOT_FOUND: 'errors.pos_booking_not_found',

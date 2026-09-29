@@ -9,11 +9,14 @@ import {
   workOrderServiceRowClass,
   workOrderServiceTableHeadClass,
 } from './constants'
-import type { WorkOrderEditableLine, WorkOrderServiceApproval } from './workOrderServiceCatalog'
+import {
+  WORK_ORDER_SERVICE_APPROVAL,
+  type WorkOrderEditableLine,
+  type WorkOrderServiceApproval,
+} from './workOrderServiceCatalog'
 import {
   formatWorkOrderDurationMinutes,
   formatWorkOrderMoney,
-  workOrderAssignedTechnicianLabel,
   workOrderTextOrPlaceholder,
 } from './workOrderTickets'
 
@@ -151,7 +154,15 @@ function WorkOrderServiceLineRow({
   onRemoveService: () => void
 }) {
   const { t } = useTranslation()
-  const canAct = Boolean(actions) && Boolean(line.isMine) && !line.isAddOn && !line.pendingRemoval
+  const isAwaitingApproval = line.approval === WORK_ORDER_SERVICE_APPROVAL.pending
+  const lineActionsLocked = Boolean(line.pendingRemoval) || isAwaitingApproval
+  // Hide Start/Complete/Accept/Decline while a change (or pending add) awaits customer approval.
+  const canAct = (
+    Boolean(actions)
+    && Boolean(line.isMine)
+    && !line.isAddOn
+    && !lineActionsLocked
+  )
   const isPending = (kind: LineStatusActionKind) =>
     actions?.pendingLineId === line.id && actions.pendingKind === kind
 
@@ -195,7 +206,7 @@ function WorkOrderServiceLineRow({
                 type="button"
                 className={WORK_ORDERS_LAYOUT_CLASS.serviceChangeButton}
                 aria-label={`${t(WORK_ORDERS_I18N.changeService)} ${workOrderTextOrPlaceholder(line.serviceName)}`}
-                disabled={Boolean(line.pendingRemoval)}
+                disabled={lineActionsLocked}
                 onClick={onChangeService}
               >
                 {t(WORK_ORDERS_I18N.changeServiceAction)}
@@ -205,7 +216,7 @@ function WorkOrderServiceLineRow({
                   type="button"
                   className={WORK_ORDERS_LAYOUT_CLASS.serviceRemoveButton}
                   aria-label={`${t(WORK_ORDERS_I18N.removeService)} ${workOrderTextOrPlaceholder(line.serviceName)}`}
-                  disabled={Boolean(line.pendingRemoval)}
+                  disabled={Boolean(line.pendingRemoval) || (isAwaitingApproval && Boolean(line.id))}
                   onClick={onRemoveService}
                 >
                   {t(WORK_ORDERS_I18N.removeService)}
@@ -216,9 +227,6 @@ function WorkOrderServiceLineRow({
         </div>
       ) : null}
       <div className={WORK_ORDERS_LAYOUT_CLASS.serviceMeta}>
-        <p className={WORK_ORDERS_LAYOUT_CLASS.serviceTech}>
-          {workOrderAssignedTechnicianLabel(line.technicianName, t)}
-        </p>
         {!line.isAddOn && line.lineStatus ? (
           <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-black uppercase ${
             LINE_STATUS_BADGE_CLASS[line.lineStatus] ?? LINE_STATUS_BADGE_CLASS[PosOrderItemStatus.Unassigned]
