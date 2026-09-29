@@ -123,7 +123,7 @@ export const POS_SMS_PREVIEW_VALUES: Record<PosSmsPlaceholder, string> = {
   [PosSmsPlaceholder.VisitLink]: 'nexora.app/q/••••',
   [PosSmsPlaceholder.SalonPhone]: '+1 (713) 555-0123',
   [PosSmsPlaceholder.TicketNumber]: '#12',
-  [PosSmsPlaceholder.TicketTotal]: '$45.00',
+  [PosSmsPlaceholder.TicketTotal]: '45.00 USD',
   [PosSmsPlaceholder.ReceiptLink]: 'nexora.app/receipt/••••',
   [PosSmsPlaceholder.ReviewLink]: 'nexora.app/q/••••/review',
   [PosSmsPlaceholder.TipLink]: 'nexora.app/q/••••/tip',
