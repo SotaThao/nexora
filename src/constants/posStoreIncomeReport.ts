@@ -12,6 +12,7 @@ export const POS_STORE_INCOME_PAYMENT_METHODS = [
   'Card',
   'Cash',
   'GiftCard',
+  'Crypto',
   'Zelle',
   'CashApp',
   'Venmo',
