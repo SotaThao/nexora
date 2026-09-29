@@ -17,7 +17,7 @@ import type { TechnicianOption } from '../../../checkin/parts/TechnicianPickerGr
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getErrorMessage } from '../../../../data/errorCodes'
 import VlinkPayCheckoutFrame from '../../../posDevice/VlinkPayCheckoutFrame'
-import { VlinkPayPaymentPage } from '../../../../types/repositories'
+import { VlinkPayPaymentPage, type VlinkPayPaymentPageValue } from '../../../../types/repositories'
 import {
   useAddOrderCustomServiceLine,
   useAddOrderServiceLine,
@@ -151,8 +151,15 @@ const CORE_CHECKOUT_PAYMENT_METHODS = new Set<PosCheckoutPaymentMethodType>([
   PosCheckoutPaymentMethod.Cash,
   PosCheckoutPaymentMethod.Card,
   PosCheckoutPaymentMethod.GiftCard,
+  PosCheckoutPaymentMethod.Crypto,
   PosCheckoutPaymentMethod.SplitPay,
 ])
+
+// Collected through the embedded VlinkPay page for the whole ticket, so never a Quick Split portion.
+const VLINKPAY_PAGE_BY_METHOD: Partial<Record<PosCheckoutPaymentMethodType, VlinkPayPaymentPageValue>> = {
+  [PosCheckoutPaymentMethod.GiftCard]: VlinkPayPaymentPage.GiftCard,
+  [PosCheckoutPaymentMethod.Crypto]: VlinkPayPaymentPage.Crypto,
+}
 
 // Keep the existing change-service flow available from Ticket Detail.
 const SHOW_CHANGE_SERVICE_ACTION = true
@@ -458,8 +465,8 @@ export default function PosOrderWorkspace({
   const vlinkPayPaymentUrl = useVlinkPayPaymentUrl(businessId)
   const vlinkPayPaymentStatus = useVlinkPayPaymentStatus(businessId)
 
-  // Gift Card is collected through VlinkPay: the cashier opens the VlinkPay page in a frame and
-  // the order is only completed once VlinkPay confirms the money moved.
+  // Gift Card and Crypto are collected through VlinkPay: the cashier opens the VlinkPay page in a
+  // frame and the order is only completed once VlinkPay confirms the money moved.
   const [vlinkPayFrameUrl, setVlinkPayFrameUrl] = useState<string | null>(null)
 
   // Sync lock so a second tap in the same tick cannot queue another call. Mutation
@@ -480,7 +487,9 @@ export default function PosOrderWorkspace({
     markServiceLineDone.isPending ||
     setTip.isPending ||
     setStaffTipSplit.isPending ||
-    completeOrder.isPending
+    completeOrder.isPending ||
+    vlinkPayPaymentUrl.isPending ||
+    vlinkPayPaymentStatus.isPending
   const { busySurface, isBusy, startTicketAction, endTicketAction } = useTicketActionLock(isMutationPending)
   const isAddingLine =
     busySurface === TicketBusySurface.AddLine || addServiceLine.isPending || addCustomServiceLine.isPending
@@ -855,12 +864,12 @@ export default function PosOrderWorkspace({
     const core: PosCheckoutPaymentMethodType[] = [
       PosCheckoutPaymentMethod.Cash,
       PosCheckoutPaymentMethod.Card,
-      PosCheckoutPaymentMethod.GiftCard,
     ]
     const configured = receivePaymentMethods
       .filter((method) => method.isActive && method.isConfigured && isPosCheckoutPaymentMethod(method.type))
       .map((method) => method.type as PosCheckoutPaymentMethodType)
-      .filter((method) => !core.includes(method) && method !== PosCheckoutPaymentMethod.SplitPay)
+      .filter((method) => !core.includes(method) && method !== PosCheckoutPaymentMethod.SplitPay
+        && !VLINKPAY_PAGE_BY_METHOD[method])
     return [...core, ...Array.from(new Set(configured))]
   }, [receivePaymentMethods])
 
@@ -1591,26 +1600,47 @@ export default function PosOrderWorkspace({
     confirmMismatch('checkout', unfinishedLineLabels, unfinishedLineLabels.length > 0, runComplete)
   }
 
-  // Gift Card money is taken through VlinkPay, so the ticket cannot be closed on the cashier's
-  // word alone: the frame is opened first, and the order is settled only after VlinkPay confirms.
+  // Gift Card and Crypto money is taken through VlinkPay, so the ticket cannot be closed on the
+  // cashier's word alone: the frame is opened first, and the order is settled only after VlinkPay
+  // confirms. The server re-reads the payment and refuses any amount other than the ticket total.
   const runComplete = () => {
     if (!order) return
 
-    if (paymentMethod === PosCheckoutPaymentMethod.GiftCard) {
-      openVlinkPayGiftCardFrame()
+    const vlinkPayPage = VLINKPAY_PAGE_BY_METHOD[paymentMethod]
+    if (vlinkPayPage !== undefined) {
+      openVlinkPayFrameUnlessAlreadyPaid(vlinkPayPage)
       return
     }
 
     settleOrder()
   }
 
-  const openVlinkPayGiftCardFrame = () => {
+  // A payment whose browser message was lost has still moved money, so VlinkPay is asked first —
+  // reopening the frame would invite charging the customer a second time.
+  const openVlinkPayFrameUnlessAlreadyPaid = (page: VlinkPayPaymentPageValue) => {
+    if (!order) return
+    vlinkPayPaymentStatus.mutate(
+      { orderId },
+      {
+        onSuccess: (status) => {
+          if (status.found) {
+            settleOrder()
+            return
+          }
+          openVlinkPayFrame(page)
+        },
+        onError: reportError,
+      },
+    )
+  }
+
+  const openVlinkPayFrame = (page: VlinkPayPaymentPageValue) => {
     if (!order) return
     vlinkPayPaymentUrl.mutate(
       {
         orderId,
         payload: {
-          page: VlinkPayPaymentPage.GiftCard,
+          page,
           callbackOrigin: window.location.origin,
           // Pre-filled and locked on the VlinkPay side, so the amount charged is the amount owed.
           amount: order.total,
@@ -1623,26 +1653,11 @@ export default function PosOrderWorkspace({
     )
   }
 
-  // Never settles on the frame's message alone. That message is a browser event and can be
-  // forged or replayed, so the payment is re-read from VlinkPay before the ticket is closed.
+  // Never trusts the frame's message on its own: it is a browser event and can be forged or
+  // replayed. Complete makes the server re-read the payment from VlinkPay before closing.
   const confirmVlinkPayThenSettle = () => {
     setVlinkPayFrameUrl(null)
-    vlinkPayPaymentStatus.mutate(
-      { orderId },
-      {
-        onSuccess: (status) => {
-          if (!status.found) {
-            showToast(
-              t('components.dashboard.views.pos.PosOrderWorkspace.vlinkPayNotConfirmed'),
-              'error',
-            )
-            return
-          }
-          settleOrder()
-        },
-        onError: reportError,
-      },
-    )
+    settleOrder()
   }
 
   // Closed without a result. The customer may still have paid, so the cashier is told to check

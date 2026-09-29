@@ -21,6 +21,7 @@ const CORE_METHODS = new Set<PosCheckoutPaymentMethodType>([
   PosCheckoutPaymentMethod.Cash,
   PosCheckoutPaymentMethod.Card,
   PosCheckoutPaymentMethod.GiftCard,
+  PosCheckoutPaymentMethod.Crypto,
   PosCheckoutPaymentMethod.SplitPay,
 ])
 

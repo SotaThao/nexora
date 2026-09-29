@@ -434,6 +434,8 @@ export const errorCodeToI18nKey = {
   POS_PAYROLL_IS_W2: 'errors.pos_payroll_is_w2',
   POS_PAYROLL_OVERRIDE_NOTE_REQUIRED: 'errors.pos_payroll_override_note_required',
   POS_PAYROLL_AMOUNT_ZERO: 'errors.pos_payroll_amount_zero',
+  POS_VLINKPAY_PAYMENT_NOT_CONFIRMED: 'errors.pos_vlinkpay_payment_not_confirmed',
+  POS_VLINKPAY_AMOUNT_MISMATCH: 'errors.pos_vlinkpay_amount_mismatch',
 
   // Tax IQ — Payroll Runs (mục 12, backend US-26)
   TAXIQ_PAYROLL_RUN_NOT_FOUND: 'errors.taxiq_payroll_run_not_found',
