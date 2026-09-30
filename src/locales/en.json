@@ -2298,6 +2298,7 @@
     "tip_max_error": "Tip cannot exceed {amount}.",
     "tip_total_max_error": "Total tips cannot exceed {amount}.",
     "inline_tip_label": "Tip amount",
+    "skip_tip": "Skip Tip",
     "tip_review_payment_title": "Review tip & choose payment",
     "tips_summary_title": "Tip Sent!",
     "tips_summary_via": "via",

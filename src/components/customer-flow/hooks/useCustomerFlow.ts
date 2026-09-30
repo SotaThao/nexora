@@ -903,6 +903,7 @@ export default function useCustomerFlow() {
     handleTrackExternalReview, paymentLinkData, tipPaymentMethodsData,
     scannedTouchpoint: null,
     canSelectMultipleStaff,
+    paymentUrl: businessId ? `/pay/${encodeURIComponent(businessId)}` : null,
     isPaymentFlow,
     isReviewFlow,
     paymentCopyScope,

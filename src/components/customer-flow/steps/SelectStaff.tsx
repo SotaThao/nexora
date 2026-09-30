@@ -16,6 +16,7 @@ export default function SelectStaff({
   customTips,
   setCustomTips,
   canSelectMultipleStaff,
+  paymentUrl = null,
 }) {
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -169,7 +170,7 @@ export default function SelectStaff({
       </div>
 
       {/* Bottom Next Button */}
-      <div className="pt-2">
+      <div className="space-y-3 pt-2">
         <button
           type="button"
           disabled={selectedStaffMembers.length === 0}
@@ -180,6 +181,14 @@ export default function SelectStaff({
         >
           {t('common.next')} <ArrowRight className="h-4 w-4" />
         </button>
+        {paymentUrl ? (
+          <a
+            href={paymentUrl}
+            className="block w-full rounded-xl border border-nexoraBorder bg-white px-4 py-3 text-center text-xs font-extrabold uppercase tracking-wider text-nexoraBrand transition hover:bg-nexoraCanvas"
+          >
+            {t('customer.skip_tip')}
+          </a>
+        ) : null}
       </div>
     </div>
   )

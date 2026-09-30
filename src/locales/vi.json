@@ -2298,6 +2298,7 @@
     "tip_max_error": "Tiền típ không được vượt quá {amount}.",
     "tip_total_max_error": "Tổng tiền típ không được vượt quá {amount}.",
     "inline_tip_label": "Số tiền tips",
+    "skip_tip": "Bỏ qua tip",
     "tip_review_payment_title": "Kiểm tra tip & chọn thanh toán",
     "tips_summary_title": "Đã gửi Tips!",
     "tips_summary_via": "qua",
