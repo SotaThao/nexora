@@ -1,3 +1,4 @@
+import { VoiceKnowledgePanel } from "./VoiceKnowledgePanel";
 import React, { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useTranslation } from "../../../contexts/LanguageContext";
 import { useNotification } from "../../../contexts/NotificationContext";
@@ -112,6 +113,8 @@ import { buildServiceOrderItems } from "./bookingSettingsServiceOrder";
 
 const TK = "components.dashboard.views.BookingHubView.settings";
 const TK_HUB = "components.dashboard.views.BookingHubView";
+const SHOW_ASSISTANT_ONLY_MODE = false;
+const SHOW_AI_LANGUAGE_AUTO = false;
 
 const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 type DayKey = (typeof DAY_KEYS)[number];
@@ -565,9 +568,13 @@ function mergeFlatServicesIntoCategories(
 
 const AI_LANGUAGE_OPTIONS = [
   MerchantVoiceUiLanguage.Auto,
-  MerchantVoiceUiLanguage.Vi,
   MerchantVoiceUiLanguage.En,
+  MerchantVoiceUiLanguage.Vi,
 ] as const;
+
+const VISIBLE_AI_LANGUAGE_OPTIONS = SHOW_AI_LANGUAGE_AUTO
+  ? AI_LANGUAGE_OPTIONS
+  : AI_LANGUAGE_OPTIONS.filter((lang) => lang !== MerchantVoiceUiLanguage.Auto);
 
 const PROMO_MAX_LENGTH = 1000;
 // Mirrors Constants.VoiceTenantContentLimits on the backend: both columns are unbounded text and
@@ -1186,6 +1193,7 @@ export default function BookingSettingsPanel() {
   const [language, setLanguage] = useState<Language>(
     MerchantVoiceUiLanguage.Auto,
   );
+  const [assistantOnlyMode, setAssistantOnlyMode] = useState(false);
   const voiceOptionsQuery = useMerchantVoiceOptions(mapUiLanguageToConfigLanguage(language), { enabled: voiceEnabled });
   const voiceLanguageScopeRef = useRef<{ language: string; languages?: string[] }>({ language: mapUiLanguageToConfigLanguage(language) });
   if (voiceLanguageScopeRef.current.language !== mapUiLanguageToConfigLanguage(language)) {
@@ -1602,6 +1610,7 @@ export default function BookingSettingsPanel() {
       t(`${TK}.${defaultGreetingI18nKey(resolvedLang)}`);
     loadedGreetingRef.current = loadedGreeting;
     setGreeting(loadedGreeting);
+    setAssistantOnlyMode(configData.assistantOnlyMode === true);
 
     const nextHours = { ...INITIAL_HOURS };
     configData.operatingHours.forEach((item) => {
@@ -3061,6 +3070,7 @@ export default function BookingSettingsPanel() {
           sendSmsPromoEnabled,
           timeZone: timeZone.trim() || null,
           language: mapUiLanguageToConfigLanguage(language),
+          assistantOnlyMode,
           welcomeGreeting: greeting.trim(),
           voiceSelections: submittedVoiceSelections,
           operatingHours: DAY_KEYS.map((day) => {
@@ -4106,7 +4116,7 @@ export default function BookingSettingsPanel() {
                 role="group"
                 aria-label={t(`${TK}.aiLanguage`)}
               >
-                {AI_LANGUAGE_OPTIONS.map((lang) => (
+                {VISIBLE_AI_LANGUAGE_OPTIONS.map((lang) => (
                   <button
                     key={lang}
                     className={`settings-language-card ${language === lang ? "is-active" : ""}`}
@@ -4122,6 +4132,22 @@ export default function BookingSettingsPanel() {
                 {t(`${TK}.languageStatus.${language}`)}
               </div>
             </div>
+            {SHOW_ASSISTANT_ONLY_MODE ? (
+            <div className="settings-field settings-span-full">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={assistantOnlyMode}
+                  onChange={(event) => setAssistantOnlyMode(event.target.checked)}
+                />
+                {t("voiceKnowledge.assistantOnlyMode")}
+              </label>
+              <p>{t("voiceKnowledge.assistantOnlyModeDescription")}</p>
+              {assistantOnlyMode && (
+                <p role="status">{t("voiceKnowledge.assistantOnlyModeGreetingWarning")}</p>
+              )}
+            </div>
+            ) : null}
             {voiceEnabled && (
               <div className="settings-field settings-span-full">
                 <span className="settings-label">{t(`${TK}.voiceFieldLabel`)}</span>
@@ -4365,6 +4391,8 @@ export default function BookingSettingsPanel() {
                 </div>
               </div>
             </label>
+
+            <VoiceKnowledgePanel />
 
             <div className="settings-first-call-sms settings-span-full">
               <div className="settings-first-call-sms-head">

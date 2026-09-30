@@ -6,7 +6,7 @@ import {
   useState,
   type ReactElement,
 } from 'react'
-import { ExternalLink, Loader2, X } from 'lucide-react'
+import { ExternalLink, Loader2, RotateCcw, X } from 'lucide-react'
 import { Document, Page, pdfjs } from 'react-pdf'
 
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -39,6 +39,7 @@ const TK = 'components.dashboard.views.NewsLibraryView'
 const MAX_PAGE_WIDTH = 900
 const PAGE_RENDER_BATCH_SIZE = 3
 const PAGE_LOAD_ROOT_MARGIN = '0px 0px 200px 0px'
+const SLOW_LOAD_DELAY_MS = 8_000
 const PDF_DOCUMENT_OPTIONS = {
   verbosity: pdfjs.VerbosityLevel.ERRORS,
 }
@@ -73,6 +74,9 @@ export default function NewsLibraryPdfPreviewModal({
   const loadMoreSentinelRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const [pageWidth, setPageWidth] = useState(0)
+  const [loadAttempt, setLoadAttempt] = useState(0)
+  const [loadProgress, setLoadProgress] = useState<number | null>(null)
+  const [isSlowLoading, setIsSlowLoading] = useState(false)
   const [documentState, setDocumentState] = useState<PdfDocumentState>(() => ({
     url,
     numPages: 0,
@@ -92,6 +96,8 @@ export default function NewsLibraryPdfPreviewModal({
 
   const handleLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
     setDocumentState({ url, numPages, hasError: false })
+    setLoadProgress(100)
+    setIsSlowLoading(false)
     setVisiblePageState({
       url,
       count: typeof IntersectionObserver === 'undefined'
@@ -103,6 +109,25 @@ export default function NewsLibraryPdfPreviewModal({
   const handleLoadError = useCallback(() => {
     setDocumentState({ url, numPages: 0, hasError: true })
     setVisiblePageState({ url, count: 0 })
+    setIsSlowLoading(false)
+  }, [url])
+
+  const handleLoadProgress = useCallback(({ loaded, total }: { loaded: number; total: number }) => {
+    if (!total) {
+      setLoadProgress(null)
+      return
+    }
+
+    const percent = Math.round((loaded / total) * 100)
+    setLoadProgress(Math.min(100, Math.max(0, percent)))
+  }, [])
+
+  const handleRetry = useCallback(() => {
+    setDocumentState({ url, numPages: 0, hasError: false })
+    setVisiblePageState({ url, count: 0 })
+    setLoadProgress(null)
+    setIsSlowLoading(false)
+    setLoadAttempt((current) => current + 1)
   }, [url])
 
   useEffect(() => {
@@ -112,7 +137,16 @@ export default function NewsLibraryPdfPreviewModal({
     setVisiblePageState((current) => current.url === url
       ? current
       : { url, count: 0 })
+    setLoadProgress(null)
+    setIsSlowLoading(false)
   }, [url])
+
+  useEffect(() => {
+    if (!open || hasError || numPages > 0) return undefined
+
+    const timer = window.setTimeout(() => setIsSlowLoading(true), SLOW_LOAD_DELAY_MS)
+    return () => window.clearTimeout(timer)
+  }, [hasError, loadAttempt, numPages, open, url])
 
   const loadNextPageBatch = useCallback(() => {
     setVisiblePageState((current) => {
@@ -241,29 +275,77 @@ export default function NewsLibraryPdfPreviewModal({
                 <p className="text-sm font-bold text-nexoraDanger">
                   {t(`${TK}.pdfViewer.error`)}
                 </p>
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-                  {t(`${TK}.actions.openPdf`)}
-                </a>
+                <div className="mt-4 flex flex-wrap justify-center gap-2">
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                    {t(`${TK}.actions.openPdf`)}
+                  </a>
+                  <button
+                    type="button"
+                    onClick={handleRetry}
+                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-nexoraBrand px-4 py-2 text-xs font-bold text-nexoraBrand"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                    {t(`${TK}.pdfViewer.retry`)}
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
             <Document
+              key={`${url}-${loadAttempt}`}
               file={url}
               options={PDF_DOCUMENT_OPTIONS}
               onLoadSuccess={handleLoadSuccess}
               onLoadError={handleLoadError}
+              onLoadProgress={handleLoadProgress}
               loading={
-                <div className="grid min-h-72 place-items-center text-nexoraMuted">
-                  <span className="inline-flex items-center gap-2 text-sm font-semibold">
-                    <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
-                    {t(`${TK}.pdfViewer.loading`)}
-                  </span>
+                <div className="grid min-h-72 place-items-center px-4 text-center text-nexoraMuted">
+                  <div role="status" aria-live="polite" className="grid w-full justify-items-center gap-3">
+                    <span className="inline-flex items-center gap-2 text-sm font-semibold">
+                      <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+                      {t(`${TK}.pdfViewer.loading`)}{loadProgress === null ? '' : ` ${loadProgress}%`}
+                    </span>
+                    {loadProgress !== null ? (
+                      <progress
+                        aria-label={t(`${TK}.pdfViewer.loading`)}
+                        className="h-2 w-full max-w-xs accent-nexoraBrand"
+                        max="100"
+                        value={loadProgress}
+                      />
+                    ) : null}
+                    {isSlowLoading ? (
+                      <>
+                        <p className="max-w-md text-sm leading-6">
+                          {t(`${TK}.pdfViewer.slowLoading`)}
+                        </p>
+                        <div className="flex flex-wrap justify-center gap-2">
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                            {t(`${TK}.actions.openPdf`)}
+                          </a>
+                          <button
+                            type="button"
+                            onClick={handleRetry}
+                            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-nexoraBrand px-4 py-2 text-xs font-bold text-nexoraBrand"
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                            {t(`${TK}.pdfViewer.retry`)}
+                          </button>
+                        </div>
+                      </>
+                    ) : null}
+                  </div>
                 </div>
               }
             >

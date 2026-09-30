@@ -10,6 +10,11 @@
 const EMPTY = {}
 
 export const qk = {
+  voiceKnowledge: (pageNumber?: number) =>
+    pageNumber === undefined
+      ? ['merchant-voice-knowledge']
+      : ['merchant-voice-knowledge', pageNumber],
+  voiceUnanswered: (from: string, to: string) => ['merchant-voice-unanswered', from, to],
   merchantSetup:    ()         => ['merchantSetup'],
   profileSettings:  ()         => ['profileSettings'],
   transactions:            () => ['transactions'],
@@ -272,6 +277,7 @@ export const qk = {
     'merchantSettings', 'posCheckInActiveVisit', businessId ?? '', phone ?? '',
   ],
   merchantPosCheckInSettings: (businessId?: string) => ['merchantSettings', 'posCheckInSettings', businessId ?? ''],
+  merchantPosSmsSettings: (businessId?: string) => ['merchantSettings', 'posSmsSettings', businessId ?? ''],
   merchantPosTimeClockQr: (businessId?: string) => ['merchantSettings', 'posTimeClockQr', businessId ?? ''],
   merchantPosTimeClockRoster: (businessId?: string, dayKey?: string) => {
     const key: unknown[] = ['merchantSettings', 'posTimeClockRoster', businessId ?? '']
@@ -747,6 +753,7 @@ export const qk = {
   publicStaffDirectPaymentPage: (staffProfileId: string) => ['publicStaffDirectPaymentPage', staffProfileId],
   // POS Booking — Public Booking Page discovery (Ticket 4)
   publicReceipt: (receiptToken?: string) => ['publicReceipt', receiptToken ?? ''],
+  publicPosVisit: (token?: string) => ['publicPosVisit', token ?? ''],
   // Certifications — public certificate page. Keyed on the uppercased code so the same certificate
   // reached in lower case reuses the cached answer instead of spending another rate-limited request.
   publicCertificate: (certificateId?: string) => ['publicCertificate', certificateId ?? ''],

@@ -12,9 +12,11 @@ import {
   arrayMove,
   useSortable,
   verticalListSortingStrategy,
+  rectSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { ChevronDown, GripVertical } from 'lucide-react'
+import Tooltip from '../../../ui/Tooltip'
 import {
   CheckCircleFillIcon,
   FolderTreeIcon,
@@ -60,6 +62,7 @@ interface ServicesPricingSortableListProps<TItem> {
   onReorder: (items: TItem[]) => void | Promise<void>
   dragHandleLabel: string
   disabled?: boolean
+  layout?: 'list' | 'grid'
   renderItem: (item: TItem, dragHandle: ReactNode) => ReactNode
 }
 
@@ -69,6 +72,8 @@ export interface ServicesPricingServiceSectionLabels {
   duration: string
   status?: string
   approval?: string
+  approvalTooltip?: string
+  approvalTooltipAriaLabel?: string
   empty: string
 }
 
@@ -229,6 +234,7 @@ export function ServicesPricingSortableList<TItem>({
   onReorder,
   dragHandleLabel,
   disabled = false,
+  layout = 'list',
   renderItem,
 }: ServicesPricingSortableListProps<TItem>) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
@@ -245,7 +251,7 @@ export function ServicesPricingSortableList<TItem>({
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+      <SortableContext items={ids} strategy={layout === 'grid' ? rectSortingStrategy : verticalListSortingStrategy}>
         {items.map((item) => (
           <SortableServiceItem
             key={getId(item)}
@@ -277,7 +283,10 @@ export function ServicesPricingServiceSection<TItem>({
     <div
       className={`settings-service-category-body${labels.status ? ' has-status-column' : ''}${labels.approval ? ' has-approval-column' : ''}`}
     >
-      <div className="settings-service-header" aria-hidden="true">
+      <div
+        className="settings-service-header"
+        aria-hidden={labels.approvalTooltip ? undefined : true}
+      >
         <span />
         <span />
         <span>{labels.service}</span>
@@ -285,7 +294,16 @@ export function ServicesPricingServiceSection<TItem>({
         <span>{labels.duration}</span>
         {labels.status ? <span>{labels.status}</span> : null}
         {labels.approval ? (
-          <span className="settings-service-header-approval">{labels.approval}</span>
+          <span className="settings-service-header-approval">
+            <span>{labels.approval}</span>
+            {labels.approvalTooltip ? (
+              <Tooltip
+                content={labels.approvalTooltip}
+                ariaLabel={labels.approvalTooltipAriaLabel}
+                placement="top"
+              />
+            ) : null}
+          </span>
         ) : null}
         <span />
       </div>

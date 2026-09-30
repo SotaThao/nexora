@@ -52,12 +52,22 @@ function useScanSessionId(): string {
   }, [fromUrl])
 }
 
-export default function OneQrLandingPage() {
+type OneQrLandingPageProps = {
+  businessSlugOverride?: string
+  topSlot?: ReactNode
+  customerOnly?: boolean
+}
+
+export default function OneQrLandingPage({
+  businessSlugOverride,
+  topSlot,
+  customerOnly = false,
+}: OneQrLandingPageProps = {}) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const params = useParams()
   const [searchParams] = useSearchParams()
-  const businessSlug = params[ONEQR_ROUTE.param] ?? ''
+  const businessSlug = businessSlugOverride ?? params[ONEQR_ROUTE.param] ?? ''
   const sessionId = useScanSessionId()
   // Forwarded verbatim: a printed code may carry `?as=staff`, and only the
   // backend can say whether this scanner is entitled to that view.
@@ -72,6 +82,7 @@ export default function OneQrLandingPage() {
     businessSlug,
     sessionId,
     viewAs,
+    customerOnly,
   })
   const trackClick = useTrackOneQrModuleClick()
   const landingAudience = data?.audience
@@ -216,6 +227,7 @@ export default function OneQrLandingPage() {
 
   return (
     <Shell business={data.business}>
+      {topSlot}
       {welcomeMessage ? (
         <div className="mx-3 mb-1 mt-3 flex items-center gap-2 rounded-lg bg-nexoraBrandSoft/40 px-3 py-2 text-xs font-medium leading-relaxed text-nexoraBrand sm:mx-5">
           <span className="grid h-5 w-5 shrink-0 place-items-center">

@@ -109,9 +109,8 @@ function ReviewsView({
     [hasCollected, collectedItems, reviews, filter, staff],
   )
 
-  // All-staff KPIs always use the all-time overview summary so they match
-  // /dashboard (Total Reviews / Google / Yelp). Collected list is only for
-  // staff filters and client-side source/star tabs.
+  // All-staff KPIs use the all-time overview summary (Reviews tab is not date-scoped).
+  // Collected list is only for staff filters and client-side source/star tabs.
   const useSummary = Boolean(summary) && filter === 'all'
 
   const stats = useMemo(() => {
@@ -180,7 +179,7 @@ function ReviewsView({
       if (matchesLowStars(r)) lowStars++
     })
 
-    // Prefer server all-time summary for All-staff tab badges (matches Overview).
+    // Prefer server all-time summary for All-staff tab badges.
     const useSummaryBadges = Boolean(summary) && filter === 'all' && starFilter === 'all'
 
     return {
