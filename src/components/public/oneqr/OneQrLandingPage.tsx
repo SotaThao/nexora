@@ -55,13 +55,13 @@ function useScanSessionId(): string {
 type OneQrLandingPageProps = {
   businessSlugOverride?: string
   topSlot?: ReactNode
-  autoOpenModuleKey?: OneQrModuleKey
+  customerOnly?: boolean
 }
 
 export default function OneQrLandingPage({
   businessSlugOverride,
   topSlot,
-  autoOpenModuleKey,
+  customerOnly = false,
 }: OneQrLandingPageProps = {}) {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -82,6 +82,7 @@ export default function OneQrLandingPage({
     businessSlug,
     sessionId,
     viewAs,
+    customerOnly,
   })
   const trackClick = useTrackOneQrModuleClick()
   const landingAudience = data?.audience
@@ -108,17 +109,6 @@ export default function OneQrLandingPage({
     },
     [businessSlug, data, sessionId, trackClick],
   )
-
-  const autoOpenModule = autoOpenModuleKey
-    ? data?.modules?.find((module) => module.moduleKey === autoOpenModuleKey)
-    : undefined
-
-  useEffect(() => {
-    if (!autoOpenModule) return
-    const href = resolveOneQrModuleHref(autoOpenModule)
-    if (href.startsWith('/')) navigate(href, { replace: true })
-    else if (/^https?:\/\//i.test(href)) window.location.replace(href)
-  }, [autoOpenModule, navigate])
 
   // No slug means there is nothing to look up — a real dead end, and the only
   // case where the query stays disabled forever. Checked before the pending

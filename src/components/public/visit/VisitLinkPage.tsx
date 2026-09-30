@@ -1,26 +1,27 @@
 import type { ReactNode } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, Navigate, useParams } from 'react-router-dom'
 import { Clock, FileText, Loader2, MessageCircle, Star, Wallet } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { usePublicPosVisit } from '../../../data/hooks/usePublicPosVisit'
 import OneQrLandingPage from '../oneqr/OneQrLandingPage'
-import { OneQrModuleKey, buildOneQrPath } from '../../../constants/oneQr'
+import { buildOneQrPath } from '../../../constants/oneQr'
 import { PosOrderStatus } from '../../../constants/posOrderStatus'
 import { PosVisitLandingMode, PosVisitSection } from '../../../constants/posSmsSettings'
 import type { PosVisitApiDto } from '../../../types/posSms'
 
 const K = 'public.posVisit'
 
-const SECTION_MODULE: Record<PosVisitSection, OneQrModuleKey> = {
-  [PosVisitSection.Review]: OneQrModuleKey.Review,
-  [PosVisitSection.Tip]: OneQrModuleKey.TipAndPay,
-  [PosVisitSection.Feedback]: OneQrModuleKey.Review,
+const SECTION_FORM_PATH: Record<PosVisitSection, (visit: PosVisitApiDto) => string | null> = {
+  [PosVisitSection.Review]: (visit) => visit.reviewFormPath,
+  [PosVisitSection.Tip]: (visit) => visit.tipFormPath,
+  [PosVisitSection.Feedback]: (visit) => visit.reviewFormPath,
 }
 
 const isPosVisitSection = (value?: string): value is PosVisitSection =>
   Object.values(PosVisitSection).includes(value as PosVisitSection)
 
 const SAFE_HREF_PATTERN = /^(?:https?:\/\/|\/(?!\/))/i
+const APP_PATH_PATTERN = /^\/(?!\/)/
 
 const isSafeHref = (href: string | null): href is string => Boolean(href) && SAFE_HREF_PATTERN.test(href as string)
 
@@ -67,13 +68,19 @@ export default function VisitLinkPage() {
     )
   }
 
-  const autoOpenModuleKey =
-    hasSection && data.mode === PosVisitLandingMode.AfterVisit ? SECTION_MODULE[section] : undefined
+  const sectionFormPath =
+    hasSection && data.mode === PosVisitLandingMode.AfterVisit && data.visit
+      ? SECTION_FORM_PATH[section](data.visit)
+      : null
+
+  if (sectionFormPath && APP_PATH_PATTERN.test(sectionFormPath)) {
+    return <Navigate to={sectionFormPath} replace />
+  }
 
   return (
     <OneQrLandingPage
       businessSlugOverride={data.businessSlug}
-      autoOpenModuleKey={autoOpenModuleKey}
+      customerOnly
       topSlot={
         isExpired ? (
           <p className="mx-3 mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 sm:mx-5">

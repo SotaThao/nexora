@@ -28,26 +28,29 @@ export function usePublicOneQrLanding({
   sessionId,
   viewAs,
   enabled = true,
+  customerOnly = false,
 }: {
   businessSlug?: string | null
   sessionId: string
   /** Raw `?as=` value from the URL; the backend validates it. */
   viewAs?: string | null
   enabled?: boolean
+  customerOnly?: boolean
 }) {
   const auth = useContext(AuthContext)
-  const authStatus = auth?.status ?? 'loading'
+  const authStatus = customerOnly ? 'anonymous' : auth?.status ?? 'loading'
   const authReady = authStatus !== 'loading'
   const slug = businessSlug?.trim() ?? ''
+  const resolvedViewAs = customerOnly ? ONEQR_ROUTE.asCustomerValue : viewAs
 
   return useQuery<OneQrLanding | null>({
-    queryKey: qk.publicOneQrLanding(slug, sessionId, authStatus, viewAs),
+    queryKey: qk.publicOneQrLanding(slug, sessionId, authStatus, resolvedViewAs),
     queryFn: () =>
       publicOneQrRepository.getLanding({
         businessSlug: slug,
         sessionId,
-        viewAs,
-        anonymous: !hasStoredAccessToken(),
+        viewAs: resolvedViewAs,
+        anonymous: customerOnly || !hasStoredAccessToken(),
       }),
     enabled: enabled && Boolean(slug) && Boolean(sessionId) && authReady,
     retry: false,

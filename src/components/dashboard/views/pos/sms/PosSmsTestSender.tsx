@@ -70,6 +70,7 @@ export default function PosSmsTestSender({ businessId, type, body, defaultTestPh
           <CountryCodeSelect
             embedded
             showSearch={false}
+            dropUp
             value={dialCode}
             onChange={(code) => {
               setDialCode(code)

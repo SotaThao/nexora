@@ -318,12 +318,14 @@ export default function CountryCodeSelect({
   disabled = false,
   showSearch = true,
   embedded = false,
+  dropUp = false,
 }: {
   value: string
   onChange?: (code: string) => void
   disabled?: boolean
   showSearch?: boolean
   embedded?: boolean
+  dropUp?: boolean
 }) {
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
@@ -387,7 +389,7 @@ export default function CountryCodeSelect({
 
       {isOpen && (
         <div className={`country-code-dropdown absolute left-0 z-[200] w-64 bg-white rounded-lg shadow-premium flex flex-col overflow-hidden animate-fadeIn ${
-          embedded ? 'top-full mt-1' : 'mt-11'
+          dropUp ? 'bottom-full mb-1' : embedded ? 'top-full mt-1' : 'mt-11'
         }`}>
           {showSearch ? (
             <div className="country-code-search-wrap p-2 bg-white border-b border-nexoraBorder">

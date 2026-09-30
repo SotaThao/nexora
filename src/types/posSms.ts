@@ -63,6 +63,8 @@ export interface PosVisitApiDto {
   reviewUrl: string | null
   tipUrl: string | null
   feedbackUrl: string | null
+  reviewFormPath: string | null
+  tipFormPath: string | null
 }
 
 export interface PosVisitLandingApiDto {
