@@ -130,7 +130,11 @@ export default function CheckInSurface({
   if (session.phase === 'phone') {
     // flex + gap (not space-y): a `display: contents` wrapper would swallow space-y margins.
     return (
-      <div className="flex w-full flex-col items-center gap-8">
+      <div
+        className={`flex w-full flex-col items-center ${
+          appearance === 'public' ? 'gap-3 sm:gap-8' : 'gap-8'
+        }`}
+      >
         {keypadPromotions}
         {idleSlot}
         <PhoneCheckInStep
@@ -214,6 +218,7 @@ export default function CheckInSurface({
       businessName={businessName}
       onCancel={abandon}
       compactTechnicianCards={compactTechnicianCards}
+      appearance={appearance}
     />
   ) : (
     <SinglePageCheckInLayout
@@ -223,6 +228,7 @@ export default function CheckInSurface({
       compactTechnicianCards={compactTechnicianCards}
       businessId={businessId}
       promotions={promotions}
+      appearance={appearance}
     />
   )
 }

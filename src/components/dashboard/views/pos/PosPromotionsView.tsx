@@ -40,73 +40,22 @@ import type { PosPromotionApiDto, PosPromotionPayload } from '../../../../types/
 import { SkeletonList } from '../../../ui/skeleton'
 import { printPosPromoPoster } from './printPosPromoPoster'
 import CreateEditPosPromotionModal from './modals/CreateEditPosPromotionModal'
-import {
-  formatPromotionArtSaving,
-  formatPromotionStudioSchedule,
-} from './posPromotionDisplay'
+import PosPromotionBannerArt from './PosPromotionBannerArt'
+import { formatPromotionStudioSchedule } from './posPromotionDisplay'
 import {
   draftFromTemplate,
   localizeTemplateText,
   POS_PROMOTION_TEMPLATES,
-  promoArtThemeForIndex,
   templateFromApi,
   type PosPromotionDraft,
   type PosPromotionTemplate,
 } from './posPromotionTemplates'
-import {
-  promotionBannerColorHex,
-  promotionBannerImageUrl,
-  themeFromColorHex,
-} from './posPromotionBanner'
+import { promotionBannerColorHex, promotionBannerImageUrl } from './posPromotionBanner'
 import './pos-promotions.css'
 
 const K = 'components.dashboard.views.pos.PosPromotionsView'
 
 type StatusFilter = 'all' | 'enabled' | 'disabled'
-
-function PromotionArt({
-  name,
-  badgeLabel,
-  artSaving,
-  imageUrl,
-  theme,
-  colorHex,
-  specialOfferFallback,
-  large = false,
-}: {
-  name: string
-  badgeLabel?: string | null
-  artSaving: string
-  imageUrl?: string | null
-  theme: string
-  colorHex?: string | null
-  specialOfferFallback: string
-  large?: boolean
-}) {
-  if (imageUrl) {
-    return (
-      <div className={`promo-art image-art${large ? ' poster-art' : ''}`}>
-        <img src={imageUrl} alt="" width={large ? 560 : 320} height={large ? 350 : 200} />
-      </div>
-    )
-  }
-
-  const customStyle =
-    colorHex && !theme
-      ? { background: `linear-gradient(115deg, ${colorHex}22, ${colorHex}0d)`, color: colorHex }
-      : undefined
-
-  return (
-    <div
-      className={`promo-art${theme ? ` theme-${theme}` : ''}${large ? ' poster-art' : ''}`}
-      style={customStyle}
-    >
-      <span className="art-badge">{badgeLabel || specialOfferFallback}</span>
-      <h3>{name || '—'}</h3>
-      <strong className="art-saving">{artSaving}</strong>
-    </div>
-  )
-}
 
 export default function PosPromotionsView({ businessId }: { businessId?: string }) {
   const { t, currentLanguage, setLanguage } = useTranslation()
@@ -357,9 +306,6 @@ export default function PosPromotionsView({ businessId }: { businessId?: string 
       dayLabel,
     )
 
-  const artSaving = (promotion: Pick<PosPromotionApiDto, 'discountType' | 'discountValue'>) =>
-    formatPromotionArtSaving(promotion.discountType, promotion.discountValue)
-
   return (
     <div className="pos-promotions-page pos-promotions-breakout">
       <div className="pos-promotions-inner">
@@ -503,21 +449,12 @@ export default function PosPromotionsView({ businessId }: { businessId?: string 
           ) : (
             <div className="promotion-grid">
               {filteredPromotions.map((promotion, index) => {
-                const imageUrl = promotionBannerImageUrl(promotion)
-                const colorHex = promotionBannerColorHex(promotion)
-                const matchedTheme = themeFromColorHex(colorHex)
-                // Unknown custom hex must not fall back to a palette theme — that hides the gradient.
-                const theme = matchedTheme ?? (colorHex ? '' : promoArtThemeForIndex(index))
                 const bannerLabel = `1 ${t(`${K}.bannerUnit`)}`
                 return (
                   <article key={promotion.id} className="promotion-card">
-                    <PromotionArt
-                      name={promotion.name}
-                      badgeLabel={promotion.badgeLabel}
-                      artSaving={artSaving(promotion)}
-                      imageUrl={imageUrl}
-                      theme={theme}
-                      colorHex={colorHex}
+                    <PosPromotionBannerArt
+                      promotion={promotion}
+                      index={index}
                       specialOfferFallback={t(`${K}.specialOffer`)}
                     />
                     <div className="promotion-card-body">
@@ -694,20 +631,11 @@ export default function PosPromotionsView({ businessId }: { businessId?: string 
                 </header>
                 <div className="poster-body">
                   <div className="poster-output">
-                    <PromotionArt
-                      name={previewing.name}
-                      badgeLabel={previewing.badgeLabel}
-                      artSaving={artSaving(previewing)}
-                      imageUrl={promotionBannerImageUrl(previewing)}
-                      theme={
-                        themeFromColorHex(promotionBannerColorHex(previewing)) ??
-                        (promotionBannerColorHex(previewing)
-                          ? ''
-                          : promoArtThemeForIndex(previewThemeIndex))
-                      }
-                      colorHex={promotionBannerColorHex(previewing)}
+                    <PosPromotionBannerArt
+                      promotion={previewing}
+                      index={previewThemeIndex}
                       specialOfferFallback={t(`${K}.specialOffer`)}
-                      large
+                      className="poster-art"
                     />
                   </div>
                   <div className="poster-details">

@@ -34,6 +34,7 @@ import {
   promotionBannerImageUrl,
   themeFromColorHex,
 } from '../posPromotionBanner'
+import PosPromotionBannerArt from '../PosPromotionBannerArt'
 import { printPosPromoPoster } from '../printPosPromoPoster'
 import '../pos-promotions.css'
 
@@ -547,19 +548,21 @@ export default function CreateEditPosPromotionModal({
 
   const renderArt = (banner: EditorBanner | undefined, large = false) => {
     if (!banner) return null
-    if (bannerHasImage(banner) && banner.imageUrl) {
-      return (
-        <div className={`promo-art image-art${large ? ' poster-art' : ''}`}>
-          <img src={banner.imageUrl} alt="" width={large ? 640 : 400} height={large ? 400 : 250} />
-        </div>
-      )
-    }
     return (
-      <div className={`promo-art theme-${banner.theme}${large ? ' poster-art' : ''}`}>
-        <span className="art-badge">{previewBadge}</span>
-        <h3>{previewName}</h3>
-        <strong className="art-saving">{previewRate}</strong>
-      </div>
+      <PosPromotionBannerArt
+        promotion={{
+          name: previewName,
+          badgeLabel: previewBadge,
+          discountType,
+          discountValue: parsedValue,
+          primaryBannerImageUrl: bannerHasImage(banner) ? banner.imageUrl : null,
+          photoUrl: null,
+          primaryBannerColorHex: bannerHasImage(banner) ? null : colorHexFromTheme(banner.theme),
+        }}
+        specialOfferFallback={t(`${K}.specialOffer`)}
+        savingLabel={previewRate}
+        className={large ? 'poster-art' : ''}
+      />
     )
   }
 
@@ -918,6 +921,7 @@ export default function CreateEditPosPromotionModal({
               <input
                 id={uploadInputId}
                 type="file"
+                aria-describedby={`${uploadInputId}-hint ${uploadInputId}-ratio-hint`}
                 accept="image/png,image/jpeg,image/jpg,image/webp,.png,.jpg,.jpeg,.webp"
                 onChange={(e) => {
                   handleUpload(e.target.files?.[0] ?? null)
@@ -925,7 +929,8 @@ export default function CreateEditPosPromotionModal({
                 }}
               />
             </label>
-            <p className="promo-note">{t(`${K}.uploadHint`)}</p>
+            <p id={`${uploadInputId}-hint`} className="promo-note">{t(`${K}.uploadHint`)}</p>
+            <p id={`${uploadInputId}-ratio-hint`} className="promo-note">{t(`${K}.uploadRatioHint`)}</p>
 
             <button
               type="button"

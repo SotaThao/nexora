@@ -9,11 +9,8 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { usePosPromotions } from '../../../data/hooks/usePosPromotions'
 import { useKioskPromotions } from '../../../data/hooks/usePosSelfCheckIn'
 import type { PosPromotionApiDto } from '../../../types/repositories'
-import {
-  formatPromotionStudioSchedule,
-  isPromotionInScheduleNow,
-} from '../../dashboard/views/pos/posPromotionDisplay'
-import PosPromotionBannerArt from '../../dashboard/views/pos/PosPromotionBannerArt'
+import { formatPromotionStudioSchedule } from '../../dashboard/views/pos/posPromotionDisplay'
+import PromotionBannerDetails from '../../dashboard/views/pos/PromotionBannerDetails'
 import CheckInSectionCard from './CheckInSectionCard'
 
 const K = 'components.checkin.CheckInActivePromotionsSection'
@@ -29,13 +26,15 @@ const SCROLL_DURATION = 35
 function PromotionsCarousel({
   promotions,
   variant,
+  twoUpOnDesktop,
 }: {
   promotions: PosPromotionApiDto[]
   variant: 'panel' | 'strip'
+  twoUpOnDesktop: boolean
 }) {
   const { t, currentLanguage } = useTranslation()
   const isStrip = variant === 'strip'
-  const canLoop = isStrip ? promotions.length > 1 : promotions.length > 2
+  const canLoop = isStrip && !twoUpOnDesktop ? promotions.length > 1 : promotions.length > 2
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: 'start',
     loop: canLoop,
@@ -43,6 +42,7 @@ function PromotionsCarousel({
     duration: SCROLL_DURATION,
   })
   const [hovered, setHovered] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [scrollSnaps, setScrollSnaps] = useState<number[]>([])
 
@@ -70,7 +70,7 @@ function PromotionsCarousel({
   // Settle-based autoplay: wait for the scroll animation to finish, then dwell,
   // then advance. Avoids setInterval stacking mid-tween (the laggy stutter).
   useEffect(() => {
-    if (!emblaApi || !canLoop || hovered) return undefined
+    if (!emblaApi || !canLoop || hovered || detailsOpen) return undefined
 
     const intervalMs = isStrip ? STRIP_AUTOPLAY_MS : PANEL_AUTOPLAY_MS
     let timeoutId: number | undefined
@@ -109,7 +109,7 @@ function PromotionsCarousel({
       emblaApi.off('settle', onSettle)
       emblaApi.off('pointerDown', onPointerDown)
     }
-  }, [emblaApi, canLoop, hovered, isStrip])
+  }, [emblaApi, canLoop, hovered, isStrip, detailsOpen])
 
   const scheduleFor = (promotion: PosPromotionApiDto) =>
     formatPromotionStudioSchedule(
@@ -121,11 +121,12 @@ function PromotionsCarousel({
     )
 
   const showDots = scrollSnaps.length > 1
-  // Strip (keypad / pair): always one full-width banner — half-width twin cards are too cramped
-  // for name + rate + schedule. Panel (under services): ~2 cards from sm when there are 2+.
+  // Keep keypad strips single-column; the full-width form footer can show two on desktop.
   const slideBasis =
-    isStrip || promotions.length < 2 ? 'basis-full' : 'basis-full sm:basis-1/2'
-  const useSlideGap = !isStrip && promotions.length >= 2
+    promotions.length < 2 ? 'basis-full' : twoUpOnDesktop
+      ? 'basis-full lg:basis-1/2'
+      : isStrip ? 'basis-full' : 'basis-full sm:basis-1/2'
+  const useSlideGap = (!isStrip || twoUpOnDesktop) && promotions.length >= 2
 
   return (
     <div
@@ -134,19 +135,24 @@ function PromotionsCarousel({
       onMouseLeave={() => setHovered(false)}
     >
       <div className="overflow-hidden" ref={emblaRef}>
-        <div className={useSlideGap ? '-ml-3 flex' : 'flex'}>
+        <div className={useSlideGap ? '-ml-4 flex' : 'flex'}>
           {promotions.map((promotion, index) => {
             const schedule = scheduleFor(promotion)
             return (
               <div
                 key={promotion.id}
-                className={`min-w-0 shrink-0 grow-0 ${slideBasis}${useSlideGap ? ' pl-3' : ''}`}
+                className={`min-w-0 shrink-0 grow-0 ${slideBasis}${useSlideGap ? ' pl-4' : ''}`}
               >
                 <article data-promotion-id={promotion.id} className="space-y-1.5">
-                  <PosPromotionBannerArt
+                  <PromotionBannerDetails
                     promotion={promotion}
                     index={index}
                     specialOfferFallback={t(`${K}.specialOffer`)}
+                    schedule={schedule}
+                    scheduleLabel={t(`${K}.scheduleLabel`)}
+                    detailsLabel={t(`${K}.viewDetails`)}
+                    closeLabel={t(`${K}.closeDetails`)}
+                    onOpenChange={setDetailsOpen}
                   />
                   {/* Image covers are picture-only — name / rate live on theme art.
                       Under the banner we only show the schedule (no description).
@@ -220,8 +226,7 @@ function useActivePromotions(
   const isLoading = source === 'inline' ? false : source === 'kiosk' ? kiosk.isLoading : merchant.isLoading
 
   const activePromotions = useMemo(
-    () =>
-      queryPromotions.filter((promotion) => promotion.isActive && isPromotionInScheduleNow(promotion)),
+    () => queryPromotions.filter((promotion) => promotion.isActive),
     [queryPromotions],
   )
 
@@ -233,6 +238,7 @@ export default function CheckInActivePromotionsSection({
   businessId,
   promotions,
   variant = 'panel',
+  twoUpOnDesktop = false,
   className = '',
 }: {
   source?: 'merchant' | 'kiosk' | 'inline'
@@ -241,6 +247,8 @@ export default function CheckInActivePromotionsSection({
   promotions?: PosPromotionApiDto[]
   /** `panel` = front-desk section card; `strip` = bare carousel above the keypad. */
   variant?: 'panel' | 'strip'
+  /** Full-width form footer: one slide on phone, two on desktop. */
+  twoUpOnDesktop?: boolean
   /** Optional width override (e.g. pair form uses `max-w-md` to match the card below). */
   className?: string
 }) {
@@ -249,13 +257,12 @@ export default function CheckInActivePromotionsSection({
 
   if (isLoading || activePromotions.length === 0) return null
 
-  const carousel = <PromotionsCarousel promotions={activePromotions} variant={variant} />
+  const carousel = <PromotionsCarousel promotions={activePromotions} variant={variant} twoUpOnDesktop={twoUpOnDesktop} />
 
   if (variant === 'strip') {
-    // One full-width banner in the strip; width matches keypad / pair card.
     return (
       <div
-        className={`mx-auto w-full ${className || 'max-w-sm'}`}
+        className={`mx-auto w-full ${className || (twoUpOnDesktop ? 'max-w-none' : 'max-w-sm')}`}
         aria-label={t(`${K}.title`)}
       >
         {carousel}

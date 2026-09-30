@@ -3,7 +3,7 @@ import useEmblaCarousel from 'embla-carousel-react'
 import {
   formatPromotionDays,
 } from '../../dashboard/views/pos/posPromotionDisplay'
-import PosPromotionBannerArt from '../../dashboard/views/pos/PosPromotionBannerArt'
+import PromotionBannerDetails from '../../dashboard/views/pos/PromotionBannerDetails'
 import { formatBookingTimeDisplay } from './bookingUtils'
 
 /** Dwell between slides — long enough to read the offer before it advances. */
@@ -45,6 +45,7 @@ export default function BookingPromotions({ promotions, copy, locale }) {
   const [scrollSnaps, setScrollSnaps] = useState([])
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [hovered, setHovered] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return
@@ -75,7 +76,7 @@ export default function BookingPromotions({ promotions, copy, locale }) {
   // Settle-based autoplay — wait for animation to finish, dwell, then advance.
   // Works with or without loop (wraps to start when scrollNext is exhausted).
   useEffect(() => {
-    if (!emblaApi || !canScroll || hovered) return undefined
+    if (!emblaApi || !canScroll || hovered || detailsOpen) return undefined
 
     let timeoutId
     let cancelled = false
@@ -121,7 +122,7 @@ export default function BookingPromotions({ promotions, copy, locale }) {
       emblaApi.off('settle', onSettle)
       emblaApi.off('pointerDown', onPointerDown)
     }
-  }, [emblaApi, canScroll, hovered])
+  }, [emblaApi, canScroll, hovered, detailsOpen])
 
   if (!count) return null
 
@@ -158,8 +159,9 @@ export default function BookingPromotions({ promotions, copy, locale }) {
                 data-promotion-id={promotion.id}
                 aria-label={copy.promotionSlideAria(index + 1, count)}
               >
-                <PosPromotionBannerArt
+                <PromotionBannerDetails
                   promotion={{
+                    description: promotion.description,
                     name: promotion.name,
                     badgeLabel: promotion.badgeLabel,
                     discountType: promotion.discountType,
@@ -170,6 +172,11 @@ export default function BookingPromotions({ promotions, copy, locale }) {
                   }}
                   index={index}
                   specialOfferFallback={copy.specialOffer || 'SPECIAL OFFER'}
+                  schedule={schedule}
+                  scheduleLabel={copy.promotionScheduleLabel}
+                  detailsLabel={copy.promotionViewDetails}
+                  closeLabel={copy.promotionCloseDetails}
+                  onOpenChange={setDetailsOpen}
                 />
                 {schedule ? <p className="promotion-banner-schedule">{schedule}</p> : null}
               </article>

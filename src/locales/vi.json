@@ -5874,6 +5874,7 @@
             "chooseFile": "Chọn ảnh",
             "currentImage": "Ảnh banner hiện tại",
             "uploadHint": "PNG / JPG / WebP · tối đa 8 MB · tối đa 8 banner",
+            "uploadRatioHint": "Để banner hiển thị đẹp, nên dùng ảnh tỷ lệ 3:1 (ví dụ: 1200 × 400 px).",
             "previewUntitled": "Tên chương trình",
             "invalidPreview": "Nhập mức giảm hợp lệ",
             "saveNote": "Chương trình mới được lưu ở trạng thái tắt.",
@@ -8736,6 +8737,9 @@
         "notePlaceholder": "Bạn muốn nhắn gì thêm không?"
       },
       "CheckInActivePromotionsSection": {
+        "scheduleLabel": "Thời gian áp dụng ưu đãi",
+        "viewDetails": "Xem chi tiết ưu đãi",
+        "closeDetails": "Đóng chi tiết ưu đãi",
         "title": "Ưu đãi đang áp dụng",
         "subtitle": "Ưu đãi trong khung ngày/giờ hiện tại. Chỉ xem — áp dụng khi thanh toán nếu đơn đủ điều kiện.",
         "specialOffer": "ƯU ĐÃI ĐẶC BIỆT",

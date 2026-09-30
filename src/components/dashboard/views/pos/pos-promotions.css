@@ -632,7 +632,7 @@
 .pos-promotions-page .promotion-card > .promo-art.image-art img {
   height: 100%;
   aspect-ratio: auto;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .pos-promotions-page .promotion-card-body {
@@ -1308,7 +1308,7 @@
 
 .pos-promo-dialog .editor-preview .promo-art.image-art img {
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .pos-promo-dialog .editor-preview .promo-art h3 {

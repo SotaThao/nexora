@@ -203,6 +203,7 @@ export interface PublicBookingOperatingHour {
 export interface PublicBookingPromotion {
   id: string
   name: string
+  description?: string | null
   badgeLabel: string
   /** Always a recognised `PosServiceDiscountType` — see `normalizePromotion`. */
   discountType: PosServiceDiscountType
