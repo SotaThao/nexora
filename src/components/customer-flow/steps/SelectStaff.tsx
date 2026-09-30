@@ -186,7 +186,7 @@ export default function SelectStaff({
             href={paymentUrl}
             className="block w-full rounded-xl border border-nexoraBorder bg-white px-4 py-3 text-center text-xs font-extrabold uppercase tracking-wider text-nexoraBrand transition hover:bg-nexoraCanvas"
           >
-            {t('direct_payment.tip_skip')}
+            {t('customer.skip_tip')}
           </a>
         ) : null}
       </div>
