@@ -210,7 +210,12 @@ export default function OneQrPanel({
 
   const handleUpdateModule = (
     localId: string,
-    fields: Partial<Pick<DraftModule, 'customLabel' | 'customIcon' | 'customUrl'>>,
+    fields: Partial<
+      Pick<
+        DraftModule,
+        'customLabel' | 'customIcon' | 'customIconUrl' | 'customUrl'
+      >
+    >,
   ) => {
     updateAudienceDraft((current) => ({
       ...current,

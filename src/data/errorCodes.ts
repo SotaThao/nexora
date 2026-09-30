@@ -146,6 +146,15 @@ export const errorCodeToI18nKey = {
   HOLIDAY_DATE_IN_PAST: 'errors.holiday_date_in_past',
   HOLIDAY_ADJUSTED_TIME_ALREADY_PASSED: 'errors.holiday_adjusted_time_already_passed',
 
+  POS_SMS_BODY_REQUIRED: 'errors.pos_sms_body_required',
+  POS_SMS_BODY_TOO_LONG: 'errors.pos_sms_body_too_long',
+  POS_SMS_PLACEHOLDER_NOT_ALLOWED: 'errors.pos_sms_placeholder_not_allowed',
+  POS_SMS_INVALID_SEND_MODE: 'errors.pos_sms_invalid_send_mode',
+  POS_SMS_INVALID_VISIT_LINK_TTL: 'errors.pos_sms_invalid_visit_link_ttl',
+  POS_SMS_TEST_PHONE_REQUIRED: 'errors.pos_sms_test_phone_required',
+  POS_SMS_TEST_PHONE_INVALID: 'errors.pos_sms_test_phone_invalid',
+  POS_SMS_VISIT_LINK_NOT_FOUND: 'errors.pos_sms_visit_link_not_found',
+
   // POS Owner Setup — Roles & Permissions (US-015)
   POS_ROLE_NOT_FOUND: 'errors.pos_role_not_found',
   POS_ROLE_NAME_REQUIRED: 'errors.pos_role_name_required',
@@ -451,6 +460,8 @@ export const errorCodeToI18nKey = {
   POS_PAYROLL_IS_W2: 'errors.pos_payroll_is_w2',
   POS_PAYROLL_OVERRIDE_NOTE_REQUIRED: 'errors.pos_payroll_override_note_required',
   POS_PAYROLL_AMOUNT_ZERO: 'errors.pos_payroll_amount_zero',
+  POS_VLINKPAY_PAYMENT_NOT_CONFIRMED: 'errors.pos_vlinkpay_payment_not_confirmed',
+  POS_VLINKPAY_AMOUNT_MISMATCH: 'errors.pos_vlinkpay_amount_mismatch',
 
   // Tax IQ — Payroll Runs (mục 12, backend US-26)
   TAXIQ_PAYROLL_RUN_NOT_FOUND: 'errors.taxiq_payroll_run_not_found',

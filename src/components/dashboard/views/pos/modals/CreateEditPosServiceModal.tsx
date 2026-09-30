@@ -195,6 +195,8 @@ export default function CreateEditPosServiceModal({
       mode={isEditMode ? 'edit' : 'create'}
       layout="overview"
       size="wide"
+      categoriesControl="select"
+      categoriesPlacement="overview"
       value={{
         name,
         price,

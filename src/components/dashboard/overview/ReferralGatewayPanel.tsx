@@ -100,12 +100,16 @@ export default function ReferralGatewayPanel({ t, showToast }) {
         </div>
 
         <div className="flex items-center justify-between gap-2 rounded-lg border border-nexoraBorder bg-white py-1.5 pl-4 pr-1.5">
-          <input
-            type="text"
-            readOnly
-            value={referralUrl ? referralUrl.replace(/^https?:\/\//, '') : ''}
-            className="min-w-0 flex-1 truncate bg-transparent text-xs font-semibold text-nexoraBrand"
-          />
+          <span
+            className={`min-w-0 flex-1 truncate text-xs font-semibold ${
+              referralUrl ? 'text-nexoraBrand' : 'text-nexoraSubtle'
+            }`}
+            title={referralUrl ? referralUrl.replace(/^https?:\/\//, '') : undefined}
+          >
+            {referralUrl
+              ? referralUrl.replace(/^https?:\/\//, '')
+              : t('dashboard.master_gateway.referral_link_placeholder')}
+          </span>
           <button
             type="button"
             onClick={() => void handleCopy()}

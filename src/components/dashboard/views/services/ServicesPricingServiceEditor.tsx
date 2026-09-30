@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react'
-import { Camera, FolderOpen, Image as ImageIcon, ImageOff } from 'lucide-react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Camera, ChevronDown, FolderOpen, Image as ImageIcon, ImageOff } from 'lucide-react'
 import CameraCaptureModal from '../../../ui/CameraCaptureModal'
 import ImageFileInput from '../../../ui/ImageFileInput'
 import {
@@ -67,7 +67,9 @@ export interface ServicesPricingServiceRowLabels {
   durationPlaceholder: string
   durationUnit: string
   edit: string
+  editAction?: string
   remove: string
+  removeAction?: string
   save: string
 }
 
@@ -85,6 +87,7 @@ export function ServicesPricingServiceRow<TItem>({
   highlighted = false,
   autoFocusName = false,
   visualFallbackText,
+  actionsAsText = false,
 }: {
   item: TItem
   dragHandle: ReactNode
@@ -99,6 +102,7 @@ export function ServicesPricingServiceRow<TItem>({
   highlighted?: boolean
   autoFocusName?: boolean
   visualFallbackText?: string
+  actionsAsText?: boolean
 }) {
   const id = adapter.getId(item)
   const name = adapter.getName(item)
@@ -110,7 +114,7 @@ export function ServicesPricingServiceRow<TItem>({
 
   return (
     <div
-      className={`settings-service-row is-compact${isDirty ? ' is-editing' : ''}${isNew ? ' is-new' : ''}${highlighted ? ' is-highlight' : ''}`}
+      className={`settings-service-row is-compact${actionsAsText ? ' has-text-actions' : ''}${isDirty ? ' is-editing' : ''}${isNew ? ' is-new' : ''}${highlighted ? ' is-highlight' : ''}`}
       data-service-row-id={isNew ? undefined : id}
       data-new-service-draft-id={isNew ? id : undefined}
     >
@@ -201,6 +205,8 @@ export function ServicesPricingServiceRow<TItem>({
             >
               {isPending ? (
                 <SpinnerIcon className="booking-inline-spinner" />
+              ) : actionsAsText ? (
+                labels.save
               ) : (
                 <CheckCircleFillIcon className="settings-action-icon" />
               )}
@@ -214,7 +220,7 @@ export function ServicesPricingServiceRow<TItem>({
               disabled={isPending}
               onClick={() => controller.onEdit?.(item)}
             >
-              <PencilIcon className="settings-service-edit-icon" />
+              {actionsAsText ? labels.editAction ?? labels.edit : <PencilIcon className="settings-service-edit-icon" />}
             </button>
           ) : null}
           {controller.onRemove ? (
@@ -227,6 +233,8 @@ export function ServicesPricingServiceRow<TItem>({
             >
               {isPending ? (
                 <SpinnerIcon className="booking-inline-spinner" />
+              ) : actionsAsText ? (
+                labels.removeAction ?? labels.remove
               ) : (
                 <XLgIcon className="settings-row-remove-icon" />
               )}
@@ -343,6 +351,8 @@ export function ServicesPricingServiceModal({
   isSubmitting = false,
   layout = 'default',
   size = 'default',
+  categoriesControl = 'options',
+  categoriesPlacement = 'top',
 }: {
   open: boolean
   mode: 'create' | 'edit'
@@ -361,58 +371,131 @@ export function ServicesPricingServiceModal({
   isSubmitting?: boolean
   layout?: 'default' | 'overview'
   size?: 'default' | 'wide'
+  categoriesControl?: 'options' | 'select'
+  categoriesPlacement?: 'top' | 'overview'
 }) {
   const [cameraOpen, setCameraOpen] = useState(false)
+  const [categoriesOpen, setCategoriesOpen] = useState(false)
+  const categoriesSelectRef = useRef<HTMLDivElement>(null)
   const isOverview = layout === 'overview'
+
+  useEffect(() => {
+    if (!open || categoriesControl !== 'select') {
+      setCategoriesOpen(false)
+      return
+    }
+
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (!categoriesSelectRef.current?.contains(event.target as Node)) {
+        setCategoriesOpen(false)
+      }
+    }
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setCategoriesOpen(false)
+    }
+
+    document.addEventListener('mousedown', closeOnOutsideClick)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('mousedown', closeOnOutsideClick)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [categoriesControl, open])
 
   if (!open) return null
 
+  const selectedCategoryNames = categories
+    .filter((category) => category.checked ?? value.categoryIds.includes(category.id))
+    .map((category) => category.name)
+  const categoriesSummary = selectedCategoryNames.length > 0
+    ? selectedCategoryNames.join(', ')
+    : categories.length === 0
+      ? labels.categoriesEmpty
+      : labels.categoriesHelp
+
+  const categoryOptions = categories.length === 0 ? (
+    <div className="settings-service-modal-categories-empty">
+      {labels.categoriesEmpty}
+    </div>
+  ) : (
+    categories.map((category) => {
+      const checked = category.checked ?? value.categoryIds.includes(category.id)
+      return (
+        <label
+          key={category.id}
+          className={`settings-service-modal-category-option${checked ? ' is-selected' : ''}${category.disabled ? ' is-disabled' : ''}`}
+        >
+          <input
+            type="checkbox"
+            checked={checked}
+            disabled={category.disabled || isSubmitting}
+            onChange={() => controller.onToggleCategory(category.id)}
+          />
+          <span>{category.name}</span>
+        </label>
+      )
+    })
+  )
+
   const categoriesField = (
     <div
-      className={`settings-field settings-service-modal-field-name${categoriesError ? ' has-error' : ''}`}
+      className={`settings-field settings-service-modal-field-name${categoriesError ? ' has-error' : ''}${categoriesOpen ? ' has-open-menu' : ''}`}
     >
       <ServicesPricingFieldLabel
         label={labels.categories}
         requirement={labels.required}
       />
-      <div
-        className={`settings-service-modal-categories${categoriesError ? ' has-error' : ''}`}
-        role="group"
-        aria-invalid={categoriesError ? 'true' : undefined}
-        aria-describedby={categoriesError ? 'shared-services-categories-error' : undefined}
-        aria-label={labels.categories}
-      >
-        {categories.length === 0 ? (
-          <div className="settings-service-modal-categories-empty">
-            {labels.categoriesEmpty}
-          </div>
-        ) : (
-          categories.map((category) => {
-            const checked = category.checked ?? value.categoryIds.includes(category.id)
-            return (
-              <label
-                key={category.id}
-                className={`settings-service-modal-category-option${checked ? ' is-selected' : ''}${category.disabled ? ' is-disabled' : ''}`}
-              >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  disabled={category.disabled || isSubmitting}
-                  onChange={() => controller.onToggleCategory(category.id)}
-                />
-                <span>{category.name}</span>
-              </label>
-            )
-          })
-        )}
-      </div>
+      {categoriesControl === 'select' ? (
+        <div className="settings-service-modal-category-select" ref={categoriesSelectRef}>
+          <button
+            type="button"
+            className={`settings-input settings-service-modal-category-trigger${categoriesError ? ' has-error' : ''}`}
+            aria-label={`${labels.categories}: ${categoriesSummary}`}
+            aria-haspopup="dialog"
+            aria-expanded={categoriesOpen}
+            aria-controls="shared-services-categories-options"
+            aria-invalid={categoriesError ? 'true' : undefined}
+            aria-describedby={categoriesError ? 'shared-services-categories-error' : undefined}
+            disabled={isSubmitting || categories.length === 0}
+            onClick={() => setCategoriesOpen((previous) => !previous)}
+          >
+            <span className={selectedCategoryNames.length === 0 ? 'is-placeholder' : ''}>
+              {categoriesSummary}
+            </span>
+            <ChevronDown
+              className={`settings-service-modal-category-chevron${categoriesOpen ? ' is-open' : ''}`}
+              aria-hidden="true"
+            />
+          </button>
+          {categoriesOpen ? (
+            <div
+              id="shared-services-categories-options"
+              className="settings-service-modal-category-menu"
+              role="group"
+              aria-label={labels.categories}
+            >
+              {categoryOptions}
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        <div
+          className={`settings-service-modal-categories${categoriesError ? ' has-error' : ''}`}
+          role="group"
+          aria-invalid={categoriesError ? 'true' : undefined}
+          aria-describedby={categoriesError ? 'shared-services-categories-error' : undefined}
+          aria-label={labels.categories}
+        >
+          {categoryOptions}
+        </div>
+      )}
       {categoriesError ? (
         <small id="shared-services-categories-error" className="settings-field-error" role="alert">
           {categoriesError}
         </small>
-      ) : (
+      ) : categoriesControl !== 'select' ? (
         <span className="settings-help">{labels.categoriesHelp}</span>
-      )}
+      ) : null}
     </div>
   )
 
@@ -621,7 +704,7 @@ export function ServicesPricingServiceModal({
 
         <div className="settings-service-modal-body">
           <div className="settings-service-modal-grid items-start">
-            {categoriesField}
+            {categoriesPlacement === 'top' ? categoriesField : null}
 
             {isOverview ? (
               <div className="settings-service-modal-overview">
@@ -632,6 +715,7 @@ export function ServicesPricingServiceModal({
                     {priceField}
                     {durationField}
                   </div>
+                  {categoriesPlacement === 'overview' ? categoriesField : null}
                   {overviewFieldsExtension}
                 </div>
               </div>

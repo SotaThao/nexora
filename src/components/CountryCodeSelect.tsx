@@ -318,12 +318,14 @@ export default function CountryCodeSelect({
   disabled = false,
   showSearch = true,
   embedded = false,
+  dropUp = false,
 }: {
   value: string
   onChange?: (code: string) => void
   disabled?: boolean
   showSearch?: boolean
   embedded?: boolean
+  dropUp?: boolean
 }) {
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
@@ -370,7 +372,7 @@ export default function CountryCodeSelect({
         disabled={disabled}
         onClick={() => !disabled && setIsOpen(!isOpen)}
         className={embedded
-          ? `min-h-0 flex-1 self-stretch flex items-center gap-2 px-3 border-0 border-r border-nexoraBorder rounded-none rounded-l-[9px] text-xs font-bold text-nexoraText transition-colors focus:outline-none select-none ${
+          ? `h-full min-h-0 flex-1 self-stretch flex items-center gap-2 px-3 border-0 border-r border-nexoraBorder rounded-none rounded-l-[9px] text-xs font-bold text-nexoraText transition-colors focus:outline-none select-none ${
             disabled ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed' : 'bg-transparent hover:bg-slate-50 cursor-pointer'
           }`
           : `h-10 flex items-center gap-2 px-3 border border-nexoraBorder border-r-0 rounded-l-lg text-xs font-bold text-nexoraText transition-colors focus:outline-none select-none
@@ -387,7 +389,7 @@ export default function CountryCodeSelect({
 
       {isOpen && (
         <div className={`country-code-dropdown absolute left-0 z-[200] w-64 bg-white rounded-lg shadow-premium flex flex-col overflow-hidden animate-fadeIn ${
-          embedded ? 'top-full mt-1' : 'mt-11'
+          dropUp ? 'bottom-full mb-1' : embedded ? 'top-full mt-1' : 'mt-11'
         }`}>
           {showSearch ? (
             <div className="country-code-search-wrap p-2 bg-white border-b border-nexoraBorder">

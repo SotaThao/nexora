@@ -30,6 +30,12 @@ export default defineConfig({
     chunkSizeWarningLimit: 900,
     rollupOptions: {
       output: {
+        assetFileNames: (assetInfo) =>
+          (assetInfo.names ?? [assetInfo.name]).some((name) =>
+            name?.endsWith('pdf.worker.min.mjs'),
+          )
+            ? 'assets/[name]-[hash].js'
+            : 'assets/[name]-[hash][extname]',
         manualChunks: {
           react: ['react', 'react-dom'],
           icons: ['lucide-react'],

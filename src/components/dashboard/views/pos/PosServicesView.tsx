@@ -2,6 +2,7 @@
 // The catalog presentation is shared with AI Hub. POS supplies its own API
 // adapter/controller and enriches each row with photos, tags, and status.
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import { LayoutGrid, List, Search } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getApiErrorCode } from '../../../../types/domain'
@@ -40,13 +41,9 @@ import {
 } from '../bookingSettingsNewServiceDrafts'
 import { CheckCircleFillIcon } from '../BookingHubIcons'
 import CreateEditPosServiceModal from './modals/CreateEditPosServiceModal'
+import PosServicesCardView, { type PosServiceSection } from './PosServicesCardView'
 import { TOAST_SNACK_DURATION_MS } from '../../../../constants/toast'
-
-type PosServiceSection = {
-  id: string
-  name: string
-  services: PosServiceApiDto[]
-}
+import { PosServiceStatus } from '../../../../constants/posServiceStatus'
 
 type PosCategoryDraft = {
   id: string | null
@@ -135,8 +132,8 @@ function groupServicesByCategory(
 export default function PosServicesView({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
-  const { data: services, isLoading } = usePosServices()
-  const { data: categories } = usePosCategories()
+  const { data: services, isLoading, isError, refetch } = usePosServices()
+  const { data: categories, isLoading: categoriesLoading, isError: categoriesError, refetch: refetchCategories } = usePosCategories()
   const { data: tags } = usePosTags()
   const createService = useCreatePosService()
   const updateService = useUpdatePosService()
@@ -148,6 +145,9 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
   const reorderCategories = useReorderPosCategories()
 
   const [items, setItems] = useState<PosServiceApiDto[]>([])
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('card')
+  const [search, setSearch] = useState('')
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
   const [inlineServiceDrafts, setInlineServiceDrafts] = useState<
     Record<string, PosInlineServiceDraft>
   >({})
@@ -195,6 +195,7 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
 
   const serviceMutationBusy =
     isSavingAllServices ||
+    deleteService.isPending ||
     createService.isPending ||
     updateService.isPending ||
     reorderServices.isPending
@@ -323,6 +324,23 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
     return draft ? isInlineServiceDraftDirty(service, draft) : false
   })
   const hasUnsavedServices = dirtyServices.length > 0 || newServiceDrafts.length > 0
+  const activeCategoryId = serviceSections.some((section) => section.id === selectedCategoryId)
+    ? selectedCategoryId
+    : null
+  const searchTerm = search.trim().toLocaleLowerCase()
+  const hasFilters = Boolean(searchTerm || activeCategoryId)
+  const visibleSections = serviceSections
+    .filter((section) => !activeCategoryId || section.id === activeCategoryId)
+    .map((section) => ({
+      ...section,
+      services: section.services.filter((service) => service.name.toLocaleLowerCase().includes(searchTerm)),
+    }))
+    .filter((section) => !searchTerm || section.services.length > 0)
+
+  const clearFilters = () => {
+    setSearch('')
+    setSelectedCategoryId(null)
+  }
 
   const saveAllServices = async () => {
     const existingUpdates = dirtyServices.map((service) => {
@@ -400,7 +418,7 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
             categoryIds:
               draft.categoryId === OTHER_SERVICES_SECTION_ID ? [] : [draft.categoryId],
             tags: [],
-            status: 'Active',
+            status: PosServiceStatus.Active,
           })
           savedNewIds.push(draft.id)
         } catch (error) {
@@ -607,13 +625,91 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
         </section>
       ) : null}
 
-      {isLoading ? (
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative w-full min-w-0 sm:w-[28rem] sm:max-w-full">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nexoraMuted" aria-hidden="true" />
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value)
+                setOpenSectionIds(new Set(serviceSections.map((section) => section.id)))
+              }}
+              placeholder={t(`${TK}.searchServices`)}
+              aria-label={t(`${TK}.searchServices`)}
+              className="min-h-11 w-full rounded-lg border border-nexoraBorder bg-nexoraSurface py-2 pl-9 pr-3 text-sm text-nexoraText focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand"
+            />
+          </div>
+          <div role="group" aria-label={t(`${TK}.viewMode`)} className="inline-flex rounded-lg border border-nexoraBorder bg-nexoraSurface p-1 sm:ml-auto">
+            {([{ mode: 'card', label: 'cardView', Icon: LayoutGrid }, { mode: 'list', label: 'listView', Icon: List }] as const).map(({ mode, label, Icon }) => (
+              <button
+                key={mode}
+                type="button"
+                aria-pressed={viewMode === mode}
+                disabled={mode === 'card' && hasUnsavedServices}
+                aria-describedby={mode === 'card' && hasUnsavedServices ? 'pos-services-unsaved-hint' : undefined}
+                onClick={() => setViewMode(mode)}
+                className={`inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand disabled:opacity-50 ${viewMode === mode ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted hover:bg-nexoraSurfaceMuted'}`}
+              >
+                <Icon className="h-4 w-4" aria-hidden="true" />
+                {t(`${TK}.${label}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+        {hasUnsavedServices ? <p id="pos-services-unsaved-hint" className="text-sm text-nexoraMuted">{t(`${TK}.unsavedViewHint`)}</p> : null}
+        {serviceSections.length > 1 ? (
+          <div role="group" aria-label={t(`${TK}.categoriesLabel`)} className="flex flex-wrap gap-2">
+            {[{ id: null, name: t(`${TK}.allCategories`) }, ...serviceSections].map((category) => (
+              <button
+                key={category.id ?? 'all'}
+                type="button"
+                aria-pressed={activeCategoryId === category.id}
+                onClick={() => {
+                  setSelectedCategoryId(category.id)
+                  setOpenSectionIds(new Set(serviceSections.map((section) => section.id)))
+                }}
+                className={`min-h-9 max-w-full break-words rounded-lg border px-2.5 py-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand ${activeCategoryId === category.id ? 'border-nexoraBrand bg-nexoraBrandSoft text-nexoraBrand' : 'border-nexoraBorder bg-nexoraSurface text-nexoraMuted hover:bg-nexoraSurfaceMuted'}`}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      {isLoading || categoriesLoading ? (
         <div className="nexora-card p-6">
           <SkeletonList count={4} lines={2} />
         </div>
+      ) : isError || categoriesError ? (
+        <div role="alert" className="nexora-card space-y-3 p-6 text-sm text-nexoraDanger">
+          <p>{t(`${TK}.loadError`)}</p>
+          <button type="button" className="min-h-11 rounded-lg border border-nexoraBorder px-3 text-nexoraText" onClick={() => { void refetch(); void refetchCategories() }}>
+            {t(`${TK}.retry`)}
+          </button>
+        </div>
+      ) : hasFilters && visibleSections.length === 0 ? (
+        <div role="status" className="nexora-card space-y-3 p-6 text-center text-sm text-nexoraMuted">
+          <p>{t(`${TK}.noSearchResults`)}</p>
+          <button type="button" onClick={clearFilters} className="min-h-11 rounded-lg border border-nexoraBorder px-3 font-semibold text-nexoraBrand">
+            {t(`${TK}.clearFilters`)}
+          </button>
+        </div>
+      ) : viewMode === 'card' ? (
+        <PosServicesCardView
+          sections={visibleSections}
+          disabled={serviceMutationBusy || categoryMutationBusy}
+          onManageCategories={openCategoryManager}
+          onAdd={(categoryId) => setModalState({ open: true, service: null, defaultCategoryId: categoryId === OTHER_SERVICES_SECTION_ID ? null : categoryId })}
+          onEdit={(service) => setModalState({ open: true, service, defaultCategoryId: null })}
+          onDelete={(service, categoryId) => void handleDelete(service, categoryId)}
+          onReorder={reorderServicesForCategory}
+        />
       ) : (
         <ServicesPricingPanel
-          sections={serviceSections}
+          sections={visibleSections}
           adapter={{
             getId: (section) => section.id,
             getName: (section) => section.name,
@@ -640,7 +736,7 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
             addService: t(`${TK}.addService`),
             empty: t(`${TK}.noServices`),
             emptyAction: t(`${TK}.addService`),
-            formatCount: (count) => t(`${TK}.serviceCount`, { count }),
+            formatCount: (count) => t(`${TK}.${count === 1 ? 'serviceCountOne' : 'serviceCount'}`, { count }),
           }}
           toolbarActions={
             <button
@@ -666,6 +762,8 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
                 duration: t(`${TK}.durationColumn`),
                 status: t(`${TK}.statusColumn`),
                 approval: t(`${TK}.approvalColumn`),
+                approvalTooltip: t(`${TK}.approvalTooltip`),
+                approvalTooltipAriaLabel: t(`${TK}.approvalTooltipAriaLabel`),
                 empty: t(`${TK}.categoryEmpty`),
               }}
               renderItem={(service, dragHandle) => {
@@ -685,15 +783,13 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
                           getPhotoUrl: (item) => item.photoUrl,
                           getStatus: (item) => ({
                             label: t(
-                              `${TK}.${item.status === 'Active' ? 'activeBadge' : 'inactiveBadge'}`,
+                              `${TK}.${item.status === PosServiceStatus.Active ? 'activeBadge' : 'inactiveBadge'}`,
                             ),
-                            tone: item.status === 'Active' ? 'active' : 'inactive',
+                            tone: item.status === PosServiceStatus.Active ? 'active' : 'inactive',
                           }),
-                          getApproval: (item) =>
-                            toApprovalBadge(
-                              Boolean(item.isRequiredApproval),
-                              t(`${TK}.${item.isRequiredApproval ? 'approvalYes' : 'approvalNo'}`),
-                            ),
+                          getApproval: (item) => item.isRequiredApproval
+                            ? toApprovalBadge(true, t(`${TK}.approvalRequired`))
+                            : null,
                         }}
                         controller={{
                           onChange: updateInlineServiceDraft,
@@ -712,9 +808,12 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
                           durationPlaceholder: t(`${AI_TK}.placeholderServiceDuration`),
                           durationUnit: t(`${AI_TK}.durationUnit`),
                           edit: t(`${TK}.editService`),
+                          editAction: t(`${TK}.editAction`),
                           remove: t(`${TK}.deleteService`),
+                          removeAction: t(`${TK}.deleteAction`),
                           save: t(`${TK}.save`),
                         }}
+                        actionsAsText
                         error={inlineServiceErrors[service.id]}
                       />
                     )
@@ -736,7 +835,7 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
                         label: t(`${TK}.activeBadge`),
                         tone: 'active',
                       }),
-                      getApproval: () => toApprovalBadge(false, t(`${TK}.approvalNo`)),
+                      getApproval: () => null,
                     }}
                     controller={{
                       onChange: updateNewServiceDraft,
@@ -744,7 +843,7 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
                       isDirty: () => true,
                       isPending: () => createService.isPending,
                     }}
-                    labels={{
+                      labels={{
                       name: t(`${AI_TK}.serviceNameAria`),
                       namePlaceholder: t(`${AI_TK}.placeholderServiceName`),
                       price: t(`${AI_TK}.servicePriceAria`),
@@ -752,10 +851,13 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
                       duration: t(`${AI_TK}.serviceDurationAria`),
                       durationPlaceholder: t(`${AI_TK}.placeholderServiceDuration`),
                       durationUnit: t(`${AI_TK}.durationUnit`),
-                      edit: t(`${TK}.editService`),
-                      remove: t(`${AI_TK}.serviceModalCancel`),
-                      save: t(`${TK}.save`),
-                    }}
+                        edit: t(`${TK}.editService`),
+                        editAction: t(`${TK}.editAction`),
+                        remove: t(`${AI_TK}.serviceModalCancel`),
+                        removeAction: t(`${AI_TK}.serviceModalCancel`),
+                        save: t(`${TK}.save`),
+                      }}
+                      actionsAsText
                     error={newServiceDraftErrors[draft.id]?.message}
                     invalidFields={newServiceDraftErrors[draft.id]?.fields}
                     isNew
@@ -837,7 +939,7 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
           nameAriaLabel: t(`${TK}.categoryNameAriaLabel`),
           deleteAriaLabel: t(`${TK}.deleteCategory`),
           dragHandle: t(`${TK}.categoryDragHandle`),
-          formatCount: (count) => t(`${TK}.serviceCount`, { count }),
+          formatCount: (count) => t(`${TK}.${count === 1 ? 'serviceCountOne' : 'serviceCount'}`, { count }),
         }}
         error={categoryError}
         errorIndex={categoryErrorIndex}

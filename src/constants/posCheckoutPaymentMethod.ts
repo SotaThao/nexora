@@ -5,6 +5,8 @@ export const PosCheckoutPaymentMethod = {
   Card: 'Card',
   Cash: 'Cash',
   GiftCard: 'GiftCard',
+  // Taken through the embedded VlinkPay page — not VlinkPay, the wallet handle confirmed by hand.
+  Crypto: 'Crypto',
   SplitPay: 'SplitPay',
   Zelle: PayoutApiType.Zelle,
   CashApp: PayoutApiType.CashApp,
@@ -13,11 +15,6 @@ export const PosCheckoutPaymentMethod = {
   AppleCash: PayoutApiType.AppleCash,
   PayPal: PayoutApiType.PayPal,
 } as const
-
-// Gift Card checkout is temporarily switched off: the money leg runs through VlinkPay and is
-// paused, so the chip stays visible but unusable and Gift Card is kept out of Split Pay.
-// Flip back to true to restore it — nothing else has to change.
-export const POS_CHECKOUT_GIFT_CARD_ENABLED = false
 
 export type PosCheckoutPaymentMethodType =
   (typeof PosCheckoutPaymentMethod)[keyof typeof PosCheckoutPaymentMethod]
@@ -32,6 +29,7 @@ export const POS_CHECKOUT_PAYMENT_METHOD_LABEL_KEYS: Record<
   [PosCheckoutPaymentMethod.Card]: `${POS_CHECKOUT_PAYMENT_METHOD_LABEL_KEY_PREFIX}.Card`,
   [PosCheckoutPaymentMethod.Cash]: `${POS_CHECKOUT_PAYMENT_METHOD_LABEL_KEY_PREFIX}.Cash`,
   [PosCheckoutPaymentMethod.GiftCard]: `${POS_CHECKOUT_PAYMENT_METHOD_LABEL_KEY_PREFIX}.GiftCard`,
+  [PosCheckoutPaymentMethod.Crypto]: `${POS_CHECKOUT_PAYMENT_METHOD_LABEL_KEY_PREFIX}.Crypto`,
   [PosCheckoutPaymentMethod.SplitPay]: `${POS_CHECKOUT_PAYMENT_METHOD_LABEL_KEY_PREFIX}.SplitPay`,
   [PosCheckoutPaymentMethod.Zelle]: `${POS_CHECKOUT_PAYMENT_METHOD_LABEL_KEY_PREFIX}.Zelle`,
   [PosCheckoutPaymentMethod.CashApp]: `${POS_CHECKOUT_PAYMENT_METHOD_LABEL_KEY_PREFIX}.CashApp`,
@@ -47,6 +45,7 @@ export const POS_CHECKOUT_PAYMENT_METHOD_ICON_SOURCES: Partial<
   [PosCheckoutPaymentMethod.Card]: '/assets/images/pos-payment/credit-debit-card-icon.png',
   [PosCheckoutPaymentMethod.Cash]: '/assets/images/pos-payment/cash.png',
   [PosCheckoutPaymentMethod.GiftCard]: '/assets/images/pos-payment/gift_card.png',
+  [PosCheckoutPaymentMethod.Crypto]: '/assets/images/pos-payment/crypto.png',
   [PosCheckoutPaymentMethod.SplitPay]: '/assets/images/pos-payment/split_pay.png',
   [PosCheckoutPaymentMethod.Zelle]: '/assets/images/pos-payment/zelle.png',
   [PosCheckoutPaymentMethod.CashApp]: '/assets/images/pos-payment/cash_app.png',
@@ -60,6 +59,7 @@ export const POS_CHECKOUT_PAYMENT_METHOD_OPTIONS = [
   PosCheckoutPaymentMethod.Cash,
   PosCheckoutPaymentMethod.Card,
   PosCheckoutPaymentMethod.GiftCard,
+  PosCheckoutPaymentMethod.Crypto,
   PosCheckoutPaymentMethod.SplitPay,
   PosCheckoutPaymentMethod.Zelle,
   PosCheckoutPaymentMethod.CashApp,
