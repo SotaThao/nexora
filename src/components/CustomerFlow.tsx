@@ -44,6 +44,7 @@ export default function CustomerFlow() {
     handleConfirmTip,
     handleTrackExternalReview,
     canSelectMultipleStaff,
+    paymentUrl,
     isPaymentFlow,
     paymentCopyScope,
     handleCreateVlinkpayTip,
@@ -148,6 +149,7 @@ export default function CustomerFlow() {
                   customTips={customTips}
                   setCustomTips={setCustomTips}
                   canSelectMultipleStaff={canSelectMultipleStaff}
+                  paymentUrl={paymentUrl}
                 />
               )}
 
