@@ -32,12 +32,13 @@ function artwork(id: string, sourceWidth: number, height: number, x: number, y: 
 export function getOneQrArtworkBackgrounds(language: AppLanguage): OneQrArtworkBackground[] {
   return ONEQR_CONCEPTS.map<OneQrArtworkBackground>(concept => {
     const assetId = `${concept.id}-${language}`
+    const assetVersion = concept.industryId === 'food' ? 6 : 5
     return {
       id: concept.id,
       industryId: concept.industryId,
       assetId,
-      imageUrl: `${import.meta.env.BASE_URL}images/oneqr-templates/${assetId}.webp?v=5`,
-      thumbnailUrl: `${import.meta.env.BASE_URL}images/oneqr-templates/${assetId}-thumb.webp?v=5`,
+      imageUrl: `${import.meta.env.BASE_URL}images/oneqr-templates/${assetId}.webp?v=${assetVersion}`,
+      thumbnailUrl: `${import.meta.env.BASE_URL}images/oneqr-templates/${assetId}-thumb.webp?v=${assetVersion}`,
       qrBox: { x: 768 / 2400, y: 1320 / 3300, width: 864 / 2400, height: 864 / 3300 },
       qrScale: 1,
       pageSize: { widthPt: 576, heightPt: 792 },
