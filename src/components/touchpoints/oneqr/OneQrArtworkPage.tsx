@@ -26,8 +26,6 @@ import '../../dashboard/views/pos/publicCheckInQrPrint.css'
 const actionControl = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
 
 const control = 'min-h-11 rounded-lg border border-nexoraBorder bg-nexoraSurface px-3 text-sm text-nexoraText disabled:opacity-50'
-const industryControl = 'inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2 active:scale-[0.98]'
-
 export default function OneQrArtworkPage() {
   const { t } = useTranslation()
   const query = useOneQr()
@@ -140,10 +138,10 @@ export function OneQrArtworkEditor({ url, fileSlug, businessName, businessLogo }
     <div className="nexora-card grid min-w-0 gap-6 p-4 md:grid-cols-2 lg:p-6">
       <div className="min-w-0 space-y-5">
         <div className="space-y-2">
-          <h2 id="oneqr-artwork-industries" className="text-sm font-bold text-nexoraText">{t('oneqr.artwork.industryLabel')}</h2>
-          <div role="group" aria-labelledby="oneqr-artwork-industries" className="flex flex-wrap gap-2">
-            {(['all', ...ONEQR_INDUSTRIES] as const).map(id => <button type="button" key={id} aria-pressed={industryId === id} onClick={() => selectIndustry(id)} className={`${industryControl} ${industryId === id ? 'border-nexoraBrand bg-nexoraCanvas text-nexoraBrand' : 'border-nexoraBorder bg-nexoraSurface text-nexoraText hover:bg-nexoraCanvas'}`}>{t(`oneqr.artwork.industries.${id}`)}</button>)}
-          </div>
+          <label htmlFor="oneqr-artwork-industry" className="block text-sm font-bold text-nexoraText">{t('oneqr.artwork.industryLabel')}</label>
+          <select id="oneqr-artwork-industry" value={industryId} onChange={event => selectIndustry(event.target.value as OneQrIndustryId | 'all')} className="h-11 w-full rounded-lg border border-nexoraBorder bg-nexoraSurface px-3 text-sm font-medium text-nexoraText focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2 sm:max-w-xs">
+            {(['all', ...ONEQR_INDUSTRIES] as const).map(id => <option key={id} value={id}>{t(`oneqr.artwork.industries.${id}`)}</option>)}
+          </select>
         </div>
         <CheckInBackgroundGallery templates={gallery} labelPrefix="oneqr.artwork.templates." selectedId={backgroundId} onSelect={setBackgroundId} />
         <div className="flex flex-wrap gap-4">
