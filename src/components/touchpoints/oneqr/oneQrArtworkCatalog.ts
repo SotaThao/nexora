@@ -1,4 +1,16 @@
 import type { CheckInBackgroundTemplate } from '../../dashboard/views/pos/checkinPrint/useCheckInBackgroundPrint'
+import type { AppLanguage } from '../../../types/contexts'
+import { ONEQR_CONCEPTS } from './oneQrArtworkConcepts'
+import type { OneQrIndustryId } from './oneQrArtworkConcepts'
+
+export { ONEQR_CONCEPTS, ONEQR_INDUSTRIES } from './oneQrArtworkConcepts'
+export type { OneQrIndustryId } from './oneQrArtworkConcepts'
+
+export interface OneQrArtworkBackground extends CheckInBackgroundTemplate {
+  industryId: OneQrIndustryId
+  assetId: string
+  hoursColor: string
+}
 
 // QR interiors are measured in the supplied artwork's original pixels.
 function artwork(id: string, sourceWidth: number, height: number, x: number, y: number, width: number, boxHeight: number, color: string, hoursColor = color): CheckInBackgroundTemplate & { hoursColor: string } {
@@ -16,7 +28,29 @@ function artwork(id: string, sourceWidth: number, height: number, x: number, y: 
   }
 }
 
-export const ONEQR_BACKGROUNDS = [
+/** One card per concept; the image, including all baked text, follows the app language. */
+export function getOneQrArtworkBackgrounds(language: AppLanguage): OneQrArtworkBackground[] {
+  return ONEQR_CONCEPTS.map<OneQrArtworkBackground>(concept => {
+    const assetId = `${concept.id}-${language}`
+    return {
+      id: concept.id,
+      industryId: concept.industryId,
+      assetId,
+      imageUrl: `${import.meta.env.BASE_URL}images/oneqr-templates/${assetId}.webp?v=5`,
+      thumbnailUrl: `${import.meta.env.BASE_URL}images/oneqr-templates/${assetId}-thumb.webp?v=5`,
+      qrBox: { x: 768 / 2400, y: 1320 / 3300, width: 864 / 2400, height: 864 / 3300 },
+      qrScale: 1,
+      pageSize: { widthPt: 576, heightPt: 792 },
+      brandingArea: { x: .25, y: .025, width: .5, height: .07 },
+      brandingColor: concept.brandingColor,
+      hoursColor: concept.hoursColor,
+      brandingFont: 'heading',
+    }
+  })
+}
+
+// Preserve the measured legacy layouts for existing integrations and files.
+export const ONEQR_LEGACY_BACKGROUNDS = [
   artwork('01', 800, 1099, 257, 433, 286, 303, '#8b652d', '#543914'),
   artwork('02', 800, 1101, 264, 437, 271, 270, '#f0d77f'),
   artwork('03', 800, 1101, 263, 428, 266, 267, '#a05256', '#772e3b'),

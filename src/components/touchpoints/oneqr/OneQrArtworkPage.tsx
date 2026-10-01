@@ -13,7 +13,8 @@ import { copyTextToClipboard } from '../../../utils/clipboard'
 import { downloadQrCode, QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { logger } from '../../../utils/logger'
-import { ONEQR_BACKGROUNDS } from './oneQrArtworkCatalog'
+import { ONEQR_CONCEPTS, ONEQR_INDUSTRIES, getOneQrArtworkBackgrounds } from './oneQrArtworkCatalog'
+import type { OneQrIndustryId } from './oneQrArtworkCatalog'
 import { CheckInBackgroundGallery } from '../../dashboard/views/pos/checkinPrint/CheckInBackgroundGallery'
 import { useCheckInBackgroundPrint } from '../../dashboard/views/pos/checkinPrint/useCheckInBackgroundPrint'
 import { useCheckInPrintAssets } from '../../dashboard/views/pos/checkinPrint/useCheckInPrintAssets'
@@ -25,6 +26,7 @@ import '../../dashboard/views/pos/publicCheckInQrPrint.css'
 const actionControl = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
 
 const control = 'min-h-11 rounded-lg border border-nexoraBorder bg-nexoraSurface px-3 text-sm text-nexoraText disabled:opacity-50'
+const industryControl = 'inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2 active:scale-[0.98]'
 
 export default function OneQrArtworkPage() {
   const { t } = useTranslation()
@@ -47,10 +49,13 @@ export default function OneQrArtworkPage() {
 }
 
 export function OneQrArtworkEditor({ url, fileSlug, businessName, businessLogo }: { url: string; fileSlug: string; businessName?: string; businessLogo?: string | null }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const text = (key: string) => t('checkInPrint.' + key)
   const { showToast } = useNotification()
-  const [backgroundId, setBackgroundId] = useState(ONEQR_BACKGROUNDS[0].id)
+  const [backgroundId, setBackgroundId] = useState(ONEQR_CONCEPTS[0].id)
+  const [industryId, setIndustryId] = useState<OneQrIndustryId | 'all'>('all')
+  const backgrounds = useMemo(() => getOneQrArtworkBackgrounds(currentLanguage), [currentLanguage])
+  const gallery = useMemo(() => industryId === 'all' ? backgrounds : backgrounds.filter(item => item.industryId === industryId), [backgrounds, industryId])
   const [showLogo, setShowLogo] = useState(false)
   const [showName, setShowName] = useState(false)
   const [showHours, setShowHours] = useState(false)
@@ -66,7 +71,7 @@ export function OneQrArtworkEditor({ url, fileSlug, businessName, businessLogo }
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; window.clearTimeout(copyTimer.current) } }, [])
   const brandingSelected = (showLogo && !!businessLogo) || (showName && !!businessName?.trim())
   const branding = useCheckInPrintAssets(showLogo ? businessLogo : null, brandingSelected || showHours, true)
-  const background = ONEQR_BACKGROUNDS.find(item => item.id === backgroundId)!
+  const background = backgrounds.find(item => item.id === backgroundId)!
   const artwork = useCheckInBackgroundPrint(background, url, 'letter-portrait', {
     name: showName ? businessName?.trim() ?? '' : '',
     logoUrl: showLogo ? businessLogo : null,
@@ -82,6 +87,12 @@ export function OneQrArtworkEditor({ url, fileSlug, businessName, businessLogo }
   const printing = useCheckInTemplatePrint()
   const ready = artwork.status === 'ready' && !!design && !!activeAssets && !hoursBlocked
   const disabled = !ready || busy !== null || printing.job !== null
+  const selectIndustry = (id: OneQrIndustryId | 'all') => {
+    setIndustryId(id)
+    if (id !== 'all' && background.industryId !== id) {
+      setBackgroundId(ONEQR_CONCEPTS.find(item => item.industryId === id)!.id)
+    }
+  }
   const copy = async () => {
     try {
       await copyTextToClipboard(url)
@@ -96,6 +107,8 @@ export function OneQrArtworkEditor({ url, fileSlug, businessName, businessLogo }
     busyRef.current = true
     setBusy(kind)
     const filename = fileSlug.replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 100)
+    // Keep the filename paired with the immutable artwork even if app language changes mid-export.
+    const assetIdSnapshot = background.assetId
     try {
       if (kind === 'qr') await downloadQrCode(buildPublicQrImageUrl(url, QR_IMAGE_SIZES.print), `${filename}.png`)
       else if (design && activeAssets) {
@@ -114,7 +127,7 @@ export function OneQrArtworkEditor({ url, fileSlug, businessName, businessLogo }
         const objectUrl = URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.href = objectUrl
-        link.download = `${filename}-${backgroundId}.${kind}`
+        link.download = `${filename}-${assetIdSnapshot}.${kind}`
         document.body.appendChild(link)
         link.click()
         link.remove()
@@ -126,7 +139,13 @@ export function OneQrArtworkEditor({ url, fileSlug, businessName, businessLogo }
   return <>
     <div className="nexora-card grid min-w-0 gap-6 p-4 md:grid-cols-2 lg:p-6">
       <div className="min-w-0 space-y-5">
-        <CheckInBackgroundGallery templates={ONEQR_BACKGROUNDS} labelPrefix="oneqr.artwork.templates." selectedId={backgroundId} onSelect={setBackgroundId} />
+        <div className="space-y-2">
+          <h2 id="oneqr-artwork-industries" className="text-sm font-bold text-nexoraText">{t('oneqr.artwork.industryLabel')}</h2>
+          <div role="group" aria-labelledby="oneqr-artwork-industries" className="flex flex-wrap gap-2">
+            {(['all', ...ONEQR_INDUSTRIES] as const).map(id => <button type="button" key={id} aria-pressed={industryId === id} onClick={() => selectIndustry(id)} className={`${industryControl} ${industryId === id ? 'border-nexoraBrand bg-nexoraCanvas text-nexoraBrand' : 'border-nexoraBorder bg-nexoraSurface text-nexoraText hover:bg-nexoraCanvas'}`}>{t(`oneqr.artwork.industries.${id}`)}</button>)}
+          </div>
+        </div>
+        <CheckInBackgroundGallery templates={gallery} labelPrefix="oneqr.artwork.templates." selectedId={backgroundId} onSelect={setBackgroundId} />
         <div className="flex flex-wrap gap-4">
           <label className="flex min-h-11 items-center gap-2 text-xs"><input type="checkbox" checked={showLogo} onChange={event => setShowLogo(event.target.checked)} />{text('showSalonLogo')}</label>
           <label className="flex min-h-11 items-center gap-2 text-xs"><input type="checkbox" checked={showName} onChange={event => setShowName(event.target.checked)} />{text('showSalonName')}</label>
@@ -144,7 +163,7 @@ export function OneQrArtworkEditor({ url, fileSlug, businessName, businessLogo }
         </div>
       </div>
       <div className="min-w-0 space-y-4">
-        <h2 className="text-sm font-bold text-nexoraText">{text('preview')}</h2>
+        <h2 className="text-sm font-bold text-nexoraText">{text('preview')} · {t(`oneqr.artwork.templates.${backgroundId}`)}</h2>
         <div className="flex min-h-64 items-center justify-center rounded-xl border border-nexoraBorder bg-nexoraCanvas p-4">
           {design && activeAssets ? <div className="w-full max-w-md"><CheckInPrintPreview document={design} assets={activeAssets} /></div> : <p role="status" className="p-6 text-center text-sm text-nexoraMuted">{text(artwork.status === 'loading' ? 'artworkLoading' : 'previewUnavailable')}</p>}
         </div>
