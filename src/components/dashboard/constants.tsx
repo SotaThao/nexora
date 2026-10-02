@@ -370,12 +370,14 @@ export const MERCHANT_SIDEBAR_HIDDEN_MENU_IDS: DashboardMenuId[] = [
 export const SHOW_HARDWARE_DEVICES = false;
 
 export const TOUCHPOINTS_SUBMENU = [
+  { id: "stations", labelKey: "dashboard.touchpoints.tabs.stations" },
+  { id: "artwork", labelKey: "dashboard.menu.oneqr_artwork" },
   { id: "devices", labelKey: "dashboard.touchpoints.tabs.devices" },
 ] as const;
 
 export const VISIBLE_TOUCHPOINTS_SUBMENU = SHOW_HARDWARE_DEVICES
   ? TOUCHPOINTS_SUBMENU
-  : []
+  : TOUCHPOINTS_SUBMENU.filter(sub => sub.id !== "devices")
 
 export const TAXIQ_SUBMENU: { id: string; labelKey: string }[] =
   MENU_ITEMS.find((item): item is typeof item & { children: { id: string; labelKey: string }[] } =>

@@ -458,12 +458,23 @@ export default function MobileMenuDrawer({
                   isTouchpointsMobileExpanded && (
                   <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
                     {VISIBLE_TOUCHPOINTS_SUBMENU.map((sub) => {
-                      const isSubActive = activeMenu === DASHBOARD_MENU.Touchpoints && (activeSubTab || 'stations') === sub.id
+                      const isSubActive = activeMenu === DASHBOARD_MENU.Touchpoints && (
+                        sub.id === 'artwork'
+                          ? location.pathname === '/dashboard/touchpoints/oneqr/artwork'
+                          : location.pathname === '/dashboard/touchpoints' && (activeSubTab || 'stations') === sub.id
+                      )
                       return (
                         <button
                           key={sub.id}
                           type="button"
-                          onClick={() => navigateMenu(DASHBOARD_MENU.Touchpoints, { tab: sub.id })}
+                          onClick={() => {
+                            if (sub.id === 'artwork') {
+                              navigate('/dashboard/touchpoints/oneqr/artwork?as=customer')
+                              onClose()
+                            } else {
+                              navigateMenu(DASHBOARD_MENU.Touchpoints, { tab: sub.id, closeDrawer: true })
+                            }
+                          }}
                           className={sidebarSubmenuItemClass(isSubActive)}
                         >
                           <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />

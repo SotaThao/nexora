@@ -151,7 +151,7 @@ export function OneQrArtworkEditor({ url, fileSlug, businessName, businessLogo }
         </div>
         {showLogo && !businessLogo && <p role="status" className="text-xs text-nexoraMuted">{text('artworkMissingLogo')}</p>}
         {showName && !businessName?.trim() && <p role="status" className="text-xs text-nexoraMuted">{text('artworkMissingName')}</p>}
-        <p className="text-xs text-nexoraMuted">{t('oneqr.artwork.fixed')}</p>
+        <p className="text-xs text-nexoraMuted">{t(background.industryId === 'nail' ? 'oneqr.artwork.legacyFixed' : 'oneqr.artwork.fixed')}</p>
         <div className="min-w-0 space-y-1">
           <p className="text-xs font-bold text-nexoraText">{t('oneqr.artwork.linkLabel')}</p>
           <div className="flex min-w-0 items-center gap-2 rounded-lg border border-nexoraBorder p-2">

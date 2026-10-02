@@ -343,6 +343,10 @@ export default function DashboardSidebar({
                   <div className="text-white/50 shrink-0">
                     {isTaxIqExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </div>
+                ): id === DASHBOARD_MENU.Touchpoints && VISIBLE_TOUCHPOINTS_SUBMENU.length > 0 ? (
+                  <div className="text-white/50 shrink-0">
+                    {isTouchpointsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </div>
                 ): id === DASHBOARD_MENU.Pos && hasCompletedOnboarding ? (
                   <div className="text-white/50 shrink-0">
                     {isPosExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -446,13 +450,19 @@ export default function DashboardSidebar({
                 isTouchpointsExpanded && (
                   <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
                     {VISIBLE_TOUCHPOINTS_SUBMENU.map((sub) => {
-                      const isSubActive = activeMenu === DASHBOARD_MENU.Touchpoints && (activeSubTab || 'stations') === sub.id
+                      const isSubActive = activeMenu === DASHBOARD_MENU.Touchpoints && (
+                        sub.id === 'artwork'
+                          ? location.pathname === '/dashboard/touchpoints/oneqr/artwork'
+                          : location.pathname === '/dashboard/touchpoints' && (activeSubTab || 'stations') === sub.id
+                      )
                       return (
                         <button
                           key={sub.id}
                           type="button"
                           onClick={() => {
-                            navigate(`/dashboard/touchpoints?tab=${sub.id}`, { replace: true })
+                            navigate(sub.id === 'artwork'
+                              ? '/dashboard/touchpoints/oneqr/artwork?as=customer'
+                              : `/dashboard/touchpoints?tab=${sub.id}`)
                           }}
                           className={sidebarSubmenuItemClass(isSubActive)}
                         >
