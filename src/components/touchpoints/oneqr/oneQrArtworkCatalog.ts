@@ -28,11 +28,13 @@ function artwork(id: string, sourceWidth: number, height: number, x: number, y: 
   }
 }
 
-/** One card per concept; the image, including all baked text, follows the app language. */
+/** One card per concept; the eight original Nail images retain their English artwork. */
 export function getOneQrArtworkBackgrounds(language: AppLanguage): OneQrArtworkBackground[] {
   return ONEQR_CONCEPTS.map<OneQrArtworkBackground>(concept => {
+    const legacy = ONEQR_LEGACY_BACKGROUNDS.find(item => item.id === concept.id)
+    if (legacy) return { ...legacy, industryId: concept.industryId, assetId: concept.id }
     const assetId = `${concept.id}-${language}`
-    const assetVersion = concept.industryId === 'food' ? 6 : 5
+    const assetVersion = 6
     return {
       id: concept.id,
       industryId: concept.industryId,
