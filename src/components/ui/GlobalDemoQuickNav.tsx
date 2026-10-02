@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Sparkles, ShoppingBag, Settings, MessageCircle, Home, ChevronUp, ChevronDown } from 'lucide-react'
+import { Sparkles, ShoppingBag, Settings, MessageCircle, QrCode, ChevronUp, ChevronDown } from 'lucide-react'
+
+const ONE_QR_PREVIEW_URL = 'https://nexora-git-feat-1741oneqr-template-customer-sota-s-projects2.vercel.app/dashboard/touchpoints/oneqr/artwork?as=customer'
 
 export default function GlobalDemoQuickNav() {
   const [isExpanded, setIsExpanded] = useState(true)
@@ -96,9 +98,19 @@ export default function GlobalDemoQuickNav() {
               <span>💳 Ghi nhận GD</span>
             </Link>
 
+            <a
+              href={ONE_QR_PREVIEW_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-cyan-400/40 bg-cyan-500/20 px-3 py-2 text-xs font-bold text-cyan-200 shadow-sm transition hover:bg-cyan-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+            >
+              <QrCode className="h-4 w-4" aria-hidden="true" />
+              <span>One QR</span>
+            </a>
+
             <Link
               to="/login"
-              className="col-span-2 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-white/10 text-white/80 hover:bg-white/20 border border-white/10"
+              className="flex min-h-11 items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-white/10 text-white/80 hover:bg-white/20 border border-white/10"
             >
               <span>⚡ Đăng nhập</span>
             </Link>
