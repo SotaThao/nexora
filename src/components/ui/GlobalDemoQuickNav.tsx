@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Sparkles, ShoppingBag, Settings, MessageCircle, QrCode, ChevronUp, ChevronDown } from 'lucide-react'
 
-const ONE_QR_PREVIEW_URL = 'https://nexora-git-feat-1741oneqr-template-customer-sota-s-projects2.vercel.app/dashboard/touchpoints/oneqr/artwork?as=customer'
+const ONE_QR_PREVIEW_URL = 'https://nexora-git-feat-1741oneqr-template-customer-sota-s-projects2.vercel.app/preview/oneqr'
 
 export default function GlobalDemoQuickNav() {
   const [isExpanded, setIsExpanded] = useState(true)
