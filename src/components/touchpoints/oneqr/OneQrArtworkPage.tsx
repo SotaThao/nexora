@@ -5,6 +5,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useOneQr } from '../../../data/hooks/useMerchantOneQr'
 import { useBusinessHours, useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import type { BusinessHourEntry } from '../../../types/domain'
 import { ONEQR_AUDIENCE_ORDER, OneQrAudience, toOneQrViewAs } from '../../../constants/oneQr'
 import { formatCheckInPosterHours } from '../../dashboard/views/pos/formatCheckInPosterHours'
 import { withOneQrArtworkHours } from './oneQrArtworkHours'
@@ -41,12 +42,25 @@ export default function OneQrArtworkPage() {
     {query.isLoading ? <p role="status">{t('oneqr.artwork.loading')}</p> : query.isError || !oneQr ? <div role="alert"><p>{t('oneqr.artwork.error')}</p><button type="button" className={control + ' mt-3'} onClick={() => void query.refetch()}>{t('checkInPrint.retry')}</button></div> : <>
       {!oneQr.isActive && <p role="status" className="text-sm text-nexoraWarning">{t('oneqr.status.paused')}</p>}
       {audience !== OneQrAudience.Customer && <p className="text-xs text-nexoraMuted">{t('oneqr.card.role_code_note', { audience: t(`oneqr.audience.${toOneQrViewAs(audience)}`) })}</p>}
-      <OneQrArtworkEditor key={`${oneQr.id}:${url}`} url={url} fileSlug={`oneqr-${slugFromUrl(oneQr.url)}-${toOneQrViewAs(audience)}`} businessName={setup?.businessInfo?.name || oneQr.name} businessLogo={setup?.businessInfo?.logo} />
+      <AuthenticatedArtworkEditor key={`${oneQr.id}:${url}`} url={url} fileSlug={`oneqr-${slugFromUrl(oneQr.url)}-${toOneQrViewAs(audience)}`} businessName={setup?.businessInfo?.name || oneQr.name} businessLogo={setup?.businessInfo?.logo} />
     </>}
   </div>
 }
 
-export function OneQrArtworkEditor({ url, fileSlug, businessName, businessLogo }: { url: string; fileSlug: string; businessName?: string; businessLogo?: string | null }) {
+function AuthenticatedArtworkEditor(props: { url: string; fileSlug: string; businessName?: string; businessLogo?: string | null }) {
+  const hoursQuery = useBusinessHours()
+  return <OneQrArtworkEditor {...props} hours={{ entries: hoursQuery.data, isPending: hoursQuery.isPending, isFetching: hoursQuery.isFetching, isError: hoursQuery.isError, retry: () => void hoursQuery.refetch() }} />
+}
+
+export type OneQrArtworkHours = {
+  entries?: BusinessHourEntry[]
+  isPending: boolean
+  isFetching: boolean
+  isError: boolean
+  retry?: () => void
+}
+
+export function OneQrArtworkEditor({ url, fileSlug, businessName, businessLogo, hours, isDemo = false }: { url: string; fileSlug: string; businessName?: string; businessLogo?: string | null; hours: OneQrArtworkHours; isDemo?: boolean }) {
   const { t, currentLanguage } = useTranslation()
   const text = (key: string) => t('checkInPrint.' + key)
   const { showToast } = useNotification()
@@ -57,9 +71,8 @@ export function OneQrArtworkEditor({ url, fileSlug, businessName, businessLogo }
   const [showLogo, setShowLogo] = useState(false)
   const [showName, setShowName] = useState(false)
   const [showHours, setShowHours] = useState(false)
-  const hoursQuery = useBusinessHours()
-  const hoursText = formatCheckInPosterHours(hoursQuery.data, day => t('components.dashboard.views.pos.PublicCheckInQrPanel.daysShort.' + day.toLowerCase()))
-  const hoursBlocked = showHours && (hoursQuery.isPending || hoursQuery.isError || !hoursQuery.data?.length)
+  const hoursText = formatCheckInPosterHours(hours.entries, day => t('components.dashboard.views.pos.PublicCheckInQrPanel.daysShort.' + day.toLowerCase()))
+  const hoursBlocked = showHours && (hours.isPending || hours.isError || !hours.entries?.length)
   const hoursValue = hoursText || t('components.dashboard.views.pos.PublicCheckInQrPanel.hoursClosed')
   const [copied, setCopied] = useState(false)
   const [busy, setBusy] = useState<'pdf' | 'png' | 'qr' | null>(null)
@@ -151,9 +164,9 @@ export function OneQrArtworkEditor({ url, fileSlug, businessName, businessLogo }
         </div>
         {showLogo && !businessLogo && <p role="status" className="text-xs text-nexoraMuted">{text('artworkMissingLogo')}</p>}
         {showName && !businessName?.trim() && <p role="status" className="text-xs text-nexoraMuted">{text('artworkMissingName')}</p>}
-        <p className="text-xs text-nexoraMuted">{t(background.industryId === 'nail' ? 'oneqr.artwork.legacyFixed' : 'oneqr.artwork.fixed')}</p>
+        <p className="text-xs text-nexoraMuted">{t(background.industryId === 'nail' ? (isDemo ? 'oneqr.artwork.demoLegacyFixed' : 'oneqr.artwork.legacyFixed') : (isDemo ? 'oneqr.artwork.demoFixed' : 'oneqr.artwork.fixed'))}</p>
         <div className="min-w-0 space-y-1">
-          <p className="text-xs font-bold text-nexoraText">{t('oneqr.artwork.linkLabel')}</p>
+          <p className="text-xs font-bold text-nexoraText">{t(isDemo ? 'oneqr.artwork.demoLinkLabel' : 'oneqr.artwork.linkLabel')}</p>
           <div className="flex min-w-0 items-center gap-2 rounded-lg border border-nexoraBorder p-2">
             <a href={url} target="_blank" rel="noopener noreferrer" className="min-w-0 flex-1 truncate text-xs text-nexoraMuted">{url}</a>
             <button type="button" onClick={() => void copy()} className="inline-flex min-h-11 items-center gap-1 text-xs text-nexoraBrand">{copied ? <Check className="h-4 w-4" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}{t(copied ? 'common.copied' : 'common.copy')}</button>
@@ -167,8 +180,8 @@ export function OneQrArtworkEditor({ url, fileSlug, businessName, businessLogo }
         </div>
         {(brandingSelected || showHours) && branding.status === 'error' && <div role="alert" className="space-y-2 text-sm"><p>{text(branding.error === 'logo' ? 'artworkLogoError' : 'artworkFontError')}</p><button type="button" className={control} onClick={branding.retry}>{text('retry')}</button></div>}
         {artwork.status === 'error' && <div role="alert" className="space-y-2 text-sm"><p>{text(artwork.error === 'brandingOverflow' ? 'artworkNameTooLong' : 'artworkError')}</p>{artwork.error === 'brandingOverflow' ? <button type="button" className={control} onClick={() => setShowName(false)}>{text('hideSalonName')}</button> : <button type="button" className={control} onClick={artwork.retry}>{text('retry')}</button>}</div>}
-        {showHours && hoursQuery.isPending && hoursQuery.isFetching && <p role="status" className="text-sm text-nexoraMuted">{text('hoursLoading')}</p>}
-        {hoursBlocked && !(hoursQuery.isPending && hoursQuery.isFetching) && <div role="alert" className="space-y-2 text-sm"><p>{text(hoursQuery.isError ? 'hoursError' : 'hoursUnavailable')}</p>{hoursQuery.isError && <button type="button" className={control} onClick={() => void hoursQuery.refetch()}>{text('retry')}</button>}<button type="button" className={control + ' ml-2'} onClick={() => setShowHours(false)}>{text('withoutHours')}</button></div>}
+        {showHours && hours.isPending && hours.isFetching && <p role="status" className="text-sm text-nexoraMuted">{text('hoursLoading')}</p>}
+        {hoursBlocked && !(hours.isPending && hours.isFetching) && <div role="alert" className="space-y-2 text-sm"><p>{text(hours.isError ? 'hoursError' : 'hoursUnavailable')}</p>{hours.isError && hours.retry && <button type="button" className={control} onClick={hours.retry}>{text('retry')}</button>}<button type="button" className={control + ' ml-2'} onClick={() => setShowHours(false)}>{text('withoutHours')}</button></div>}
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <button type="button" className={actionControl + ' border-nexoraBrand/20 bg-nexoraBrand/5 text-nexoraBrand enabled:hover:bg-nexoraBrand/10'} disabled={disabled} onClick={() => { if (ready && design && activeAssets) printing.print(design, activeAssets) }}><Printer className="h-4 w-4" aria-hidden />{text('print')}</button>
           <button type="button" className={actionControl + ' border-amber-200 bg-amber-50/70 text-amber-800 enabled:hover:bg-amber-100'} disabled={disabled} onClick={() => void download('pdf')}><FileDown className="h-4 w-4" aria-hidden />{text(busy === 'pdf' ? 'working' : 'pdf')}</button>

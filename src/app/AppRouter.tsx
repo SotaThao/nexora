@@ -58,6 +58,7 @@ import { ONEQR_ROUTE } from "../constants/oneQr";
 import { POS_VISIT_ROUTE } from "../constants/posSmsSettings";
 
 const OneQrArtworkPage = lazyWithRetry(() => import("../components/touchpoints/oneqr/OneQrArtworkPage"));
+const OneQrArtworkDemoPage = lazyWithRetry(() => import("../components/touchpoints/oneqr/OneQrArtworkDemoPage"));
 
 const SetupWizard = lazyWithRetry(() => import("../components/SetupWizard"));
 const DashboardOwnerShell = lazyWithRetry(
@@ -344,6 +345,7 @@ export default function AppRouter() {
         <Routes>
           <Route path="/" element={<RootRedirect />} />
           <Route path="/login" element={<LoginScreen />} />
+          <Route path="/preview/oneqr" element={<OneQrArtworkDemoPage />} />
           <Route path="/register" element={<RegisterWizard />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
