@@ -50,7 +50,7 @@ function Harness() {
   return <>
     <button onClick={() => setLanguage('vi')}>Use Vietnamese system language</button>
     <button onClick={() => setLanguage('en')}>Use English system language</button>
-    <OneQrArtworkEditor url={url} fileSlug="oneqr-example-customer" />
+    <OneQrArtworkEditor url={url} fileSlug="oneqr-example-customer" hours={{ entries: [], isPending: false, isFetching: false, isError: false }} />
   </>
 }
 

@@ -33,7 +33,7 @@ export default function App() {
       <div className={shellClassName}>
         <AppRouter />
       </div>
-      <CallOverlayHost />
+      {location.pathname !== '/preview/oneqr' && <CallOverlayHost />}
     </KybGateProvider>
   )
 }
