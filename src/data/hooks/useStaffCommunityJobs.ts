@@ -30,6 +30,17 @@ export function useStaffHiringFeed(filters: HiringFeedFilters, options: { enable
   })
 }
 
+export function useStaffSeekingFeed(filters: HiringFeedFilters, options: { enabled?: boolean } = {}) {
+  const { enabled = true } = options
+  return useQuery<PaginatedResponse<SeekingPost>>({
+    queryKey: qk.staffCommunitySeekingFeed(filters),
+    queryFn: () => communityJobsRepository.listSeekingFeed(filters),
+    enabled,
+    retry: false,
+    placeholderData: (previousData) => previousData,
+  })
+}
+
 export function useStaffSeekingPosts(staffKey: string | undefined) {
   return useQuery<PaginatedResponse<SeekingPost>>({
     queryKey: qk.staffCommunitySeekingPosts(staffKey),
@@ -45,6 +56,7 @@ export function useSaveStaffSeekingDraft(staffKey: string | undefined) {
     mutationFn: ({ input, id }) => communityJobsRepository.saveSeekingDraft(staffKey as string, input, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staffCommunityJobs', 'mySeekingPosts'] })
+      queryClient.invalidateQueries({ queryKey: ['staffCommunityJobs', 'seekingFeed'] })
     },
   })
 }
@@ -55,6 +67,7 @@ export function usePublishStaffSeekingPost(staffKey: string | undefined) {
     mutationFn: ({ input, id }) => communityJobsRepository.publishSeekingPost(staffKey as string, input, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staffCommunityJobs', 'mySeekingPosts'] })
+      queryClient.invalidateQueries({ queryKey: ['staffCommunityJobs', 'seekingFeed'] })
     },
   })
 }
@@ -65,6 +78,7 @@ export function useCloseStaffSeekingPost(staffKey: string | undefined) {
     mutationFn: (id) => communityJobsRepository.closeSeekingPost(staffKey as string, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staffCommunityJobs', 'mySeekingPosts'] })
+      queryClient.invalidateQueries({ queryKey: ['staffCommunityJobs', 'seekingFeed'] })
     },
   })
 }

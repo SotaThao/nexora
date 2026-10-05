@@ -407,11 +407,13 @@
         },
         "filters": {
           "keywordLabel": "Từ khóa",
-          "keywordPlaceholder": "vd: Bột, Dip, Toàn thời gian",
-          "cityLabel": "Thành phố",
-          "cityPlaceholder": "vd: Austin",
-          "stateLabel": "Bang",
-          "statePlaceholder": "vd: TX",
+          "keywordPlaceholder": "Tìm theo tiêu đề, kỹ năng hoặc khu vực",
+          "kindLabel": "Loại tin",
+          "kindAll": "Tất cả",
+          "kindSeeking": "Tìm việc",
+          "kindHiring": "Tuyển thợ",
+          "areaLabel": "Khu vực",
+          "areaAll": "Tất cả khu vực",
           "workTypeLabel": "Hình thức làm việc",
           "workTypeAll": "Tất cả hình thức",
           "skillLabel": "Kỹ năng",
@@ -419,10 +421,13 @@
           "clear": "Xóa bộ lọc"
         },
         "feed": {
-          "title": "Tin tuyển dụng",
-          "emptyTitle": "Không có tin tuyển dụng phù hợp bộ lọc",
-          "emptyDescription": "Thử xóa bớt bộ lọc hoặc quay lại sau — tiệm đăng tin mới thường xuyên.",
-          "loadError": "Không thể tải tin tuyển dụng. Vui lòng thử lại.",
+          "resultCount": "{{count}} tin phù hợp",
+          "badgeSeeking": "Tìm việc",
+          "postSeeking": "Đăng tin tìm việc",
+          "anonymousTechnician": "Thợ ẩn danh",
+          "emptyTitle": "Không có tin phù hợp bộ lọc",
+          "emptyDescription": "Thử đổi loại tin, khu vực hoặc từ khóa — tiệm và thợ đăng tin mới thường xuyên.",
+          "loadError": "Không thể tải tin việc làm. Vui lòng thử lại.",
           "retry": "Thử lại"
         },
         "card": {
@@ -9529,7 +9534,8 @@
     },
     "readOnly": {
       "banner": "Bạn đang xem Việc làm cộng đồng với vai trò khách. Chuyển sang Jessica để ứng tuyển hoặc nhắn tin.",
-      "actionHint": "Chọn “Jessica · thợ” ở thanh trên để ứng tuyển/nhắn tin"
+      "actionHint": "Chọn “Jessica · thợ” ở thanh trên để ứng tuyển/nhắn tin",
+      "ownerActionHint": "Ứng tuyển và nhắn tin dành cho tài khoản thợ. Chủ tiệm xem tin để tham khảo thị trường; quản lý tin của tiệm ở tab Tuyển dụng."
     },
     "chat": {
       "sampleSalonHint": "Đây là tin đăng minh hoạ của một tiệm mẫu — không có trò chuyện thật ở đây.",

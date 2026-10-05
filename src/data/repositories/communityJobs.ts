@@ -88,6 +88,14 @@ export function createCommunityJobsRepository(client: CommunityJobsClient = comm
       }
     },
 
+    async listSeekingFeed(filters: HiringFeedFilters = {}): Promise<PaginatedResponse<SeekingPost>> {
+      const response = await client.listSeekingFeed(filters)
+      return {
+        ...response,
+        items: (response.items ?? []).map(normalizeSeekingPost),
+      }
+    },
+
     async listMySeekingPosts(staffKey: string): Promise<PaginatedResponse<SeekingPost>> {
       const response = await client.listMySeekingPosts(staffKey)
       return {

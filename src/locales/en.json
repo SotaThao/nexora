@@ -407,11 +407,13 @@
         },
         "filters": {
           "keywordLabel": "Keyword",
-          "keywordPlaceholder": "e.g. Acrylic, Dip, Full-time",
-          "cityLabel": "City",
-          "cityPlaceholder": "e.g. Austin",
-          "stateLabel": "State",
-          "statePlaceholder": "e.g. TX",
+          "keywordPlaceholder": "Search by title, skill or area",
+          "kindLabel": "Post type",
+          "kindAll": "All",
+          "kindSeeking": "Seeking work",
+          "kindHiring": "Hiring",
+          "areaLabel": "Area",
+          "areaAll": "All areas",
           "workTypeLabel": "Work type",
           "workTypeAll": "All work types",
           "skillLabel": "Skill",
@@ -419,10 +421,13 @@
           "clear": "Clear filters"
         },
         "feed": {
-          "title": "Hiring posts",
-          "emptyTitle": "No hiring posts match your filters",
-          "emptyDescription": "Try clearing a filter or check back later — salons post new openings often.",
-          "loadError": "Could not load the hiring feed. Please try again.",
+          "resultCount": "{{count}} matching posts",
+          "badgeSeeking": "Seeking work",
+          "postSeeking": "Post seeking",
+          "anonymousTechnician": "Anonymous technician",
+          "emptyTitle": "No posts match your filters",
+          "emptyDescription": "Try changing the post type, area or keyword — salons and technicians post new listings often.",
+          "loadError": "Could not load job posts. Please try again.",
           "retry": "Try again"
         },
         "card": {
@@ -9534,7 +9539,8 @@
     },
     "readOnly": {
       "banner": "You're viewing Community Jobs as a guest. Switch to Jessica to apply or send messages.",
-      "actionHint": "Choose \"Jessica · staff\" in the top bar to apply or message."
+      "actionHint": "Choose \"Jessica · staff\" in the top bar to apply or message.",
+      "ownerActionHint": "Applying and messaging are for technician accounts. Owners can browse to see the market; manage your own postings in the Recruitment tab."
     },
     "chat": {
       "sampleSalonHint": "This is a sample salon posting for the demo — no real chat is available here.",

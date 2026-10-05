@@ -8,7 +8,7 @@ import {
   JobWorkType,
   RecruitmentSkill,
 } from '../../constants/posRecruitment'
-import { JobApplicationStatus, JobPostKind } from '../../constants/communityJobs'
+import { JobApplicationStatus, JobPostKind, SeekingExperience } from '../../constants/communityJobs'
 import type { PaginatedResponse } from '../../types/domain'
 import type { PosJobPostingDto } from '../../types/posRecruitment'
 import type {
@@ -29,6 +29,7 @@ const FEED_VISIBLE_STATUSES: JobPostingStatus[] = [JobPostingStatus.Published, J
 
 export interface CommunityJobsClient {
   listHiringFeed(filters: HiringFeedFilters): Promise<PaginatedResponse<PosJobPostingDto>>
+  listSeekingFeed(filters: HiringFeedFilters): Promise<PaginatedResponse<SeekingPostDto>>
   listMySeekingPosts(staffKey: string): Promise<PaginatedResponse<SeekingPostDto>>
   writeSeekingPost(staffKey: string, body: SeekingPostWriteDto, id?: string): Promise<SeekingPostDto>
   closeSeekingPost(staffKey: string, id: string): Promise<SeekingPostDto>
@@ -209,7 +210,113 @@ function createHiringSeeds(): PosJobPostingDto[] {
   ]
 }
 
+/**
+ * Fictional technician "seeking work" seeds so the mixed browse feed always has
+ * both kinds of posts. Display names are invented; one post hides the phone.
+ */
+function createSeekingSeeds(): SeekingPostDto[] {
+  return [
+    {
+      id: 'mock-seeking-seed-001',
+      code: 'TV-SEED-001',
+      postKind: JobPostKind.Seeking,
+      title: 'Experienced acrylic & dip tech looking for full-time',
+      skills: [RecruitmentSkill.Acrylic, RecruitmentSkill.Dip, RecruitmentSkill.Gel],
+      experience: SeekingExperience.FivePlusYears,
+      workTypes: [JobWorkType.FullTime],
+      city: 'Houston',
+      state: 'TX',
+      payType: JobPayType.Commission,
+      payAmount: null,
+      payUnit: null,
+      payText: '60/40 or better',
+      availableFrom: '2026-10-01',
+      body: 'Six years behind the table, fast and clean with acrylic and dip sets. Looking for a stable salon with steady walk-ins and a respectful team.',
+      displayName: 'Linh Tran',
+      phone: '(713) 555-0111',
+      visibility: { showFullName: true, showPhone: true },
+      status: JobPostingStatus.Published,
+      createdAt: '2026-09-05T09:00:00.000Z',
+      updatedAt: '2026-09-05T09:00:00.000Z',
+      publishedAt: '2026-09-05T09:00:00.000Z',
+    },
+    {
+      id: 'mock-seeking-seed-002',
+      code: 'TV-SEED-002',
+      postKind: JobPostKind.Seeking,
+      title: 'Pedicure & manicure specialist, weekends available',
+      skills: [RecruitmentSkill.Pedicure, RecruitmentSkill.Manicure, RecruitmentSkill.Waxing],
+      experience: SeekingExperience.OneToThreeYears,
+      workTypes: [JobWorkType.PartTime, JobWorkType.Flexible],
+      city: 'San Jose',
+      state: 'CA',
+      payType: JobPayType.Fixed,
+      payAmount: 20,
+      payUnit: JobPayUnit.Hour,
+      payText: null,
+      availableFrom: '2026-09-20',
+      body: 'Gentle and detail-oriented with spa pedicures. Prefer weekend and evening shifts while I finish my esthetics course.',
+      displayName: 'Mai Nguyen',
+      phone: '(408) 555-0122',
+      visibility: { showFullName: false, showPhone: true },
+      status: JobPostingStatus.Published,
+      createdAt: '2026-09-04T09:00:00.000Z',
+      updatedAt: '2026-09-04T09:00:00.000Z',
+      publishedAt: '2026-09-04T09:00:00.000Z',
+    },
+    {
+      id: 'mock-seeking-seed-003',
+      code: 'TV-SEED-003',
+      postKind: JobPostKind.Seeking,
+      title: 'Nail artist - Gel-X, 3D art and custom designs',
+      skills: [RecruitmentSkill.GelX, RecruitmentSkill.NailArt, RecruitmentSkill.ThreeDNailArt, RecruitmentSkill.French],
+      experience: SeekingExperience.ThreeToFiveYears,
+      workTypes: [JobWorkType.FullTime, JobWorkType.Flexible],
+      city: 'Orlando',
+      state: 'FL',
+      payType: JobPayType.Negotiable,
+      payAmount: null,
+      payUnit: null,
+      payText: null,
+      availableFrom: null,
+      body: 'Creative artist with a portfolio of hand-painted and 3D designs. Open to boutique studios that value custom work.',
+      displayName: 'Hoa Pham',
+      phone: '',
+      visibility: { showFullName: true, showPhone: false },
+      status: JobPostingStatus.Published,
+      createdAt: '2026-09-03T09:00:00.000Z',
+      updatedAt: '2026-09-03T09:00:00.000Z',
+      publishedAt: '2026-09-03T09:00:00.000Z',
+    },
+    {
+      id: 'mock-seeking-seed-004',
+      code: 'TV-SEED-004',
+      postKind: JobPostKind.Seeking,
+      title: 'Beginner-friendly tech seeking training salon',
+      skills: [RecruitmentSkill.Manicure, RecruitmentSkill.Gel],
+      experience: SeekingExperience.UnderOneYear,
+      workTypes: [JobWorkType.FullTime],
+      city: 'Houston',
+      state: 'TX',
+      payType: JobPayType.Negotiable,
+      payAmount: null,
+      payUnit: null,
+      payText: null,
+      availableFrom: '2026-10-15',
+      body: 'Recently licensed and eager to learn. Looking for a salon that offers mentoring on acrylic and dip while I build my speed.',
+      displayName: 'Thu Le',
+      phone: '(281) 555-0144',
+      visibility: { showFullName: true, showPhone: true },
+      status: JobPostingStatus.Published,
+      createdAt: '2026-09-02T09:00:00.000Z',
+      updatedAt: '2026-09-02T09:00:00.000Z',
+      publishedAt: '2026-09-02T09:00:00.000Z',
+    },
+  ]
+}
+
 let hiringSeeds = createHiringSeeds()
+let seekingSeeds = createSeekingSeeds()
 let storesByStaffKey = new Map<string, StaffCommunityJobsStore>()
 let nextSeekingSequence = 1
 let latencyMs = import.meta.env.VITEST ? 0 : 600
@@ -270,6 +377,43 @@ function findFeedPostingById(postingId: string): PosJobPostingDto | null {
   return buildHiringFeed({}).find((posting) => posting.id === postingId) ?? null
 }
 
+function matchesSeekingFeedFilters(post: SeekingPostDto, filters: HiringFeedFilters): boolean {
+  if (filters.workType && !post.workTypes.includes(filters.workType)) return false
+  if (filters.skill && !post.skills.includes(filters.skill)) return false
+  if (filters.city && normalizeRecruitmentSearch(post.city) !== normalizeRecruitmentSearch(filters.city)) {
+    return false
+  }
+  if (filters.state && normalizeRecruitmentSearch(post.state) !== normalizeRecruitmentSearch(filters.state)) {
+    return false
+  }
+  const keyword = filters.keyword?.trim()
+  if (keyword) {
+    const query = normalizeRecruitmentSearch(keyword)
+    const haystack = normalizeRecruitmentSearch(`${post.title} ${post.skills.join(' ')} ${post.body} ${post.city}`)
+    if (query && !haystack.includes(query)) return false
+  }
+  return true
+}
+
+function buildSeekingFeed(filters: HiringFeedFilters): SeekingPostDto[] {
+  const storePosts = Array.from(storesByStaffKey.values()).flatMap((store) => store.seekingPosts)
+  const combined = [...seekingSeeds, ...storePosts].filter((post) => post.status === JobPostingStatus.Published)
+  const seenIds = new Set<string>()
+  const deduped = combined.filter((post) => {
+    if (seenIds.has(post.id)) return false
+    seenIds.add(post.id)
+    return true
+  })
+  return deduped
+    .filter((post) => matchesSeekingFeedFilters(post, filters))
+    .sort((a, b) => {
+      if (!a.publishedAt && !b.publishedAt) return 0
+      if (!a.publishedAt) return 1
+      if (!b.publishedAt) return -1
+      return b.publishedAt.localeCompare(a.publishedAt)
+    })
+}
+
 function buildSeekingPost(body: SeekingPostWriteDto, id: string | undefined, existing: SeekingPostDto | undefined): SeekingPostDto {
   const now = new Date().toISOString()
   const code = existing?.code ?? `TV-${String(nextSeekingSequence++).padStart(3, '0')}`
@@ -286,6 +430,7 @@ function buildSeekingPost(body: SeekingPostWriteDto, id: string | undefined, exi
 
 export function resetCommunityJobsMockStore(): void {
   hiringSeeds = createHiringSeeds()
+  seekingSeeds = createSeekingSeeds()
   storesByStaffKey = new Map<string, StaffCommunityJobsStore>()
   nextSeekingSequence = 1
 }
@@ -298,6 +443,19 @@ export const communityJobsMockClient: CommunityJobsClient = {
   async listHiringFeed(filters: HiringFeedFilters): Promise<PaginatedResponse<PosJobPostingDto>> {
     await waitForLatency()
     const items = clone(buildHiringFeed(filters))
+    return {
+      items,
+      pageNumber: 1,
+      totalPages: 1,
+      totalCount: items.length,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    }
+  },
+
+  async listSeekingFeed(filters: HiringFeedFilters): Promise<PaginatedResponse<SeekingPostDto>> {
+    await waitForLatency()
+    const items = clone(buildSeekingFeed(filters))
     return {
       items,
       pageNumber: 1,

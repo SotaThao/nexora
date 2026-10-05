@@ -503,6 +503,7 @@ export const qk = {
   // Staff Community Jobs (browse hiring feed + own seeking posts + applications)
   staffCommunityJobsRoot: () => ['staffCommunityJobs'] as const,
   staffCommunityJobFeed: (filters = EMPTY) => ['staffCommunityJobs', 'feed', filters],
+  staffCommunitySeekingFeed: (filters = EMPTY) => ['staffCommunityJobs', 'seekingFeed', filters],
   staffCommunitySeekingPosts: (staffKey?: string) => ['staffCommunityJobs', 'mySeekingPosts', staffKey ?? ''],
   staffCommunityJobApplications: (staffKey?: string) => ['staffCommunityJobs', 'myApplications', staffKey ?? ''],
 

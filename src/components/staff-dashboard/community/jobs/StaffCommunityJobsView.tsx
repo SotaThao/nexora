@@ -12,12 +12,13 @@ import {
   useCloseStaffSeekingPost,
   useStaffHiringFeed,
   useStaffJobApplications,
+  useStaffSeekingFeed,
   useStaffSeekingPosts,
 } from '../../../../data/hooks/useStaffCommunityJobs'
 import { COMMUNITY_JOBS_IS_SIMULATED } from '../../../../data/repositories/communityJobsMockClient'
 import { getPublicSalonLabel } from '../../../dashboard/views/pos/recruitment/recruitmentModel'
 import { useCommunityJobsDemo } from '../../../community/jobs/CommunityJobsDemoContext'
-import type { HiringFeedFilters, SeekingPost } from '../../../../types/communityJobs'
+import type { HiringFeedFilters, JobsBrowseKind, SeekingPost } from '../../../../types/communityJobs'
 import type { PosJobPosting } from '../../../../types/posRecruitment'
 import ApplyToPostingModal from './ApplyToPostingModal'
 import AppliedJobsPanel from './AppliedJobsPanel'
@@ -27,6 +28,7 @@ import MySeekingPostsPanel from './MySeekingPostsPanel'
 import SeekingPostComposerModal from './SeekingPostComposerModal'
 import {
   buildAppliedPostingIdSet,
+  collectFeedCities,
   createDefaultSeekingDraft,
   normalizeStaffJobsTab,
   resolveHiringPostChatAction,
@@ -40,22 +42,36 @@ interface ComposerState {
   postId: string | null
 }
 
-export default function StaffCommunityJobsView() {
+interface StaffCommunityJobsViewProps {
+  /** Browse feed only (no Mine/Applied tabs, no apply/compose) — used for guests and for the
+   *  owner's "Duyệt tin" tab, which reuses this exact feed instead of a separate owner UI. */
+  browseOnly?: boolean
+}
+
+export default function StaffCommunityJobsView({ browseOnly = false }: StaffCommunityJobsViewProps = {}) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const { mode, staffKey, staffAccount, linkedBusinessIds, openInbox, openBusinessChat } = useCommunityJobsDemo()
-  const readOnly = mode === 'readOnly'
+  const readOnly = browseOnly || mode === 'readOnly'
+  // Owner browsing (browseOnly) is signed in — don't tell them to switch to the staff persona like a guest.
+  const readOnlyActionHint = t(browseOnly ? 'community_jobs_demo.readOnly.ownerActionHint' : 'community_jobs_demo.readOnly.actionHint')
   const [searchParams, setSearchParams] = useSearchParams()
 
   const activeTab = readOnly ? StaffCommunityJobsTab.Browse : normalizeStaffJobsTab(searchParams.get('jobsTab'))
   const [feedFilters, setFeedFilters] = useState<HiringFeedFilters>({})
+  const [browseKind, setBrowseKind] = useState<JobsBrowseKind>('all')
   const [detailPosting, setDetailPosting] = useState<PosJobPosting | null>(null)
   const [applyPosting, setApplyPosting] = useState<PosJobPosting | null>(null)
   const [composer, setComposer] = useState<ComposerState | null>(null)
   const [closingPost, setClosingPost] = useState<SeekingPost | null>(null)
   const closeDialogRef = useRef<HTMLDivElement>(null)
 
-  const feedQuery = useStaffHiringFeed(feedFilters, { enabled: activeTab === StaffCommunityJobsTab.Browse })
+  const isBrowseTab = activeTab === StaffCommunityJobsTab.Browse
+  const feedQuery = useStaffHiringFeed(feedFilters, { enabled: isBrowseTab && browseKind !== 'seeking' })
+  const seekingFeedQuery = useStaffSeekingFeed(feedFilters, { enabled: isBrowseTab && browseKind !== 'hiring' })
+  // Unfiltered feeds only feed the area select, so its options don't shrink as filters apply (TanStack dedupes/caches).
+  const allHiringFeedQuery = useStaffHiringFeed({}, { enabled: isBrowseTab })
+  const allSeekingFeedQuery = useStaffSeekingFeed({}, { enabled: isBrowseTab })
   const seekingPostsQuery = useStaffSeekingPosts(staffKey)
   const applicationsQuery = useStaffJobApplications(staffKey)
   const closeMutation = useCloseStaffSeekingPost(staffKey)
@@ -70,6 +86,19 @@ export default function StaffCommunityJobsView() {
   )
 
   const postings = feedQuery.data?.items ?? []
+  const seekingFeedPosts = seekingFeedQuery.data?.items ?? []
+  const areaCities = useMemo(
+    () => collectFeedCities(allHiringFeedQuery.data?.items ?? [], allSeekingFeedQuery.data?.items ?? []),
+    [allHiringFeedQuery.data, allSeekingFeedQuery.data],
+  )
+  const showHiringFeed = browseKind !== 'seeking'
+  const showSeekingFeed = browseKind !== 'hiring'
+  const feedIsLoading = (showHiringFeed && feedQuery.isLoading) || (showSeekingFeed && seekingFeedQuery.isLoading)
+  const feedIsError = (showHiringFeed && feedQuery.isError) || (showSeekingFeed && seekingFeedQuery.isError)
+  const retryFeed = () => {
+    if (showHiringFeed) void feedQuery.refetch()
+    if (showSeekingFeed) void seekingFeedQuery.refetch()
+  }
   const seekingPosts = seekingPostsQuery.data?.items ?? []
   const applications = applicationsQuery.data?.items ?? []
   const appliedPostingIds = useMemo(() => buildAppliedPostingIdSet(applications), [applications])
@@ -86,9 +115,14 @@ export default function StaffCommunityJobsView() {
     setSearchParams(next)
   }
 
+  const openCreateSeekingPost = () => {
+    setComposer({ postId: null })
+  }
+
+
   const handleChat = (posting: PosJobPosting) => {
     if (readOnly) {
-      showToast(t('community_jobs_demo.readOnly.actionHint'), 'info', 4000)
+      showToast(readOnlyActionHint, 'info', 4000)
       return
     }
     // Close the detail modal first — it renders at z-[10000] and would otherwise
@@ -105,7 +139,7 @@ export default function StaffCommunityJobsView() {
 
   const handleApply = (posting: PosJobPosting) => {
     if (readOnly) {
-      showToast(t('community_jobs_demo.readOnly.actionHint'), 'info', 4000)
+      showToast(readOnlyActionHint, 'info', 4000)
       return
     }
     setApplyPosting(posting)
@@ -122,10 +156,6 @@ export default function StaffCommunityJobsView() {
     }
   }
 
-  const openCreateSeekingPost = () => {
-    setComposer({ postId: null })
-  }
-
   const composerInitialDraft = useMemo(() => {
     const editing = composer?.postId ? seekingPosts.find((post) => post.id === composer.postId) : undefined
     return editing ? seekingPostToDraft(editing) : createDefaultSeekingDraft(staffAccount)
@@ -133,6 +163,9 @@ export default function StaffCommunityJobsView() {
 
   return (
     <div className="space-y-5">
+      {/* Owner browse sits under the owner's own Tuyển dụng / Duyệt tin tabs, so the staff page header,
+          guest banner and the single-tab strip below are redundant there. */}
+      {browseOnly ? null : (
       <section className="flex flex-col gap-3">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-nexoraText">{t(`${TK}.pageTitle`)}</h1>
@@ -144,8 +177,13 @@ export default function StaffCommunityJobsView() {
           <p className="w-fit rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-[11px] font-bold text-amber-800">{t(`${TK}.simulatedNotice`)}</p>
         ) : null}
       </section>
+      )}
 
-      <div role="tablist" aria-label={t(`${TK}.tabs.ariaLabel`)} className="flex gap-1 overflow-x-auto border-b border-nexoraRule">
+      {browseOnly ? null : (
+      // "+ Post" sits on the right of the sub-tabs (same placement as the owner's Tuyển dụng / Duyệt tin row);
+      // read-only guests get no button.
+      <div className="flex flex-wrap items-end justify-between gap-2 border-b border-nexoraRule">
+      <div role="tablist" aria-label={t(`${TK}.tabs.ariaLabel`)} className="flex min-w-0 gap-1 overflow-x-auto">
         <button type="button" role="tab" aria-selected={activeTab === StaffCommunityJobsTab.Browse} onClick={() => setTab(StaffCommunityJobsTab.Browse)} className={`inline-flex min-h-11 shrink-0 items-center gap-1.5 border-b-2 px-3 text-xs font-bold ${activeTab === StaffCommunityJobsTab.Browse ? 'border-nexoraBrand text-nexoraBrand' : 'border-transparent text-nexoraMuted hover:text-nexoraText'}`}>
           <SearchIcon className="h-4 w-4" aria-hidden />{t(`${TK}.tabs.browse`)}
         </button>
@@ -160,19 +198,34 @@ export default function StaffCommunityJobsView() {
           </>
         )}
       </div>
+      {readOnly ? null : (
+        <button
+          type="button"
+          onClick={openCreateSeekingPost}
+          className="mb-2 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 text-xs font-black text-white shadow-nexora-soft hover:bg-nexoraBrandDark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2"
+        >
+          <Plus className="h-4 w-4" aria-hidden />{t(`${TK}.feed.postSeeking`)}
+        </button>
+      )}
+      </div>
+      )}
 
       {activeTab === StaffCommunityJobsTab.Browse ? (
         <HiringFeedPanel
           filters={feedFilters}
           onFiltersChange={setFeedFilters}
+          kind={browseKind}
+          onKindChange={setBrowseKind}
           postings={postings}
-          isLoading={feedQuery.isLoading}
-          isError={feedQuery.isError}
+          seekingPosts={seekingFeedPosts}
+          areaCities={areaCities}
+          isLoading={feedIsLoading}
+          isError={feedIsError}
           appliedPostingIds={appliedPostingIds}
           onOpenDetail={setDetailPosting}
           onApply={handleApply}
           onChat={handleChat}
-          onRetry={() => feedQuery.refetch()}
+          onRetry={retryFeed}
         />
       ) : null}
 
