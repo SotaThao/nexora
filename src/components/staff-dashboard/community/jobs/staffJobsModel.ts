@@ -15,6 +15,7 @@ import { formatNationalNumber, PhoneDialCode } from '../../../CountryCodeSelect'
 import type { TranslationVariables } from '../../../../types/contexts'
 import type {
   JobApplication,
+  JobsBrowseKind,
   SeekingPost,
   SeekingPostUpsertInput,
   SeekingPostVisibility,
@@ -198,4 +199,52 @@ export const SEEKING_STATUS_LABEL_KEY: Record<JobPostingStatus, string> = {
   [JobPostingStatus.Published]: 'staff_dashboard.community.jobs.seekingStatus.Published',
   [JobPostingStatus.Closed]: 'staff_dashboard.community.jobs.seekingStatus.Closed',
   [JobPostingStatus.Filled]: 'staff_dashboard.community.jobs.seekingStatus.Closed',
+}
+
+export type BrowseFeedItem =
+  | { kind: 'hiring'; key: string; publishedAt: string; posting: PosJobPosting }
+  | { kind: 'seeking'; key: string; publishedAt: string; post: SeekingPost }
+
+/**
+ * Mixed browse feed: 'hiring' / 'seeking' show a single kind, 'all' merges both newest-first.
+ * Filtering by kind happens here (not by the caller) so a disabled query that still holds cached
+ * data can never leak into the wrong view.
+ */
+export function buildBrowseFeedItems(
+  kind: JobsBrowseKind,
+  postings: readonly PosJobPosting[],
+  seekingPosts: readonly SeekingPost[],
+): BrowseFeedItem[] {
+  const hiringItems: BrowseFeedItem[] = kind === 'seeking'
+    ? []
+    : postings.map((posting) => ({
+        kind: 'hiring',
+        key: `hiring-${posting.id}`,
+        publishedAt: posting.publishedAt || posting.createdAt || '',
+        posting,
+      }))
+  const seekingItems: BrowseFeedItem[] = kind === 'hiring'
+    ? []
+    : seekingPosts.map((post) => ({
+        kind: 'seeking',
+        key: `seeking-${post.id}`,
+        publishedAt: post.publishedAt || post.createdAt || '',
+        post,
+      }))
+  return [...hiringItems, ...seekingItems].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))
+}
+
+/** Distinct, case-insensitive city list (first spelling wins) for the area select, A-Z. */
+export function collectFeedCities(
+  postings: readonly Pick<PosJobPosting, 'city'>[],
+  seekingPosts: readonly Pick<SeekingPost, 'city'>[],
+): string[] {
+  const byKey = new Map<string, string>()
+  for (const item of [...postings, ...seekingPosts]) {
+    const city = item.city?.trim()
+    if (!city) continue
+    const key = city.toLowerCase()
+    if (!byKey.has(key)) byKey.set(key, city)
+  }
+  return Array.from(byKey.values()).sort((a, b) => a.localeCompare(b))
 }

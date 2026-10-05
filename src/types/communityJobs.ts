@@ -69,6 +69,8 @@ export interface HiringFeedFilters {
   skill?: RecruitmentSkill | null
 }
 
+export type JobsBrowseKind = 'all' | 'seeking' | 'hiring'
+
 export interface JobApplicationInput {
   postingId: string
   note: string

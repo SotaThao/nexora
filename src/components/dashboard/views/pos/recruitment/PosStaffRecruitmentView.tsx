@@ -1,5 +1,5 @@
 // Adapted for Community demo
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { ExternalLink, Plus } from 'lucide-react'
@@ -21,6 +21,10 @@ const TK = 'components.dashboard.views.pos.recruitment.shell'
 
 interface PosStaffRecruitmentViewProps {
   businessId: string
+  /** Bump to open the "create posting" picker from outside (Community owner tabs' "Post a Job" button). 0 = no request. */
+  createRequest?: number
+  /** Community owner tabs render their own title-less header row (tabs + Open in POS + Post a Job). */
+  hideHeader?: boolean
 }
 
 interface ComposerState {
@@ -29,7 +33,7 @@ interface ComposerState {
 
 type CreateFlow = 'picker' | 'quick' | null
 
-export default function PosStaffRecruitmentView({ businessId }: PosStaffRecruitmentViewProps) {
+export default function PosStaffRecruitmentView({ businessId, createRequest = 0, hideHeader = false }: PosStaffRecruitmentViewProps) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const navigate = useNavigate()
@@ -52,6 +56,10 @@ export default function PosStaffRecruitmentView({ businessId }: PosStaffRecruitm
   const openCreatePicker = () => {
     setCreateFlow('picker')
   }
+
+  useEffect(() => {
+    if (createRequest > 0) setCreateFlow('picker')
+  }, [createRequest])
 
   const handleClosePosting = async () => {
     if (!closingPosting) return
@@ -85,6 +93,7 @@ export default function PosStaffRecruitmentView({ businessId }: PosStaffRecruitm
 
   return (
     <div className="space-y-5">
+      {hideHeader ? null : (
       <section className="flex flex-col gap-4 px-0.5 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-nexoraText">{t('community_jobs_demo.owner.title')}</h1>
@@ -113,6 +122,7 @@ export default function PosStaffRecruitmentView({ businessId }: PosStaffRecruitm
           <button type="button" onClick={openCreatePicker} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 text-xs font-black text-white shadow-nexora-soft hover:bg-nexoraBrandDark"><Plus className="h-4 w-4" aria-hidden />{t(`${TK}.recruitStaff`)}</button>
         </div>
       </section>
+      )}
 
       <RecruitmentListPanel
         postings={postings}
