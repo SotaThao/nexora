@@ -273,6 +273,8 @@ A: Yes, as of 2026-09-21. Rather than building and moderating its own job-postin
 
 ### Related Features
 
+- **Jobs — POS Recruitment & Community Jobs (current, full)** — [jobs.md](./jobs.md). End-to-end owner and technician flows across POS and Community; supersedes this prototype document for current behavior.
+- **Browse Jobs (Owner & Technician)** — [community-jobs-browse.md](./community-jobs-browse.md). The current owner/technician board (mixed hiring + seeking feed, role-based posting, privacy rules); supersedes the browse section of this prototype document.
 - **Community Chat** — Nexora's real, persistent chat system. Jobs messaging is intended to connect to it in a future phase; today it uses a separate, local-only simulation.
 - **Community Home** (Feed, Groups, Events, Learning, Jobs) — Jobs is one tab inside this shared area of the app.
 - **Engineering hand-off documents** (technical detail on what's built vs. still pending): [community-jobs-prototype-spec-handoff_260917.md](../community-jobs-prototype-spec-handoff_260917.md), [community-jobs-handoff-v2_260915.md](../community-jobs-handoff-v2_260915.md)
