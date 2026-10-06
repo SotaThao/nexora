@@ -12,8 +12,6 @@ import type { PosJobPosting } from '../../../../../types/posRecruitment'
 import { useCommunityJobsDemo } from '../../../../community/jobs/CommunityJobsDemoContext'
 import JobPostingComposer from './JobPostingComposer'
 import JobPostingPreviewModal from './JobPostingPreviewModal'
-import PostModePickerModal from './PostModePickerModal'
-import QuickPostModal from './QuickPostModal'
 import RecruitmentListPanel, { ALL_JOB_POSTINGS, type PostingFilter } from './RecruitmentListPanel'
 import { createDefaultJobDraft, postingToDraft } from './recruitmentModel'
 
@@ -21,7 +19,7 @@ const TK = 'components.dashboard.views.pos.recruitment.shell'
 
 interface PosStaffRecruitmentViewProps {
   businessId: string
-  /** Bump to open the "create posting" picker from outside (Community owner tabs' "Post a Job" button). 0 = no request. */
+  /** Bump to open the Advanced composer from outside (Community owner tabs' "Post a Job" button). 0 = no request. */
   createRequest?: number
   /** Community owner tabs render their own title-less header row (tabs + Open in POS + Post a Job). */
   hideHeader?: boolean
@@ -31,15 +29,12 @@ interface ComposerState {
   postingId: string | null
 }
 
-type CreateFlow = 'picker' | 'quick' | null
-
 export default function PosStaffRecruitmentView({ businessId, createRequest = 0, hideHeader = false }: PosStaffRecruitmentViewProps) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const navigate = useNavigate()
-  const { businessInfo, currentUserName, services, categories, surface } = useCommunityJobsDemo()
+  const { businessInfo, services, categories, surface } = useCommunityJobsDemo()
   const [composer, setComposer] = useState<ComposerState | null>(null)
-  const [createFlow, setCreateFlow] = useState<CreateFlow>(null)
   const [previewPosting, setPreviewPosting] = useState<PosJobPosting | null>(null)
   const [closingPosting, setClosingPosting] = useState<PosJobPosting | null>(null)
   const [listFilter, setListFilter] = useState<PostingFilter>(ALL_JOB_POSTINGS)
@@ -53,12 +48,15 @@ export default function PosStaffRecruitmentView({ businessId, createRequest = 0,
     return posting ? postingToDraft(posting) : createDefaultJobDraft(businessInfo)
   }, [composer?.postingId, postings, businessInfo])
 
-  const openCreatePicker = () => {
-    setCreateFlow('picker')
+  // "Post a Job" always opens the Advanced composer; the Quick post / mode picker step is hidden
+  // (PostModePickerModal / QuickPostModal are kept in the folder but no longer reachable).
+  const openCreateComposer = () => {
+    setComposer({ postingId: null })
   }
 
   useEffect(() => {
-    if (createRequest > 0) setCreateFlow('picker')
+    // Don't replace a composer that's already open (e.g. mid-edit) when the tab row's "Post a Job" is clicked.
+    if (createRequest > 0) setComposer((current) => current ?? { postingId: null })
   }, [createRequest])
 
   const handleClosePosting = async () => {
@@ -119,7 +117,7 @@ export default function PosStaffRecruitmentView({ businessId, createRequest = 0,
           )}
         </div>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <button type="button" onClick={openCreatePicker} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 text-xs font-black text-white shadow-nexora-soft hover:bg-nexoraBrandDark"><Plus className="h-4 w-4" aria-hidden />{t(`${TK}.recruitStaff`)}</button>
+          <button type="button" onClick={openCreateComposer} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 text-xs font-black text-white shadow-nexora-soft hover:bg-nexoraBrandDark"><Plus className="h-4 w-4" aria-hidden />{t(`${TK}.recruitStaff`)}</button>
         </div>
       </section>
       )}
@@ -135,14 +133,12 @@ export default function PosStaffRecruitmentView({ businessId, createRequest = 0,
         onPreview={setPreviewPosting}
         onEdit={(posting) => setComposer({ postingId: posting.id })}
         onClose={setClosingPosting}
-        onCreate={openCreatePicker}
+        onCreate={openCreateComposer}
         createDisabled={createDisabled}
         onRetry={() => postingsQuery.refetch()}
       />
 
       {previewPosting ? <JobPostingPreviewModal posting={previewPosting} logo={typeof businessInfo.logo === 'string' ? businessInfo.logo : null} onClose={() => setPreviewPosting(null)} /> : null}
-      {createFlow === 'picker' ? <PostModePickerModal onQuick={() => setCreateFlow('quick')} onAdvanced={() => { setCreateFlow(null); setComposer({ postingId: null }) }} onClose={() => setCreateFlow(null)} /> : null}
-      {createFlow === 'quick' ? <QuickPostModal businessInfo={businessInfo} currentUserName={currentUserName} logo={typeof businessInfo.logo === 'string' ? businessInfo.logo : null} onClose={() => setCreateFlow(null)} onPublished={() => { setCreateFlow(null); setListFilter(ALL_JOB_POSTINGS) }} /> : null}
       {closingPosting ? createPortal(
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm" onMouseDown={() => !closeMutation.isPending && setClosingPosting(null)}>
           <div role="dialog" aria-modal="true" aria-labelledby="close-recruitment-title" className="nexora-modal-card flex w-full max-w-md flex-col rounded-2xl border border-nexoraBorder bg-white p-5 shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>

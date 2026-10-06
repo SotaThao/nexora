@@ -17,7 +17,7 @@ function OwnerJobsTabs() {
   const { businessId } = useCommunityJobsDemo()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  // Bumped by "Post a Job" so the Recruitment view opens its create picker; reset on manual tab switches
+  // Bumped by "Post a Job" so the Recruitment view opens the Advanced composer; reset on manual tab switches
   // so remounting Recruitment later doesn't re-open it.
   const [createRequest, setCreateRequest] = useState(0)
   const activeView: OwnerJobsView = searchParams.get('ownerView') === 'browse' ? 'browse' : 'recruitment'
