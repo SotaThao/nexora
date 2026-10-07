@@ -10,9 +10,11 @@ import { useMyJobContacts, useRecordJobContact } from '../../data/hooks/useJobCo
 import { resolveJobChatTarget } from './jobChatTarget'
 import type { JobChatTarget } from './jobChatTarget'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
+import { useTranslation } from '../../contexts/LanguageContext'
 import Pagination from '../ui/Pagination'
 import { formatSalaryChip } from './jobSalary'
 import { JobFilterSheet } from './JobFilterSheet'
+import { matchesCommunityBrowseKeyword } from './jobs/communityJobsPresentation'
 import {
   communityJobsReducer,
   createInitialPanelState,
@@ -28,6 +30,11 @@ const JOBS_PAGE_SIZE = 12
 import type { DemoJob } from './communityDemoContent'
 import type { JobContactDto } from '../../data/hooks/useJobContacts'
 import type { PanelAction, PanelState } from './communityJobsReducer'
+import type { HiringFeedFilters } from '../../types/communityJobs'
+
+export interface CommunityBrowseJob extends Pick<DemoJob, 'id' | 'postKind' | 'title' | 'salon' | 'location' | 'salary' | 'status' | 'urgent' | 'posted' | 'posterName' | 'image' | 'description' | 'ownerPersonaId' | 'skills'> {
+  salaryChipLabel?: string | null
+}
 
 // DEMO ONLY — mirrors communityDemoContent.ts's own rule: Jobs has no backend yet.
 // This panel never calls an API or the real CommunityChatDock/useCommunityChat
@@ -65,12 +72,13 @@ function statusLabel(status: DemoJob['status'], postKind: PostKind) {
 // Filtering/pagination live in the component (not the reducer) because they need
 // the actual `jobs` array, which the reducer never sees — see
 // communityJobsReducer.ts's header comment and the plan's reducer-signature note.
-export function filterJobsForState(
-  jobs: DemoJob[],
+export function filterJobsForState<T extends CommunityBrowseJob>(
+  jobs: T[],
   state: PanelState,
   persona: { id: string } | null,
   contacts: readonly JobContactDto[] = [],
-): DemoJob[] {
+  keywordMatcher?: (job: T, query: string) => boolean,
+): T[] {
   const contactedAtByJobId = new Map(contacts.map((contact) => [contact.jobId, contact.lastContactedAt]))
   const filteredJobs = jobs.filter((job) => {
     if (state.viewTab === 'contacted') {
@@ -87,6 +95,7 @@ export function filterJobsForState(
     if (state.kindFilter !== 'all' && job.postKind !== state.kindFilter) return false
     if (state.locationFilter !== DEFAULT_LOCATION_FILTER && job.location !== state.locationFilter) return false
     if (state.query.trim()) {
+      if (keywordMatcher) return keywordMatcher(job, state.query)
       const haystack = `${job.title} ${job.salon ?? ''} ${job.location} ${job.description}`.toLowerCase()
       if (!haystack.includes(state.query.trim().toLowerCase())) return false
     }
@@ -99,7 +108,7 @@ export function filterJobsForState(
   ))
 }
 
-function paginate(filteredJobs: DemoJob[], pageNumber: number) {
+function paginate<T>(filteredJobs: T[], pageNumber: number) {
   const totalPages = Math.max(1, Math.ceil(filteredJobs.length / JOBS_PAGE_SIZE))
   const safePageNumber = Math.min(Math.max(pageNumber, 1), totalPages)
   const start = (safePageNumber - 1) * JOBS_PAGE_SIZE
@@ -476,10 +485,11 @@ function JobCard({
   dimmed = false,
   onSelect,
 }: {
-  job: DemoJob
+  job: CommunityBrowseJob
   dimmed?: boolean
   onSelect: () => void
 }) {
+  const salaryChip = job.salaryChipLabel === undefined ? formatSalaryChip(job.salary) : job.salaryChipLabel
   return (
     <article
       role="button"
@@ -509,13 +519,13 @@ function JobCard({
               grid, just not repeated on every card. */}
           <div className="flex flex-wrap items-center gap-1.5">
             {job.urgent ? <span className="shrink-0 rounded-md bg-nexoraDanger px-2 py-0.5 text-xs font-extrabold text-white">Cần gấp</span> : null}
-            {formatSalaryChip(job.salary) ? (
+            {salaryChip ? (
               <span
                 className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-nexoraSuccess/40 bg-nexoraSuccess/10 px-2 py-0.5 text-xs font-extrabold text-nexoraText"
                 title={job.salary}
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-nexoraSuccess" aria-hidden="true" />
-                {formatSalaryChip(job.salary)}
+                {salaryChip}
               </span>
             ) : null}
             {job.status !== 'open' ? (
@@ -1088,7 +1098,22 @@ function JobDetailView({
 }
 
 
-export function CommunityJobsPanel({ isActive = true }: { isActive?: boolean } = {}) {
+interface CommunityJobsPanelProps {
+  isActive?: boolean
+  browseOnly?: boolean
+  browseHeader?: ReactNode
+  browseHiringJobs?: CommunityBrowseJob[]
+  browseSeekingJobs?: CommunityBrowseJob[]
+  renderSeekingJob?: (id: string) => ReactNode
+  onSelectHiringJob?: (id: string) => void
+  onBrowseFiltersChange?: (filters: HiringFeedFilters) => void
+  hiringIsLoading?: boolean
+  hiringIsError?: boolean
+  onRetryHiring?: () => void
+}
+
+export function CommunityJobsPanel({ isActive = true, browseOnly = false, browseHeader, browseHiringJobs, browseSeekingJobs, renderSeekingJob, onSelectHiringJob, onBrowseFiltersChange, hiringIsLoading = false, hiringIsError = false, onRetryHiring }: CommunityJobsPanelProps = {}) {
+  const { t } = useTranslation()
   const persona = useCurrentPersona()
   const { authReady, isAnonymous, user } = useCommunityAuth()
   const isLinhAccount = Boolean(user?.email && COMMUNITY_DEMO_PERSONAS.some((candidate) => (
@@ -1104,20 +1129,31 @@ export function CommunityJobsPanel({ isActive = true }: { isActive?: boolean } =
   const [createOpen, setCreateOpen] = useState(false)
   const [editingJobId, setEditingJobId] = useState<string | null>(null)
 
+  const hasHiringOverride = browseOnly && browseHiringJobs !== undefined
+  const panelJobs: CommunityBrowseJob[] = hasHiringOverride
+    ? [...browseHiringJobs, ...(browseSeekingJobs ?? []), ...jobs.filter((job) => job.postKind === 'seeking')]
+    : jobs
+  const locations = hasHiringOverride
+    ? Array.from(new Set([...JOB_LOCATIONS, ...panelJobs.map((job) => job.location).filter(Boolean), panelState.locationFilter]))
+    : JOB_LOCATIONS
+  const filterPanelJobs = (state: PanelState) => filterJobsForState(
+    panelJobs, state, persona, contactsQuery.data ?? [], browseOnly ? matchesCommunityBrowseKeyword : undefined,
+  )
+
   const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
 
   const isOwn = (job: DemoJob) => persona !== null && job.ownerPersonaId === persona.id
 
   const editingJob = jobs.find((job) => job.id === editingJobId) ?? null
   const filteredJobs = useMemo(
-    () => filterJobsForState(jobs, panelState, persona, contactsQuery.data ?? []),
-    [jobs, panelState.viewTab, panelState.kindFilter, panelState.locationFilter, panelState.query, persona, contactsQuery.data],
+    () => filterPanelJobs(panelState),
+    [jobs, browseHiringJobs, browseSeekingJobs, browseOnly, panelState.viewTab, panelState.kindFilter, panelState.locationFilter, panelState.query, persona, contactsQuery.data],
   )
   // While the create/edit modal is open, JobDetailView should not show — the
   // modal is a full overlay either way. Selection must also stay within
   // filteredJobs so mutations or active filters do not show an excluded job
   // (P2 fix).
-  const visibleSelectedJob = createOpen ? null : filteredJobs.find((job) => job.id === panelState.selectedJobId) ?? null
+  const visibleSelectedJob = createOpen ? null : jobs.find((job) => job.id === panelState.selectedJobId && filteredJobs.some((visible) => visible.id === job.id)) ?? null
   const { totalPages, safePageNumber, pageJobs } = useMemo(
     () => paginate(filteredJobs, panelState.pageNumber),
     [filteredJobs, panelState.pageNumber],
@@ -1128,7 +1164,7 @@ export function CommunityJobsPanel({ isActive = true }: { isActive?: boolean } =
   const dispatch = (action: PanelAction) => {
     setPanelState((prev) => {
       const projected = projectFilterState(prev, action)
-      const projectedFiltered = filterJobsForState(jobs, projected, persona, contactsQuery.data ?? [])
+      const projectedFiltered = filterPanelJobs(projected)
       const { pageJobs: projectedPageJobs } = paginate(projectedFiltered, projected.pageNumber)
       return communityJobsReducer(prev, action, projectedPageJobs.map((job) => job.id))
     })
@@ -1173,6 +1209,14 @@ export function CommunityJobsPanel({ isActive = true }: { isActive?: boolean } =
       lastFocusedElementRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
     }
     dispatch({ type: 'SELECT_JOB', jobId })
+  }
+
+  const selectBrowseJob = (jobId: string) => {
+    if (hasHiringOverride && browseHiringJobs.some((job) => job.id === jobId)) {
+      onSelectHiringJob?.(jobId)
+      return
+    }
+    selectJob(jobId)
   }
 
   useEffect(() => {
@@ -1332,7 +1376,7 @@ export function CommunityJobsPanel({ isActive = true }: { isActive?: boolean } =
   const filterButtonRef = useRef<HTMLButtonElement>(null)
   const activeFilterCount = panelState.locationFilter !== DEFAULT_LOCATION_FILTER ? 1 : 0
   const jobsCountForLocation = (location: string) =>
-    filterJobsForState(jobs, { ...panelState, locationFilter: location }, persona, contactsQuery.data ?? []).length
+    filterPanelJobs({ ...panelState, locationFilter: location }).length
   const closeFilterSheet = () => {
     setFilterSheetOpen(false)
     requestAnimationFrame(() => filterButtonRef.current?.focus())
@@ -1341,6 +1385,25 @@ export function CommunityJobsPanel({ isActive = true }: { isActive?: boolean } =
     dispatch({ type: 'SET_LOCATION_FILTER', location })
     closeFilterSheet()
   }
+
+  useEffect(() => {
+    if (!isActive) {
+      setFilterSheetOpen(false)
+      setCreateOpen(false)
+      setEditingJobId(null)
+    }
+  }, [isActive])
+
+  useEffect(() => {
+    if (!browseOnly || !onBrowseFiltersChange) return
+    const location = panelState.locationFilter === DEFAULT_LOCATION_FILTER ? undefined : panelState.locationFilter
+    const separator = location?.lastIndexOf(',') ?? -1
+    onBrowseFiltersChange({
+      keyword: panelState.query.trim() || undefined,
+      city: location ? (separator >= 0 ? location.slice(0, separator).trim() : location) : undefined,
+      state: location && separator >= 0 ? location.slice(separator + 1).trim() : undefined,
+    })
+  }, [browseOnly, onBrowseFiltersChange, panelState.query, panelState.locationFilter])
 
   return (
     <>
@@ -1353,7 +1416,7 @@ export function CommunityJobsPanel({ isActive = true }: { isActive?: boolean } =
       {visibleSelectedJob ? (
         <JobDetailView
           job={visibleSelectedJob}
-          allJobs={jobs}
+          allJobs={hasHiringOverride ? jobs.filter((job) => job.postKind === 'seeking') : jobs}
           isActive={isActive}
           isOwn={isOwn(visibleSelectedJob)}
           deleteConfirmId={panelState.deleteConfirmId}
@@ -1369,11 +1432,12 @@ export function CommunityJobsPanel({ isActive = true }: { isActive?: boolean } =
           onConfirmDelete={confirmDeleteJob}
           onCancelDelete={cancelDeleteJob}
           onToggleChat={() => dispatch({ type: 'TOGGLE_CHAT' })}
-          onSelectRelated={(jobId) => selectJob(jobId)}
+          onSelectRelated={selectBrowseJob}
         />
       ) : null}
 
       <div className={visibleSelectedJob ? 'hidden' : 'space-y-4'}>
+        {browseHeader}
         {/* No Jobs workspace header ("Nexora Community / Jobs · N tin") here —
             the user explicitly chose the headerless version (reversing an
             earlier round's P2 restoration), same product decision as the
@@ -1385,7 +1449,7 @@ export function CommunityJobsPanel({ isActive = true }: { isActive?: boolean } =
               CommunityScreens.tsx, to reclaim vertical space previously spent
               on large brand-filled pills. Same handlers/aria, no behavior
               change. */}
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          {browseOnly ? null : <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="no-scrollbar inline-flex min-w-0 max-w-full flex-nowrap overflow-x-auto rounded-xl bg-nexoraSurfaceMuted p-1">
               <button
                 type="button"
@@ -1415,7 +1479,7 @@ export function CommunityJobsPanel({ isActive = true }: { isActive?: boolean } =
               ) : null}
             </div>
             {isMineEmpty ? null : postButtonNode}
-          </div>
+          </div>}
 
           {/* Row B: search (flex-1) + <768px "Bộ lọc" button (opens the sheet)
               / >=768px inline "Khu vực" select. `flex-wrap` (not a fixed row)
@@ -1427,6 +1491,7 @@ export function CommunityJobsPanel({ isActive = true }: { isActive?: boolean } =
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nexoraSubtle" aria-hidden="true" />
               <input
                 ref={searchInputRef}
+                type="search"
                 value={panelState.query}
                 onChange={(event) => dispatch({ type: 'SET_QUERY', query: event.target.value })}
                 placeholder="Tìm theo tiêu đề, salon, khu vực…"
@@ -1453,7 +1518,7 @@ export function CommunityJobsPanel({ isActive = true }: { isActive?: boolean } =
               aria-label="Lọc theo khu vực"
               className="hidden min-h-11 rounded-lg border border-nexoraBorder bg-nexoraSurface px-3 text-sm text-nexoraText outline-none focus:border-nexoraBrand md:block"
             >
-              {JOB_LOCATIONS.map((loc) => <option key={loc} value={loc}>{loc}</option>)}
+              {locations.map((loc) => <option key={loc} value={loc}>{loc}</option>)}
             </select>
           </div>
 
@@ -1462,12 +1527,13 @@ export function CommunityJobsPanel({ isActive = true }: { isActive?: boolean } =
               be its own Row D line below this one — folded in here,
               right-aligned, to reclaim a line of vertical space (round 3
               layout pass); same `filteredJobs.length` value, unchanged. */}
-          <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto pt-0.5" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+          <div role="group" aria-label={t('community_jobs_browser.kindFilterLabel')} className="no-scrollbar flex items-center gap-1.5 overflow-x-auto pt-0.5" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
             {(['all', 'seeking', 'hiring'] as const).map((kind) => (
               <button
                 key={kind}
                 type="button"
                 onClick={() => dispatch({ type: 'SET_KIND_FILTER', kind })}
+                aria-pressed={panelState.kindFilter === kind}
                 className={`min-h-11 shrink-0 whitespace-nowrap rounded-full px-3 text-xs font-bold transition-colors ${panelState.kindFilter === kind ? 'bg-nexoraBrand text-white' : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-nexoraBrandSoft'}`}
               >
                 {kind === 'all' ? 'Tất cả' : postKindLabel(kind)}
@@ -1487,16 +1553,26 @@ export function CommunityJobsPanel({ isActive = true }: { isActive?: boolean } =
           </div>
         </div>
 
+        {hasHiringOverride && hiringIsLoading ? <p role="status" className="text-sm text-nexoraMuted">{t('common.loading')}</p> : null}
+        {hasHiringOverride && hiringIsError ? (
+          <div role="alert" className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-4 text-sm text-nexoraText">
+            <p>{t('staff_dashboard.community.jobs.feed.loadError')}</p>
+            <button type="button" onClick={onRetryHiring} className="mt-2 min-h-11 rounded-lg px-3 font-bold text-nexoraBrand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand">{t('staff_dashboard.community.jobs.feed.retry')}</button>
+          </div>
+        ) : null}
+
         {/* Grid + pagination unified across all widths — the earlier isXlUp
             split here only existed to pair with the now-deleted docking
             panel/drawer split; JobDetailView applies at every width now. */}
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(18rem,1fr))]">
-          {pageJobs.map((job) => (
+          {pageJobs.map((job) => browseSeekingJobs?.some((post) => post.id === job.id) && renderSeekingJob ? (
+            <div key={job.id}>{renderSeekingJob(job.id)}</div>
+          ) : (
             <JobCard
               key={job.id}
               job={job}
               dimmed={job.status !== 'open'}
-              onSelect={() => selectJob(job.id)}
+              onSelect={() => selectBrowseJob(job.id)}
             />
           ))}
           {pageJobs.length === 0 ? (
@@ -1534,7 +1610,7 @@ export function CommunityJobsPanel({ isActive = true }: { isActive?: boolean } =
         ) : null}
       </div>
 
-      {createOpen && myPostKind ? (
+      {isActive && createOpen && myPostKind ? (
         <PostJobModal
           postKind={editingJob ? editingJob.postKind : myPostKind}
           personaLabel={personaLabel}
@@ -1558,9 +1634,9 @@ export function CommunityJobsPanel({ isActive = true }: { isActive?: boolean } =
         />
       ) : null}
 
-      {filterSheetOpen ? (
+      {isActive && filterSheetOpen ? (
         <JobFilterSheet
-          locations={JOB_LOCATIONS}
+          locations={locations}
           defaultLocation={DEFAULT_LOCATION_FILTER}
           currentLocation={panelState.locationFilter}
           jobsCountForLocation={jobsCountForLocation}

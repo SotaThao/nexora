@@ -18,6 +18,7 @@ import type {
   PosJobPostingUpsertInput,
 } from '../../../../../types/posRecruitment'
 import { formatUsdAmount } from '../../../../../utils/currencyInput'
+import { normalizePostingContent, postingContentPrivacyText } from './recruitmentPostingContent'
 
 export type RecruitmentDraftField =
   | 'title'
@@ -26,6 +27,7 @@ export type RecruitmentDraftField =
   | 'deadline'
   | 'payAmount'
   | 'body'
+  | 'postingContent'
   | 'contactName'
   | 'phone'
   | 'privacy'
@@ -218,6 +220,7 @@ export function postingToDraft(posting: PosJobPosting): PosJobPostingUpsertInput
     isUrgent: posting.isUrgent,
     benefits: [...posting.benefits],
     body: posting.body,
+    postingContent: normalizePostingContent(posting.postingContent),
     deadline: posting.deadline,
     businessName: posting.businessName,
     address: posting.address,
@@ -264,8 +267,9 @@ export function validateJobDraft(
 }
 
 export function findHiddenInfoLeaks(draft: PosJobPostingUpsertInput): HiddenInfoLeak[] {
-  const content = normalizeRecruitmentSearch(`${draft.title} ${draft.body}`)
-  const contentDigits = digitsOnly(`${draft.title} ${draft.body}`)
+  const publicContent = `${draft.title} ${draft.body} ${postingContentPrivacyText(draft.postingContent)}`
+  const content = normalizeRecruitmentSearch(publicContent)
+  const contentDigits = digitsOnly(publicContent)
   const candidates: HiddenInfoLeak[] = []
   const addText = (field: HiddenInfoLeak['field'], value: string, hidden: boolean) => {
     const normalized = normalizeRecruitmentSearch(value)

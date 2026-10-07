@@ -33,6 +33,7 @@ const fieldClass = 'min-h-11 w-full rounded-lg border border-nexoraBorder bg-whi
 
 interface SeekingPostComposerModalProps {
   postId: string | null
+  needsExperience?: boolean
   initialDraft: SeekingPostUpsertInput
   staffKey: string | undefined
   onClose: () => void
@@ -43,6 +44,7 @@ interface SeekingPostComposerModalProps {
 export default function SeekingPostComposerModal({
   postId,
   initialDraft,
+  needsExperience = false,
   staffKey,
   onClose,
   onSavedDraft,
@@ -55,12 +57,14 @@ export default function SeekingPostComposerModal({
   const dialogRef = useRef<HTMLDivElement>(null)
   const confirmDialogRef = useRef<HTMLDivElement>(null)
   const [draft, setDraft] = useState<SeekingPostUpsertInput>(initialDraft)
+  const [experienceSelected, setExperienceSelected] = useState(!needsExperience)
+  const [experienceError, setExperienceError] = useState(false)
   const [errors, setErrors] = useState<SeekingValidationErrors>({})
   const [dirty, setDirty] = useState(false)
   const [confirmCloseOpen, setConfirmCloseOpen] = useState(false)
   const isLocked = saveDraftMutation.isPending || publishMutation.isPending
   const leak = findSeekingPhoneLeak(draft)
-  const firstError = Object.values(errors)[0]
+  const firstError = experienceError ? t('community_jobs_browser.technicianProfile.completeExperience') : Object.values(errors)[0]
 
   useCommunityJobsModalFocusTrap(!confirmCloseOpen, dialogRef, requestClose)
   useCommunityJobsModalFocusTrap(confirmCloseOpen, confirmDialogRef, () => setConfirmCloseOpen(false))
@@ -105,6 +109,7 @@ export default function SeekingPostComposerModal({
 
   const handleSaveDraft = async () => {
     if (isLocked) return
+    if (!experienceSelected) { setExperienceError(true); return }
     if (!draft.title.trim()) {
       setErrors({ title: t(`${TK}.validation.draftTitle`) })
       return
@@ -121,6 +126,7 @@ export default function SeekingPostComposerModal({
 
   const handlePublish = async () => {
     if (isLocked) return
+    if (!experienceSelected) { setExperienceError(true); return }
     const nextErrors = validateSeekingDraft(draft, validationMessages)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
@@ -163,7 +169,8 @@ export default function SeekingPostComposerModal({
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <label className="block text-xs font-bold text-nexoraText">
                   {t(`${TK}.experienceLabel`)}
-                  <select disabled={isLocked} value={draft.experience} onChange={(event) => updateDraft({ experience: event.target.value as SeekingExperience })} className={`${fieldClass} mt-1.5 bg-white`}>
+                  <select disabled={isLocked} value={experienceSelected ? draft.experience : ''} aria-invalid={experienceError} onChange={(event) => { updateDraft({ experience: event.target.value as SeekingExperience }); setExperienceSelected(true); setExperienceError(false) }} className={`${fieldClass} mt-1.5 bg-white`}>
+                    {!experienceSelected ? <option value="" disabled>{t('community_jobs_browser.technicianProfile.choose')}</option> : null}
                     {Object.values(SeekingExperience).map((experience) => (
                       <option key={experience} value={experience}>{t(`staff_dashboard.community.jobs.experience.${experience}`)}</option>
                     ))}
@@ -290,7 +297,7 @@ export default function SeekingPostComposerModal({
 
           <aside className="space-y-2">
             <p className="text-[10px] font-black uppercase tracking-wide text-nexoraSubtle">{t(`${TK}.previewLabel`)}</p>
-            <SeekingPostPreview draft={draft} compact />
+            {experienceSelected ? <SeekingPostPreview draft={draft} compact /> : <p className="rounded-xl border border-nexoraBorder bg-white p-4 text-xs leading-5 text-nexoraMuted">{t('community_jobs_browser.technicianProfile.completeExperience')}</p>}
           </aside>
         </div>
 

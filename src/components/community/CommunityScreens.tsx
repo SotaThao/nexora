@@ -396,7 +396,8 @@ export function CommunityHome() {
   const communities = useCommunityList({ enabled: Boolean(user) })
   const [composerCommunityId, setComposerCommunityId] = useState<string | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
-  const currentTab = searchParams.get('tab') || 'feed'
+  const requestedTab = searchParams.get('tab') || 'feed'
+  const currentTab = requestedTab === 'profile' ? 'jobs' : requestedTab
   const needsCommunityList = currentTab === 'feed' || currentTab === 'groups' || currentTab === 'announcements'
 
   const ringCommunities = myCommunities.data?.items.length ? myCommunities.data.items : (communities.data?.items ?? [])

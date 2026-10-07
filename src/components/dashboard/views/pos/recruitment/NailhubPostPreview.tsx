@@ -1,4 +1,7 @@
 import { Briefcase, MapPin, Users } from 'lucide-react'
+import { useMemo } from 'react'
+import RecruitmentPostingContentView from './RecruitmentPostingContentView'
+import { normalizePostingContent } from './recruitmentPostingContent'
 
 import { JobPostingStatus } from '../../../../../constants/posRecruitment'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
@@ -21,6 +24,7 @@ interface NailhubPostPreviewProps {
 
 export default function NailhubPostPreview({ draft, compact = false, logo }: NailhubPostPreviewProps) {
   const { t, currentLanguage } = useTranslation()
+  const coverImage = useMemo(() => draft.postingContent?.coverImage ? normalizePostingContent({ html: '', images: [], videoUrls: [], coverImage: draft.postingContent.coverImage })?.coverImage : undefined, [draft.postingContent?.coverImage])
   const locationLabel = formatRecruitmentLocation(draft.city, draft.state)
   const fullLocality = [locationLabel, draft.zipCode.trim()].filter(Boolean).join(' ')
   const businessLabel = getPublicSalonLabel(draft, t)
@@ -43,7 +47,7 @@ export default function NailhubPostPreview({ draft, compact = false, logo }: Nai
       </header>
 
       <div className={`flex items-center justify-center bg-gradient-to-br from-emerald-50 to-nexoraBrandSoft ${compact ? 'h-28' : 'h-40 sm:h-48'}`}>
-        {draft.visibility.showBusinessName ? (
+        {coverImage ? <img src={coverImage.url} alt={t(`${TK}.composer.richContent.coverPreview`)} className="h-full w-full object-cover" /> : draft.visibility.showBusinessName ? (
           logo
             ? <img src={logo} width="96" height="96" alt="" className={`${compact ? 'h-14 w-14' : 'h-20 w-20'} rounded-2xl object-cover shadow-sm`} />
             : <div className={`${compact ? 'h-14 w-14 text-lg' : 'h-20 w-20 text-2xl'} grid place-items-center rounded-2xl bg-white font-black text-emerald-700 shadow-sm`}>{businessLabel.charAt(0).toUpperCase()}</div>
@@ -75,7 +79,7 @@ export default function NailhubPostPreview({ draft, compact = false, logo }: Nai
         {draft.selectedServices.length > 0 ? <div className="border-t border-nexoraRule pt-3"><h4 className="text-xs font-extrabold text-nexoraText">{t(`${TK}.preview.selectedServices`)}</h4><div className="mt-2 flex flex-wrap gap-1.5">{draft.selectedServices.map((service) => <span key={service.posServiceId} className="rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-800">{service.name}</span>)}</div></div> : null}
 
         {!compact ? <>
-          <div className="whitespace-pre-wrap border-t border-nexoraRule pt-4 text-sm font-medium leading-7 text-nexoraMuted">{draft.body || t(`${TK}.preview.bodyFallback`)}</div>
+          <div className="border-t border-nexoraRule pt-4"><RecruitmentPostingContentView body={draft.body || t(`${TK}.preview.bodyFallback`)} postingContent={draft.postingContent} showCover={false} /></div>
           <div className="space-y-1 border-t border-nexoraRule pt-4 text-xs font-medium leading-6 text-nexoraMuted"><h4 className="font-extrabold text-nexoraText">{t(`${TK}.preview.locationContact`)}</h4>{draft.visibility.showAddress ? <>{draft.address.trim() ? <p>{draft.address}</p> : null}{fullLocality ? <p>{fullLocality}</p> : null}</> : locationLabel ? <p>{locationLabel}</p> : null}{contactName || phone ? <p>{joinRecruitmentMeta([contactName, phone])}</p> : null}{draft.deadline ? <p>{t(`${TK}.preview.deadline`, { date: formatRecruitmentDate(draft.deadline, currentLanguage) })}</p> : null}{!draft.visibility.showPhone ? <p>{t(`${TK}.preview.chatHelper`)}</p> : null}</div>
         </> : null}
 

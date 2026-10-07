@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { ArrowLeft, Check, Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-import { RecruitmentSkill } from '../../../../../constants/posRecruitment'
+import { JobPayType, RecruitmentSkill } from '../../../../../constants/posRecruitment'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import {
@@ -12,6 +12,7 @@ import {
 } from '../../../../../data/hooks/usePosRecruitment'
 import type { PosCategoryApiDto, PosServiceApiDto } from '../../../../../types/repositories'
 import type { PosJobPosting, PosJobPostingUpsertInput } from '../../../../../types/posRecruitment'
+import { recruitmentCompensationPreview } from './recruitmentCompensation'
 import ComposerContentSection from './ComposerContentSection'
 import ComposerNeedsSection from './ComposerNeedsSection'
 import ComposerResultStep from './ComposerResultStep'
@@ -30,6 +31,7 @@ import {
   type RecruitmentValidationErrors,
 } from './recruitmentModel'
 import JobPostingPreviewModal from './JobPostingPreviewModal'
+import { normalizePostingVideoUrl, postingHtmlFromText, POSTING_VIDEO_MAX } from './recruitmentPostingContent'
 
 const TK = 'components.dashboard.views.pos.recruitment.composer'
 
@@ -61,6 +63,7 @@ export default function JobPostingComposer({
   const navigate = useNavigate()
   const [draft, setDraft] = useState(initialDraft)
   const [errors, setErrors] = useState<RecruitmentValidationErrors>({})
+  const [mediaBusy, setMediaBusy] = useState(false)
   const [step, setStep] = useState<ComposerStep>('compose')
   const [servicePickerOpen, setServicePickerOpen] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
@@ -71,11 +74,27 @@ export default function JobPostingComposer({
   const [suppressedSuggestions, setSuppressedSuggestions] = useState<RecruitmentSkill[]>([])
   const saveDraftMutation = useSavePosJobPostingDraft()
   const publishMutation = usePublishPosJobPosting()
-  const initialSnapshot = useMemo(() => JSON.stringify(initialDraft), [initialDraft])
-  const isDirty = JSON.stringify(draft) !== initialSnapshot
+  // Compare immutable image strings directly instead of serializing raster data on every keystroke.
+  const draftSnapshot = (value: PosJobPostingUpsertInput) => JSON.stringify({ ...value, postingContent: value.postingContent ? { html: value.postingContent.html, videoUrls: value.postingContent.videoUrls } : undefined })
+  const initialSnapshot = useMemo(() => draftSnapshot(initialDraft), [initialDraft])
+  const initialImages = initialDraft.postingContent?.images ?? []
+  const images = draft.postingContent?.images ?? []
+  const initialCover = initialDraft.postingContent?.coverImage
+  const cover = draft.postingContent?.coverImage
+  const isDirty = draftSnapshot(draft) !== initialSnapshot
+    || cover?.url !== initialCover?.url || cover?.name !== initialCover?.name
+    || images.length !== initialImages.length
+    || images.some((image, index) => image.url !== initialImages[index]?.url || image.name !== initialImages[index]?.name)
   const leaks = findHiddenInfoLeaks(draft)
   const suggestedSkills = deriveSkillsFromServices(draft.selectedServices.map((service) => service.name))
   const firstError = Object.values(errors)[0]
+  const previewDraft = recruitmentCompensationPreview(draft)
+  const previewResult = result ? recruitmentCompensationPreview(result) : null
+  const invalidCompensationAmount = draft.payType === JobPayType.Fixed
+    && draft.payAmount !== null
+    && (!Number.isFinite(draft.payAmount) || draft.payAmount <= 0 || draft.payAmount > 100000)
+  const invalidVideos = Boolean(draft.postingContent && (draft.postingContent.videoUrls.length > POSTING_VIDEO_MAX
+    || draft.postingContent.videoUrls.some((url) => url.trim() && !normalizePostingVideoUrl(url))))
 
   const requestLeave = useCallback((action: () => void) => {
     if (!isDirty || result) {
@@ -135,14 +154,17 @@ export default function JobPostingComposer({
     skills: t(`${TK}.validation.skills`),
     deadline: t(`${TK}.validation.deadline`),
     payAmount: t(`${TK}.validation.payAmount`),
-    body: t(`${TK}.validation.body`),
+    body: t(`${TK}.validation.${draft.body.trim().length > 4000 ? 'bodyTooLong' : 'body'}`),
     contactName: t(`${TK}.validation.contactName`),
     phone: t(`${TK}.validation.phone`),
     privacy: t(`${TK}.validation.privacy`),
   }
 
   const handlePreview = () => {
+    if (mediaBusy || saveDraftMutation.isPending) return
     const nextErrors = validateJobDraft(draft, validationMessages)
+    if (invalidCompensationAmount) nextErrors.payAmount = t(`${TK}.validation.payAmount`)
+    if (invalidVideos) nextErrors.postingContent = t(`${TK}.richContent.invalidVideo`)
     if (leaks.length > 0) {
       nextErrors.privacy = t(`${TK}.validation.privacy`, {
         fields: leaks.map((leak) => t(`${TK}.visibility.leakFields.${leak.field}`)).join(', '),
@@ -160,10 +182,23 @@ export default function JobPostingComposer({
   }
 
   const handleSaveDraft = async () => {
-    if (saveDraftMutation.isPending) return
+    if (saveDraftMutation.isPending || mediaBusy) return
+    if (draft.body.length > 4000) {
+      setErrors({ body: t(`${TK}.validation.bodyTooLong`) }); focusField('body'); return
+    }
     if (!draft.title.trim()) {
       setErrors({ title: t(`${TK}.validation.draftTitle`) })
       focusField('title')
+      return
+    }
+    if (invalidCompensationAmount) {
+      setErrors({ payAmount: t(`${TK}.validation.payAmount`) })
+      focusField('payAmount')
+      return
+    }
+    if (invalidVideos) {
+      setErrors({ postingContent: t(`${TK}.richContent.invalidVideo`) })
+      focusField('postingContent')
       return
     }
     try {
@@ -243,32 +278,32 @@ export default function JobPostingComposer({
 
       {step === 'compose' ? (
         <>
-          <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
-            <div className="space-y-5">
+          <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
+            <div className="min-w-0 space-y-5">
               <ComposerNeedsSection draft={draft} errors={errors} disabled={saveDraftMutation.isPending} onChange={updateDraft} onOpenServices={() => setServicePickerOpen(true)} onClearServices={() => updateDraft({ selectedServices: [] })} onToggleSkill={handleToggleSkill} />
-              <ComposerContentSection draft={draft} errors={errors} disabled={saveDraftMutation.isPending} onChange={updateDraft} onUseSuggested={() => { updateDraft({ body: buildSuggestedDescription(draft, t) }); showToast(t(`${TK}.suggestedApplied`), 'success', 3000) }} />
+              <ComposerContentSection draft={draft} errors={errors} disabled={saveDraftMutation.isPending} onChange={updateDraft} onMediaBusyChange={setMediaBusy} onUseSuggested={() => { const body = buildSuggestedDescription(previewDraft, t); updateDraft({ body, postingContent: { ...(draft.postingContent ?? { images: [], videoUrls: [] }), html: postingHtmlFromText(body) } }); showToast(t(`${TK}.suggestedApplied`), 'success', 3000) }} />
               <ComposerVisibilitySection draft={draft} errors={errors} leaks={leaks} disabled={saveDraftMutation.isPending} onChange={updateDraft} />
             </div>
             <aside className="hidden space-y-2 xl:sticky xl:top-4 xl:block">
               <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wide text-nexoraSubtle"><span>{t(`${TK}.quickPreview`)}</span><span className="normal-case tracking-normal text-emerald-700">NailHub</span></div>
-              {leaks.length > 0 ? <div className="rounded-xl border border-nexoraLavender bg-white p-5 shadow-sm"><span className="rounded bg-nexoraBrandSoft px-2 py-1 text-[10px] font-bold text-nexoraBrand">{t(`${TK}.visibility.pausedTag`)}</span><h3 className="mt-4 font-black text-nexoraText">{t(`${TK}.visibility.pausedTitle`)}</h3><p className="mt-2 text-xs font-medium leading-5 text-nexoraMuted">{t(`${TK}.visibility.pausedDescription`, { fields: leaks.map((leak) => t(`${TK}.visibility.leakFields.${leak.field}`)).join(', ') })}</p><p className="mt-3 text-[10px] font-medium text-nexoraSubtle">{t(`${TK}.visibility.pausedNote`)}</p></div> : <NailhubPostPreview draft={draft} compact logo={logo} />}
+              {leaks.length > 0 ? <div className="rounded-xl border border-nexoraLavender bg-white p-5 shadow-sm"><span className="rounded bg-nexoraBrandSoft px-2 py-1 text-[10px] font-bold text-nexoraBrand">{t(`${TK}.visibility.pausedTag`)}</span><h3 className="mt-4 font-black text-nexoraText">{t(`${TK}.visibility.pausedTitle`)}</h3><p className="mt-2 text-xs font-medium leading-5 text-nexoraMuted">{t(`${TK}.visibility.pausedDescription`, { fields: leaks.map((leak) => t(`${TK}.visibility.leakFields.${leak.field}`)).join(', ') })}</p><p className="mt-3 text-[10px] font-medium text-nexoraSubtle">{t(`${TK}.visibility.pausedNote`)}</p></div> : <NailhubPostPreview draft={previewDraft} compact logo={logo} />}
               <p className="px-2 text-xs font-medium leading-5 text-nexoraMuted">↗ {t(`${TK}.quickPreviewNote`)}</p>
             </aside>
           </div>
 
           <footer className="sticky bottom-0 z-20 -mx-2 flex flex-col gap-2 border-t border-nexoraRule bg-white/95 px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur sm:flex-row sm:items-center sm:justify-end">
             {firstError ? <p role="alert" className="text-xs font-semibold text-rose-600 sm:mr-auto">{firstError}</p> : null}
-            <button type="button" disabled={saveDraftMutation.isPending} onClick={handleSaveDraft} className="min-h-11 rounded-lg border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted disabled:opacity-50">{saveDraftMutation.isPending ? <Loader2 className="mr-2 inline h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden /> : null}{t(`${TK}.saveDraft`)}</button>
-            <button type="button" disabled={saveDraftMutation.isPending} onClick={handlePreview} className="min-h-11 rounded-lg bg-nexoraBrand px-4 text-xs font-black text-white hover:bg-nexoraBrandDark disabled:opacity-50">{t(`${TK}.previewAction`)} →</button>
+            <button type="button" disabled={saveDraftMutation.isPending || mediaBusy} onClick={handleSaveDraft} className="min-h-11 rounded-lg border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted disabled:opacity-50">{saveDraftMutation.isPending ? <Loader2 className="mr-2 inline h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden /> : null}{t(`${TK}.saveDraft`)}</button>
+            <button type="button" disabled={saveDraftMutation.isPending || mediaBusy} onClick={handlePreview} className="min-h-11 rounded-lg bg-nexoraBrand px-4 text-xs font-black text-white hover:bg-nexoraBrandDark disabled:opacity-50">{t(`${TK}.previewAction`)} →</button>
           </footer>
         </>
       ) : null}
 
-      {step === 'review' ? <ComposerReviewStep draft={draft} logo={logo} confirmed={confirmed} isPending={publishMutation.isPending} isEditing={Boolean(postingId)} onConfirmedChange={setConfirmed} onPublish={handlePublish} onBack={() => setStep('compose')} /> : null}
-      {step === 'result' && result ? <ComposerResultStep posting={result} onPreview={() => setResultPreviewOpen(true)} onDone={() => onPublishedDone(result)} /> : null}
+      {step === 'review' ? <ComposerReviewStep draft={previewDraft} logo={logo} confirmed={confirmed} isPending={publishMutation.isPending} isEditing={Boolean(postingId)} onConfirmedChange={setConfirmed} onPublish={handlePublish} onBack={() => setStep('compose')} /> : null}
+      {step === 'result' && result && previewResult ? <ComposerResultStep posting={previewResult} onPreview={() => setResultPreviewOpen(true)} onDone={() => onPublishedDone(result)} /> : null}
 
       <MenuServicePickerModal open={servicePickerOpen} services={services} categories={categories} selectedIds={draft.selectedServices.map((service) => service.posServiceId)} onApply={handleApplyServices} onClose={() => setServicePickerOpen(false)} />
-      {result && resultPreviewOpen ? <JobPostingPreviewModal posting={result} logo={logo} onClose={() => setResultPreviewOpen(false)} /> : null}
+      {previewResult && resultPreviewOpen ? <JobPostingPreviewModal posting={previewResult} logo={logo} onClose={() => setResultPreviewOpen(false)} /> : null}
       {leaveConfirmOpen ? createPortal(
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm" onMouseDown={() => setLeaveConfirmOpen(false)}>
           <div role="dialog" aria-modal="true" aria-labelledby="leave-composer-title" className="nexora-modal-card flex w-full max-w-md flex-col rounded-2xl border border-nexoraBorder bg-white p-5 shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>

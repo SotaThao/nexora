@@ -1,4 +1,192 @@
 {
+  "community_jobs_browser": {
+    "hiringDetail": {
+      "contentTitle": "Job details",
+      "contactTitle": "Contact information",
+      "relatedTitle": "Related posts",
+      "relatedEmpty": "No other hiring posts are available.",
+      "address": "Address",
+      "mapAction": "View map",
+      "position": "Position",
+      "workType": "Work type",
+      "headcount": "Openings",
+      "deadline": "Application deadline",
+      "skills": "Skills",
+      "benefits": "Benefits",
+      "services": "Services",
+      "posted": "Posted {{date}}"
+    },
+    "pageTitle": "Community Jobs",
+    "ownerDescription": "Browse hiring posts and matching technician suggestions. Manage your salon’s recruitment in My Posts.",
+    "readOnlyDescription": "Browse hiring posts from salons. Sign in as a technician to apply or post that you are seeking work.",
+    "postsTitle": "Posts",
+    "kindFilterLabel": "Post type",
+    "tabs": {
+      "browse": "Browse Jobs",
+      "mine": "My Posts",
+      "ownerMine": "My Posts"
+    },
+    "demoPosts": {
+      "contactName": "Quản lý tiệm",
+      "acrylicDip": {
+        "title": "Cần thợ bột & dip, ăn chia 60/40",
+        "body": "Sunshine Nails cần thợ bột & dip có kinh nghiệm. Tiệm đông khách tại Houston, giờ làm linh hoạt, môi trường thân thiện. Ăn chia 60/40, liên hệ quản lý tiệm để trao đổi.",
+        "payText": "Ăn chia 60/40"
+      },
+      "manicurePedicure": {
+        "title": "Tuyển thợ chân tay nước, làm cuối tuần",
+        "body": "Lotus Nail Studio cần thợ chân tay nước làm cuối tuần tại San Jose. Ưu tiên người cẩn thận, thân thiện. Lương bao $22/giờ; được hướng dẫn các dịch vụ pedicure của tiệm.",
+        "payText": "Lương bao $22/giờ"
+      },
+      "nailArt": {
+        "title": "Cần thợ Gel-X & vẽ móng, giờ linh hoạt",
+        "body": "Bloom Nail Bar cần thợ Gel-X & vẽ móng cho tiệm tại Orlando. Có hình mẫu các bộ móng đã làm là một lợi thế. Giờ làm linh hoạt, lương thoả thuận qua tin nhắn.",
+        "payText": "Thoả thuận"
+      },
+      "headSpa": {
+        "title": "Tuyển thợ toàn thời gian, biết Head Spa, mi & wax",
+        "body": "Serenity Nails & Wellness đang mở rộng dịch vụ tại Seattle. Cần thợ có thể làm Head Spa, mi & wax. Ăn chia 50/50, có tiền tip; trao đổi thêm với quản lý tiệm.",
+        "payText": "Ăn chia 50/50, có tiền tip"
+      }
+    },
+    "suggestions": {
+      "title": "AI suggests matching technicians",
+      "demoLabel": "Demo",
+      "privacyHint": "Matched by skills, area, and work type in the hiring post. Technicians who enable “Hide from current salon” are not shown to their current salon.",
+      "invite": "Invite",
+      "invited": "Invited",
+      "profile": "Profile",
+      "matchLabel": "{{percent}}% match",
+      "inviteFeedback": "Simulated an invitation to {{name}}. This is demo data.",
+      "profileTitle": "{{name}}’s profile",
+      "demoHint": "Demo profile for reference; invitations are simulated for this session only.",
+      "workers": {
+        "vy": {
+          "name": "Vy Tran",
+          "location": "Houston TX",
+          "experience": "3–5 years",
+          "skills": "Acrylic · Dip · Manicure",
+          "bio": "Acrylic and dip technician with manicure experience, seeking work in Houston.",
+          "availability": "Work type: Full-time or flexible. Pay negotiable."
+        },
+        "lan": {
+          "name": "Cô Lan",
+          "location": "Houston TX",
+          "experience": "Over 10 years",
+          "skills": "Manicure · Pedicure · Wax",
+          "bio": "Experienced in manicures, pedicures, and waxing. Prefers a salon in Houston.",
+          "availability": "Work type: Full-time. Pay negotiable."
+        },
+        "linda": {
+          "name": "Linda Vu",
+          "location": "Dallas TX",
+          "experience": "1–3 years",
+          "skills": "Gel Polish · Pedicure",
+          "bio": "Gel and pedicure technician in Dallas, looking for a salon to develop her skills.",
+          "availability": "Work type: Part-time or flexible. Pay negotiable."
+        }
+      }
+    },
+    "ownerActions": {
+      "postJob": "Post a Job"
+    },
+    "technicianProfile": {
+      "tab": "Tech Profile",
+      "title": "Technician profile",
+      "subtitle": "create once, use for every post",
+      "steps": {
+        "basic": "Basics",
+        "skills": "Skills",
+        "portfolio": "Portfolio",
+        "preferences": "Job preferences"
+      },
+      "displayName": "Display name",
+      "experienceLabel": "Experience",
+      "cityLabel": "Area",
+      "languagesLabel": "Languages",
+      "bioLabel": "Short bio",
+      "bioPlaceholder": "For example: Gel-X specialist; fast, clean work.",
+      "choose": "Choose",
+      "experience": {
+        "UnderOneYear": "Under 1 year",
+        "OneToThreeYears": "1–3 years",
+        "ThreeToFiveYears": "3–5 years",
+        "FiveToTenYears": "5–10 years",
+        "OverTenYears": "Over 10 years"
+      },
+      "languages": {
+        "vi": "Vietnamese",
+        "en": "English",
+        "es": "Spanish"
+      },
+      "skillsLabel": "Skills",
+      "gelPolish": "Gel Polish",
+      "licenseLabel": "License",
+      "licenses": {
+        "TX": "TX TDLR",
+        "OtherState": "Another state",
+        "Studying": "Studying / waiting for exam"
+      },
+      "licenseNumberLabel": "License number (private)",
+      "licenseHint": "Demo license number is stored only in your local profile. It is excluded from the summary and generated post. Entering a number does not verify a license.",
+      "portfolioTitle": "Portfolio",
+      "portfolioHint": "Nine demo sample slots. Select an empty slot to add a sample; select a sample to remove it.",
+      "addPhoto": "Add demo photo {{index}}",
+      "removePhoto": "Remove demo photo {{index}}",
+      "demoPhoto": "Demo portfolio photo {{index}}",
+      "workTypesLabel": "Preferred job types",
+      "workTypes": {
+        "FullTime": "Full-time",
+        "PartTime": "Part-time",
+        "Weekend": "Weekends",
+        "Substitute": "Substitute shifts"
+      },
+      "payPreferencesLabel": "Compensation preferences",
+      "payPreferences": {
+        "Guaranteed": "Guaranteed salary",
+        "Commission": "Commission",
+        "ChairRental": "Chair rental",
+        "Negotiated": "Negotiated"
+      },
+      "desiredAmountLabel": "Desired amount (optional)",
+      "desiredAmountPlaceholder": "For example: $1,200/week or 60/40 commission",
+      "desiredAmountHint": "Leave blank to discuss compensation.",
+      "privacyTitle": "Privacy",
+      "privacy": {
+        "lookingForWork": "Looking for work",
+        "lookingForWorkHint": "Show the green badge on your profile.",
+        "hideFromCurrentSalon": "Hide from current salon",
+        "hideFromCurrentSalonHint": "Preference for hiding from your current salon (Bella Salon).",
+        "hidePhone": "Hide phone",
+        "hidePhoneHint": "Keep the phone hidden in a generated post until you choose to share it."
+      },
+      "demoPrivacyHint": "This demo profile is saved in this browser for your signed-in demo account. Current-salon hiding is a demo preference; no live salon visibility enforcement is claimed.",
+      "back": "Back",
+      "next": "Next",
+      "save": "Save profile",
+      "saved": "Demo profile saved.",
+      "saveFailed": "Could not save the demo profile in this browser. Your edits remain open.",
+      "storageError": "Profile storage is unavailable or could not be read. You can edit here; saving must succeed before returning to the board.",
+      "previewTitle": "Live profile summary",
+      "lookingBadge": "Looking for work",
+      "unverified": "UNVERIFIED",
+      "noName": "Your display name",
+      "noLocation": "No area yet",
+      "noExperience": "No experience selected",
+      "completion": "Profile completion",
+      "invitations": "Interview invitations",
+      "noInvitations": "No invitations yet.",
+      "edit": "Edit profile",
+      "aiDraft": "AI draft from profile",
+      "aiHint": "Complete at least 60% to create an editable demo post. Add your real contact details in the existing composer before publishing.",
+      "draftTitle": "{{name}} is looking for nail work · {{city}}",
+      "draftSkills": "Skills: {{skills}}",
+      "draftExperience": "Experience: {{experience}}",
+      "draftWorkTypes": "Preferred job types: {{types}}",
+      "draftPay": "Compensation preferences: {{pay}}",
+      "completeExperience": "Select your experience to complete the generated post."
+    }
+  },
   "merchant_dashboard": {
     "tips": {
       "awaiting_shop_confirmation": "Awaiting shop confirmation",
@@ -5322,7 +5510,8 @@
                 "urgent": "Mark as urgent",
                 "body": "Posting content",
                 "contactName": "Contact name in profile",
-                "phone": "Phone number in profile"
+                "phone": "Phone number in profile",
+                "currentCompensation": "Current compensation: {{value}}"
               },
               "placeholders": {
                 "title": "e.g. Hiring an experienced Acrylic / Dip technician",
@@ -5332,6 +5521,51 @@
                 "payText": "e.g. $1,000 - $1,300/week",
                 "body": "e.g. Describe the role, schedule, salon culture, and how to get in touch.",
                 "contactName": "e.g. Salon manager"
+              },
+              "richContent": {
+                "toolbar": "Content formatting",
+                "textStyle": "Text style",
+                "styles": { "p": "Normal", "h1": "Heading 1", "h2": "Heading 2", "h3": "Heading 3" },
+                "bold": "Bold",
+                "italic": "Italic",
+                "underline": "Underline",
+                "link": "Insert link",
+                "orderedList": "Numbered list",
+                "bulletList": "Bulleted list",
+                "clear": "Clear formatting",
+                "linkUrl": "Link URL",
+                "applyLink": "Insert",
+                "invalidLink": "Enter a valid HTTP, HTTPS, email or telephone link.",
+                "unsupported": "This formatting action is unavailable in your browser.",
+                "undo": "Undo",
+                "redo": "Redo",
+                "writeAI": "Write with AI",
+                "aiDisclaimer": "AI-assisted content may contain mistakes. Review it before posting. This demo uses a local writing template.",
+                "coverImage": "Cover image",
+                "inlineImages": "Images in post",
+                "camera": "Take photo",
+                "gallery": "Choose image",
+                "coverCamera": "Take a cover photo",
+                "coverGallery": "Choose a cover image",
+                "imagesCamera": "Take a photo for the post",
+                "imagesGallery": "Choose images for the post",
+                "coverHint": "One JPEG, PNG or WebP image, up to 5 MB. Images stay in this demo draft.",
+                "imagesHint": "Up to 6 JPEG, PNG or WebP images, 5 MB each.",
+                "coverPreview": "Cover image preview",
+                "imagePreview": "Post image {{index}}",
+                "removeCover": "Remove cover image",
+                "removeImage": "Remove post image {{index}}",
+                "imageLimit": "Choose one cover image or up to 6 images in the post.",
+                "invalidImage": "Choose a readable JPEG, PNG or WebP image no larger than 5 MB. Your existing images were kept.",
+                "readingImages": "Processing selected images…",
+                "videos": "Video links",
+                "videoUrl": "YouTube link {{index}}",
+                "videoPlaceholder": "Paste a YouTube link (https://…)",
+                "addVideo": "Add",
+                "removeVideo": "Remove video link {{index}}",
+                "viewVideo": "Watch video {{index}} on YouTube",
+                "videosHint": "Up to 3 YouTube links. Videos open on YouTube.",
+                "invalidVideo": "Enter valid YouTube video links (HTTP or HTTPS), or remove unfinished links. Maximum 3 videos."
               },
               "content": {
                 "title": "Posting content",
@@ -5437,6 +5671,7 @@
                 "deadline": "Select the last day to receive applications.",
                 "payAmount": "Enter pay greater than $0, up to $100,000.",
                 "body": "Content must contain at least 20 characters.",
+                "bodyTooLong": "Content must contain no more than 4,000 characters.",
                 "contactName": "Enter the contact person.",
                 "phone": "Enter a 10-digit phone number, optionally with country code 1.",
                 "privacy": "Please remove hidden {{fields}} from the title or content."
