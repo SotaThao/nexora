@@ -13,6 +13,11 @@ import { collectFeedCities } from './staffJobsModel'
 
 const demo = vi.hoisted(() => ({ mode: 'staff' as 'owner' | 'staff' | 'readOnly' }))
 
+vi.mock('../../../community/CommunityAuth', async (importActual) => ({
+  ...await importActual<typeof import('../../../community/CommunityAuth')>(),
+  useCommunityAuth: () => ({ user: null, isAnonymous: true, authReady: true, isLoading: false }),
+}))
+
 vi.mock('../../../community/jobs/CommunityJobsDemoContext', () => ({
   useCommunityJobsDemo: () => ({
     mode: demo.mode,
@@ -197,28 +202,32 @@ describe('StaffCommunityJobsView header post button per role', () => {
     resetCommunityJobsMockStore()
   })
 
-  const renderView = (props: { browseOnly?: boolean } = {}) =>
-    render(<MemoryRouter><StaffCommunityJobsView {...props} /></MemoryRouter>)
+  const renderView = () => render(<MemoryRouter><StaffCommunityJobsView /></MemoryRouter>)
 
   it('staff sees "Đăng tin tìm việc" and it opens the seeking composer', async () => {
     demo.mode = 'staff'
     renderView()
-    await screen.findByText(HIRING_TITLE)
+    expect(screen.getByRole('tab', { name: 'Duyệt tin' })).toHaveAttribute('aria-selected', 'true')
     fireEvent.click(screen.getByRole('button', { name: 'Đăng tin tìm việc' }))
-    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+    expect(await screen.findByRole('dialog', { name: 'Đăng tin tìm việc' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Mở trong POS' })).not.toBeInTheDocument()
   })
 
-  it('owner browse (browseOnly) renders no post button — the owner tab row owns "Post a Job"', async () => {
+  it('owner unified header exposes Open in POS and the recruitment post action', () => {
     demo.mode = 'owner'
-    renderView({ browseOnly: true })
-    await screen.findByText(HIRING_TITLE)
-    expect(screen.queryByRole('button', { name: /Đăng tin/ })).not.toBeInTheDocument()
+    renderView()
+    expect(screen.getByRole('tab', { name: 'Duyệt tin' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('button', { name: 'Mở trong POS' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Đăng bài tuyển thợ' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Đăng tin tìm việc' })).not.toBeInTheDocument()
   })
 
-  it('read-only guest sees no post button', async () => {
+  it('read-only guest sees Browse without owner or seeking post actions', () => {
     demo.mode = 'readOnly'
     renderView()
-    await screen.findByText(HIRING_TITLE)
-    expect(screen.queryByRole('button', { name: /Đăng tin/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Duyệt tin' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.queryByRole('button', { name: 'Mở trong POS' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Đăng bài tuyển thợ' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Đăng tin tìm việc' })).not.toBeInTheDocument()
   })
 })

@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { ExternalLink, Plus } from 'lucide-react'
 
-import { JobPostingStatus } from '../../../../../constants/posRecruitment'
+import { JobPayType, JobPayUnit, JobPostingStatus } from '../../../../../constants/posRecruitment'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import { useClosePosJobPosting, usePosJobPostings } from '../../../../../data/hooks/usePosRecruitment'
@@ -23,13 +23,16 @@ interface PosStaffRecruitmentViewProps {
   createRequest?: number
   /** Community owner tabs render their own title-less header row (tabs + Open in POS + Post a Job). */
   hideHeader?: boolean
+  createRequested?: boolean
+  onCreateRequestHandled?: () => void
+  onComposerStateChange?: (composing: boolean) => void
 }
 
 interface ComposerState {
   postingId: string | null
 }
 
-export default function PosStaffRecruitmentView({ businessId, createRequest = 0, hideHeader = false }: PosStaffRecruitmentViewProps) {
+export default function PosStaffRecruitmentView({ businessId, createRequest = 0, hideHeader = false, createRequested = false, onCreateRequestHandled, onComposerStateChange }: PosStaffRecruitmentViewProps) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const navigate = useNavigate()
@@ -45,7 +48,10 @@ export default function PosStaffRecruitmentView({ businessId, createRequest = 0,
 
   const initialDraft = useMemo(() => {
     const posting = composer?.postingId ? postings.find((item) => item.id === composer.postingId) : undefined
-    return posting ? postingToDraft(posting) : createDefaultJobDraft(businessInfo)
+    const draft = posting ? postingToDraft(posting) : createDefaultJobDraft(businessInfo)
+    return posting
+      ? { ...draft, payUnit: posting.payUnit }
+      : { ...draft, payType: JobPayType.Fixed, payUnit: JobPayUnit.Week }
   }, [composer?.postingId, postings, businessInfo])
 
   // "Post a Job" always opens the Advanced composer; the Quick post / mode picker step is hidden
@@ -58,6 +64,18 @@ export default function PosStaffRecruitmentView({ businessId, createRequest = 0,
     // Don't replace a composer that's already open (e.g. mid-edit) when the tab row's "Post a Job" is clicked.
     if (createRequest > 0) setComposer((current) => current ?? { postingId: null })
   }, [createRequest])
+
+  useEffect(() => {
+    if (!createRequested) return
+    setComposer((current) => current ?? { postingId: null })
+    onCreateRequestHandled?.()
+  }, [createRequested, onCreateRequestHandled])
+
+  const isComposing = composer !== null
+  useEffect(() => {
+    onComposerStateChange?.(isComposing)
+    return () => onComposerStateChange?.(false)
+  }, [isComposing, onComposerStateChange])
 
   const handleClosePosting = async () => {
     if (!closingPosting) return

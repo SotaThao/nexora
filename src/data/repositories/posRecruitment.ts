@@ -4,6 +4,7 @@ import {
   POS_RECRUITMENT_PATHS,
 } from '../../constants/posRecruitment'
 import { formatNationalNumber, PhoneDialCode } from '../../components/CountryCodeSelect'
+import { normalizePostingContent, postingPlainText } from '../../components/dashboard/views/pos/recruitment/recruitmentPostingContent'
 import type { MerchantBusinessInfo, PaginatedResponse } from '../../types/domain'
 import type {
   PosJobPosting,
@@ -18,6 +19,7 @@ import {
 } from './posRecruitmentMockClient'
 
 export function normalizePosting(dto: PosJobPostingDto): PosJobPosting {
+  const postingContent = normalizePostingContent(dto.postingContent)
   return {
     id: String(dto.id ?? ''),
     code: String(dto.code ?? ''),
@@ -32,7 +34,8 @@ export function normalizePosting(dto: PosJobPostingDto): PosJobPosting {
     payText: typeof dto.payText === 'string' && dto.payText.trim() ? dto.payText.trim() : null,
     isUrgent: Boolean(dto.isUrgent),
     benefits: Array.isArray(dto.benefits) ? [...dto.benefits] : [],
-    body: String(dto.body ?? ''),
+    body: postingContent ? postingPlainText(postingContent.html) : String(dto.body ?? ''),
+    postingContent,
     deadline: String(dto.deadline ?? ''),
     businessName: String(dto.businessName ?? ''),
     address: String(dto.address ?? ''),
@@ -59,8 +62,11 @@ export function normalizePosting(dto: PosJobPostingDto): PosJobPosting {
 }
 
 function toWriteDto(input: PosJobPostingUpsertInput, status: JobPostingStatus): PosJobPostingWriteDto {
+  const postingContent = normalizePostingContent(input.postingContent)
   return {
     ...input,
+    body: postingContent ? postingPlainText(postingContent.html) : input.body,
+    postingContent,
     skills: [...input.skills],
     benefits: [...input.benefits],
     selectedServices: input.selectedServices.map((service) => ({ ...service })),

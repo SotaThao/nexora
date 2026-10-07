@@ -1,13 +1,12 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { CheckCircle2, MessagesSquare, X } from 'lucide-react'
 
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { COMMUNITY_JOBS_IS_SIMULATED } from '../../../../data/repositories/communityJobsMockClient'
 import IconButton from '../../../ui/IconButton'
-import NailhubPostPreview from '../../../dashboard/views/pos/recruitment/NailhubPostPreview'
-import { postingToDraft } from '../../../dashboard/views/pos/recruitment/recruitmentModel'
 import type { PosJobPosting } from '../../../../types/posRecruitment'
+import CommunityHiringDetailContent from './CommunityHiringDetailContent'
 import { useCommunityJobsModalFocusTrap } from './useCommunityJobsModalFocusTrap'
 
 const TK = 'staff_dashboard.community.jobs.detail'
@@ -15,15 +14,30 @@ const TK = 'staff_dashboard.community.jobs.detail'
 interface HiringPostDetailModalProps {
   posting: PosJobPosting
   alreadyApplied: boolean
+  canApply?: boolean
+  relatedPostings?: PosJobPosting[]
+  onOpenRelated?: (postingId: string) => void
   onClose: () => void
   onApply: (posting: PosJobPosting) => void
   onChat: (posting: PosJobPosting) => void
 }
 
-export default function HiringPostDetailModal({ posting, alreadyApplied, onClose, onApply, onChat }: HiringPostDetailModalProps) {
+export default function HiringPostDetailModal({ posting, alreadyApplied, canApply = true, relatedPostings = [], onOpenRelated, onClose, onApply, onChat }: HiringPostDetailModalProps) {
   const { t } = useTranslation()
   const dialogRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const previousPostingIdRef = useRef(posting.id)
   useCommunityJobsModalFocusTrap(true, dialogRef, onClose)
+
+  useEffect(() => {
+    if (previousPostingIdRef.current === posting.id) return
+    previousPostingIdRef.current = posting.id
+    if (contentRef.current) contentRef.current.scrollTop = 0
+    const focusFrame = window.requestAnimationFrame(() => {
+      contentRef.current?.querySelector<HTMLElement>('[data-community-detail-heading]')?.focus()
+    })
+    return () => window.cancelAnimationFrame(focusFrame)
+  }, [posting.id])
 
   return createPortal(
     <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm" onMouseDown={onClose}>
@@ -32,7 +46,7 @@ export default function HiringPostDetailModal({ posting, alreadyApplied, onClose
         role="dialog"
         aria-modal="true"
         aria-labelledby="hiring-post-detail-title"
-        className="nexora-modal-card flex w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-nexoraBorder bg-nexoraSurface shadow-2xl"
+        className="nexora-modal-card flex w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-nexoraBorder bg-nexoraSurface shadow-2xl"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="flex items-center justify-between border-b border-nexoraRule px-4 py-3 sm:px-5">
@@ -51,8 +65,8 @@ export default function HiringPostDetailModal({ posting, alreadyApplied, onClose
           </p>
         ) : null}
 
-        <div className="flex-1 overflow-y-auto bg-nexoraCanvas p-3 sm:p-5">
-          <NailhubPostPreview draft={{ ...postingToDraft(posting), status: posting.status }} />
+        <div ref={contentRef} className="min-h-0 flex-1 overflow-y-auto bg-nexoraSurface p-3 sm:p-5">
+          <CommunityHiringDetailContent posting={posting} relatedPostings={relatedPostings} onOpenRelated={onOpenRelated} />
         </div>
 
         <footer className="grid grid-cols-1 gap-2 border-t border-nexoraRule bg-white px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:grid-cols-2 sm:px-5">
@@ -63,7 +77,7 @@ export default function HiringPostDetailModal({ posting, alreadyApplied, onClose
           >
             <MessagesSquare className="h-4 w-4" aria-hidden />{t(`${TK}.chatAction`)}
           </button>
-          {alreadyApplied ? (
+          {!canApply ? null : alreadyApplied ? (
             <span className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-emerald-50 px-4 text-xs font-bold text-emerald-700">
               <CheckCircle2 className="h-4 w-4" aria-hidden />{t('staff_dashboard.community.jobs.card.alreadyApplied')}
             </span>

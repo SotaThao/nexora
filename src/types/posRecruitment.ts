@@ -21,6 +21,18 @@ export interface JobPostingSelectedService {
   name: string
 }
 
+export interface RecruitmentPostingImage {
+  url: string
+  name: string
+}
+
+export interface RecruitmentPostingContent {
+  html: string
+  coverImage?: RecruitmentPostingImage
+  images: RecruitmentPostingImage[]
+  videoUrls: string[]
+}
+
 export interface PosRecruitmentSalonContext {
   name: string
   address: string
@@ -31,6 +43,7 @@ export interface PosRecruitmentSalonContext {
 }
 
 export interface PosJobPostingDto {
+  postingContent?: RecruitmentPostingContent
   id: string
   code: string
   title: string
@@ -66,6 +79,7 @@ export interface PosJobPostingDto {
 }
 
 export interface PosJobPosting {
+  postingContent?: RecruitmentPostingContent
   id: string
   code: string
   title: string
@@ -101,6 +115,7 @@ export interface PosJobPosting {
 }
 
 export interface PosJobPostingUpsertInput {
+  postingContent?: RecruitmentPostingContent
   title: string
   position: JobPosition
   headcount: number

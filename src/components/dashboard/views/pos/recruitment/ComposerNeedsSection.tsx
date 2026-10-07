@@ -1,11 +1,9 @@
 import { Store } from 'lucide-react'
+import RecruitmentCompensationFields from './RecruitmentCompensationFields'
 
 import {
-  JobPayType,
-  JobPayUnit,
   JobPosition,
   JobWorkType,
-  RecruitmentBenefit,
   RecruitmentSkill,
 } from '../../../../../constants/posRecruitment'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
@@ -33,7 +31,6 @@ const COMPOSER_POSITIONS = [
 ]
 
 const COMPOSER_WORK_TYPES = [JobWorkType.FullTime, JobWorkType.PartTime, JobWorkType.Flexible]
-const COMPOSER_PAY_UNITS = [JobPayUnit.Hour, JobPayUnit.Day, JobPayUnit.Week, JobPayUnit.Month]
 
 export default function ComposerNeedsSection({ draft, errors, disabled, onChange, onOpenServices, onClearServices, onToggleSkill }: ComposerNeedsSectionProps) {
   const { t } = useTranslation()
@@ -87,42 +84,7 @@ export default function ComposerNeedsSection({ draft, errors, disabled, onChange
           {errors.skills ? <span className="mt-1 block text-[11px] font-semibold text-rose-600">{errors.skills}</span> : null}
         </fieldset>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <label className="text-xs font-bold text-nexoraText">{t(`${TK}.composer.fields.payType`)}<select disabled={disabled} value={draft.payType} onChange={(event) => onChange({ payType: event.target.value as JobPayType })} className={`${fieldClass} mt-1.5`}>{Object.values(JobPayType).map((value) => <option key={value} value={value}>{t(`${TK}.enums.payType.${value}`)}</option>)}</select></label>
-          {draft.payType === JobPayType.Fixed ? (
-            <div className="grid grid-cols-[minmax(0,1fr)_130px] gap-2">
-              <label className="text-xs font-bold text-nexoraText">{t(`${TK}.composer.fields.payAmount`)} *<input id="recruitment-field-payAmount" type="number" min="0.01" max="100000" step="0.01" disabled={disabled} value={draft.payAmount ?? ''} onChange={(event) => onChange({ payAmount: event.target.value ? Number(event.target.value) : null })} placeholder={t(`${TK}.composer.placeholders.payAmount`)} className={`${fieldClass} mt-1.5 ${errors.payAmount ? 'border-rose-400' : ''}`} /></label>
-              <label className="text-xs font-bold text-nexoraText">{t(`${TK}.composer.fields.payUnit`)}<select disabled={disabled} value={draft.payUnit ?? JobPayUnit.Week} onChange={(event) => onChange({ payUnit: event.target.value as JobPayUnit })} className={`${fieldClass} mt-1.5`}>{COMPOSER_PAY_UNITS.map((value) => <option key={value} value={value}>{t(`${TK}.enums.payUnit.${value}`)}</option>)}</select></label>
-              {errors.payAmount ? <span className="col-span-2 text-[11px] font-semibold text-rose-600">{errors.payAmount}</span> : null}
-            </div>
-          ) : <div />}
-        </div>
-
-        <label className="block text-xs font-bold text-nexoraText">
-          {t(`${TK}.composer.fields.payText`)}
-          <input type="text" disabled={disabled} value={draft.payText ?? ''} onChange={(event) => onChange({ payText: event.target.value || null })} placeholder={t(`${TK}.composer.placeholders.payText`)} className={`${fieldClass} mt-1.5`} />
-        </label>
-
-        <fieldset>
-          <legend className="text-xs font-bold text-nexoraText">{t(`${TK}.composer.needs.benefitsTitle`)}</legend>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {Object.values(RecruitmentBenefit).map((benefit) => {
-              const selected = draft.benefits.includes(benefit)
-              return (
-                <button
-                  key={benefit}
-                  type="button"
-                  disabled={disabled}
-                  aria-pressed={selected}
-                  onClick={() => onChange({ benefits: selected ? draft.benefits.filter((item) => item !== benefit) : [...draft.benefits, benefit] })}
-                  className={`min-h-11 rounded-lg border px-3 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand disabled:opacity-50 ${selected ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-nexoraBorder bg-white text-nexoraMuted hover:border-nexoraLavender'}`}
-                >
-                  {t(`${TK}.enums.benefit.${benefit}`)}
-                </button>
-              )
-            })}
-          </div>
-        </fieldset>
+        <RecruitmentCompensationFields draft={draft} errors={errors} disabled={disabled} onChange={onChange} />
       </div>
     </section>
   )

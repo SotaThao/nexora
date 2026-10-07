@@ -1,4 +1,192 @@
 {
+  "community_jobs_browser": {
+    "hiringDetail": {
+      "contentTitle": "Chi tiết công việc",
+      "contactTitle": "Thông tin liên lạc",
+      "relatedTitle": "Bài viết liên quan",
+      "relatedEmpty": "Chưa có tin tuyển thợ khác.",
+      "address": "Địa chỉ",
+      "mapAction": "Xem bản đồ",
+      "position": "Vị trí",
+      "workType": "Loại việc",
+      "headcount": "Số lượng tuyển",
+      "deadline": "Hạn ứng tuyển",
+      "skills": "Kỹ năng",
+      "benefits": "Quyền lợi",
+      "services": "Dịch vụ",
+      "posted": "Đăng ngày {{date}}"
+    },
+    "pageTitle": "Việc làm cộng đồng",
+    "ownerDescription": "Duyệt tin tuyển thợ và tham khảo gợi ý phù hợp. Quản lý tin tuyển của tiệm trong Bài của tôi.",
+    "readOnlyDescription": "Duyệt tin tuyển thợ từ các tiệm. Đăng nhập với tài khoản thợ để ứng tuyển hoặc đăng tin tìm việc.",
+    "postsTitle": "Bài đăng",
+    "kindFilterLabel": "Loại tin",
+    "tabs": {
+      "browse": "Duyệt tin",
+      "mine": "Bài của tôi",
+      "ownerMine": "Bài của tôi"
+    },
+    "demoPosts": {
+      "contactName": "Quản lý tiệm",
+      "acrylicDip": {
+        "title": "Cần thợ bột & dip, ăn chia 60/40",
+        "body": "Sunshine Nails cần thợ bột & dip có kinh nghiệm. Tiệm đông khách tại Houston, giờ làm linh hoạt, môi trường thân thiện. Ăn chia 60/40, liên hệ quản lý tiệm để trao đổi.",
+        "payText": "Ăn chia 60/40"
+      },
+      "manicurePedicure": {
+        "title": "Tuyển thợ chân tay nước, làm cuối tuần",
+        "body": "Lotus Nail Studio cần thợ chân tay nước làm cuối tuần tại San Jose. Ưu tiên người cẩn thận, thân thiện. Lương bao $22/giờ; được hướng dẫn các dịch vụ pedicure của tiệm.",
+        "payText": "Lương bao $22/giờ"
+      },
+      "nailArt": {
+        "title": "Cần thợ Gel-X & vẽ móng, giờ linh hoạt",
+        "body": "Bloom Nail Bar cần thợ Gel-X & vẽ móng cho tiệm tại Orlando. Có hình mẫu các bộ móng đã làm là một lợi thế. Giờ làm linh hoạt, lương thoả thuận qua tin nhắn.",
+        "payText": "Thoả thuận"
+      },
+      "headSpa": {
+        "title": "Tuyển thợ toàn thời gian, biết Head Spa, mi & wax",
+        "body": "Serenity Nails & Wellness đang mở rộng dịch vụ tại Seattle. Cần thợ có thể làm Head Spa, mi & wax. Ăn chia 50/50, có tiền tip; trao đổi thêm với quản lý tiệm.",
+        "payText": "Ăn chia 50/50, có tiền tip"
+      }
+    },
+    "suggestions": {
+      "title": "AI gợi ý thợ phù hợp",
+      "demoLabel": "Demo",
+      "privacyHint": "Tính theo kỹ năng, khu vực, loại việc khớp với tin tuyển. Thợ bật “Ẩn với tiệm hiện tại” sẽ không hiện với tiệm của họ.",
+      "invite": "Mời",
+      "invited": "Đã mời",
+      "profile": "Hồ sơ",
+      "matchLabel": "Phù hợp {{percent}}%",
+      "inviteFeedback": "Đã mô phỏng lời mời đến {{name}}. Đây là dữ liệu demo.",
+      "profileTitle": "Hồ sơ {{name}}",
+      "demoHint": "Hồ sơ demo để tham khảo; lời mời chỉ được mô phỏng trong phiên này.",
+      "workers": {
+        "vy": {
+          "name": "Vy Tran",
+          "location": "Houston TX",
+          "experience": "3–5 năm",
+          "skills": "Bột / Acrylic · Dip · Tay nước",
+          "bio": "Thợ bột & dip, có kinh nghiệm làm tay nước. Mong muốn làm việc tại Houston.",
+          "availability": "Loại việc: Toàn thời gian hoặc linh hoạt. Lương thoả thuận."
+        },
+        "lan": {
+          "name": "Cô Lan",
+          "location": "Houston TX",
+          "experience": "Trên 10 năm",
+          "skills": "Tay nước · Chân / Pedicure · Wax",
+          "bio": "Kinh nghiệm lâu năm về chân tay nước & wax. Ưu tiên tiệm tại Houston.",
+          "availability": "Loại việc: Toàn thời gian. Lương thoả thuận."
+        },
+        "linda": {
+          "name": "Linda Vu",
+          "location": "Dallas TX",
+          "experience": "1–3 năm",
+          "skills": "Gel Polish · Chân / Pedicure",
+          "bio": "Thợ gel & pedicure tại Dallas, muốn tìm tiệm phù hợp để phát triển tay nghề.",
+          "availability": "Loại việc: Bán thời gian hoặc linh hoạt. Lương thoả thuận."
+        }
+      }
+    },
+    "ownerActions": {
+      "postJob": "Đăng bài tuyển thợ"
+    },
+    "technicianProfile": {
+      "tab": "Hồ sơ thợ",
+      "title": "Hồ sơ thợ",
+      "subtitle": "tạo 1 lần, dùng cho mọi bài",
+      "steps": {
+        "basic": "Cơ bản",
+        "skills": "Kỹ năng",
+        "portfolio": "Portfolio",
+        "preferences": "Việc mong muốn"
+      },
+      "displayName": "Tên hiển thị",
+      "experienceLabel": "Kinh nghiệm",
+      "cityLabel": "Khu vực",
+      "languagesLabel": "Ngôn ngữ",
+      "bioLabel": "Giới thiệu ngắn",
+      "bioPlaceholder": "VD: Chuyên Gel-X, làm nhanh, sạch sẽ.",
+      "choose": "Chọn",
+      "experience": {
+        "UnderOneYear": "Dưới 1 năm",
+        "OneToThreeYears": "1–3 năm",
+        "ThreeToFiveYears": "3–5 năm",
+        "FiveToTenYears": "5–10 năm",
+        "OverTenYears": "Trên 10 năm"
+      },
+      "languages": {
+        "vi": "Tiếng Việt",
+        "en": "English",
+        "es": "Español"
+      },
+      "skillsLabel": "Kỹ năng",
+      "gelPolish": "Gel Polish",
+      "licenseLabel": "License",
+      "licenses": {
+        "TX": "TX TDLR",
+        "OtherState": "Bang khác",
+        "Studying": "Đang học / chờ thi"
+      },
+      "licenseNumberLabel": "Số license (riêng tư)",
+      "licenseHint": "Số license mẫu chỉ lưu trong hồ sơ riêng trên trình duyệt, không đưa vào preview hay bài tạo từ hồ sơ. Nhập số không xác minh license.",
+      "portfolioTitle": "Portfolio",
+      "portfolioHint": "9 ô ảnh mẫu demo. Bấm ô trống để thêm mẫu; bấm ảnh để gỡ.",
+      "addPhoto": "Thêm ảnh mẫu {{index}}",
+      "removePhoto": "Gỡ ảnh mẫu {{index}}",
+      "demoPhoto": "Ảnh portfolio mẫu {{index}}",
+      "workTypesLabel": "Loại việc mong muốn",
+      "workTypes": {
+        "FullTime": "Full-time",
+        "PartTime": "Part-time",
+        "Weekend": "Cuối tuần",
+        "Substitute": "Thế ca"
+      },
+      "payPreferencesLabel": "Cách trả lương mong muốn",
+      "payPreferences": {
+        "Guaranteed": "Lương bảo đảm",
+        "Commission": "Ăn chia",
+        "ChairRental": "Thuê ghế",
+        "Negotiated": "Thỏa thuận"
+      },
+      "desiredAmountLabel": "Mức mong muốn (tùy chọn)",
+      "desiredAmountPlaceholder": "VD: $1,200/tuần hoặc ăn chia 60/40",
+      "desiredAmountHint": "Để trống nghĩa là thỏa thuận.",
+      "privacyTitle": "Quyền riêng tư",
+      "privacy": {
+        "lookingForWork": "Đang tìm việc",
+        "lookingForWorkHint": "Hiện huy hiệu xanh trên hồ sơ.",
+        "hideFromCurrentSalon": "Ẩn với tiệm hiện tại",
+        "hideFromCurrentSalonHint": "Lựa chọn ẩn với tiệm đang làm (Bella Salon).",
+        "hidePhone": "Ẩn số điện thoại",
+        "hidePhoneHint": "Giữ số điện thoại ẩn trong bài tạo từ hồ sơ cho đến khi bạn chọn chia sẻ."
+      },
+      "demoPrivacyHint": "Hồ sơ demo lưu trên trình duyệt riêng cho tài khoản demo đang đăng nhập. Ẩn với tiệm là lựa chọn demo, chưa xác nhận áp dụng lọc hiển thị trên hệ thống thật.",
+      "back": "Quay lại",
+      "next": "Tiếp",
+      "save": "Lưu hồ sơ",
+      "saved": "Đã lưu hồ sơ demo.",
+      "saveFailed": "Không lưu được hồ sơ demo trên trình duyệt. Nội dung bạn sửa vẫn được giữ trong form.",
+      "storageError": "Không đọc được hồ sơ hoặc bộ nhớ trình duyệt chưa sẵn sàng. Bạn vẫn có thể sửa; cần lưu thành công trước khi quay lại bảng việc làm.",
+      "previewTitle": "Preview hồ sơ trực tiếp",
+      "lookingBadge": "Đang tìm việc",
+      "unverified": "CHƯA XÁC MINH",
+      "noName": "Tên hiển thị của bạn",
+      "noLocation": "Chưa có khu vực",
+      "noExperience": "Chưa có kinh nghiệm",
+      "completion": "Hoàn thiện hồ sơ",
+      "invitations": "Lời mời phỏng vấn",
+      "noInvitations": "Chưa có lời mời.",
+      "edit": "Chỉnh sửa hồ sơ",
+      "aiDraft": "AI tạo bản nháp từ hồ sơ",
+      "aiHint": "Hoàn thiện từ 60% để tạo bài demo có thể sửa. Điền thông tin liên hệ trong form hiện có trước khi đăng.",
+      "draftTitle": "{{name}} tìm việc nail · {{city}}",
+      "draftSkills": "Kỹ năng: {{skills}}",
+      "draftExperience": "Kinh nghiệm: {{experience}}",
+      "draftWorkTypes": "Loại việc mong muốn: {{types}}",
+      "draftPay": "Đãi ngộ mong muốn: {{pay}}",
+      "completeExperience": "Chọn kinh nghiệm để hoàn thiện bài tạo từ hồ sơ."
+    }
+  },
   "merchant_dashboard": {
     "tips": {
       "awaiting_shop_confirmation": "Chờ tiệm xác nhận",
@@ -5322,7 +5510,8 @@
                 "urgent": "Đánh dấu cần gấp",
                 "body": "Nội dung",
                 "contactName": "Người nhận liên hệ trong hồ sơ",
-                "phone": "Số điện thoại trong hồ sơ"
+                "phone": "Số điện thoại trong hồ sơ",
+                "currentCompensation": "Đãi ngộ hiện tại: {{value}}"
               },
               "placeholders": {
                 "title": "Ví dụ: Cần tuyển thợ Acrylic / Dip có kinh nghiệm",
@@ -5332,6 +5521,51 @@
                 "payText": "VD: $1,000 - $1,300/tuần",
                 "body": "Ví dụ: Mô tả công việc, lịch làm, môi trường tiệm và cách liên hệ.",
                 "contactName": "Ví dụ: Quản lý tiệm"
+              },
+              "richContent": {
+                "toolbar": "Định dạng nội dung",
+                "textStyle": "Kiểu văn bản",
+                "styles": { "p": "Normal", "h1": "Tiêu đề 1", "h2": "Tiêu đề 2", "h3": "Tiêu đề 3" },
+                "bold": "In đậm",
+                "italic": "In nghiêng",
+                "underline": "Gạch chân",
+                "link": "Chèn liên kết",
+                "orderedList": "Danh sách đánh số",
+                "bulletList": "Danh sách dấu đầu dòng",
+                "clear": "Xóa định dạng",
+                "linkUrl": "Đường dẫn liên kết",
+                "applyLink": "Chèn",
+                "invalidLink": "Nhập liên kết HTTP, HTTPS, email hoặc số điện thoại hợp lệ.",
+                "unsupported": "Trình duyệt hiện tại chưa hỗ trợ thao tác định dạng này.",
+                "undo": "Hoàn tác",
+                "redo": "Làm lại",
+                "writeAI": "Viết bằng AI",
+                "aiDisclaimer": "Nội dung do AI hỗ trợ có thể có sai sót. Vui lòng kiểm tra trước khi đăng. Bản demo sử dụng mẫu viết tại máy.",
+                "coverImage": "Ảnh bìa",
+                "inlineImages": "Ảnh trong bài",
+                "camera": "Chụp ảnh",
+                "gallery": "Chọn ảnh",
+                "coverCamera": "Chụp ảnh bìa",
+                "coverGallery": "Chọn ảnh bìa từ thư viện",
+                "imagesCamera": "Chụp ảnh trong bài",
+                "imagesGallery": "Chọn ảnh trong bài từ thư viện",
+                "coverHint": "Một ảnh JPEG, PNG hoặc WebP, tối đa 5 MB. Ảnh được giữ trong nháp demo này.",
+                "imagesHint": "Tối đa 6 ảnh JPEG, PNG hoặc WebP, mỗi ảnh tối đa 5 MB.",
+                "coverPreview": "Xem trước ảnh bìa",
+                "imagePreview": "Ảnh trong bài {{index}}",
+                "removeCover": "Xóa ảnh bìa",
+                "removeImage": "Xóa ảnh trong bài {{index}}",
+                "imageLimit": "Chọn một ảnh bìa hoặc tối đa 6 ảnh trong bài.",
+                "invalidImage": "Chọn ảnh JPEG, PNG hoặc WebP đọc được, tối đa 5 MB. Các ảnh đã có được giữ nguyên.",
+                "readingImages": "Đang xử lý ảnh đã chọn…",
+                "videos": "Link video",
+                "videoUrl": "Liên kết YouTube {{index}}",
+                "videoPlaceholder": "Dán link YouTube (https://…)",
+                "addVideo": "Thêm",
+                "removeVideo": "Xóa liên kết video {{index}}",
+                "viewVideo": "Xem video {{index}} trên YouTube",
+                "videosHint": "Tối đa 3 link YouTube. Video mở trên YouTube.",
+                "invalidVideo": "Nhập link video YouTube hợp lệ (HTTP hoặc HTTPS), hoặc xóa link chưa hoàn tất. Tối đa 3 video."
               },
               "content": {
                 "title": "Nội dung bài đăng",
@@ -5437,6 +5671,7 @@
                 "deadline": "Chọn ngày kết thúc nhận liên hệ.",
                 "payAmount": "Nhập mức lương lớn hơn 0, tối đa 100.000 USD.",
                 "body": "Nội dung cần ít nhất 20 ký tự.",
+                "bodyTooLong": "Nội dung không được quá 4.000 ký tự.",
                 "contactName": "Nhập người nhận liên hệ.",
                 "phone": "Nhập số điện thoại gồm 10 chữ số, có thể kèm mã quốc gia 1.",
                 "privacy": "Vui lòng bỏ {{fields}} đã ẩn khỏi tiêu đề hoặc nội dung."
