@@ -103,9 +103,10 @@ export default function Pagination({
   }
 
   if (variant === 'community') {
-    const pageButtonClass = 'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2'
+    const pageButtonClass = 'group inline-flex h-11 w-11 shrink-0 items-center justify-center p-1 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2'
+    const pageFaceClass = 'inline-flex h-9 w-9 items-center justify-center rounded-lg border transition-colors'
     const renderPageItems = (radius: number) => pageItems(radius).map((item, index) => item === 'ellipsis' ? (
-      <span key={`ellipsis-${index}`} aria-hidden="true" className={`${pageButtonClass} border-nexoraBorder bg-white text-nexoraMuted`}>…</span>
+      <span key={`ellipsis-${index}`} aria-hidden="true" className={`${pageFaceClass} shrink-0 border-nexoraBorder bg-white text-nexoraMuted`}>…</span>
     ) : (
       <button
         key={item}
@@ -114,9 +115,11 @@ export default function Pagination({
         disabled={isLoading}
         aria-current={item === pageNumber ? 'page' : undefined}
         aria-label={t('staff_dashboard.tips.page_of', { page: item, total: effectiveTotalPages })}
-        className={`${pageButtonClass} ${item === pageNumber ? 'border-nexoraBrand bg-white text-nexoraBrand' : 'border-nexoraBorder bg-white text-nexoraText hover:border-nexoraBrand hover:text-nexoraBrand'} disabled:cursor-not-allowed disabled:opacity-50`}
+        className={`${pageButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
       >
-        {item}
+        <span className={`${pageFaceClass} ${item === pageNumber ? 'border-nexoraBrand bg-white text-nexoraBrand' : 'border-nexoraBorder bg-white text-nexoraText group-hover:border-nexoraBrand group-hover:text-nexoraBrand'}`}>
+          {item}
+        </span>
       </button>
     ))
 
@@ -129,15 +132,17 @@ export default function Pagination({
           <strong className="font-bold text-nexoraText">{rangeEnd}</strong> {t('common.pagination_of')}{' '}
           <strong className="font-bold text-nexoraText">{totalCount}</strong> {t('common.pagination_results')}
         </p>
-        <nav className="flex max-w-full items-center gap-1 overflow-x-auto pb-0.5 self-end" aria-label="Pagination">
+        <nav className="flex max-w-full items-center gap-0.5 overflow-x-auto pb-0.5 self-end" aria-label="Pagination">
           <button
             type="button"
             onClick={() => handlePageChange(pageNumber - 1)}
             disabled={!canGoPrev || isLoading}
             aria-label={t('common.previous')}
-            className={`${pageButtonClass} border-nexoraBorder bg-white text-nexoraMuted hover:border-nexoraBrand hover:text-nexoraBrand disabled:cursor-not-allowed disabled:bg-nexoraSurfaceMuted disabled:text-nexoraSubtle disabled:opacity-50`}
+            className={`${pageButtonClass} text-nexoraMuted disabled:cursor-not-allowed disabled:text-nexoraSubtle disabled:opacity-50`}
           >
-            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+            <span className={`${pageFaceClass} border-nexoraBorder bg-white group-hover:border-nexoraBrand group-hover:text-nexoraBrand group-disabled:bg-nexoraSurfaceMuted`}>
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+            </span>
           </button>
           <span className="contents sm:hidden">{renderPageItems(0)}</span>
           <span className="hidden sm:contents">{renderPageItems(1)}</span>
@@ -146,9 +151,11 @@ export default function Pagination({
             onClick={() => handlePageChange(pageNumber + 1)}
             disabled={!canGoNext || isLoading}
             aria-label={t('common.next')}
-            className={`${pageButtonClass} border-nexoraBorder bg-white text-nexoraMuted hover:border-nexoraBrand hover:text-nexoraBrand disabled:cursor-not-allowed disabled:bg-nexoraSurfaceMuted disabled:text-nexoraSubtle disabled:opacity-50`}
+            className={`${pageButtonClass} text-nexoraMuted disabled:cursor-not-allowed disabled:text-nexoraSubtle disabled:opacity-50`}
           >
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden="true" /> : <ChevronRight className="h-4 w-4" aria-hidden="true" />}
+            <span className={`${pageFaceClass} border-nexoraBorder bg-white group-hover:border-nexoraBrand group-hover:text-nexoraBrand group-disabled:bg-nexoraSurfaceMuted`}>
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden="true" /> : <ChevronRight className="h-4 w-4" aria-hidden="true" />}
+            </span>
           </button>
         </nav>
       </div>
