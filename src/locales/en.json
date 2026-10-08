@@ -587,7 +587,6 @@
       "jobs": {
         "pageTitle": "Community Jobs",
         "pageDescription": "Browse hiring posts from salons, or let salons find you with your own \"seeking work\" post.",
-        "simulatedNotice": "Simulated data",
         "chatFallbackHint": "Direct chat with this salon unlocks once you're linked there. We opened your chat inbox instead.",
         "tabs": {
           "ariaLabel": "Community jobs sections",
@@ -626,7 +625,7 @@
           "messageAction": "Message",
           "viewDetail": "View details",
           "applyAction": "Apply",
-          "salaryNegotiable": "Negotiable",
+          "salaryNegotiable": "Thương lượng",
           "headcountOne": "1 opening",
           "headcountOther": "{{count}} openings"
         },

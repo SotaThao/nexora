@@ -6,10 +6,9 @@ import {
   formatRecruitmentDate,
   formatRecruitmentLocation,
   getPublicSalonLabel,
-  getRecruitmentPayLabel,
 } from '../../../dashboard/views/pos/recruitment/recruitmentModel'
 import type { PosJobPosting } from '../../../../types/posRecruitment'
-import { formatSalaryCardLabel } from './salaryCardLabel'
+import { getCommunitySalaryLabel } from './salaryCardLabel'
 
 const TK = 'staff_dashboard.community.jobs.card'
 const RECRUITMENT_TK = 'components.dashboard.views.pos.recruitment'
@@ -25,10 +24,7 @@ export default function HiringPostCard({ posting, alreadyApplied, onOpenDetail }
   const { t, currentLanguage } = useTranslation()
   const businessLabel = getPublicSalonLabel(posting, t)
   const location = formatRecruitmentLocation(posting.city, posting.state)
-  const pay = formatSalaryCardLabel(
-    getRecruitmentPayLabel(posting, t),
-    t(`${TK}.salaryNegotiable`),
-  )
+  const pay = getCommunitySalaryLabel(posting, t(`${TK}.salaryNegotiable`))
   const posted = formatRecruitmentDate(posting.publishedAt || posting.createdAt, currentLanguage)
 
   return (

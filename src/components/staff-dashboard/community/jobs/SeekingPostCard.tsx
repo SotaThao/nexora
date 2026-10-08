@@ -5,10 +5,10 @@ import { useTranslation } from '../../../../contexts/LanguageContext'
 import {
   formatRecruitmentDate,
   formatRecruitmentLocation,
-  getRecruitmentPayLabel,
 } from '../../../dashboard/views/pos/recruitment/recruitmentModel'
 import type { SeekingPost } from '../../../../types/communityJobs'
 import { getSeekingPublicName, SEEKING_STATUS_LABEL_KEY } from './staffJobsModel'
+import { getCommunitySalaryLabel } from './salaryCardLabel'
 
 const TK = 'staff_dashboard.community.jobs.myPosts'
 const FEED_TK = 'staff_dashboard.community.jobs.feed'
@@ -36,7 +36,7 @@ interface SeekingPostCardProps {
 export default function SeekingPostCard({ post, variant = 'list', onEdit, onClose }: SeekingPostCardProps) {
   const { t, currentLanguage } = useTranslation()
   const location = formatRecruitmentLocation(post.city, post.state)
-  const pay = getRecruitmentPayLabel(post, t)
+  const pay = getCommunitySalaryLabel(post, t('staff_dashboard.community.jobs.card.salaryNegotiable'))
 
   if (variant === 'feed') {
     const posted = formatRecruitmentDate(post.publishedAt || post.createdAt, currentLanguage)
@@ -119,7 +119,7 @@ export default function SeekingPostCard({ post, variant = 'list', onEdit, onClos
             {post.skills.map((skill) => (
               <span key={skill} className="rounded-md border border-nexoraBorder bg-nexoraSurfaceMuted px-2 py-1 text-[10px] font-semibold text-nexoraMuted">{t(`${ENUM_TK}.skill.${skill}`)}</span>
             ))}
-            <span className="rounded-md border border-emerald-100 bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-800">{pay}</span>
+            {pay ? <span className="rounded-md border border-emerald-100 bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-800">{pay}</span> : null}
           </div>
         </div>
       </div>

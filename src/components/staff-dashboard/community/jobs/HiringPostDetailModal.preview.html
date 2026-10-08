@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Job detail actions — state preview</title>
+  <link rel="stylesheet" href="./communityJobsTheme.css" />
+  <style>
+    body { margin: 0; padding: 24px; }
+    main { max-width: 520px; margin: auto; font-family: var(--detail-font); }
+    h1 { font-size: 20px; font-weight: 700; }
+    .state-row { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 12px; align-items: center; margin: 8px 0; }
+    .state-row button { min-height: 44px; border-radius: 10px; padding: 0 16px; font: inherit; font-weight: 700; }
+    .community-job-detail-action { width: 100%; }
+  </style>
+</head>
+<body class="community-jobs-theme">
+  <main class="community-job-detail-modal">
+    <h1>Job detail · action states</h1>
+    <div class="state-row"><span>Default</span><button class="community-job-detail-action community-job-detail-action--primary">Apply now</button></div>
+    <div class="state-row"><span>Hover</span><button class="community-job-detail-action community-job-detail-action--primary is-hover">Apply now</button></div>
+    <div class="state-row"><span>Focus</span><button class="community-job-detail-action community-job-detail-action--primary is-focus">Apply now</button></div>
+    <div class="state-row"><span>Active</span><button class="community-job-detail-action community-job-detail-action--primary is-active">Apply now</button></div>
+    <div class="state-row"><span>Disabled</span><button class="community-job-detail-action community-job-detail-action--primary" disabled>Apply now</button></div>
+    <div class="state-row"><span>Loading</span><button class="community-job-detail-action community-job-detail-action--primary" data-state="loading" aria-busy="true">Applying…</button></div>
+    <div class="state-row"><span>Error</span><button class="community-job-detail-action community-job-detail-action--primary" data-state="error">Try again</button></div>
+    <div class="state-row"><span>Success</span><button class="community-job-detail-action community-job-detail-action--primary" data-state="success">Applied</button></div>
+  </main>
+</body>
+</html>

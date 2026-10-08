@@ -1,3 +1,8 @@
+/* Hallmark · pre-emit critique: P5 H4 E5 S5 R5 V4 */
+/* Hallmark · component: modal · genre: modern-minimal · theme: Nexora Touch
+ * states: default · hover · focus · active · disabled · loading · error · success
+ * contrast: Nexora token pairs; visual verification required
+ */
 /* Jobs tokens from the HTML jobsTech module. Scope also covers portaled dialogs. */
 .community-jobs-theme {
   --jobs-muted: #5b6b82;
@@ -39,6 +44,130 @@
 .community-jobs-theme [aria-pressed="true"].bg-nexoraBrand { background: var(--jobs-gradient); color: white; }
 .community-jobs-theme button[aria-pressed].rounded-full { border-radius: 14px; }
 .community-jobs-theme .bg-nexoraSurfaceMuted { background-color: #f1f5f9; }
+
+/* Job detail keeps its visual language local to the portal, leaving Jobs tabs untouched. */
+.community-job-detail-modal {
+  --detail-paper: #fff;
+  --detail-canvas: #f7f9fc;
+  --detail-tint: #f3f6fa;
+  --detail-rule: #e7ecf3;
+  --detail-border: #dde5ef;
+  --detail-ink: #0b1220;
+  --detail-muted: #4d5870;
+  --detail-brand: #2b59ff;
+  --detail-brand-dark: #393bc8;
+  --detail-brand-soft: #eef2ff;
+  --detail-danger: #d32f2f;
+  --detail-danger-soft: #fff1f1;
+  --detail-success: #00845a;
+  --detail-success-soft: #eaf8f2;
+  --detail-font: Inter, sans-serif;
+  --detail-ease: cubic-bezier(.2, .8, .2, 1);
+}
+.community-job-detail-header {
+  background: var(--detail-paper);
+  color: var(--detail-ink);
+}
+.community-job-detail-body {
+  background: var(--detail-canvas);
+  color: var(--detail-ink);
+}
+.community-job-detail-hero,
+.community-job-detail-panel {
+  background: var(--detail-paper);
+  color: var(--detail-ink);
+  border-color: var(--detail-border);
+  box-shadow: var(--jobs-card-shadow);
+}
+.community-job-detail-hero { border-top: 3px solid var(--detail-brand); }
+.community-job-detail-avatar {
+  background: var(--detail-brand-soft);
+  border-color: var(--detail-border);
+  color: var(--detail-brand);
+}
+.community-job-detail-title { overflow-wrap: anywhere; }
+.community-job-detail-pay {
+  background: var(--detail-danger-soft);
+  color: var(--detail-danger);
+  overflow-wrap: anywhere;
+}
+.community-job-detail-urgent {
+  background: var(--detail-danger-soft);
+  color: var(--detail-danger);
+}
+.community-job-detail-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-block: 1px solid var(--detail-rule);
+  background: transparent;
+  color: var(--detail-ink);
+}
+.community-job-detail-facts > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.community-job-detail-phone {
+  border: 1px solid var(--detail-border);
+  background: var(--detail-brand-soft);
+  color: var(--detail-brand);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.community-job-detail-phone:focus-visible,
+.community-job-detail-related:focus-visible,
+.community-job-detail-action:focus-visible {
+  outline: 2px solid var(--detail-brand-dark);
+  outline-offset: 2px;
+}
+.community-job-detail-related {
+  background: var(--detail-paper);
+  color: var(--detail-ink);
+}
+.community-job-detail-footer {
+  background: var(--detail-paper);
+  color: var(--detail-ink);
+}
+.community-job-detail-action {
+  border: 1px solid transparent;
+  white-space: nowrap;
+  transition: background-color 150ms var(--detail-ease), box-shadow 150ms var(--detail-ease), filter 150ms var(--detail-ease), transform 150ms var(--detail-ease);
+}
+.community-job-detail-action--primary {
+  background: var(--jobs-gradient);
+  color: var(--detail-paper);
+}
+.community-job-detail-action--secondary {
+  border-color: var(--detail-border);
+  background: var(--detail-paper);
+  color: var(--detail-brand);
+}
+.community-job-detail-action--success,
+.community-job-detail-action[data-state="success"] {
+  background: var(--detail-success-soft);
+  color: var(--detail-success);
+}
+.community-job-detail-action:active,
+.community-job-detail-action.is-active { transform: translateY(1px); }
+.community-job-detail-action:disabled,
+.community-job-detail-action[aria-disabled="true"],
+.community-job-detail-action[data-state="loading"] { opacity: .55; cursor: not-allowed; }
+.community-job-detail-action[data-state="error"] {
+  border-color: var(--detail-danger);
+  background: var(--detail-danger-soft);
+  color: var(--detail-danger);
+}
+.community-job-detail-action.is-focus { outline: 2px solid var(--detail-brand-dark); outline-offset: 2px; }
+.community-job-detail-action--primary.is-hover { filter: brightness(.94); }
+.community-job-detail-action--secondary.is-hover { background: var(--detail-brand-soft); }
+@media (hover: hover) and (pointer: fine) {
+  .community-job-detail-related:hover { background: var(--detail-tint); }
+  .community-job-detail-phone:hover { background: var(--detail-tint); }
+  .community-job-detail-action--primary:hover:not(:disabled) { filter: brightness(.94); }
+  .community-job-detail-action--secondary:hover:not(:disabled) { background: var(--detail-brand-soft); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .community-job-detail-action { transition: none; }
+}
 @media (prefers-reduced-motion: no-preference) {
   .community-jobs-theme button.bg-nexoraBrand { transition: filter 150ms, box-shadow 150ms; }
 }

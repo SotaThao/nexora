@@ -12,7 +12,7 @@ import type { JobChatTarget } from './jobChatTarget'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useTranslation } from '../../contexts/LanguageContext'
 import Pagination from '../ui/Pagination'
-import { formatSalaryChip } from './jobSalary'
+import { getCommunityLegacySalaryLabel } from '../staff-dashboard/community/jobs/salaryCardLabel'
 import { JobFilterSheet } from './JobFilterSheet'
 import { matchesCommunityBrowseKeyword } from './jobs/communityJobsPresentation'
 import {
@@ -489,7 +489,7 @@ function JobCard({
   dimmed?: boolean
   onSelect: () => void
 }) {
-  const salaryChip = job.salaryChipLabel === undefined ? formatSalaryChip(job.salary) : job.salaryChipLabel
+  const salaryChip = job.salaryChipLabel === undefined ? getCommunityLegacySalaryLabel(job.salary) : job.salaryChipLabel
   return (
     <article
       role="button"
@@ -822,7 +822,7 @@ function JobDetailView({
 
   if (!job) return null
   const confirmingDelete = deleteConfirmId === job.id
-  const salaryChip = formatSalaryChip(job.salary)
+  const salaryChip = job.salaryChipLabel === undefined ? getCommunityLegacySalaryLabel(job.salary) : job.salaryChipLabel
   const posterInitials = (job.posterName || 'N')
     .split(/\s+/)
     .filter(Boolean)
@@ -994,7 +994,7 @@ function JobDetailView({
       <h2 className="border-b border-nexoraRule px-5 py-4 text-lg font-extrabold text-nexoraText lg:py-3.5 lg:text-base">Bài viết liên quan</h2>
       <div className="divide-y divide-nexoraRule px-5">
         {relatedJobs.map((related) => {
-          const relatedSalary = formatSalaryChip(related.salary)
+          const relatedSalary = related.salaryChipLabel === undefined ? getCommunityLegacySalaryLabel(related.salary) : related.salaryChipLabel
           return (
             <button
               key={related.id}

@@ -58,6 +58,8 @@ export type DemoJob = {
   salon: string | null
   location: string
   salary: string
+  /** Null suppresses the salary badge for structured Community postings. */
+  salaryChipLabel?: string | null
   employmentType: 'Full-time' | 'Part-time'
   status: 'open' | 'filled' | 'closed'
   urgent?: boolean

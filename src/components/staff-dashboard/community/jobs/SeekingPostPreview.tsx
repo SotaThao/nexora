@@ -4,11 +4,11 @@ import { JobPostingStatus } from '../../../../constants/posRecruitment'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import {
   formatRecruitmentLocation,
-  getRecruitmentPayLabel,
   joinRecruitmentMeta,
 } from '../../../dashboard/views/pos/recruitment/recruitmentModel'
 import type { SeekingPostUpsertInput } from '../../../../types/communityJobs'
 import { getSeekingPublicName } from './staffJobsModel'
+import { getCommunitySalaryLabel } from './salaryCardLabel'
 
 const TK = 'staff_dashboard.community.jobs.composer.preview'
 const ENUM_TK = 'components.dashboard.views.pos.recruitment.enums'
@@ -23,10 +23,7 @@ interface SeekingPostPreviewProps {
 export default function SeekingPostPreview({ draft, compact = false }: SeekingPostPreviewProps) {
   const { t } = useTranslation()
   const locationLabel = formatRecruitmentLocation(draft.city, draft.state)
-  const payLabel = getRecruitmentPayLabel(
-    { payType: draft.payType, payAmount: draft.payAmount ?? null, payUnit: draft.payUnit ?? null, payText: draft.payText },
-    t,
-  )
+  const payLabel = getCommunitySalaryLabel(draft, t('staff_dashboard.community.jobs.card.salaryNegotiable'))
   const publicName = getSeekingPublicName(draft, t(`${TK}.anonymousName`))
   const phone = draft.visibility.showPhone ? draft.phone : ''
 
@@ -57,7 +54,7 @@ export default function SeekingPostPreview({ draft, compact = false }: SeekingPo
           {locationLabel ? <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" aria-hidden />{locationLabel}</span> : null}
         </div>
 
-        <p className="font-extrabold text-nexoraBrand">{payLabel}</p>
+        {payLabel ? <p className="font-extrabold text-nexoraBrand">{payLabel}</p> : null}
         <div className="flex flex-wrap gap-1.5">
           {draft.skills.map((skill) => (
             <span key={skill} className="rounded-md border border-nexoraBorder bg-nexoraSurfaceMuted px-2 py-1 text-[10px] font-semibold text-nexoraMuted">{t(`${ENUM_TK}.skill.${skill}`)}</span>

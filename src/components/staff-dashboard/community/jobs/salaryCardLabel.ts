@@ -1,36 +1,30 @@
-const MONEY_RANGE_PATTERN = /\$\s*([\d,]+(?:\.\d+)?)\s*(?:-|–|—|to|đến)\s*\$?\s*([\d,]+(?:\.\d+)?)/i
-const MONEY_AMOUNT_PATTERN = /\$\s*([\d,]+(?:\.\d+)?)(\s*\+)?/
-const NON_WEEKLY_PAY_UNIT_PATTERN = /(?:\/\s*(?:hour|hr|gio|day|ngay|month|thang|year|nam)\b|\bper\s+(?:hour|day|month|year)\b|\b(?:hourly|daily|monthly|yearly|annually)\b|\bmoi\s+(?:gio|ngay|thang|nam)\b)/
+import { JobPayType, JobPayUnit } from '../../../../constants/posRecruitment'
 
-function normalizePayText(value: string): string {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/đ/g, 'd')
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .trim()
+interface CommunityPay {
+  payType: JobPayType
+  payAmount?: number | null
+  payUnit?: JobPayUnit | null
 }
 
-export function formatSalaryCardLabel(
-  raw: string | null | undefined,
-  negotiableLabel: string,
-): string | null {
-  const trimmed = raw?.trim()
-  if (!trimmed) return null
+/** Community job cards and details display only weekly salary or negotiable pay. */
+export function getCommunitySalaryLabel(pay: CommunityPay, negotiableLabel: string): string | null {
+  if (pay.payType === JobPayType.Negotiable) return negotiableLabel
+  if (pay.payType !== JobPayType.Fixed || pay.payUnit !== JobPayUnit.Week) return null
 
-  const normalized = normalizePayText(trimmed)
-  if (NON_WEEKLY_PAY_UNIT_PATTERN.test(normalized)) return null
+  const amount = pay.payAmount
+  if (amount == null || !Number.isFinite(amount) || amount <= 0) return null
+  return `$${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(amount)}`
+}
 
-  const rangeMatch = trimmed.match(MONEY_RANGE_PATTERN)
-  if (rangeMatch) return `$${rangeMatch[1]}-$${rangeMatch[2]}`
+/** Older Community demo posts store weekly pay as free text. */
+export function getCommunityLegacySalaryLabel(raw: string | null | undefined): string | null {
+  const text = raw?.trim()
+  if (!text) return null
 
-  const amountMatch = trimmed.match(MONEY_AMOUNT_PATTERN)
-  if (amountMatch) return `$${amountMatch[1]}${amountMatch[2] ? '+' : ''}`
-
-  if (/\bnegotiable\b|\bthoa thuan\b|\bthuong luong\b/.test(normalized)) {
-    return negotiableLabel
+  const normalized = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  if (/\/\s*tuan\b|\bper\s+week\b|\bweekly\b/.test(normalized)) {
+    const amount = text.match(/\$\s*([\d,]+)/)?.[1]
+    if (amount) return `$${amount}`
   }
-
-  return null
+  return /thoa\s+thuan|thuong\s+luong|negotiable/.test(normalized) ? 'Thương lượng' : null
 }

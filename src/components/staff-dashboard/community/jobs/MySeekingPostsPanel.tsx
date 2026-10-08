@@ -1,4 +1,4 @@
-import { Plus, RefreshCw } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { SkeletonList } from '../../../ui/skeleton'
@@ -12,22 +12,15 @@ interface MySeekingPostsPanelProps {
   isLoading: boolean
   isError: boolean
   onRetry: () => void
-  onCreate: () => void
   onEdit: (post: SeekingPost) => void
   onClose: (post: SeekingPost) => void
 }
 
-export default function MySeekingPostsPanel({ posts, isLoading, isError, onRetry, onCreate, onEdit, onClose }: MySeekingPostsPanelProps) {
+export default function MySeekingPostsPanel({ posts, isLoading, isError, onRetry, onEdit, onClose }: MySeekingPostsPanelProps) {
   const { t } = useTranslation()
 
   return (
     <section aria-label={t(`${TK}.title`)} className="overflow-hidden rounded-xl border border-nexoraBorder bg-white shadow-sm">
-      <header className="flex justify-end border-b border-nexoraRule p-4 sm:p-5">
-        <button type="button" onClick={onCreate} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 text-xs font-black text-white shadow-nexora-soft hover:bg-nexoraBrandDark">
-          <Plus className="h-4 w-4" aria-hidden />{t(`${TK}.createAction`)}
-        </button>
-      </header>
-
       {isLoading ? (
         <div className="p-5"><SkeletonList count={2} lines={3} showAvatar /></div>
       ) : isError ? (
@@ -43,9 +36,6 @@ export default function MySeekingPostsPanel({ posts, isLoading, isError, onRetry
             <p className="font-black text-nexoraText">{t(`${TK}.emptyTitle`)}</p>
             <p className="mt-1 text-xs font-medium text-nexoraMuted">{t(`${TK}.emptyDescription`)}</p>
           </div>
-          <button type="button" onClick={onCreate} className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted">
-            <Plus className="h-4 w-4" aria-hidden />{t(`${TK}.createAction`)}
-          </button>
         </div>
       ) : (
         <div>
