@@ -8,6 +8,7 @@ import { ExternalLink, Plus } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { PosOwnerJobsDemoProvider } from '../../../../community/jobs/CommunityJobsDemoContext'
 import { BNB_BUSINESS_ID } from '../../../../community/jobs/communityJobsDemoData'
+import '../../../../staff-dashboard/community/jobs/communityJobsTheme.css'
 import PosStaffRecruitmentView from '../recruitment/PosStaffRecruitmentView'
 import PosStaffSampleList from './PosStaffSampleList'
 
@@ -81,7 +82,7 @@ export default function PosStaffPage() {
         })}
       </div>
         {activeView === 'recruitment' ? (
-          <div className="mb-2 flex flex-wrap items-center gap-2">
+          <div className="community-jobs-theme mb-2 ml-auto flex max-w-full flex-wrap items-center justify-end gap-2">
             <button
               type="button"
               onClick={() => navigate('/community?tab=jobs')}
@@ -104,7 +105,9 @@ export default function PosStaffPage() {
 
       {activeView === 'recruitment' ? (
         <PosOwnerJobsDemoProvider>
-          <PosStaffRecruitmentView businessId={BNB_BUSINESS_ID} createRequest={createRequest} hideHeader />
+          <div className="community-jobs-theme">
+            <PosStaffRecruitmentView businessId={BNB_BUSINESS_ID} createRequest={createRequest} hideHeader />
+          </div>
         </PosOwnerJobsDemoProvider>
       ) : (
         <PosStaffSampleList />

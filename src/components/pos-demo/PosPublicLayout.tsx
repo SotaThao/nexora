@@ -6,18 +6,19 @@
 import { useState, type ReactNode } from 'react'
 import { Menu } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
+import AppDownloadLinks from '../ui/AppDownloadLinks'
 import PosSidebar from './PosSidebar'
 import PosSidebarDrawer from './PosSidebarDrawer'
 import PosContentHeader from './PosContentHeader'
 
 // Mobile header mirrors DashboardHeader.mobile.tsx's <=lg bar (hamburger + Nexora logo);
 // query-backed search/notifications/avatar controls are omitted as demo-unsafe.
-export default function PosPublicLayout({ children }: { children: ReactNode }) {
+export default function PosPublicLayout({ children, showFooter = false }: { children: ReactNode; showFooter?: boolean }) {
   const { t } = useTranslation()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   return (
-    <div className="min-h-dvh w-full overflow-x-hidden bg-nexoraCanvas font-sans text-nexoraText lg:pl-72">
+    <div className="flex min-h-dvh w-full flex-col overflow-x-hidden bg-nexoraCanvas font-sans text-nexoraText lg:pl-72">
       <PosSidebar />
       <PosSidebarDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
 
@@ -45,7 +46,15 @@ export default function PosPublicLayout({ children }: { children: ReactNode }) {
 
       <PosContentHeader />
 
-      <div className="mx-auto w-full max-w-6xl p-4 pb-6 sm:p-6 sm:pb-8 lg:p-7 lg:pb-7">{children}</div>
+      <main className="mx-auto w-full max-w-6xl flex-1 p-4 pb-6 sm:p-6 sm:pb-8 lg:p-7 lg:pb-7">{children}</main>
+      {showFooter ? (
+        <footer className="border-t border-nexoraBorder bg-white px-3 pb-16 pt-3 sm:px-6 lg:px-7 lg:pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-left">
+            <p className="shrink-0 text-xs font-medium text-slate-700 sm:text-sm">{t('dashboard.footer.copyright')}</p>
+            <AppDownloadLinks />
+          </div>
+        </footer>
+      ) : null}
     </div>
   )
 }

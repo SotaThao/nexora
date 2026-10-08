@@ -5,7 +5,7 @@ import type { RecruitmentPostingContent } from '../../../../../types/posRecruitm
 import { normalizePostingVideoUrl, POSTING_INLINE_IMAGE_MAX, POSTING_VIDEO_MAX, readPostingImage } from './recruitmentPostingContent'
 
 const TK = 'components.dashboard.views.pos.recruitment.composer.richContent'
-const actionClass = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-nexoraSuccess/15 px-3 text-xs font-bold text-nexoraSuccess hover:bg-nexoraSuccess/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand disabled:opacity-40'
+const actionClass = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-nexoraBrandSoft px-3 text-xs font-bold text-nexoraBrand hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand disabled:opacity-40'
 const removeClass = 'inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-rose-600 hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand disabled:opacity-40'
 
 interface RecruitmentMediaFieldsProps {
@@ -59,8 +59,8 @@ export default function RecruitmentMediaFields({ content, disabled, validationEr
           <fieldset key={label} className="min-w-0">
             <legend className="mb-2 text-xs font-bold text-nexoraText">{t(`${TK}.${label}`)}</legend>
             <div className="grid grid-cols-2 gap-3">
-              <button type="button" disabled={locked || (!cover && content.images.length >= POSTING_INLINE_IMAGE_MAX)} onClick={() => camera.current?.click()} className={`${actionClass} min-h-28 flex-col border border-dashed border-nexoraSuccess/40 bg-nexoraSuccess/5`}><Camera className="h-6 w-6" aria-hidden />{t(`${TK}.camera`)}</button>
-              <button type="button" disabled={locked || (!cover && content.images.length >= POSTING_INLINE_IMAGE_MAX)} onClick={() => gallery.current?.click()} className={`${actionClass} min-h-28 flex-col border border-dashed border-nexoraSuccess/40 bg-nexoraSuccess/5`}><FolderOpen className="h-6 w-6" aria-hidden />{t(`${TK}.gallery`)}</button>
+              <button type="button" disabled={locked || (!cover && content.images.length >= POSTING_INLINE_IMAGE_MAX)} onClick={() => camera.current?.click()} className={`${actionClass} min-h-28 flex-col border border-dashed border-nexoraLavender`}><Camera className="h-6 w-6" aria-hidden />{t(`${TK}.camera`)}</button>
+              <button type="button" disabled={locked || (!cover && content.images.length >= POSTING_INLINE_IMAGE_MAX)} onClick={() => gallery.current?.click()} className={`${actionClass} min-h-28 flex-col border border-dashed border-nexoraLavender`}><FolderOpen className="h-6 w-6" aria-hidden />{t(`${TK}.gallery`)}</button>
             </div>
             <p className="mt-2 text-xs leading-5 text-nexoraMuted">{t(`${TK}.${cover ? 'coverHint' : 'imagesHint'}`)}</p>
             <input ref={camera} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" disabled={locked} aria-label={t(`${TK}.${cover ? 'coverCamera' : 'imagesCamera'}`)} onChange={(event) => { void selectImages(event.currentTarget, cover) }} className="hidden" />

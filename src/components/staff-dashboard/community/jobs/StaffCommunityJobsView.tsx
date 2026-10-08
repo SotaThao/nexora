@@ -178,8 +178,8 @@ export default function StaffCommunityJobsView() {
 
   return (
     <div className="community-jobs-theme space-y-5">
-      <div className="flex items-center justify-between gap-2">
-        <div role="tablist" aria-label={t(`${TK}.tabs.ariaLabel`)} className="no-scrollbar flex min-w-0 flex-1 gap-1 overflow-x-auto border-b border-nexoraRule">
+      <div className={`flex gap-2 ${owner ? 'flex-wrap items-center sm:flex-nowrap sm:justify-between' : 'items-center justify-between'}`}>
+        <div role="tablist" aria-label={t(`${TK}.tabs.ariaLabel`)} className={`no-scrollbar flex min-w-0 gap-1 overflow-x-auto border-b border-nexoraRule ${owner ? 'w-full sm:w-auto sm:flex-1' : 'flex-1'}`}>
           <button type="button" role="tab" aria-selected={activeTab === StaffCommunityJobsTab.Browse} onClick={() => setTab(StaffCommunityJobsTab.Browse)} className={`inline-flex min-h-11 shrink-0 items-center gap-1.5 border-b-2 px-3 text-xs font-bold ${activeTab === StaffCommunityJobsTab.Browse ? 'border-nexoraBrand text-nexoraBrand' : 'border-transparent text-nexoraMuted hover:text-nexoraText'}`}>
             <SearchIcon className="h-4 w-4" aria-hidden />{t('community_jobs_browser.tabs.browse')}
           </button>
@@ -199,12 +199,12 @@ export default function StaffCommunityJobsView() {
         </div>
 
         {owner && !ownerComposing ? (
-          <div className="flex shrink-0 gap-2">
-            <button type="button" aria-label={t('community_jobs_demo.owner.openInPos')} onClick={() => navigate('/pos/staff?staffView=recruitment')} className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-0 text-xs font-bold text-nexoraBrand hover:bg-nexoraBrandSoft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand sm:px-3">
-              <ExternalLink className="h-4 w-4" aria-hidden /><span className="hidden sm:inline">{t('community_jobs_demo.owner.openInPos')}</span>
+          <div className="ml-auto flex w-full flex-wrap justify-end gap-2 sm:w-auto sm:shrink-0">
+            <button type="button" aria-label={t('community_jobs_demo.owner.openInPos')} onClick={() => navigate('/pos/staff?staffView=recruitment')} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-3 text-xs font-bold text-nexoraBrand hover:bg-nexoraBrandSoft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand">
+              <ExternalLink className="h-4 w-4" aria-hidden /><span>{t('community_jobs_demo.owner.openInPos')}</span>
             </button>
-            <button type="button" aria-label={t('community_jobs_browser.ownerActions.postJob')} onClick={() => { setOwnerCreateRequested(true); setTab(StaffCommunityJobsTab.Mine) }} className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-0 text-xs font-black text-white hover:bg-nexoraBrandDark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2 sm:px-3">
-              <Plus className="h-4 w-4" aria-hidden /><span className="hidden sm:inline">{t('community_jobs_browser.ownerActions.postJob')}</span>
+            <button type="button" aria-label={t('community_jobs_browser.ownerActions.postJob')} onClick={() => { setOwnerCreateRequested(true); setTab(StaffCommunityJobsTab.Mine) }} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-3 text-xs font-black text-white hover:bg-nexoraBrandDark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2">
+              <Plus className="h-4 w-4" aria-hidden /><span>{t('community_jobs_browser.ownerActions.postJob')}</span>
             </button>
           </div>
         ) : mode === 'staff' ? (
@@ -323,7 +323,7 @@ export default function StaffCommunityJobsView() {
       ) : null}
 
       {closingPost ? createPortal(
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm" onMouseDown={() => !closeMutation.isPending && setClosingPost(null)}>
+        <div className="community-jobs-theme fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm" onMouseDown={() => !closeMutation.isPending && setClosingPost(null)}>
           <div
             ref={closeDialogRef}
             role="dialog"

@@ -508,20 +508,20 @@ function JobCard({
       // minimum for normal text (blended color ≈ rgb(148,155,169), luminance
       // ≈0.326). opacity-90 blends to ≈rgb(95,105,126), luminance ≈0.140,
       // giving ≈5.5:1 — verified by hand, not eyeballed (P3 fix).
-      className={`cursor-pointer rounded-xl border border-nexoraBorder bg-nexoraSurface p-2.5 text-left shadow-nexora-card transition-colors hover:border-nexoraBrand hover:bg-nexoraBrandSoft/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2 ${dimmed ? 'opacity-90 saturate-[0.6]' : ''}`}
+      className={`cursor-pointer rounded-xl border border-nexoraBorder bg-nexoraSurface p-3 text-left shadow-nexora-card transition-colors hover:border-nexoraBrand hover:bg-nexoraBrandSoft/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2 ${dimmed ? 'opacity-90 saturate-[0.6]' : ''}`}
     >
       <div className="flex items-start gap-2.5">
-        <img src={job.image} alt="" className="h-14 w-14 shrink-0 rounded-xl object-cover" loading="lazy" />
+        <img src={job.image} alt="" className="h-12 w-12 shrink-0 rounded-[10px] object-cover" loading="lazy" />
         <div className="min-w-0 flex-1">
           {/* Badge row: Cần gấp · salary · status (open jobs show no status
               chip). No "Tuyển thợ / Tìm việc" kind badge (D9/plan "Card (D1 =
               1B)") — post type is still filtered via the kind chips above the
               grid, just not repeated on every card. */}
           <div className="flex flex-wrap items-center gap-1.5">
-            {job.urgent ? <span className="shrink-0 rounded-md bg-nexoraDanger px-2 py-0.5 text-xs font-extrabold text-white">Cần gấp</span> : null}
+            {job.urgent ? <span className="shrink-0 rounded-[10px] bg-red-50 px-2 py-0.5 text-[11px] font-bold text-red-700">Cần gấp</span> : null}
             {salaryChip ? (
               <span
-                className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-nexoraSuccess/40 bg-nexoraSuccess/10 px-2 py-0.5 text-xs font-extrabold text-nexoraText"
+                className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-[10px] bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700"
                 title={job.salary}
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-nexoraSuccess" aria-hidden="true" />
@@ -529,15 +529,15 @@ function JobCard({
               </span>
             ) : null}
             {job.status !== 'open' ? (
-              <span className="shrink-0 rounded-md bg-nexoraSurfaceMuted px-2 py-0.5 text-xs font-extrabold text-nexoraMuted">
+              <span className="shrink-0 rounded-[10px] bg-nexoraSurfaceMuted px-2 py-0.5 text-[11px] font-bold text-nexoraMuted">
                 {statusLabel(job.status, job.postKind)}
               </span>
             ) : null}
           </div>
-          <h3 className="mt-1 line-clamp-2 text-base font-bold leading-snug text-nexoraText">{job.title}</h3>
+          <h3 className="mt-1 line-clamp-2 text-sm font-bold leading-[1.3] text-nexoraText">{job.title}</h3>
         </div>
       </div>
-      <p className="mt-1 flex min-w-0 items-center gap-1 truncate text-sm text-nexoraMuted">
+      <p className="mt-1.5 flex min-w-0 items-center gap-1 truncate text-xs text-nexoraMuted">
         <span className="min-w-0 truncate font-semibold text-nexoraBrand">{job.salon || job.posterName}</span>
         <span aria-hidden="true">·</span>
         <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
@@ -545,7 +545,7 @@ function JobCard({
         <span aria-hidden="true">·</span>
         <span className="shrink-0">{job.posted}</span>
       </p>
-      <p className="mt-2 min-h-[63px] line-clamp-3 text-sm leading-relaxed text-nexoraMuted">{job.description}</p>
+      <p className="mt-1.5 line-clamp-3 text-xs leading-relaxed text-nexoraMuted">{job.description}</p>
     </article>
   )
 }
@@ -1606,7 +1606,7 @@ export function CommunityJobsPanel({ isActive = true, browseOnly = false, browse
           ) : null}
         </section>
         {totalPages > 1 ? (
-          <Pagination pageNumber={safePageNumber} pageSize={JOBS_PAGE_SIZE} totalPages={totalPages} onPageChange={(page) => dispatch({ type: 'SET_PAGE', page })} variant="simple" className="mt-4" />
+          <Pagination pageNumber={safePageNumber} pageSize={JOBS_PAGE_SIZE} totalPages={totalPages} totalCount={filteredJobs.length} onPageChange={(page) => dispatch({ type: 'SET_PAGE', page })} variant="community" className="mt-4" />
         ) : null}
       </div>
 

@@ -294,7 +294,7 @@ export default function AppRouter() {
           <Route path="/pos-services" element={<PosPublicLayout><PosServicesRoute /></PosPublicLayout>} />
           <Route path="/services" element={<PosPublicLayout><PosServicesRoute /></PosPublicLayout>} />
           <Route path="/preview/pos" element={<PosPublicLayout><PosServicesRoute /></PosPublicLayout>} />
-          <Route path="/pos/staff" element={<PosPublicLayout><PosStaffRoute /></PosPublicLayout>} />
+          <Route path="/pos/staff" element={<PosPublicLayout showFooter><PosStaffRoute /></PosPublicLayout>} />
           <Route path="/pos/recruitment" element={<Navigate to="/pos/staff?staffView=recruitment" replace />} />
           <Route path="/preview/menu" element={<PosMenuUpsellPreviewPage />} />
           <Route path="/booking/preview" element={<PosMenuUpsellPreviewPage />} />

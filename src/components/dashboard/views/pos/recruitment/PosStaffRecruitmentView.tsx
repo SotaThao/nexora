@@ -13,7 +13,7 @@ import { useCommunityJobsDemo } from '../../../../community/jobs/CommunityJobsDe
 import JobPostingComposer from './JobPostingComposer'
 import JobPostingPreviewModal from './JobPostingPreviewModal'
 import RecruitmentListPanel, { ALL_JOB_POSTINGS, type PostingFilter } from './RecruitmentListPanel'
-import { createDefaultJobDraft, postingToDraft } from './recruitmentModel'
+import { createDefaultJobDraft, prepareJobDraftForComposer, postingToDraft } from './recruitmentModel'
 
 const TK = 'components.dashboard.views.pos.recruitment.shell'
 
@@ -48,7 +48,7 @@ export default function PosStaffRecruitmentView({ businessId, createRequest = 0,
 
   const initialDraft = useMemo(() => {
     const posting = composer?.postingId ? postings.find((item) => item.id === composer.postingId) : undefined
-    const draft = posting ? postingToDraft(posting) : createDefaultJobDraft(businessInfo)
+    const draft = prepareJobDraftForComposer(posting ? postingToDraft(posting) : createDefaultJobDraft(businessInfo))
     return posting
       ? { ...draft, payUnit: posting.payUnit }
       : { ...draft, payType: JobPayType.Fixed, payUnit: JobPayUnit.Week }
@@ -158,7 +158,7 @@ export default function PosStaffRecruitmentView({ businessId, createRequest = 0,
 
       {previewPosting ? <JobPostingPreviewModal posting={previewPosting} logo={typeof businessInfo.logo === 'string' ? businessInfo.logo : null} onClose={() => setPreviewPosting(null)} /> : null}
       {closingPosting ? createPortal(
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm" onMouseDown={() => !closeMutation.isPending && setClosingPosting(null)}>
+        <div className="community-jobs-theme fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm" onMouseDown={() => !closeMutation.isPending && setClosingPosting(null)}>
           <div role="dialog" aria-modal="true" aria-labelledby="close-recruitment-title" className="nexora-modal-card flex w-full max-w-md flex-col rounded-2xl border border-nexoraBorder bg-white p-5 shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>
             <h2 id="close-recruitment-title" className="text-lg font-black text-nexoraText">{t(`${TK}.closeConfirmTitle`)}</h2>
             <p className="mt-3 text-sm font-medium leading-6 text-nexoraMuted">{t(`${TK}.closeConfirmBody`, { title: closingPosting.title })}</p>
