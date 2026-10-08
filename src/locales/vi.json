@@ -51,6 +51,8 @@
     },
     "suggestions": {
       "title": "AI gợi ý thợ phù hợp",
+      "showSuggestions": "Xem {{count}} thợ",
+      "hideSuggestions": "Thu gọn",
       "demoLabel": "Demo",
       "privacyHint": "Tính theo kỹ năng, khu vực, loại việc khớp với tin tuyển. Thợ bật “Ẩn với tiệm hiện tại” sẽ không hiện với tiệm của họ.",
       "invite": "Mời",

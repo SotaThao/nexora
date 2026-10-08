@@ -1,0 +1,40 @@
+/* Jobs tokens from the HTML jobsTech module. Scope also covers portaled dialogs. */
+.community-jobs-theme {
+  --jobs-muted: #5b6b82;
+  --jobs-primary: #2b59ff;
+  --jobs-gradient: linear-gradient(135deg, #2b59ff, #8e4df8);
+  --jobs-card-shadow: 0 2px 8px rgb(15 23 42 / 8%);
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  color: #0b1220;
+}
+.community-jobs-theme .text-nexoraMuted:not([role="tab"]) { color: var(--jobs-muted); }
+.community-jobs-theme .text-nexoraBrand:not([role="tab"]) { color: var(--jobs-primary); }
+.community-jobs-theme .font-black { font-weight: 700; }
+.community-jobs-theme :is(h1, h2, h3).font-black { font-weight: 800; }
+.community-jobs-theme .shadow-nexora-card,
+.community-jobs-theme .bg-white.shadow-sm { box-shadow: var(--jobs-card-shadow); }
+.community-jobs-theme .rounded-2xl.border:not(.nexora-modal-card) { border-radius: 12px; }
+.community-jobs-theme button.bg-nexoraBrand {
+  background: var(--jobs-gradient);
+  font-weight: 700;
+}
+.community-jobs-theme button.bg-nexoraBrand:not(.rounded-full) { border-radius: 12px; font-size: 14px; }
+.community-jobs-theme button.bg-nexoraBrand:hover:not(:disabled) { filter: brightness(0.96); }
+.community-jobs-theme button.rounded-lg { border-radius: 12px; }
+.community-jobs-theme :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea) {
+  border-radius: 10px;
+  font-size: 14px;
+  background-color: white;
+}
+.community-jobs-theme :is(input, select, textarea):focus-visible {
+  border-color: var(--jobs-primary);
+  outline: 2px solid rgb(43 89 255 / 25%);
+  outline-offset: 2px;
+}
+.community-jobs-theme [aria-pressed="true"].bg-nexoraBrand { background: var(--jobs-gradient); color: white; }
+.community-jobs-theme button[aria-pressed].rounded-full { border-radius: 14px; }
+.community-jobs-theme .bg-nexoraSurfaceMuted { background-color: #f1f5f9; }
+@media (prefers-reduced-motion: no-preference) {
+  .community-jobs-theme button.bg-nexoraBrand { transition: filter 150ms, box-shadow 150ms; }
+}

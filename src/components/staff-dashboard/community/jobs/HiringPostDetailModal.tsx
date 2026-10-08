@@ -40,7 +40,7 @@ export default function HiringPostDetailModal({ posting, alreadyApplied, canAppl
   }, [posting.id])
 
   return createPortal(
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm" onMouseDown={onClose}>
+    <div className="community-jobs-theme fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm" onMouseDown={onClose}>
       <div
         ref={dialogRef}
         role="dialog"
@@ -66,14 +66,14 @@ export default function HiringPostDetailModal({ posting, alreadyApplied, canAppl
         ) : null}
 
         <div ref={contentRef} className="min-h-0 flex-1 overflow-y-auto bg-nexoraSurface p-3 sm:p-5">
-          <CommunityHiringDetailContent posting={posting} relatedPostings={relatedPostings} onOpenRelated={onOpenRelated} />
+          <CommunityHiringDetailContent posting={posting} relatedPostings={relatedPostings} onOpenRelated={onOpenRelated} onChat={() => onChat(posting)} canApply={canApply} />
         </div>
 
-        <footer className="grid grid-cols-1 gap-2 border-t border-nexoraRule bg-white px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:grid-cols-2 sm:px-5">
+        <footer className={`grid grid-cols-1 gap-2 border-t border-nexoraRule bg-white px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:px-5 ${canApply ? 'sm:grid-cols-2 lg:grid-cols-1' : 'lg:hidden'}`}>
           <button
             type="button"
             onClick={() => onChat(posting)}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand"
+            className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand lg:hidden ${canApply ? 'border border-nexoraBrand/40 bg-nexoraBrandSoft text-nexoraBrand hover:bg-nexoraBrandSoft/70' : 'bg-nexoraBrand text-white hover:bg-nexoraBrandDark'}`}
           >
             <MessagesSquare className="h-4 w-4" aria-hidden />{t(`${TK}.chatAction`)}
           </button>

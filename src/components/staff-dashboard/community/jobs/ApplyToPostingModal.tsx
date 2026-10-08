@@ -72,7 +72,7 @@ export default function ApplyToPostingModal({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm" onMouseDown={() => !isLocked && onClose()}>
+    <div className="community-jobs-theme fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm" onMouseDown={() => !isLocked && onClose()}>
       <div
         ref={dialogRef}
         role="dialog"

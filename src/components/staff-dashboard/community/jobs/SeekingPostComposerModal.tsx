@@ -141,7 +141,7 @@ export default function SeekingPostComposerModal({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/60 p-2 backdrop-blur-sm sm:p-4" onMouseDown={requestClose}>
+    <div className="community-jobs-theme fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/60 p-2 backdrop-blur-sm sm:p-4" onMouseDown={requestClose}>
       <div
         ref={dialogRef}
         role="dialog"
