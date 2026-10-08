@@ -51,6 +51,8 @@
     },
     "suggestions": {
       "title": "AI suggests matching technicians",
+      "showSuggestions": "View {{count}} matches",
+      "hideSuggestions": "Hide matches",
       "demoLabel": "Demo",
       "privacyHint": "Matched by skills, area, and work type in the hiring post. Technicians who enable “Hide from current salon” are not shown to their current salon.",
       "invite": "Invite",

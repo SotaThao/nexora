@@ -1,4 +1,5 @@
-import { Check, MapPin, ShieldCheck, Sparkles } from 'lucide-react'
+import { useState } from 'react'
+import { Check, ChevronDown, MapPin, ShieldCheck, Sparkles } from 'lucide-react'
 
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -18,6 +19,7 @@ interface CommunityWorkerSuggestionsProps {
 export default function CommunityWorkerSuggestions({ invitedIds, onInvite }: CommunityWorkerSuggestionsProps) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
+  const [expanded, setExpanded] = useState(false)
 
   const inviteWorker = (id: string) => {
     if (invitedIds.has(id)) return
@@ -26,22 +28,38 @@ export default function CommunityWorkerSuggestions({ invitedIds, onInvite }: Com
   }
 
   return (
-    <section aria-labelledby="community-worker-suggestions-title" className="rounded-xl border border-nexoraBrand/30 bg-nexoraBrandSoft/30 p-4 sm:p-5">
+    <section aria-labelledby="community-worker-suggestions-title" className="rounded-xl border border-nexoraBrand/30 bg-nexoraBrandSoft/30 p-3 sm:p-4 xl:p-5">
       <div className="flex items-center gap-2">
         <Sparkles className="h-5 w-5 shrink-0 text-nexoraBrand" aria-hidden />
-        <h2 id="community-worker-suggestions-title" className="text-lg font-black text-nexoraText">{t(`${TK}.title`)}</h2>
-        <span className="rounded-md border border-nexoraBorder px-2 py-1 text-xs font-bold text-nexoraMuted">{t(`${TK}.demoLabel`)}</span>
+        <h2 id="community-worker-suggestions-title" className="min-w-0 flex-1 text-sm font-black leading-5 text-nexoraText sm:text-base xl:text-lg">{t(`${TK}.title`)}</h2>
+        <span className="hidden rounded-md border border-nexoraBorder px-2 py-1 text-xs font-bold text-nexoraMuted xl:inline-flex">{t(`${TK}.demoLabel`)}</span>
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-controls="community-worker-suggestions-list"
+          onClick={() => setExpanded((current) => !current)}
+          className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-bold text-nexoraBrand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand xl:hidden"
+        >
+          <span>{t(`${TK}.${expanded ? 'hideSuggestions' : 'showSuggestions'}`, { count: SUGGESTIONS.length })}</span>
+          <ChevronDown className={`h-4 w-4 transition-transform motion-reduce:transition-none ${expanded ? 'rotate-180' : ''}`} aria-hidden />
+        </button>
       </div>
-      <p className="mt-2 flex items-start gap-2 text-xs leading-5 text-nexoraMuted">
+      {!expanded ? (
+        <p className="mt-1 flex items-center gap-2 pl-7 text-xs text-nexoraMuted xl:hidden">
+          <span className="truncate font-bold text-nexoraText">{t(`${TK}.workers.${SUGGESTIONS[0].id}.name`)}</span>
+          <span aria-label={t(`${TK}.matchLabel`, { percent: SUGGESTIONS[0].match })}>{SUGGESTIONS[0].match}%</span>
+        </p>
+      ) : null}
+      <p className={`mt-2 items-start gap-2 text-xs leading-5 text-nexoraMuted ${expanded ? 'flex' : 'hidden xl:flex'}`}>
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
         <span>{t(`${TK}.privacyHint`)}</span>
       </p>
-      <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div id="community-worker-suggestions-list" className={`mt-3 grid grid-cols-1 gap-3 md:grid-cols-3 xl:mt-4 ${expanded ? '' : 'hidden xl:grid'}`}>
         {SUGGESTIONS.map((worker) => {
           const key = `${TK}.workers.${worker.id}`
           const invited = invitedIds.has(worker.id)
           return (
-            <article key={worker.id} aria-label={t(`${key}.name`)} className="min-w-0 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-nexora-card">
+            <article key={worker.id} aria-label={t(`${key}.name`)} className="min-w-0 rounded-xl border border-nexoraBorder bg-nexoraSurface p-3 shadow-nexora-card sm:p-4">
               <div className="flex items-center gap-3">
                 <span aria-hidden className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-nexoraBrandSoft text-sm font-black text-nexoraBrand">{worker.initials}</span>
                 <h3 className="min-w-0 flex-1 text-sm font-black text-nexoraText">{t(`${key}.name`)}</h3>

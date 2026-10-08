@@ -21,12 +21,8 @@ export default function MySeekingPostsPanel({ posts, isLoading, isError, onRetry
   const { t } = useTranslation()
 
   return (
-    <div className="overflow-hidden rounded-xl border border-nexoraBorder bg-white shadow-sm">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-nexoraRule p-4 sm:p-5">
-        <div>
-          <h2 className="text-lg font-black text-nexoraText">{t(`${TK}.title`)}</h2>
-          <p className="mt-1 text-xs font-medium text-nexoraMuted">{t(`${TK}.description`)}</p>
-        </div>
+    <section aria-label={t(`${TK}.title`)} className="overflow-hidden rounded-xl border border-nexoraBorder bg-white shadow-sm">
+      <header className="flex justify-end border-b border-nexoraRule p-4 sm:p-5">
         <button type="button" onClick={onCreate} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 text-xs font-black text-white shadow-nexora-soft hover:bg-nexoraBrandDark">
           <Plus className="h-4 w-4" aria-hidden />{t(`${TK}.createAction`)}
         </button>
@@ -58,6 +54,6 @@ export default function MySeekingPostsPanel({ posts, isLoading, isError, onRetry
           ))}
         </div>
       )}
-    </div>
+    </section>
   )
 }
