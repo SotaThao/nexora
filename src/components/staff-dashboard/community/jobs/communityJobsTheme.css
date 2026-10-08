@@ -96,9 +96,15 @@
   color: var(--detail-danger);
 }
 .community-job-detail-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   border-block: 1px solid var(--detail-rule);
   background: transparent;
   color: var(--detail-ink);
+}
+.community-job-detail-facts > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .community-job-detail-phone {
   border: 1px solid var(--detail-border);

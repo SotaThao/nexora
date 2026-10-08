@@ -74,7 +74,7 @@ export default function CommunityHiringDetailContent({ posting, relatedPostings,
           <h4 className="px-4 pb-0 pt-4 text-base font-black text-nexoraText sm:px-6 sm:pt-6">{t(`${TK}.contentTitle`)}</h4>
           <div className="space-y-5 p-4 sm:p-6">
             <RecruitmentPostingContentView body={posting.body || t(`${PREVIEW_TK}.bodyFallback`)} postingContent={posting.postingContent} />
-            <dl className="community-job-detail-facts grid grid-cols-2 gap-x-3 gap-y-4 py-4 text-sm sm:gap-x-5">
+            <dl className="community-job-detail-facts gap-x-3 gap-y-4 py-4 text-sm sm:gap-x-5">
               <div><dt className="text-xs font-bold text-nexoraMuted">{t(`${TK}.position`)}</dt><dd className="mt-1 font-semibold text-nexoraText">{t(`${ENUM_TK}.position.${posting.position}`)}</dd></div>
               <div><dt className="text-xs font-bold text-nexoraMuted">{t(`${TK}.workType`)}</dt><dd className="mt-1 font-semibold text-nexoraText">{t(`${ENUM_TK}.workType.${posting.workType}`)}</dd></div>
               <div><dt className="text-xs font-bold text-nexoraMuted">{t(`${TK}.headcount`)}</dt><dd className="mt-1 font-semibold text-nexoraText">{getHeadcountLabel(posting.headcount, t)}</dd></div>
