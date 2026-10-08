@@ -1,4 +1,4 @@
-import { Building2, ExternalLink, MapPin, MessagesSquare, Phone, UserRound } from 'lucide-react'
+import { Building2, ExternalLink, MapPin, Phone, UserRound } from 'lucide-react'
 
 import { JobPostingStatus } from '../../../../constants/posRecruitment'
 import { useTranslation } from '../../../../contexts/LanguageContext'
@@ -6,12 +6,12 @@ import {
   formatRecruitmentDate,
   formatRecruitmentLocation,
   getPublicSalonLabel,
-  getRecruitmentPayLabel,
 } from '../../../dashboard/views/pos/recruitment/recruitmentModel'
 
 import { getHeadcountLabel } from './staffJobsModel'
 import type { PosJobPosting } from '../../../../types/posRecruitment'
 import RecruitmentPostingContentView from '../../../dashboard/views/pos/recruitment/RecruitmentPostingContentView'
+import { getCommunitySalaryLabel } from './salaryCardLabel'
 
 const TK = 'community_jobs_browser.hiringDetail'
 const ENUM_TK = 'components.dashboard.views.pos.recruitment.enums'
@@ -21,8 +21,6 @@ interface CommunityHiringDetailContentProps {
   posting: PosJobPosting
   relatedPostings: PosJobPosting[]
   onOpenRelated?: (postingId: string) => void
-  onChat: () => void
-  canApply: boolean
 }
 
 function SalonAvatar({ posting, label }: { posting: PosJobPosting; label: string }) {
@@ -33,11 +31,11 @@ function SalonAvatar({ posting, label }: { posting: PosJobPosting; label: string
   )
 }
 
-export default function CommunityHiringDetailContent({ posting, relatedPostings, onOpenRelated, onChat, canApply }: CommunityHiringDetailContentProps) {
+export default function CommunityHiringDetailContent({ posting, relatedPostings, onOpenRelated }: CommunityHiringDetailContentProps) {
   const { t, currentLanguage } = useTranslation()
   const salon = getPublicSalonLabel(posting, t)
   const location = formatRecruitmentLocation(posting.city, posting.state)
-  const pay = getRecruitmentPayLabel(posting, t)
+  const pay = getCommunitySalaryLabel(posting, t('staff_dashboard.community.jobs.card.salaryNegotiable'))
   const publicAddress = posting.visibility.showAddress && posting.address.trim()
     ? [posting.address.trim(), location, posting.zipCode.trim()].filter(Boolean).join(', ')
     : ''
@@ -66,7 +64,7 @@ export default function CommunityHiringDetailContent({ posting, relatedPostings,
             <p className="mt-2 text-xs text-nexoraMuted">{t(`${TK}.posted`, { date: formatRecruitmentDate(posting.publishedAt || posting.createdAt, currentLanguage) })}</p>
           </div>
         </div>
-        <p className="break-words text-lg font-black text-nexoraDanger sm:max-w-[16rem] sm:text-right">{pay}</p>
+        {pay ? <p className="break-words text-lg font-black text-nexoraDanger sm:max-w-[16rem] sm:text-right">{pay}</p> : null}
       </section>
 
       {posting.status === JobPostingStatus.Pending ? <p className="rounded-lg border border-nexoraBorder bg-nexoraSurfaceMuted p-3 text-xs font-medium text-nexoraMuted">{t(`${PREVIEW_TK}.pendingNotice`)}</p> : null}
@@ -95,22 +93,20 @@ export default function CommunityHiringDetailContent({ posting, relatedPostings,
               <div className="flex items-center gap-3"><SalonAvatar posting={posting} label={salon} /><p className="min-w-0 break-words font-bold text-nexoraText">{salon}</p></div>
               {publicContactName ? <p className="flex items-start gap-2 text-sm text-nexoraText"><UserRound className="mt-0.5 h-4 w-4 shrink-0 text-nexoraMuted" aria-hidden />{publicContactName}</p> : null}
               {publicPhone ? <a href={`tel:${publicPhone.replace(/[^\d+]/g, '')}`} className="inline-flex min-h-11 max-w-full items-center gap-2 rounded-lg border border-nexoraBrand/30 bg-nexoraBrandSoft px-3 text-sm font-bold text-nexoraBrand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand"><Phone className="h-4 w-4 shrink-0" aria-hidden />{publicPhone}</a> : <p className="text-xs leading-5 text-nexoraMuted">{t(`${PREVIEW_TK}.chatHelper`)}</p>}
-              <button type="button" onClick={onChat} className={`hidden min-h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-sm font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand focus-visible:ring-offset-2 lg:inline-flex ${canApply ? 'border border-nexoraBrand/40 bg-nexoraBrandSoft text-nexoraBrand hover:bg-nexoraBrandSoft/70' : 'bg-nexoraBrand text-white hover:bg-nexoraBrandDark'}`}>
-                <MessagesSquare className="h-4 w-4" aria-hidden />{t('staff_dashboard.community.jobs.detail.chatAction')}
-              </button>
               {publicAddress ? <div className="text-sm text-nexoraText"><p className="flex items-center gap-1 font-bold"><MapPin className="h-4 w-4" aria-hidden />{t(`${TK}.address`)}</p><p className="mt-1 break-words leading-6">{publicAddress}</p><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(publicAddress)}`} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex min-h-11 items-center gap-1 font-semibold text-nexoraBrand underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand">{t(`${TK}.mapAction`)}<ExternalLink className="h-3.5 w-3.5" aria-hidden /></a></div> : location ? <p className="flex items-center gap-1 text-sm text-nexoraMuted"><MapPin className="h-4 w-4" aria-hidden />{location}</p> : null}
             </div>
           </section>
 
           <section className="overflow-hidden rounded-xl border border-nexoraBorder bg-nexoraSurface">
             <h4 className="border-b border-nexoraRule px-4 py-3 text-base font-black text-nexoraText">{t(`${TK}.relatedTitle`)}</h4>
-            {related.length && onOpenRelated ? related.map((candidate) => (
-              <button key={candidate.id} type="button" onClick={() => onOpenRelated(candidate.id)} className="block min-h-11 w-full border-b border-nexoraRule p-4 text-left last:border-b-0 hover:bg-nexoraSurfaceMuted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-nexoraBrand">
+            {related.length && onOpenRelated ? related.map((candidate) => {
+              const candidatePay = getCommunitySalaryLabel(candidate, t('staff_dashboard.community.jobs.card.salaryNegotiable'))
+              return <button key={candidate.id} type="button" onClick={() => onOpenRelated(candidate.id)} className="block min-h-11 w-full border-b border-nexoraRule p-4 text-left last:border-b-0 hover:bg-nexoraSurfaceMuted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-nexoraBrand">
                 <div className="flex items-start gap-2"><Building2 className="mt-0.5 h-5 w-5 shrink-0 text-nexoraMuted" aria-hidden /><div className="min-w-0 flex-1"><p className="text-xs leading-5 text-nexoraMuted"><span className="font-semibold text-nexoraBrand">{getPublicSalonLabel(candidate, t)}</span> · {formatRecruitmentLocation(candidate.city, candidate.state)}</p><p className="mt-1 line-clamp-2 text-sm font-bold text-nexoraText">{candidate.title}</p></div></div>
-                <p className="mt-2 break-words text-sm font-bold text-nexoraDanger">{getRecruitmentPayLabel(candidate, t)}</p>
+                {candidatePay ? <p className="mt-2 break-words text-sm font-bold text-nexoraDanger">{candidatePay}</p> : null}
                 <p className="mt-1 line-clamp-2 text-xs leading-5 text-nexoraMuted">{candidate.body}</p>
               </button>
-            )) : <p className="p-4 text-sm text-nexoraMuted">{t(`${TK}.relatedEmpty`)}</p>}
+            }) : <p className="p-4 text-sm text-nexoraMuted">{t(`${TK}.relatedEmpty`)}</p>}
           </section>
         </aside>
       </div>

@@ -1,29 +1,27 @@
 import { describe, expect, it } from 'vitest'
 import { formatSalaryChip } from '../../src/components/community/jobSalary'
-import { JobPayUnit } from '../../src/constants/posRecruitment'
+import { JobPayType, JobPayUnit } from '../../src/constants/posRecruitment'
 import { createDefaultJobDraft } from '../../src/components/dashboard/views/pos/recruitment/recruitmentModel'
-import { formatSalaryCardLabel } from '../../src/components/staff-dashboard/community/jobs/salaryCardLabel'
+import { getCommunityLegacySalaryLabel, getCommunitySalaryLabel } from '../../src/components/staff-dashboard/community/jobs/salaryCardLabel'
 import { createDefaultSeekingDraft } from '../../src/components/staff-dashboard/community/jobs/staffJobsModel'
 
-describe('formatSalaryCardLabel', () => {
-  it('keeps only dollar amounts and ranges', () => {
-    expect(formatSalaryCardLabel('$400 - $500 / week', 'Negotiable')).toBe('$400-$500')
-    expect(formatSalaryCardLabel('$1,000–1,200/tuần', 'Thương lượng')).toBe('$1,000-$1,200')
-    expect(formatSalaryCardLabel('Up to $1,600+', 'Negotiable')).toBe('$1,600+')
+describe('Community salary display', () => {
+  it('shows only a fixed weekly amount without a unit suffix', () => {
+    expect(getCommunitySalaryLabel({ payType: JobPayType.Fixed, payAmount: 900, payUnit: JobPayUnit.Week }, 'Thương lượng')).toBe('$900')
   })
 
-  it('shows weekly pay only', () => {
-    expect(formatSalaryCardLabel('$22 / hour', 'Negotiable')).toBeNull()
-    expect(formatSalaryCardLabel('$180/ngày', 'Negotiable')).toBeNull()
-    expect(formatSalaryCardLabel('$4,000 per month', 'Negotiable')).toBeNull()
-    expect(formatSalaryCardLabel('$52,000/year', 'Negotiable')).toBeNull()
+  it('shows negotiable pay and hides commission, non-weekly, and missing amounts', () => {
+    expect(getCommunitySalaryLabel({ payType: JobPayType.Negotiable }, 'Thương lượng')).toBe('Thương lượng')
+    expect(getCommunitySalaryLabel({ payType: JobPayType.Commission }, 'Thương lượng')).toBeNull()
+    expect(getCommunitySalaryLabel({ payType: JobPayType.Fixed, payAmount: 900, payUnit: JobPayUnit.Day }, 'Thương lượng')).toBeNull()
+    expect(getCommunitySalaryLabel({ payType: JobPayType.Fixed, payUnit: JobPayUnit.Week }, 'Thương lượng')).toBeNull()
   })
 
-  it('localizes negotiable pay and hides unsupported text', () => {
-    expect(formatSalaryCardLabel('Pay negotiable', 'Negotiable')).toBe('Negotiable')
-    expect(formatSalaryCardLabel('Lương thỏa thuận', 'Thương lượng')).toBe('Thương lượng')
-    expect(formatSalaryCardLabel('60/40 commission split', 'Negotiable')).toBeNull()
-    expect(formatSalaryCardLabel(null, 'Negotiable')).toBeNull()
+  it('reduces old weekly demo ranges to one amount and leaves commission blank', () => {
+    expect(getCommunityLegacySalaryLabel('$900 - $1,000/tuần')).toBe('$900')
+    expect(getCommunityLegacySalaryLabel('$900+/tuần')).toBe('$900')
+    expect(getCommunityLegacySalaryLabel('Ăn chia 60/40')).toBeNull()
+    expect(getCommunityLegacySalaryLabel('Thoả thuận trực tiếp')).toBe('Thương lượng')
   })
 })
 

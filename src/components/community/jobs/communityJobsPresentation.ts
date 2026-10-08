@@ -1,7 +1,7 @@
 import { JobPostingStatus } from '../../../constants/posRecruitment'
 import { DEFAULT_JOB_IMAGE } from '../communityDemoContent'
-import { formatRecruitmentDate, formatRecruitmentLocation, getPublicSalonLabel, getRecruitmentPayLabel } from '../../dashboard/views/pos/recruitment/recruitmentModel'
-import { formatSalaryCardLabel } from '../../staff-dashboard/community/jobs/salaryCardLabel'
+import { formatRecruitmentDate, formatRecruitmentLocation, getPublicSalonLabel } from '../../dashboard/views/pos/recruitment/recruitmentModel'
+import { getCommunitySalaryLabel } from '../../staff-dashboard/community/jobs/salaryCardLabel'
 import type { CommunityBrowseJob } from '../CommunityJobDetail'
 import type { PosJobPosting } from '../../../types/posRecruitment'
 import type { SeekingPost } from '../../../types/communityJobs'
@@ -49,16 +49,15 @@ export function matchesCommunityPostingKeyword(posting: PosJobPosting, keyword?:
 
 /** A read-only card projection; detail/application actions always look up the raw ID. */
 export function toCommunityHiringCard(posting: PosJobPosting, t: StaffJobsTranslate, language: string): CommunityBrowseJob {
-  const salary = getRecruitmentPayLabel(posting, t)
+  const salary = getCommunitySalaryLabel(posting, t('staff_dashboard.community.jobs.card.salaryNegotiable'))
   return {
     id: posting.id,
     postKind: 'hiring',
     title: posting.title,
     salon: getPublicSalonLabel(posting, t),
     location: formatRecruitmentLocation(posting.city, posting.state),
-    salary,
-    // Preserve commission and non-weekly units instead of the legacy demo fallback.
-    salaryChipLabel: formatSalaryCardLabel(salary, t('staff_dashboard.community.jobs.card.salaryNegotiable')) ?? salary,
+    salary: salary ?? '',
+    salaryChipLabel: salary,
     status: posting.status === JobPostingStatus.Filled ? 'filled' : posting.status === JobPostingStatus.Closed || posting.status === JobPostingStatus.Draft ? 'closed' : 'open',
     urgent: posting.isUrgent,
     posted: formatRecruitmentDate(posting.publishedAt || posting.createdAt, language),
@@ -73,15 +72,15 @@ export function toCommunityHiringCard(posting: PosJobPosting, t: StaffJobsTransl
 /** Public seeking feed projection contains no phone or hidden name; raw records stay in the parent. */
 export function toCommunitySeekingCard(post: SeekingPost, t: StaffJobsTranslate, language: string): CommunityBrowseJob {
   const publicName = getSeekingPublicName(post, t('staff_dashboard.community.jobs.feed.anonymousTechnician'))
-  const salary = getRecruitmentPayLabel(post, t)
+  const salary = getCommunitySalaryLabel(post, t('staff_dashboard.community.jobs.card.salaryNegotiable'))
   return {
     id: `public-seeking:${post.id}`,
     postKind: 'seeking',
     title: post.title,
     salon: publicName,
     location: formatRecruitmentLocation(post.city, post.state),
-    salary,
-    salaryChipLabel: formatSalaryCardLabel(salary, t('staff_dashboard.community.jobs.card.salaryNegotiable')) ?? salary,
+    salary: salary ?? '',
+    salaryChipLabel: salary,
     status: 'open',
     urgent: false,
     posted: formatRecruitmentDate(post.publishedAt || post.createdAt, language),

@@ -587,7 +587,6 @@
       "jobs": {
         "pageTitle": "Việc làm cộng đồng",
         "pageDescription": "Xem tin tuyển dụng từ các tiệm, hoặc đăng tin \"tìm việc\" để tiệm chủ động liên hệ bạn.",
-        "simulatedNotice": "Dữ liệu mô phỏng",
         "chatFallbackHint": "Chat trực tiếp với tiệm sẽ bật khi bạn được liên kết với tiệm đó. Chúng tôi đã mở hộp thư chat của bạn thay thế.",
         "tabs": {
           "ariaLabel": "Các mục việc làm cộng đồng",

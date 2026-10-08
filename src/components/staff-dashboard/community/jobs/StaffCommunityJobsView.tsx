@@ -258,7 +258,6 @@ export default function StaffCommunityJobsView() {
           isLoading={seekingPostsQuery.isLoading}
           isError={seekingPostsQuery.isError}
           onRetry={() => seekingPostsQuery.refetch()}
-          onCreate={openCreateSeekingPost}
           onEdit={(post) => setComposer({ postId: post.id })}
           onClose={setClosingPost}
         />
@@ -272,17 +271,6 @@ export default function StaffCommunityJobsView() {
           onRetry={() => applicationsQuery.refetch()}
           onChat={handleChat}
         />
-      ) : null}
-
-      {mode === 'staff' && activeTab === StaffCommunityJobsTab.Mine ? (
-        <button
-          type="button"
-          onClick={openCreateSeekingPost}
-          className="fixed bottom-24 right-4 z-30 inline-flex min-h-14 min-w-14 items-center justify-center rounded-full bg-nexoraBrand text-white shadow-lg hover:bg-nexoraBrandDark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand lg:hidden"
-          aria-label={t(`${TK}.myPosts.createAction`)}
-        >
-          <Plus className="h-6 w-6" aria-hidden />
-        </button>
       ) : null}
 
       {activeTab === StaffCommunityJobsTab.Browse && detailPosting ? (
