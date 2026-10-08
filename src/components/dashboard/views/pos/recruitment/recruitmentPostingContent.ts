@@ -105,19 +105,3 @@ export async function readPostingImage(file: File): Promise<RecruitmentPostingIm
   })
   return { url, name: file.name.slice(0, 120) }
 }
-
-export function postingContentPrivacyText(content: RecruitmentPostingContent | undefined): string {
-  if (!content) return ''
-  const element = document.createElement('div')
-  element.innerHTML = sanitizePostingHtml(content.html)
-  const links = Array.from(element.querySelectorAll('a[href]')).map((anchor) => anchor.getAttribute('href') ?? '')
-  // Raster data URLs contain binary pixels; public media URLs and filenames are visible metadata.
-  const media = [...(content.coverImage ? [content.coverImage] : []), ...content.images]
-  const text = [...links, ...content.videoUrls, ...media.flatMap((image) => [image.name, image.url.startsWith('data:') ? '' : image.url])].join(' ')
-  const decodeValidRuns = (value: string) => value.replace(/(?:%[0-9a-f]{2})+/gi, (encoded) => {
-    try { return decodeURIComponent(encoded) }
-    catch { return encoded.replace(/%([0-9a-f]{2})/gi, (byte, hex: string) => Number.parseInt(hex, 16) < 128 ? String.fromCharCode(Number.parseInt(hex, 16)) : byte) }
-  })
-  const decoded = decodeValidRuns(text)
-  return `${text} ${decoded} ${decodeValidRuns(decoded)}`
-}

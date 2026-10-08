@@ -18,7 +18,7 @@ import type {
   PosJobPostingUpsertInput,
 } from '../../../../../types/posRecruitment'
 import { formatUsdAmount } from '../../../../../utils/currencyInput'
-import { normalizePostingContent, postingContentPrivacyText } from './recruitmentPostingContent'
+import { normalizePostingContent } from './recruitmentPostingContent'
 
 export type RecruitmentDraftField =
   | 'title'
@@ -30,14 +30,8 @@ export type RecruitmentDraftField =
   | 'postingContent'
   | 'contactName'
   | 'phone'
-  | 'privacy'
 
 export type RecruitmentValidationErrors = Partial<Record<RecruitmentDraftField, string>>
-
-export interface HiddenInfoLeak {
-  field: 'businessName' | 'address' | 'zipCode' | 'contactName' | 'phone'
-  value: string
-}
 
 export type RecruitmentPreviewDraft = PosJobPostingUpsertInput & {
   status?: JobPostingStatus
@@ -157,17 +151,6 @@ export function deriveVisibilityPreset(visibility: JobPostingVisibility): JobVis
   return JobVisibilityPreset.Custom
 }
 
-export function visibilityMatchesPreset(
-  visibility: JobPostingVisibility,
-  preset: JobVisibilityPreset,
-): boolean {
-  const resolved = resolveVisibilityPreset(preset)
-  return Object.keys(resolved).every((key) => {
-    const field = key as keyof JobPostingVisibility
-    return visibility[field] === resolved[field]
-  })
-}
-
 export function createDefaultJobDraft(
   businessInfo: MerchantBusinessInfo = {},
   today = new Date(),
@@ -200,8 +183,8 @@ export function createDefaultJobDraft(
     zipCode: typeof businessInfo.zipCode === 'string' ? businessInfo.zipCode : '',
     contactName: '',
     phone,
-    visibilityPreset: JobVisibilityPreset.ShowAll,
-    visibility: resolveVisibilityPreset(JobVisibilityPreset.ShowAll),
+    visibilityPreset: JobVisibilityPreset.ChatOnly,
+    visibility: resolveVisibilityPreset(JobVisibilityPreset.ChatOnly),
     selectedServices: [],
   }
 }
@@ -235,6 +218,16 @@ export function postingToDraft(posting: PosJobPosting): PosJobPostingUpsertInput
   }
 }
 
+/** This composer cannot edit contact details, so never expose missing or masked values. */
+export function prepareJobDraftForComposer(draft: PosJobPostingUpsertInput): PosJobPostingUpsertInput {
+  const visibility = {
+    ...draft.visibility,
+    showContactName: draft.visibility.showContactName && Boolean(draft.contactName.trim()),
+    showPhone: draft.visibility.showPhone && phoneDigits(draft.phone).length === 10,
+  }
+  return { ...draft, visibility, visibilityPreset: deriveVisibilityPreset(visibility) }
+}
+
 export function validateJobDraft(
   draft: PosJobPostingUpsertInput,
   messages: Partial<Record<RecruitmentDraftField, string>> = {},
@@ -259,35 +252,11 @@ export function validateJobDraft(
   if (body.length < 20 || body.length > 4000) {
     result.body = error('body', 'Description must be between 20 and 4,000 characters.')
   }
-  if (!draft.contactName.trim()) result.contactName = error('contactName', 'Contact name is required.')
-  if (phoneDigits(draft.phone).length !== 10) {
+  if (draft.visibility.showContactName && !draft.contactName.trim()) result.contactName = error('contactName', 'Contact name is required.')
+  if (draft.visibility.showPhone && phoneDigits(draft.phone).length !== 10) {
     result.phone = error('phone', 'Enter a valid 10-digit US phone number.')
   }
   return result
-}
-
-export function findHiddenInfoLeaks(draft: PosJobPostingUpsertInput): HiddenInfoLeak[] {
-  const publicContent = `${draft.title} ${draft.body} ${postingContentPrivacyText(draft.postingContent)}`
-  const content = normalizeRecruitmentSearch(publicContent)
-  const contentDigits = digitsOnly(publicContent)
-  const candidates: HiddenInfoLeak[] = []
-  const addText = (field: HiddenInfoLeak['field'], value: string, hidden: boolean) => {
-    const normalized = normalizeRecruitmentSearch(value)
-    if (hidden && normalized.length >= 3 && content.includes(normalized)) {
-      candidates.push({ field, value })
-    }
-  }
-  addText('businessName', draft.businessName, !draft.visibility.showBusinessName)
-  addText('address', draft.address, !draft.visibility.showAddress)
-  addText('zipCode', draft.zipCode, !draft.visibility.showAddress)
-  if (!isGenericManagerLabel(draft.contactName)) {
-    addText('contactName', draft.contactName, !draft.visibility.showContactName)
-  }
-  const phone = phoneDigits(draft.phone)
-  if (!draft.visibility.showPhone && phone.length === 10 && contentDigits.includes(phone)) {
-    candidates.push({ field: 'phone', value: draft.phone })
-  }
-  return candidates
 }
 
 export function getPublicSalonLabel(

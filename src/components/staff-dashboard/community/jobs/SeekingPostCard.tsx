@@ -42,27 +42,27 @@ export default function SeekingPostCard({ post, variant = 'list', onEdit, onClos
     const posted = formatRecruitmentDate(post.publishedAt || post.createdAt, currentLanguage)
     const publicName = getSeekingPublicName(post, t(`${FEED_TK}.anonymousTechnician`))
     return (
-      <article className="h-full rounded-xl border border-nexoraBorder bg-nexoraSurface p-2.5 text-left shadow-nexora-card">
+      <article className="h-full rounded-xl border border-nexoraBorder bg-nexoraSurface p-3 text-left shadow-nexora-card">
         <div className="flex items-start gap-2.5">
-          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-nexoraBrandSoft text-nexoraBrand">
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-[10px] bg-purple-100 text-purple-700">
             <Pencil className="h-5 w-5" aria-hidden />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="shrink-0 rounded-md bg-nexoraBrandSoft px-2 py-0.5 text-xs font-extrabold text-nexoraBrand">
+              <span className="shrink-0 rounded-[10px] bg-purple-100 px-2 py-0.5 text-[11px] font-bold text-purple-700">
                 {t(`${FEED_TK}.badgeSeeking`)}
               </span>
               {pay ? (
-                <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-nexoraSuccess/40 bg-nexoraSuccess/10 px-2 py-0.5 text-xs font-extrabold text-nexoraText" title={pay}>
+                <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-[10px] bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700" title={pay}>
                   <span className="h-1.5 w-1.5 rounded-full bg-nexoraSuccess" aria-hidden="true" />
                   {pay}
                 </span>
               ) : null}
             </div>
-            <h3 className="mt-1 line-clamp-2 text-base font-bold leading-snug text-nexoraText">{post.title}</h3>
+            <h3 className="mt-1 line-clamp-2 text-sm font-bold leading-[1.3] text-nexoraText">{post.title}</h3>
           </div>
         </div>
-        <p className="mt-1 flex min-w-0 items-center gap-1 truncate text-sm text-nexoraMuted">
+        <p className="mt-1.5 flex min-w-0 items-center gap-1 truncate text-xs text-nexoraMuted">
           <span className="min-w-0 truncate font-semibold text-nexoraBrand">{publicName}</span>
           {location ? (
             <>
@@ -74,7 +74,7 @@ export default function SeekingPostCard({ post, variant = 'list', onEdit, onClos
           <span aria-hidden="true">·</span>
           <span className="shrink-0">{posted}</span>
         </p>
-        <p className="mt-2 min-h-[63px] line-clamp-3 text-sm leading-relaxed text-nexoraMuted">{post.body}</p>
+        <p className="mt-1.5 line-clamp-3 text-xs leading-relaxed text-nexoraMuted">{post.body}</p>
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           {post.workTypes.map((workType) => (
             <span key={workType} className="inline-flex items-center gap-1 rounded-md border border-nexoraBorder bg-white px-2 py-1 text-[10px] font-semibold text-nexoraMuted">

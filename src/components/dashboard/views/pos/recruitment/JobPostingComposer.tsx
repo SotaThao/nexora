@@ -17,15 +17,12 @@ import ComposerContentSection from './ComposerContentSection'
 import ComposerNeedsSection from './ComposerNeedsSection'
 import ComposerResultStep from './ComposerResultStep'
 import ComposerReviewStep from './ComposerReviewStep'
-import ComposerVisibilitySection from './ComposerVisibilitySection'
 import MenuServicePickerModal from './MenuServicePickerModal'
 import NailhubPostPreview from './NailhubPostPreview'
 import {
   buildSuggestedDescription,
   deriveVisibilityPreset,
   deriveSkillsFromServices,
-  findHiddenInfoLeaks,
-  joinRecruitmentMeta,
   validateJobDraft,
   type RecruitmentDraftField,
   type RecruitmentValidationErrors,
@@ -85,7 +82,6 @@ export default function JobPostingComposer({
     || cover?.url !== initialCover?.url || cover?.name !== initialCover?.name
     || images.length !== initialImages.length
     || images.some((image, index) => image.url !== initialImages[index]?.url || image.name !== initialImages[index]?.name)
-  const leaks = findHiddenInfoLeaks(draft)
   const suggestedSkills = deriveSkillsFromServices(draft.selectedServices.map((service) => service.name))
   const firstError = Object.values(errors)[0]
   const previewDraft = recruitmentCompensationPreview(draft)
@@ -155,9 +151,6 @@ export default function JobPostingComposer({
     deadline: t(`${TK}.validation.deadline`),
     payAmount: t(`${TK}.validation.payAmount`),
     body: t(`${TK}.validation.${draft.body.trim().length > 4000 ? 'bodyTooLong' : 'body'}`),
-    contactName: t(`${TK}.validation.contactName`),
-    phone: t(`${TK}.validation.phone`),
-    privacy: t(`${TK}.validation.privacy`),
   }
 
   const handlePreview = () => {
@@ -165,11 +158,6 @@ export default function JobPostingComposer({
     const nextErrors = validateJobDraft(draft, validationMessages)
     if (invalidCompensationAmount) nextErrors.payAmount = t(`${TK}.validation.payAmount`)
     if (invalidVideos) nextErrors.postingContent = t(`${TK}.richContent.invalidVideo`)
-    if (leaks.length > 0) {
-      nextErrors.privacy = t(`${TK}.validation.privacy`, {
-        fields: leaks.map((leak) => t(`${TK}.visibility.leakFields.${leak.field}`)).join(', '),
-      })
-    }
     setErrors(nextErrors)
     const first = Object.keys(nextErrors)[0] as RecruitmentDraftField | undefined
     if (first) {
@@ -260,11 +248,9 @@ export default function JobPostingComposer({
 
   return (
     <div className="space-y-5">
-      <button type="button" onClick={handleCancel} disabled={publishMutation.isPending} className="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-xs font-bold text-nexoraMuted hover:bg-nexoraSurfaceMuted hover:text-nexoraText disabled:opacity-50"><ArrowLeft className="h-4 w-4" aria-hidden />{t(`${TK}.backToRecruitment`)}</button>
-      <header className="space-y-1">
-        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-nexoraBrand">{joinRecruitmentMeta([draft.businessName, draft.city])}</p>
-        <h1 className="text-2xl font-black tracking-tight text-nexoraText">{t(`${TK}.${postingId ? 'editTitle' : 'title'}`)}</h1>
-        <p className="text-sm font-medium text-nexoraMuted">{t(`${TK}.description`)}</p>
+      <header className="relative flex min-h-11 items-center justify-center">
+        <button type="button" onClick={handleCancel} disabled={publishMutation.isPending} aria-label={t(`${TK}.backToRecruitment`)} className="absolute inset-y-0 left-0 inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg px-2 text-xs font-bold text-nexoraMuted hover:bg-nexoraSurfaceMuted hover:text-nexoraText disabled:opacity-50 sm:justify-start"><ArrowLeft className="h-4 w-4" aria-hidden /><span className="hidden sm:inline">{t(`${TK}.backToRecruitment`)}</span></button>
+        <h1 className="min-w-0 px-12 text-center text-xl font-black tracking-tight text-nexoraText sm:px-40">{t(`${TK}.${postingId ? 'editTitle' : 'title'}`)}</h1>
       </header>
 
       <ol className="grid grid-cols-3 border-y border-nexoraRule py-3">
@@ -282,19 +268,20 @@ export default function JobPostingComposer({
             <div className="min-w-0 space-y-5">
               <ComposerNeedsSection draft={draft} errors={errors} disabled={saveDraftMutation.isPending} onChange={updateDraft} onOpenServices={() => setServicePickerOpen(true)} onClearServices={() => updateDraft({ selectedServices: [] })} onToggleSkill={handleToggleSkill} />
               <ComposerContentSection draft={draft} errors={errors} disabled={saveDraftMutation.isPending} onChange={updateDraft} onMediaBusyChange={setMediaBusy} onUseSuggested={() => { const body = buildSuggestedDescription(previewDraft, t); updateDraft({ body, postingContent: { ...(draft.postingContent ?? { images: [], videoUrls: [] }), html: postingHtmlFromText(body) } }); showToast(t(`${TK}.suggestedApplied`), 'success', 3000) }} />
-              <ComposerVisibilitySection draft={draft} errors={errors} leaks={leaks} disabled={saveDraftMutation.isPending} onChange={updateDraft} />
             </div>
             <aside className="hidden space-y-2 xl:sticky xl:top-4 xl:block">
               <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wide text-nexoraSubtle"><span>{t(`${TK}.quickPreview`)}</span><span className="normal-case tracking-normal text-emerald-700">NailHub</span></div>
-              {leaks.length > 0 ? <div className="rounded-xl border border-nexoraLavender bg-white p-5 shadow-sm"><span className="rounded bg-nexoraBrandSoft px-2 py-1 text-[10px] font-bold text-nexoraBrand">{t(`${TK}.visibility.pausedTag`)}</span><h3 className="mt-4 font-black text-nexoraText">{t(`${TK}.visibility.pausedTitle`)}</h3><p className="mt-2 text-xs font-medium leading-5 text-nexoraMuted">{t(`${TK}.visibility.pausedDescription`, { fields: leaks.map((leak) => t(`${TK}.visibility.leakFields.${leak.field}`)).join(', ') })}</p><p className="mt-3 text-[10px] font-medium text-nexoraSubtle">{t(`${TK}.visibility.pausedNote`)}</p></div> : <NailhubPostPreview draft={previewDraft} compact logo={logo} />}
+              <NailhubPostPreview draft={previewDraft} compact logo={logo} />
               <p className="px-2 text-xs font-medium leading-5 text-nexoraMuted">↗ {t(`${TK}.quickPreviewNote`)}</p>
             </aside>
           </div>
 
-          <footer className="sticky bottom-0 z-20 -mx-2 flex flex-col gap-2 border-t border-nexoraRule bg-white/95 px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur sm:flex-row sm:items-center sm:justify-end">
+          <footer className="sticky bottom-0 z-50 -mx-2 flex flex-col gap-2 border-t border-nexoraRule bg-white/95 px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur sm:flex-row sm:items-center sm:justify-end">
             {firstError ? <p role="alert" className="text-xs font-semibold text-rose-600 sm:mr-auto">{firstError}</p> : null}
-            <button type="button" disabled={saveDraftMutation.isPending || mediaBusy} onClick={handleSaveDraft} className="min-h-11 rounded-lg border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted disabled:opacity-50">{saveDraftMutation.isPending ? <Loader2 className="mr-2 inline h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden /> : null}{t(`${TK}.saveDraft`)}</button>
-            <button type="button" disabled={saveDraftMutation.isPending || mediaBusy} onClick={handlePreview} className="min-h-11 rounded-lg bg-nexoraBrand px-4 text-xs font-black text-white hover:bg-nexoraBrandDark disabled:opacity-50">{t(`${TK}.previewAction`)} →</button>
+            <div className="flex w-full gap-2 sm:w-auto">
+              <button type="button" disabled={saveDraftMutation.isPending || mediaBusy} onClick={handleSaveDraft} className="min-h-11 min-w-0 flex-1 whitespace-nowrap rounded-lg border border-nexoraBorder px-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted disabled:opacity-50 sm:flex-none sm:px-4">{saveDraftMutation.isPending ? <Loader2 className="mr-2 inline h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden /> : null}{t(`${TK}.saveDraft`)}</button>
+              <button type="button" disabled={saveDraftMutation.isPending || mediaBusy} onClick={handlePreview} className="min-h-11 min-w-0 flex-1 whitespace-nowrap rounded-lg bg-nexoraBrand px-2 text-xs font-black text-white hover:bg-nexoraBrandDark disabled:opacity-50 sm:flex-none sm:px-4">{t(`${TK}.previewAction`)} →</button>
+            </div>
           </footer>
         </>
       ) : null}
@@ -305,7 +292,7 @@ export default function JobPostingComposer({
       <MenuServicePickerModal open={servicePickerOpen} services={services} categories={categories} selectedIds={draft.selectedServices.map((service) => service.posServiceId)} onApply={handleApplyServices} onClose={() => setServicePickerOpen(false)} />
       {previewResult && resultPreviewOpen ? <JobPostingPreviewModal posting={previewResult} logo={logo} onClose={() => setResultPreviewOpen(false)} /> : null}
       {leaveConfirmOpen ? createPortal(
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm" onMouseDown={() => setLeaveConfirmOpen(false)}>
+        <div className="community-jobs-theme fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm" onMouseDown={() => setLeaveConfirmOpen(false)}>
           <div role="dialog" aria-modal="true" aria-labelledby="leave-composer-title" className="nexora-modal-card flex w-full max-w-md flex-col rounded-2xl border border-nexoraBorder bg-white p-5 shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>
             <h2 id="leave-composer-title" className="text-lg font-black text-nexoraText">{t(`${TK}.unsavedTitle`)}</h2>
             <p className="mt-3 text-sm font-medium text-nexoraMuted">{t(`${TK}.unsavedConfirm`)}</p>

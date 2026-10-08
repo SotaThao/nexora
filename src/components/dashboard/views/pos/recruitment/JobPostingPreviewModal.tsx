@@ -18,7 +18,7 @@ interface JobPostingPreviewModalProps {
 export default function JobPostingPreviewModal({ posting, logo, onClose }: JobPostingPreviewModalProps) {
   const { t } = useTranslation()
   return createPortal(
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm" onMouseDown={onClose}>
+    <div className="community-jobs-theme fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm" onMouseDown={onClose}>
       <div
         role="dialog"
         aria-modal="true"

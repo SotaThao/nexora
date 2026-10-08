@@ -126,7 +126,7 @@ export interface SeekingPhoneLeak {
   value: string
 }
 
-/** Mirrors owner-side findHiddenInfoLeaks, scoped to the one field a seeking post can hide: phone. */
+/** Keep hidden phone numbers out of public seeking-post text. */
 export function findSeekingPhoneLeak(draft: SeekingPostUpsertInput): SeekingPhoneLeak | null {
   if (draft.visibility.showPhone) return null
   const phone = digitsOnly(draft.phone)

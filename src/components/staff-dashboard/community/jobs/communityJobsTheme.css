@@ -2,6 +2,7 @@
 .community-jobs-theme {
   --jobs-muted: #5b6b82;
   --jobs-primary: #2b59ff;
+  --jobs-primary-soft: #eef2ff;
   --jobs-gradient: linear-gradient(135deg, #2b59ff, #8e4df8);
   --jobs-card-shadow: 0 2px 8px rgb(15 23 42 / 8%);
   font-family: Inter, sans-serif;
@@ -10,6 +11,9 @@
 }
 .community-jobs-theme .text-nexoraMuted:not([role="tab"]) { color: var(--jobs-muted); }
 .community-jobs-theme .text-nexoraBrand:not([role="tab"]) { color: var(--jobs-primary); }
+.community-jobs-theme .bg-nexoraBrandSoft:not([role="tab"]) { background-color: var(--jobs-primary-soft); }
+.community-jobs-theme .border-nexoraBrand:not([role="tab"]) { border-color: var(--jobs-primary); }
+.community-jobs-theme .bg-nexoraBrand:not(button):not([role="tab"]) { background-color: var(--jobs-primary); }
 .community-jobs-theme .font-black { font-weight: 700; }
 .community-jobs-theme :is(h1, h2, h3).font-black { font-weight: 800; }
 .community-jobs-theme .shadow-nexora-card,
@@ -19,9 +23,9 @@
   background: var(--jobs-gradient);
   font-weight: 700;
 }
-.community-jobs-theme button.bg-nexoraBrand:not(.rounded-full) { border-radius: 12px; font-size: 14px; }
+.community-jobs-theme button.bg-nexoraBrand:not(.rounded-full) { border-radius: 10px; font-size: 14px; }
 .community-jobs-theme button.bg-nexoraBrand:hover:not(:disabled) { filter: brightness(0.96); }
-.community-jobs-theme button.rounded-lg { border-radius: 12px; }
+.community-jobs-theme button.rounded-lg { border-radius: 10px; }
 .community-jobs-theme :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea) {
   border-radius: 10px;
   font-size: 14px;
