@@ -506,6 +506,7 @@ export const qk = {
   staffCommunitySeekingFeed: (filters = EMPTY) => ['staffCommunityJobs', 'seekingFeed', filters],
   staffCommunitySeekingPosts: (staffKey?: string) => ['staffCommunityJobs', 'mySeekingPosts', staffKey ?? ''],
   staffCommunityJobApplications: (staffKey?: string) => ['staffCommunityJobs', 'myApplications', staffKey ?? ''],
+  ownerPostingApplicants: (postingIds: string[]) => ['staffCommunityJobs', 'ownerApplicants', postingIds.join(',')],
 
   // Nexora Voice trial (merchant)
   voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],

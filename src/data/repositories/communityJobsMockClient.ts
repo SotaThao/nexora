@@ -15,9 +15,11 @@ import type {
   HiringFeedFilters,
   JobApplicationDto,
   JobApplicationInput,
+  PostingApplicant,
   SeekingPostDto,
   SeekingPostWriteDto,
 } from '../../types/communityJobs'
+import type { PublicTechnicianProfile } from '../../components/community/jobs/technicianProfileModel'
 import { readPosRecruitmentMockPostingsForFeed } from './posRecruitmentMockClient'
 
 /**
@@ -35,6 +37,8 @@ export interface CommunityJobsClient {
   closeSeekingPost(staffKey: string, id: string): Promise<SeekingPostDto>
   applyToPosting(staffKey: string, input: JobApplicationInput): Promise<JobApplicationDto>
   listMyApplications(staffKey: string): Promise<PaginatedResponse<JobApplicationDto>>
+  cancelApplication(staffKey: string, applicationId: string): Promise<void>
+  listPostingApplicants(postingIds: string[]): Promise<PostingApplicant[]>
 }
 
 interface StaffCommunityJobsStore {
@@ -330,10 +334,117 @@ async function waitForLatency(): Promise<void> {
   await new Promise((resolve) => window.setTimeout(resolve, latencyMs))
 }
 
+/** Demo identities behind each store key — the owner view needs a name per applicant. */
+const MOCK_APPLICANTS: Record<string, { name: string; phone: string; profile: PublicTechnicianProfile | null }> = {
+  jessica: {
+    name: 'Jessica Nguyen',
+    phone: '(713) 555-0201',
+    profile: {
+      licenseVerified: true, displayName: 'Jessica Nguyen', experience: SeekingExperience.ThreeToFiveYears, city: 'Houston', languages: ['vi', 'en'],
+      bio: 'Thợ nail 5 năm kinh nghiệm bột và dip, cẩn thận, hợp tác tốt với đồng nghiệp.',
+      skills: [RecruitmentSkill.Acrylic, RecruitmentSkill.Dip, RecruitmentSkill.NailArt], licenseType: 'TX',
+      portfolio: ['sample-1', 'sample-2', 'sample-3'], workTypes: [JobWorkType.FullTime], payPreferences: ['Commission'],
+      desiredAmount: '60/40', lookingForWork: true, hideFromCurrentSalon: true, hidePhone: false,
+    },
+  },
+  // Completion ladder (technicianProfileCompletion): hoa 10% → lan 45% → minh 75% → jessica / thao 100%.
+  'demo-hoa': {
+    name: 'Hoa Võ',
+    phone: '(713) 555-0204',
+    profile: {
+      licenseVerified: false, displayName: 'Hoa Võ', experience: '', city: '', languages: ['vi'], bio: '', skills: [], licenseType: '',
+      portfolio: [], workTypes: [], payPreferences: [], desiredAmount: '',
+      lookingForWork: true, hideFromCurrentSalon: true, hidePhone: true,
+    },
+  },
+  'demo-lan': {
+    name: 'Lan Phạm',
+    phone: '(713) 555-0203',
+    profile: {
+      licenseVerified: false, displayName: 'Lan Phạm', experience: SeekingExperience.UnderOneYear, city: 'Dallas', languages: ['vi'], bio: '',
+      skills: [RecruitmentSkill.Manicure, RecruitmentSkill.Pedicure], licenseType: '',
+      portfolio: [], workTypes: [], payPreferences: [], desiredAmount: '',
+      lookingForWork: true, hideFromCurrentSalon: true, hidePhone: true,
+    },
+  },
+  'demo-minh': {
+    name: 'Minh Trần',
+    phone: '(713) 555-0202',
+    profile: {
+      licenseVerified: false, displayName: 'Minh Trần', experience: 'FiveToTenYears', city: 'Houston', languages: ['vi', 'en'],
+      bio: 'Chuyên dip và bột, có thể đi làm cuối tuần và thay ca.',
+      skills: [RecruitmentSkill.Dip, RecruitmentSkill.Acrylic, RecruitmentSkill.GelX], licenseType: 'OtherState',
+      portfolio: [], workTypes: [JobWorkType.PartTime, 'Weekend'], payPreferences: [], desiredAmount: '',
+      lookingForWork: false, hideFromCurrentSalon: true, hidePhone: false,
+    },
+  },
+  'demo-thao': {
+    name: 'Thảo Nguyễn',
+    phone: '(713) 555-0205',
+    profile: {
+      licenseVerified: true, displayName: 'Thảo Nguyễn', experience: 'OverTenYears', city: 'Austin', languages: ['vi', 'en', 'es'],
+      bio: 'Hơn 10 năm làm nail ở Texas, từng quản lý ca và đào tạo thợ mới. Mạnh về nail art, gel-x và đắp bột, khách quen nhiều, làm việc nhanh gọn, sạch sẽ và luôn đúng giờ. Sẵn sàng làm toàn thời gian hoặc chia ca linh hoạt.',
+      skills: [RecruitmentSkill.Acrylic, RecruitmentSkill.Dip, RecruitmentSkill.GelX, RecruitmentSkill.Gel, RecruitmentSkill.NailArt, RecruitmentSkill.Pedicure, RecruitmentSkill.Manicure, RecruitmentSkill.Waxing, RecruitmentSkill.Lash], licenseType: 'TX',
+      portfolio: ['sample-1', 'sample-2', 'sample-3', 'sample-4', 'sample-5', 'sample-6', 'sample-7', 'sample-8', 'sample-9'],
+      workTypes: [JobWorkType.FullTime, JobWorkType.PartTime, 'Weekend', 'Substitute'], payPreferences: ['Guaranteed', 'Commission', 'ChairRental', 'Negotiated'], desiredAmount: '$220/ngày hoặc 65/35',
+      lookingForWork: true, hideFromCurrentSalon: true, hidePhone: false,
+    },
+  },
+}
+
+/** Owner's seeded posting (posRecruitmentMockClient) that the demo workers applied to. */
+const OWNER_SEED_POSTING_ID = 'mock-posting-001'
+
+function seedExtraApplicants(): void {
+  getStore('jessica') // her seeded applications must show up for the owner even if she never opened the Applied tab
+  const posting = findFeedPostingById(OWNER_SEED_POSTING_ID)
+  if (!posting) return
+  const extras: Array<{ key: string; note: string; sharePhone: boolean; createdAt: string }> = [
+    { key: 'demo-minh', note: 'Làm dip và bột 4 năm, có đồ nghề riêng, có thể đi làm cuối tuần.', sharePhone: true, createdAt: '2026-09-05T10:30:00.000Z' },
+    { key: 'demo-lan', note: 'Mới vào nghề, vui vẻ hòa đồng, muốn học hỏi thêm.', sharePhone: false, createdAt: '2026-09-06T14:15:00.000Z' },
+    { key: 'demo-hoa', note: '', sharePhone: false, createdAt: '2026-09-07T08:00:00.000Z' },
+    { key: 'demo-thao', note: 'Làm nhanh sạch sẽ, khách quen đông, có license TX và xe đi làm đúng giờ. Em có thể bắt đầu từ tuần sau.', sharePhone: true, createdAt: '2026-09-08T16:45:00.000Z' },
+  ]
+  for (const extra of extras) {
+    if (storesByStaffKey.has(extra.key)) continue
+    storesByStaffKey.set(extra.key, {
+      seekingPosts: [],
+      applications: [{
+        id: `mock-application-${extra.key}`,
+        postingId: OWNER_SEED_POSTING_ID,
+        seekingPostId: null,
+        note: extra.note,
+        sharePhone: extra.sharePhone,
+        status: JobApplicationStatus.Submitted,
+        createdAt: extra.createdAt,
+        posting: clone(posting),
+      }],
+    })
+  }
+}
+
+/** Demo applications so the staff "Applied" tab has data (Details / Cancel) out of the box. */
+function seedApplications(): JobApplicationDto[] {
+  return ['mock-hiring-seed-001', OWNER_SEED_POSTING_ID].flatMap((postingId, index) => {
+    const posting = findFeedPostingById(postingId)
+    if (!posting) return []
+    return [{
+      id: `mock-application-seed-00${index + 1}`,
+      postingId,
+      seekingPostId: null,
+      note: index === 0 ? 'Em có 3 năm kinh nghiệm, có thể bắt đầu ngay.' : '',
+      sharePhone: index === 0,
+      status: JobApplicationStatus.Submitted,
+      createdAt: `2026-09-0${index + 3}T09:00:00.000Z`,
+      posting: clone(posting),
+    }]
+  })
+}
+
 function getStore(staffKey: string): StaffCommunityJobsStore {
   let store = storesByStaffKey.get(staffKey)
   if (!store) {
-    store = { seekingPosts: [], applications: [] }
+    store = { seekingPosts: [], applications: seedApplications() }
     storesByStaffKey.set(staffKey, store)
   }
   return store
@@ -521,6 +632,39 @@ export const communityJobsMockClient: CommunityJobsClient = {
     }
     store.applications = [application, ...store.applications]
     return clone(application)
+  },
+
+  async cancelApplication(staffKey: string, applicationId: string): Promise<void> {
+    await waitForLatency()
+    const store = getStore(staffKey)
+    if (!store.applications.some((application) => application.id === applicationId)) {
+      throw new Error(`Application not found: ${applicationId}`)
+    }
+    store.applications = store.applications.filter((application) => application.id !== applicationId)
+  },
+
+  async listPostingApplicants(postingIds: string[]): Promise<PostingApplicant[]> {
+    await waitForLatency()
+    seedExtraApplicants()
+    const wanted = new Set(postingIds)
+    const applicants: PostingApplicant[] = []
+    storesByStaffKey.forEach((store, staffKey) => {
+      const identity = MOCK_APPLICANTS[staffKey]
+      if (!identity) return
+      for (const application of store.applications) {
+        if (!wanted.has(application.postingId)) continue
+        applicants.push({
+          applicationId: application.id,
+          postingId: application.postingId,
+          applicantName: identity.name,
+          note: application.note,
+          phone: application.sharePhone ? identity.phone : null,
+          profile: identity.profile,
+          createdAt: application.createdAt,
+        })
+      }
+    })
+    return applicants.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   },
 
   async listMyApplications(staffKey: string): Promise<PaginatedResponse<JobApplicationDto>> {

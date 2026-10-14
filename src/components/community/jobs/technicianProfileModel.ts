@@ -30,14 +30,15 @@ export interface TechnicianProfile {
   hidePhone: boolean
 }
 
-export type PublicTechnicianProfile = Omit<TechnicianProfile, 'licenseNumber'>
+/** Never carries the license number itself — only whether one was provided (doc 02: badge needs license type AND number). */
+export type PublicTechnicianProfile = Omit<TechnicianProfile, 'licenseNumber'> & { licenseVerified: boolean }
 
 export function createTechnicianProfile(name: string): TechnicianProfile {
   return { displayName: name, experience: '', city: '', languages: ['vi'], bio: '', skills: [], licenseType: '', licenseNumber: '', portfolio: [], workTypes: [], payPreferences: [], desiredAmount: '', lookingForWork: true, hideFromCurrentSalon: true, hidePhone: true }
 }
 
-export function publicTechnicianProfile({ licenseNumber: _privateLicense, ...profile }: TechnicianProfile): PublicTechnicianProfile {
-  return profile
+export function publicTechnicianProfile({ licenseNumber, ...profile }: TechnicianProfile): PublicTechnicianProfile {
+  return { ...profile, licenseVerified: Boolean(profile.licenseType && licenseNumber.trim()) }
 }
 
 export function technicianProfileCompletion(profile: PublicTechnicianProfile): number {

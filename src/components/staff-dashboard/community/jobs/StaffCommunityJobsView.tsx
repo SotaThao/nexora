@@ -10,6 +10,7 @@ import { JobPostingStatus } from '../../../../constants/posRecruitment'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import {
+  useCancelStaffJobApplication,
   useCloseStaffSeekingPost,
   useStaffHiringFeed,
   useStaffJobApplications,
@@ -25,7 +26,7 @@ import { useCommunityJobsDemo } from '../../../community/jobs/CommunityJobsDemoC
 import CommunityWorkerSuggestions from '../../../community/jobs/CommunityWorkerSuggestions'
 import { CommunityJobsPanel } from '../../../community/CommunityJobDetail'
 import { presentCommunityDemoPosting, toCommunityHiringCard, toCommunitySeekingCard } from '../../../community/jobs/communityJobsPresentation'
-import type { HiringFeedFilters, SeekingPost, SeekingPostUpsertInput } from '../../../../types/communityJobs'
+import type { HiringFeedFilters, JobApplication, SeekingPost, SeekingPostUpsertInput } from '../../../../types/communityJobs'
 import type { PosJobPosting } from '../../../../types/posRecruitment'
 import AppliedJobsPanel from './AppliedJobsPanel'
 import ApplyToPostingModal from './ApplyToPostingModal'
@@ -73,7 +74,10 @@ export default function StaffCommunityJobsView() {
   const [applyPosting, setApplyPosting] = useState<PosJobPosting | null>(null)
   const [composer, setComposer] = useState<ComposerState | null>(null)
   const [closingPost, setClosingPost] = useState<SeekingPost | null>(null)
+  const [cancellingApplication, setCancellingApplication] = useState<JobApplication | null>(null)
+  const [appliedDetailPosting, setAppliedDetailPosting] = useState<PosJobPosting | null>(null)
   const closeDialogRef = useRef<HTMLDivElement>(null)
+  const cancelDialogRef = useRef<HTMLDivElement>(null)
   const previousTabRef = useRef(activeTab)
 
   const feedQuery = useStaffHiringFeed(COMMUNITY_JOBS_IS_SIMULATED ? {} : feedFilters, { enabled: activeTab === StaffCommunityJobsTab.Browse })
@@ -81,6 +85,7 @@ export default function StaffCommunityJobsView() {
   const seekingPostsQuery = useStaffSeekingPosts(staffKey)
   const applicationsQuery = useStaffJobApplications(staffKey)
   const closeMutation = useCloseStaffSeekingPost(staffKey)
+  const cancelMutation = useCancelStaffJobApplication(staffKey)
 
   // POS writes invalidate only their own list. Refresh this existing feed when returning.
   useEffect(() => {
@@ -106,6 +111,19 @@ export default function StaffCommunityJobsView() {
     closeDialogRef,
     () => setClosingPost(null),
   )
+
+  useCommunityJobsModalFocusTrap(
+    Boolean(cancellingApplication) && !cancelMutation.isPending,
+    cancelDialogRef,
+    () => setCancellingApplication(null),
+  )
+
+  useEffect(() => {
+    if (activeTab !== StaffCommunityJobsTab.Applied) {
+      setAppliedDetailPosting(null)
+      setCancellingApplication(null)
+    }
+  }, [activeTab])
 
   const seekingPosts = seekingPostsQuery.data?.items ?? []
   const rawPostingsById = new Map((feedQuery.data?.items ?? []).map((posting) => [posting.id, posting]))
@@ -163,6 +181,17 @@ export default function StaffCommunityJobsView() {
       showToast(t(`${TK}.myPosts.closeSuccess`), 'success', 3000)
     } catch {
       showToast(t(`${TK}.myPosts.closeFailed`), 'error', 3500)
+    }
+  }
+
+  const handleCancelApplication = async () => {
+    if (!cancellingApplication || cancelMutation.isPending) return
+    try {
+      await cancelMutation.mutateAsync(cancellingApplication.id)
+      setCancellingApplication(null)
+      showToast(t(`${TK}.applied.cancelSuccess`), 'success', 3000)
+    } catch {
+      showToast(t(`${TK}.applied.cancelFailed`), 'error', 3500)
     }
   }
 
@@ -270,6 +299,18 @@ export default function StaffCommunityJobsView() {
           isError={applicationsQuery.isError}
           onRetry={() => applicationsQuery.refetch()}
           onChat={handleChat}
+          onDetail={setAppliedDetailPosting}
+          onCancel={setCancellingApplication}
+        />
+      ) : null}
+
+      {mode === 'staff' && activeTab === StaffCommunityJobsTab.Applied && appliedDetailPosting ? (
+        <HiringPostDetailModal
+          posting={appliedDetailPosting}
+          alreadyApplied
+          onClose={() => setAppliedDetailPosting(null)}
+          onApply={() => setAppliedDetailPosting(null)}
+          onChat={handleChat}
         />
       ) : null}
 
@@ -308,6 +349,27 @@ export default function StaffCommunityJobsView() {
           onSavedDraft={() => setComposer(null)}
           onPublished={() => { setComposer(null); if (composer.draft) setTab(StaffCommunityJobsTab.Mine) }}
         />
+      ) : null}
+
+      {cancellingApplication ? createPortal(
+        <div className="community-jobs-theme fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm" onMouseDown={() => !cancelMutation.isPending && setCancellingApplication(null)}>
+          <div
+            ref={cancelDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cancel-application-title"
+            className="nexora-modal-card flex w-full max-w-md flex-col rounded-2xl border border-nexoraBorder bg-white p-5 shadow-2xl"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <h2 id="cancel-application-title" className="text-lg font-black text-nexoraText">{t(`${TK}.applied.cancelConfirmTitle`)}</h2>
+            <p className="mt-3 text-sm font-medium leading-6 text-nexoraMuted">{t(`${TK}.applied.cancelConfirmBody`, { title: cancellingApplication.posting?.title ?? t(`${TK}.applied.postingUnavailable`) })}</p>
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button type="button" disabled={cancelMutation.isPending} onClick={() => setCancellingApplication(null)} className="min-h-11 rounded-lg border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted disabled:opacity-50">{t(`${TK}.applied.cancelConfirmKeep`)}</button>
+              <button type="button" disabled={cancelMutation.isPending} onClick={handleCancelApplication} className="min-h-11 rounded-lg bg-red-600 px-4 text-xs font-black text-white hover:bg-red-700 disabled:opacity-50">{t(`${TK}.applied.cancelConfirmAction`)}</button>
+            </div>
+          </div>
+        </div>,
+        document.body,
       ) : null}
 
       {closingPost ? createPortal(

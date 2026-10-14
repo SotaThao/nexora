@@ -1,5 +1,5 @@
 // Adapted for Community demo
-import { Clock3, FileText, MapPin, MessagesSquare, Pencil, Users } from 'lucide-react'
+import { Clock3, FileText, MapPin, MessagesSquare, Pencil, UserCheck, Users } from 'lucide-react'
 
 import { JobPostingStatus } from '../../../../../constants/posRecruitment'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
@@ -14,6 +14,8 @@ interface JobPostingCardProps {
   onPreview: (posting: PosJobPosting) => void
   onEdit: (posting: PosJobPosting) => void
   onClose: (posting: PosJobPosting) => void
+  applicantCount?: number
+  onViewApplicants?: (posting: PosJobPosting) => void
 }
 
 const STATUS_CLASS: Record<JobPostingStatus, string> = {
@@ -24,7 +26,7 @@ const STATUS_CLASS: Record<JobPostingStatus, string> = {
   [JobPostingStatus.Filled]: 'bg-indigo-50 text-indigo-700',
 }
 
-export default function JobPostingCard({ posting, onPreview, onEdit, onClose }: JobPostingCardProps) {
+export default function JobPostingCard({ posting, onPreview, onEdit, onClose, applicantCount = 0, onViewApplicants }: JobPostingCardProps) {
   const { t, currentLanguage } = useTranslation()
   const { openInbox } = useCommunityJobsDemo()
   const created = formatRecruitmentDate(posting.createdAt, currentLanguage)
@@ -79,6 +81,12 @@ export default function JobPostingCard({ posting, onPreview, onEdit, onClose }: 
               : t(`${TK}.list.nailhubStatus`)}
         </span>
         <div className="flex flex-wrap items-center gap-1 sm:justify-end">
+          {posting.status !== JobPostingStatus.Draft && onViewApplicants ? (
+            <button type="button" onClick={() => onViewApplicants(posting)} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 font-bold text-nexoraBrand hover:bg-nexoraBrandSoft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand">
+              <UserCheck className="h-4 w-4" aria-hidden />
+              {t(`${TK}.list.applicants`, { count: applicantCount })}
+            </button>
+          ) : null}
           {posting.status !== JobPostingStatus.Draft ? (
             <button type="button" aria-label={t(`${TK}.list.messages`)} onClick={openInbox} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 font-bold text-nexoraBrand hover:bg-nexoraBrandSoft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand">
               <MessagesSquare className="h-4 w-4" aria-hidden />
