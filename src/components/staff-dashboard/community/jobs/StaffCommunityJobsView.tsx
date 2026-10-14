@@ -308,6 +308,7 @@ export default function StaffCommunityJobsView() {
         <HiringPostDetailModal
           posting={appliedDetailPosting}
           alreadyApplied
+          canApply={false}
           onClose={() => setAppliedDetailPosting(null)}
           onApply={() => setAppliedDetailPosting(null)}
           onChat={handleChat}
@@ -319,8 +320,6 @@ export default function StaffCommunityJobsView() {
           posting={displayPosting(detailPosting)}
           alreadyApplied={appliedPostingIds.has(detailPosting.id)}
           canApply={!owner}
-          relatedPostings={(feedQuery.data?.items ?? []).map(displayPosting)}
-          onOpenRelated={(id) => setDetailPosting(rawPostingsById.get(id) ?? null)}
           onClose={() => setDetailPosting(null)}
           onApply={(posting) => { setDetailPosting(null); handleApply(posting) }}
           onChat={handleChat}

@@ -1,4 +1,4 @@
-import { Building2, ExternalLink, MapPin, Phone, UserRound } from 'lucide-react'
+import { Briefcase, Clock3, Globe, Mail, MapPin, Phone, PlayCircle, UserRound } from 'lucide-react'
 
 import { JobPostingStatus } from '../../../../constants/posRecruitment'
 import { useTranslation } from '../../../../contexts/LanguageContext'
@@ -7,8 +7,8 @@ import {
   formatRecruitmentLocation,
   getPublicSalonLabel,
 } from '../../../dashboard/views/pos/recruitment/recruitmentModel'
+import { normalizePostingContent } from '../../../dashboard/views/pos/recruitment/recruitmentPostingContent'
 
-import { getHeadcountLabel } from './staffJobsModel'
 import type { PosJobPosting } from '../../../../types/posRecruitment'
 import RecruitmentPostingContentView from '../../../dashboard/views/pos/recruitment/RecruitmentPostingContentView'
 import { getCommunitySalaryLabel } from './salaryCardLabel'
@@ -19,97 +19,127 @@ const PREVIEW_TK = 'components.dashboard.views.pos.recruitment.preview'
 
 interface CommunityHiringDetailContentProps {
   posting: PosJobPosting
-  relatedPostings: PosJobPosting[]
-  onOpenRelated?: (postingId: string) => void
 }
 
-function SalonAvatar({ posting, label }: { posting: PosJobPosting; label: string }) {
-  return (
-    <span aria-hidden className="community-job-detail-avatar flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted text-xl font-black text-nexoraBrand sm:h-14 sm:w-14">
-      {posting.visibility.showBusinessName ? label.charAt(0).toUpperCase() : <Building2 className="h-6 w-6" />}
-    </span>
-  )
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return <h4 className="text-xs font-bold uppercase tracking-wide text-nexoraMuted">{children}</h4>
 }
 
-export default function CommunityHiringDetailContent({ posting, relatedPostings, onOpenRelated }: CommunityHiringDetailContentProps) {
+function FactLabel({ children }: { children: React.ReactNode }) {
+  return <dt className="text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">{children}</dt>
+}
+
+const linkClass = 'inline-flex min-h-8 items-center gap-1.5 text-xs font-medium text-nexoraBrand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand'
+
+export default function CommunityHiringDetailContent({ posting }: CommunityHiringDetailContentProps) {
   const { t, currentLanguage } = useTranslation()
   const salon = getPublicSalonLabel(posting, t)
   const location = formatRecruitmentLocation(posting.city, posting.state)
   const pay = getCommunitySalaryLabel(posting, t('staff_dashboard.community.jobs.card.salaryNegotiable'))
+  const payLabel = pay?.startsWith('$') ? `${pay} ${t(`${TK}.perWeek`)}` : pay
   const publicAddress = posting.visibility.showAddress && posting.address.trim()
     ? [posting.address.trim(), location, posting.zipCode.trim()].filter(Boolean).join(', ')
     : ''
   const publicPhone = posting.visibility.showPhone ? posting.phone.trim() : ''
+  const publicEmail = posting.visibility.showPhone ? posting.contactEmail?.trim() ?? '' : ''
+  const publicWebsite = posting.visibility.showPhone ? posting.website?.trim() ?? '' : ''
   const publicContactName = posting.visibility.showContactName ? posting.contactName.trim() : ''
-  const related = relatedPostings
-    .filter((candidate) => candidate.id !== posting.id)
-    .sort((left, right) => Number(right.city === posting.city && right.state === posting.state) - Number(left.city === posting.city && left.state === posting.state))
-    .slice(0, 3)
+  const contactLinks = [
+    publicPhone ? <a key="phone" href={`tel:${publicPhone.replace(/[^\d+]/g, '')}`} className={linkClass}><Phone className="h-4 w-4 shrink-0" aria-hidden />{publicPhone}</a> : null,
+    publicEmail ? <a key="email" href={`mailto:${publicEmail}`} className={`${linkClass} break-all`}><Mail className="h-4 w-4 shrink-0" aria-hidden />{publicEmail}</a> : null,
+    publicWebsite ? <a key="website" href={publicWebsite} target="_blank" rel="noopener noreferrer" className={`${linkClass} break-all`}><Globe className="h-4 w-4 shrink-0" aria-hidden />{publicWebsite.replace(/^https?:\/\//i, '')}</a> : null,
+  ].filter(Boolean)
+  const media = normalizePostingContent(posting.postingContent)
+  const posted = formatRecruitmentDate(posting.publishedAt || posting.createdAt, currentLanguage)
+  const specialNotes = posting.benefits.map((benefit) => t(`${ENUM_TK}.benefit.${benefit}`)).join('. ')
 
   return (
-    <div className="space-y-4 sm:space-y-5">
-      <section className="community-job-detail-hero flex flex-col gap-4 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4 sm:flex-row sm:items-start sm:p-6">
-        <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
-          <SalonAvatar posting={posting} label={salon} />
-          <div className="min-w-0 flex-1">
-            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm">
-              <span className="font-bold text-nexoraBrand">{salon}</span>
-              {location ? <span className="inline-flex items-center gap-1 text-nexoraMuted"><MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />{location}</span> : null}
-            </p>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              {posting.isUrgent ? <span className="community-job-detail-urgent rounded-md px-2 py-1 text-xs font-black">{t(`${PREVIEW_TK}.urgentBadge`)}</span> : null}
-              {posting.status !== JobPostingStatus.Published ? <span className="rounded-md bg-nexoraSurfaceMuted px-2 py-1 text-xs font-bold text-nexoraMuted">{t(`${ENUM_TK}.status.${posting.status}`)}</span> : null}
-              <h3 tabIndex={-1} data-community-detail-heading className="community-job-detail-title min-w-0 text-lg font-black leading-snug text-nexoraText sm:text-2xl">{posting.title}</h3>
+    <div className="space-y-6">
+      <section className="flex flex-col gap-5 sm:flex-row sm:items-start">
+        {media?.coverImage ? (
+          <img src={media.coverImage.url} alt="" className="h-44 w-full shrink-0 rounded-xl object-cover sm:h-40 sm:w-60" />
+        ) : null}
+        <div className="min-w-0 flex-1">
+          <h3 id="hiring-post-detail-title" tabIndex={-1} data-community-detail-heading className="community-job-detail-title text-lg font-black leading-tight text-nexoraText sm:pr-8 sm:text-[22px]">{posting.title}</h3>
+          <div className="mt-2.5 flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              {posting.isUrgent ? <span className="community-job-detail-urgent rounded-full px-2.5 py-0.5 text-xs font-semibold">{t(`${PREVIEW_TK}.urgentBadge`)}</span> : null}
+              <span className="rounded-full bg-nexoraBrandSoft px-2.5 py-0.5 text-xs font-semibold text-nexoraBrand">{t(`${TK}.hiringBadge`)}</span>
+              {posting.status !== JobPostingStatus.Published ? <span className="rounded-full bg-nexoraSurfaceMuted px-2.5 py-0.5 text-xs font-semibold text-nexoraMuted">{t(`${ENUM_TK}.status.${posting.status}`)}</span> : null}
             </div>
-            <p className="mt-2 text-xs text-nexoraMuted">{t(`${TK}.posted`, { date: formatRecruitmentDate(posting.publishedAt || posting.createdAt, currentLanguage) })}</p>
+            {payLabel ? <p className="shrink-0 text-right text-base font-black text-emerald-600">{payLabel}</p> : null}
           </div>
+          <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-nexoraMuted">
+            <span className="font-semibold text-nexoraText">{salon}</span>
+            <span>{t(`${TK}.posted`, { date: posted })}</span>
+          </p>
         </div>
-        {pay ? <p className="community-job-detail-pay shrink-0 self-start rounded-lg px-3 py-2 text-base font-black sm:max-w-[12rem] sm:text-right">{pay}</p> : null}
       </section>
 
       {posting.status === JobPostingStatus.Pending ? <p className="rounded-lg border border-nexoraBorder bg-nexoraSurfaceMuted p-3 text-xs font-medium text-nexoraMuted">{t(`${PREVIEW_TK}.pendingNotice`)}</p> : null}
 
-      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1.85fr)_minmax(18rem,1fr)] lg:gap-5">
-        <section className="community-job-detail-panel min-w-0 overflow-hidden rounded-xl border border-nexoraBorder bg-nexoraSurface">
-          <h4 className="px-4 pb-0 pt-4 text-base font-black text-nexoraText sm:px-6 sm:pt-6">{t(`${TK}.contentTitle`)}</h4>
-          <div className="space-y-5 p-4 sm:p-6">
-            <RecruitmentPostingContentView body={posting.body || t(`${PREVIEW_TK}.bodyFallback`)} postingContent={posting.postingContent} />
-            <dl className="community-job-detail-facts gap-x-3 gap-y-4 py-4 text-sm sm:gap-x-5">
-              <div><dt className="text-xs font-bold text-nexoraMuted">{t(`${TK}.position`)}</dt><dd className="mt-1 font-semibold text-nexoraText">{t(`${ENUM_TK}.position.${posting.position}`)}</dd></div>
-              <div><dt className="text-xs font-bold text-nexoraMuted">{t(`${TK}.workType`)}</dt><dd className="mt-1 font-semibold text-nexoraText">{t(`${ENUM_TK}.workType.${posting.workType}`)}</dd></div>
-              <div><dt className="text-xs font-bold text-nexoraMuted">{t(`${TK}.headcount`)}</dt><dd className="mt-1 font-semibold text-nexoraText">{getHeadcountLabel(posting.headcount, t)}</dd></div>
-              {posting.deadline ? <div><dt className="text-xs font-bold text-nexoraMuted">{t(`${TK}.deadline`)}</dt><dd className="mt-1 font-semibold text-nexoraText">{formatRecruitmentDate(posting.deadline, currentLanguage)}</dd></div> : null}
-            </dl>
-            <div><h5 className="text-xs font-bold text-nexoraMuted">{t(`${TK}.skills`)}</h5><div className="mt-2 flex flex-wrap gap-2">{posting.skills.map((skill) => <span key={skill} className="rounded-md border border-nexoraBorder bg-nexoraSurfaceMuted px-2 py-1 text-xs font-semibold text-nexoraText">{t(`${ENUM_TK}.skill.${skill}`)}</span>)}</div></div>
-            {posting.benefits.length ? <div><h5 className="text-xs font-bold text-nexoraMuted">{t(`${TK}.benefits`)}</h5><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-nexoraText">{posting.benefits.map((benefit) => <li key={benefit}>{t(`${ENUM_TK}.benefit.${benefit}`)}</li>)}</ul></div> : null}
-            {posting.selectedServices.length ? <div><h5 className="text-xs font-bold text-nexoraMuted">{t(`${TK}.services`)}</h5><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-nexoraText">{posting.selectedServices.map((service) => <li key={service.posServiceId}>{service.name}</li>)}</ul></div> : null}
+      <section className="rounded-xl bg-[#f3f6fa] p-4 sm:p-5">
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-[1fr_1fr_1.8fr] sm:gap-0">
+          <div className="flex items-start gap-2.5 sm:gap-3 sm:pr-5">
+            <Briefcase className="mt-0.5 h-5 w-5 shrink-0 text-nexoraText" aria-hidden />
+            <div className="min-w-0"><FactLabel>{t(`${TK}.headcount`)}</FactLabel><dd className="mt-0.5 text-[13px] font-medium text-nexoraText">{posting.headcount}</dd></div>
           </div>
-        </section>
-
-        <aside className="min-w-0 space-y-4">
-          <section className="community-job-detail-panel overflow-hidden rounded-xl border border-nexoraBorder bg-nexoraSurface">
-            <h4 className="px-4 pb-0 pt-4 text-base font-black text-nexoraText sm:px-5 sm:pt-5">{t(`${TK}.contactTitle`)}</h4>
-            <div className="space-y-4 p-4 sm:p-5">
-              <div className="flex items-center gap-2"><Building2 className="h-5 w-5 shrink-0 text-nexoraBrand" aria-hidden /><p className="min-w-0 break-words font-bold text-nexoraText">{salon}</p></div>
-              {publicContactName ? <p className="flex items-start gap-2 text-sm text-nexoraText"><UserRound className="mt-0.5 h-4 w-4 shrink-0 text-nexoraMuted" aria-hidden />{publicContactName}</p> : null}
-              {publicPhone ? <a href={`tel:${publicPhone.replace(/[^\d+]/g, '')}`} className="community-job-detail-phone inline-flex min-h-11 max-w-full items-center gap-2 rounded-lg px-3 text-sm font-bold"><Phone className="h-4 w-4 shrink-0" aria-hidden />{publicPhone}</a> : <p className="text-xs leading-5 text-nexoraMuted">{t(`${PREVIEW_TK}.chatHelper`)}</p>}
-              {publicAddress ? <div className="text-sm text-nexoraText"><p className="flex items-center gap-1 font-bold"><MapPin className="h-4 w-4" aria-hidden />{t(`${TK}.address`)}</p><p className="mt-1 break-words leading-6">{publicAddress}</p><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(publicAddress)}`} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex min-h-11 items-center gap-1 font-semibold text-nexoraBrand underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand">{t(`${TK}.mapAction`)}<ExternalLink className="h-3.5 w-3.5" aria-hidden /></a></div> : location ? <p className="flex items-center gap-1 text-sm text-nexoraMuted"><MapPin className="h-4 w-4" aria-hidden />{location}</p> : null}
+          <div className="flex items-start gap-2.5 sm:gap-3 sm:border-l sm:border-nexoraRule sm:px-5">
+            <Clock3 className="mt-0.5 h-5 w-5 shrink-0 text-nexoraText" aria-hidden />
+            <div className="min-w-0"><FactLabel>{t(`${TK}.schedule`)}</FactLabel><dd className="mt-0.5 text-[13px] font-medium text-nexoraText">{t(`${ENUM_TK}.workType.${posting.workType}`)}</dd></div>
+          </div>
+          <div className="col-span-2 flex items-start gap-2.5 border-t border-nexoraRule pt-4 sm:col-span-1 sm:gap-3 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
+            <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-nexoraText" aria-hidden />
+            <div className="min-w-0">
+              <FactLabel>{t(`${TK}.location`)}</FactLabel>
+              <dd className="mt-0.5 break-words text-[13px] font-medium leading-snug text-nexoraText">
+                {publicAddress
+                  ? <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(publicAddress)}`} target="_blank" rel="noopener noreferrer" title={t(`${TK}.mapAction`)} className="text-nexoraBrand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand">{publicAddress}</a>
+                  : location || '—'}
+              </dd>
             </div>
-          </section>
+          </div>
+        </dl>
+        {publicContactName || contactLinks.length ? (
+          <div className="mt-4 flex flex-col gap-3 border-t border-nexoraRule pt-4 text-xs sm:flex-row sm:items-center sm:gap-x-5">
+            <div className="flex shrink-0 items-start gap-3">
+              <UserRound className="mt-0.5 h-5 w-5 shrink-0 text-nexoraText" aria-hidden />
+              <dl className="min-w-0"><FactLabel>{t(`${TK}.contact`)}</FactLabel>{publicContactName ? <dd className="mt-0.5 text-[13px] font-bold text-nexoraText">{publicContactName}</dd> : null}</dl>
+            </div>
+            <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-0.5 sm:flex-nowrap">
+              {contactLinks.map((link, index) => <span key={index} className={`inline-flex min-w-0 items-center gap-4 ${link.key === 'email' ? 'order-last sm:order-none' : ''}`}>{index > 0 || publicContactName ? <span aria-hidden className="hidden h-4 w-px shrink-0 bg-nexoraRule sm:block" /> : null}{link}</span>)}
+            </div>
+          </div>
+        ) : null}
+      </section>
 
-          <section className="community-job-detail-panel overflow-hidden rounded-xl border border-nexoraBorder bg-nexoraSurface">
-            <h4 className="px-4 pb-2 pt-4 text-base font-black text-nexoraText sm:px-5 sm:pt-5">{t(`${TK}.relatedTitle`)}</h4>
-            {related.length && onOpenRelated ? related.map((candidate) => {
-              const candidatePay = getCommunitySalaryLabel(candidate, t('staff_dashboard.community.jobs.card.salaryNegotiable'))
-              return <button key={candidate.id} type="button" onClick={() => onOpenRelated(candidate.id)} className="community-job-detail-related block min-h-11 w-full border-t border-nexoraRule p-4 text-left sm:px-5">
-                <div className="flex items-start gap-2"><Building2 className="mt-0.5 h-5 w-5 shrink-0 text-nexoraMuted" aria-hidden /><div className="min-w-0 flex-1"><p className="text-xs leading-5 text-nexoraMuted"><span className="font-semibold text-nexoraBrand">{getPublicSalonLabel(candidate, t)}</span> · {formatRecruitmentLocation(candidate.city, candidate.state)}</p><p className="mt-1 line-clamp-2 text-sm font-bold text-nexoraText">{candidate.title}</p></div></div>
-                {candidatePay ? <p className="mt-2 break-words text-sm font-bold text-nexoraDanger">{candidatePay}</p> : null}
-                <p className="mt-1 line-clamp-2 text-xs leading-5 text-nexoraMuted">{candidate.body}</p>
-              </button>
-            }) : <p className="p-4 text-sm text-nexoraMuted">{t(`${TK}.relatedEmpty`)}</p>}
-          </section>
-        </aside>
-      </div>
+      <section className="space-y-2">
+        <SectionLabel>{t(`${TK}.description`)}</SectionLabel>
+        <RecruitmentPostingContentView body={posting.body || t(`${PREVIEW_TK}.bodyFallback`)} postingContent={posting.postingContent} showCover={false} showImages={false} showVideos={false} />
+        {posting.skills.length ? <div className="flex flex-wrap gap-2 pt-1">{posting.skills.map((skill) => <span key={skill} className="rounded-md border border-nexoraBorder bg-nexoraSurfaceMuted px-2 py-1 text-xs font-semibold text-nexoraText">{t(`${ENUM_TK}.skill.${skill}`)}</span>)}</div> : null}
+        {posting.deadline ? <p className="text-xs font-medium text-nexoraMuted">{t(`${TK}.deadline`)}: <span className="text-nexoraText">{formatRecruitmentDate(posting.deadline, currentLanguage)}</span></p> : null}
+      </section>
+
+      {specialNotes ? (
+        <section className="space-y-2">
+          <SectionLabel>{t(`${TK}.specialNotes`)}</SectionLabel>
+          <p className="text-sm font-medium leading-6 text-nexoraText">{specialNotes}.</p>
+        </section>
+      ) : null}
+
+      {media?.videoUrls.length ? (
+        <section className="space-y-2">
+          <SectionLabel>{t(`${TK}.videos`)}</SectionLabel>
+          <div className="space-y-1">{media.videoUrls.map((url) => <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="flex min-h-9 items-center gap-2 break-all text-sm font-medium text-nexoraBrand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand"><PlayCircle className="h-5 w-5 shrink-0" aria-hidden />{url}</a>)}</div>
+        </section>
+      ) : null}
+
+      {media?.images.length ? (
+        <section className="space-y-2">
+          <SectionLabel>{t(`${TK}.images`)}</SectionLabel>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">{media.images.map((image, index) => <img key={`${index}-${image.name}`} src={image.url} alt={image.name} loading="lazy" className="h-64 w-full rounded-xl object-cover" />)}</div>
+        </section>
+      ) : null}
     </div>
   )
 }

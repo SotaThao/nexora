@@ -14,7 +14,17 @@
       "skills": "Skills",
       "benefits": "Benefits",
       "services": "Services",
-      "posted": "Posted {{date}}"
+      "posted": "Posted {{date}}",
+      "hiringBadge": "Hiring",
+      "specialNotes": "Special notes",
+      "messageAction": "Message",
+      "perWeek": "/ week",
+      "schedule": "Schedule",
+      "location": "Location",
+      "contact": "Contact",
+      "description": "Description",
+      "videos": "Videos",
+      "images": "Images"
     },
     "pageTitle": "Community Jobs",
     "ownerDescription": "Browse hiring posts and matching technician suggestions. Manage your salon’s recruitment in My Posts.",

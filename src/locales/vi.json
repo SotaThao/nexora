@@ -14,7 +14,17 @@
       "skills": "Kỹ năng",
       "benefits": "Quyền lợi",
       "services": "Dịch vụ",
-      "posted": "Đăng ngày {{date}}"
+      "posted": "Đăng ngày {{date}}",
+      "hiringBadge": "Đang tuyển",
+      "specialNotes": "Ghi chú đặc biệt",
+      "messageAction": "Nhắn tin",
+      "perWeek": "/ tuần",
+      "schedule": "Lịch làm việc",
+      "location": "Địa điểm",
+      "contact": "Liên hệ",
+      "description": "Mô tả",
+      "videos": "Video",
+      "images": "Hình ảnh"
     },
     "pageTitle": "Việc làm cộng đồng",
     "ownerDescription": "Duyệt tin tuyển thợ và tham khảo gợi ý phù hợp. Quản lý tin tuyển của tiệm trong Bài của tôi.",
