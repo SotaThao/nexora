@@ -32,7 +32,7 @@ export function TechnicianProfileCard({ profile, showDetails = false }: { profil
         <div role="progressbar" aria-label={t(`${TK}.completion`)} aria-valuemin={0} aria-valuemax={100} aria-valuenow={completion} className="mt-1 h-2 overflow-hidden rounded-full bg-nexoraBrandSoft"><div className="h-full rounded-full bg-nexoraBrand" style={{ width: `${completion}%` }} /></div>
         </>}
         {profile.skills.length ? <div className="mt-3 flex flex-wrap gap-1.5">{profile.skills.map((skill) => <span key={skill} className="rounded-md bg-nexoraBrandSoft px-2 py-1 text-xs font-semibold text-nexoraBrand">{t(`components.dashboard.views.pos.recruitment.enums.skill.${skill}`)}</span>)}</div> : null}
-        {profile.portfolio.length ? <div className="mt-3 grid grid-cols-3 gap-2" aria-label={t(`${TK}.portfolioTitle`)}>{profile.portfolio.map((photo, index) => <span key={`${photo}-${index}`} className="grid aspect-square place-items-center rounded-lg border border-nexoraBorder bg-nexoraSurfaceMuted text-2xl" role="img" aria-label={t(`${TK}.demoPhoto`, { index: index + 1 })}><TechnicianPortfolioTile sample={photo} /></span>)}</div> : null}
+        {!showDetails && profile.portfolio.length ? <div className="mt-3 grid grid-cols-3 gap-2" aria-label={t(`${TK}.portfolioTitle`)}>{profile.portfolio.map((photo, index) => <span key={`${photo}-${index}`} className="grid aspect-square place-items-center rounded-lg border border-nexoraBorder bg-nexoraSurfaceMuted text-2xl" role="img" aria-label={t(`${TK}.demoPhoto`, { index: index + 1 })}><TechnicianPortfolioTile sample={photo} /></span>)}</div> : null}
         {showDetails ? (
           <dl className="mt-4 grid gap-3 border-t border-nexoraRule pt-4 sm:grid-cols-2">
             <DetailField label={t(`${TK}.languagesLabel`)}>{profile.languages.map((value) => t(`${TK}.languages.${value}`)).join(', ') || '—'}</DetailField>
@@ -40,6 +40,12 @@ export function TechnicianProfileCard({ profile, showDetails = false }: { profil
             <DetailField label={t(`${TK}.workTypesLabel`)}>{profile.workTypes.map((value) => t(`${TK}.workTypes.${value}`)).join(', ') || '—'}</DetailField>
             <DetailField label={t(`${TK}.payPreferencesLabel`)}>{[...profile.payPreferences.map((value) => t(`${TK}.payPreferences.${value}`)), profile.desiredAmount.trim()].filter(Boolean).join(' · ') || '—'}</DetailField>
           </dl>
+        ) : null}
+        {showDetails && profile.portfolio.length ? (
+          <div className="mt-4 border-t border-nexoraRule pt-4">
+            <h5 className="text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">{t(`${TK}.portfolioTitle`)}</h5>
+            <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4" aria-label={t(`${TK}.portfolioTitle`)}>{profile.portfolio.map((photo, index) => <span key={`${photo}-${index}`} className="grid aspect-square place-items-center overflow-hidden rounded-lg border border-nexoraBorder bg-nexoraSurfaceMuted" role="img" aria-label={t(`${TK}.demoPhoto`, { index: index + 1 })}><TechnicianPortfolioTile sample={photo} /></span>)}</div>
+          </div>
         ) : null}
       </section>
   )

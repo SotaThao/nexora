@@ -61,23 +61,25 @@ export default function PostingApplicantsModal({ posting, applicants, isLoading,
                 <div className="min-w-0 flex-1">
                   <h3 className="font-black leading-snug text-nexoraText">{applicant.applicantName}</h3>
                   <p className="mt-0.5 text-[11px] font-medium text-nexoraMuted">{t(`${TK}.applicantAppliedOn`, { date: formatRecruitmentDate(applicant.createdAt, currentLanguage) })}</p>
-                  <p className="mt-2 whitespace-pre-wrap text-xs font-medium leading-5 text-nexoraText">{applicant.note || t(`${TK}.applicantNoNote`)}</p>
-                  {applicant.phone ? (
-                    <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-nexoraBrand"><Phone className="h-3.5 w-3.5" aria-hidden />{applicant.phone}</p>
-                  ) : null}
                 </div>
+                <div className="-mt-3 flex shrink-0 items-center gap-0.5">
+                  <button type="button" aria-expanded={expandedId === applicant.applicationId} onClick={() => setExpandedId((current) => current === applicant.applicationId ? null : applicant.applicationId)} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-lg px-2 text-xs sm:gap-1.5 sm:px-3 font-bold text-nexoraBrand hover:bg-nexoraBrandSoft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand">
+                    <UserRound className="h-4 w-4" aria-hidden /><span>{t(`${TK}.${expandedId === applicant.applicationId ? 'hideProfile' : 'viewProfile'}`)}</span>
+                  </button>
+                  <button type="button" onClick={() => { onClose(); openInbox() }} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-lg px-2 text-xs sm:gap-1.5 sm:px-3 font-bold text-nexoraBrand hover:bg-nexoraBrandSoft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand">
+                    <MessagesSquare className="h-4 w-4" aria-hidden /><span>{t(`${TK}.applicantMessage`)}</span>
+                  </button>
+                </div>
+              </div>
+              <div className="mt-2">
+                <p className="whitespace-pre-wrap text-xs font-medium leading-5 text-nexoraText">{applicant.note || t(`${TK}.applicantNoNote`)}</p>
+                {applicant.phone ? (
+                  <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-nexoraBrand"><Phone className="h-3.5 w-3.5" aria-hidden />{applicant.phone}</p>
+                ) : null}
               </div>
               {expandedId === applicant.applicationId ? (
                 applicant.profile ? <div className="mt-3"><TechnicianProfileCard profile={applicant.profile} showDetails /></div> : <p className="mt-3 text-xs font-medium text-nexoraMuted">{t(`${TK}.applicantNoProfile`)}</p>
               ) : null}
-              <div className="mt-2 flex flex-wrap justify-end gap-1">
-                <button type="button" aria-expanded={expandedId === applicant.applicationId} onClick={() => setExpandedId((current) => current === applicant.applicationId ? null : applicant.applicationId)} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-nexoraBrand hover:bg-nexoraBrandSoft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand">
-                  <UserRound className="h-4 w-4" aria-hidden />{t(`${TK}.${expandedId === applicant.applicationId ? 'hideProfile' : 'viewProfile'}`)}
-                </button>
-                <button type="button" onClick={() => { onClose(); openInbox() }} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-nexoraBrand hover:bg-nexoraBrandSoft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand">
-                  <MessagesSquare className="h-4 w-4" aria-hidden />{t(`${TK}.applicantMessage`)}
-                </button>
-              </div>
             </article>
           ))}
         </div>

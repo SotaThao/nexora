@@ -14,6 +14,7 @@ export enum SeekingExperience {
 
 export enum JobApplicationStatus {
   Submitted = 'Submitted',
+  Cancelled = 'Cancelled',
 }
 
 export enum StaffCommunityJobsTab {

@@ -1,4 +1,4 @@
-import { FileText, MessagesSquare, RefreshCw, XCircle } from 'lucide-react'
+import { FileText, MessagesSquare, RefreshCw, RotateCcw, XCircle } from 'lucide-react'
 
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { SkeletonList } from '../../../ui/skeleton'
@@ -7,6 +7,7 @@ import {
   formatRecruitmentLocation,
   getPublicSalonLabel,
 } from '../../../dashboard/views/pos/recruitment/recruitmentModel'
+import { JobApplicationStatus } from '../../../../constants/communityJobs'
 import type { JobApplication } from '../../../../types/communityJobs'
 import type { PosJobPosting } from '../../../../types/posRecruitment'
 
@@ -20,9 +21,11 @@ interface AppliedJobsPanelProps {
   onChat: (posting: PosJobPosting) => void
   onDetail: (posting: PosJobPosting) => void
   onCancel: (application: JobApplication) => void
+  onReapply: (application: JobApplication) => void
+  reapplyingId?: string | null
 }
 
-export default function AppliedJobsPanel({ applications, isLoading, isError, onRetry, onChat, onDetail, onCancel }: AppliedJobsPanelProps) {
+export default function AppliedJobsPanel({ applications, isLoading, isError, onRetry, onChat, onDetail, onCancel, onReapply, reapplyingId = null }: AppliedJobsPanelProps) {
   const { t, currentLanguage } = useTranslation()
 
   if (isLoading) {
@@ -57,6 +60,7 @@ export default function AppliedJobsPanel({ applications, isLoading, isError, onR
     <div className="overflow-hidden rounded-xl border border-nexoraBorder bg-white shadow-sm">
       {applications.map((application) => {
         const posting = application.posting
+        const cancelled = application.status === JobApplicationStatus.Cancelled
         const businessLabel = posting ? getPublicSalonLabel(posting, t) : t(`${TK}.postingUnavailable`)
         const location = posting ? formatRecruitmentLocation(posting.city, posting.state) : ''
         return (
@@ -66,16 +70,22 @@ export default function AppliedJobsPanel({ applications, isLoading, isError, onR
                 <h3 className="font-black leading-snug text-nexoraText">{posting?.title ?? t(`${TK}.postingUnavailable`)}</h3>
                 <p className="mt-1 text-xs font-medium text-nexoraMuted">{[businessLabel, location].filter(Boolean).join(' · ')}</p>
               </div>
-              <span className="shrink-0 rounded-md bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-700">
+              <span className={`shrink-0 rounded-md px-2 py-1 text-[10px] font-bold ${cancelled ? 'bg-slate-100 text-slate-500' : 'bg-amber-50 text-amber-700'}`}>
                 {t(`staff_dashboard.community.jobs.applicationStatus.${application.status}`)}
               </span>
             </div>
             <p className="mt-2 text-xs font-medium text-nexoraMuted">{t(`${TK}.appliedOn`, { date: formatRecruitmentDate(application.createdAt, currentLanguage) })}</p>
             {application.note ? <p className="mt-2 whitespace-pre-wrap text-xs font-medium leading-5 text-nexoraText">{application.note}</p> : null}
             <footer className="mt-3 flex flex-wrap justify-end gap-1 border-t border-dashed border-nexoraRule pt-3">
-              <button type="button" onClick={() => onCancel(application)} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-red-600 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500">
-                <XCircle className="h-4 w-4" aria-hidden />{t(`${TK}.cancelAction`)}
-              </button>
+              {cancelled ? (
+                <button type="button" disabled={reapplyingId === application.id} onClick={() => onReapply(application)} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-emerald-700 hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 disabled:opacity-50">
+                  <RotateCcw className="h-4 w-4" aria-hidden />{t(`${TK}.reapplyAction`)}
+                </button>
+              ) : (
+                <button type="button" onClick={() => onCancel(application)} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-red-600 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500">
+                  <XCircle className="h-4 w-4" aria-hidden />{t(`${TK}.cancelAction`)}
+                </button>
+              )}
               {posting ? (
                 <>
                   <button type="button" onClick={() => onDetail(posting)} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-nexoraBrand hover:bg-nexoraBrandSoft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand">

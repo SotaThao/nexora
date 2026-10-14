@@ -1,4 +1,5 @@
 import {
+  JobApplicationStatus,
   SEEKING_BODY_MAX,
   SEEKING_BODY_MIN,
   SeekingExperience,
@@ -142,7 +143,7 @@ export function normalizeStaffJobsTab(value: string | null | undefined): StaffCo
 }
 
 export function buildAppliedPostingIdSet(applications: JobApplication[]): Set<string> {
-  return new Set(applications.map((application) => application.postingId).filter(Boolean))
+  return new Set(applications.filter((application) => application.status !== JobApplicationStatus.Cancelled).map((application) => application.postingId).filter(Boolean))
 }
 
 export type HiringPostChatAction =

@@ -131,6 +131,11 @@ export function createCommunityJobsRepository(client: CommunityJobsClient = comm
       await client.cancelApplication(staffKey, applicationId)
     },
 
+    async reapplyApplication(staffKey: string, applicationId: string): Promise<JobApplication> {
+      const dto = await client.reapplyApplication(staffKey, applicationId)
+      return normalizeJobApplication(dto)
+    },
+
     async listMyApplications(staffKey: string): Promise<PaginatedResponse<JobApplication>> {
       const response = await client.listMyApplications(staffKey)
       return {
