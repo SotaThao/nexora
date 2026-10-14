@@ -66,6 +66,9 @@ export interface PosJobPostingDto {
   zipCode: string
   contactName: string
   phone: string
+  /** Optional public contact extras, shown with the phone (same visibility). */
+  contactEmail?: string
+  website?: string
   visibilityPreset: JobVisibilityPreset
   visibility: JobPostingVisibility
   selectedServices: JobPostingSelectedService[]
@@ -102,6 +105,8 @@ export interface PosJobPosting {
   zipCode: string
   contactName: string
   phone: string
+  contactEmail?: string
+  website?: string
   visibilityPreset: JobVisibilityPreset
   visibility: JobPostingVisibility
   selectedServices: JobPostingSelectedService[]

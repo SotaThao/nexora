@@ -5,8 +5,11 @@ import { ArrowUpRight, RefreshCw, Search } from 'lucide-react'
 import { JobPostingStatus } from '../../../../../constants/posRecruitment'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { SkeletonList } from '../../../../ui/skeleton'
+import type { PostingApplicant } from '../../../../../types/communityJobs'
 import type { PosJobPosting } from '../../../../../types/posRecruitment'
+import { useOwnerPostingApplicants } from '../../../../../data/hooks/useOwnerPostingApplicants'
 import JobPostingCard from './JobPostingCard'
+import PostingApplicantsModal from './PostingApplicantsModal'
 import { joinRecruitmentMeta, postingMatchesSearch } from './recruitmentModel'
 
 const TK = 'components.dashboard.views.pos.recruitment.list'
@@ -56,6 +59,12 @@ export default function RecruitmentListPanel({
 }: RecruitmentListPanelProps) {
   const { t } = useTranslation()
   const [search, setSearch] = useState('')
+  const [applicantsPosting, setApplicantsPosting] = useState<PosJobPosting | null>(null)
+  const applicantsQuery = useOwnerPostingApplicants(postings.map((posting) => posting.id))
+  const applicantsByPosting = (applicantsQuery.data ?? []).reduce<Record<string, PostingApplicant[]>>((groups, applicant) => {
+    (groups[applicant.postingId] ??= []).push(applicant)
+    return groups
+  }, {})
   const filtered = postings.filter((posting) => {
     const statusMatches = filter === ALL_JOB_POSTINGS || posting.status === filter
     return statusMatches && postingMatchesSearch(posting, search)
@@ -150,7 +159,7 @@ export default function RecruitmentListPanel({
               </button>
             </div>
           ) : (
-            <div>{filtered.map((posting) => <JobPostingCard key={posting.id} posting={posting} onPreview={onPreview} onEdit={onEdit} onClose={onClose} />)}</div>
+            <div>{filtered.map((posting) => <JobPostingCard key={posting.id} posting={posting} onPreview={onPreview} onEdit={onEdit} onClose={onClose} applicantCount={applicantsByPosting[posting.id]?.length ?? 0} onViewApplicants={setApplicantsPosting} />)}</div>
           )}
         </section>
 
@@ -178,6 +187,15 @@ export default function RecruitmentListPanel({
           </section>
         </aside>
       </div>
+
+      {applicantsPosting ? (
+        <PostingApplicantsModal
+          posting={applicantsPosting}
+          applicants={applicantsByPosting[applicantsPosting.id] ?? []}
+          isLoading={applicantsQuery.isLoading}
+          onClose={() => setApplicantsPosting(null)}
+        />
+      ) : null}
     </div>
   )
 }

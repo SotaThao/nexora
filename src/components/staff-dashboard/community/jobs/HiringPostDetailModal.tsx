@@ -14,14 +14,12 @@ interface HiringPostDetailModalProps {
   posting: PosJobPosting
   alreadyApplied: boolean
   canApply?: boolean
-  relatedPostings?: PosJobPosting[]
-  onOpenRelated?: (postingId: string) => void
   onClose: () => void
   onApply: (posting: PosJobPosting) => void
   onChat: (posting: PosJobPosting) => void
 }
 
-export default function HiringPostDetailModal({ posting, alreadyApplied, canApply = true, relatedPostings = [], onOpenRelated, onClose, onApply, onChat }: HiringPostDetailModalProps) {
+export default function HiringPostDetailModal({ posting, alreadyApplied, canApply = true, onClose, onApply, onChat }: HiringPostDetailModalProps) {
   const { t } = useTranslation()
   const dialogRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -45,41 +43,45 @@ export default function HiringPostDetailModal({ posting, alreadyApplied, canAppl
         role="dialog"
         aria-modal="true"
         aria-labelledby="hiring-post-detail-title"
-        className="nexora-modal-card community-job-detail-modal flex w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-nexoraBorder bg-nexoraSurface shadow-2xl"
+        className="nexora-modal-card community-job-detail-modal relative flex w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-nexoraBorder bg-nexoraSurface shadow-2xl"
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <header className="community-job-detail-header flex items-center justify-between border-b border-nexoraRule px-4 py-3 sm:px-6">
-          <h2 id="hiring-post-detail-title" className="text-base font-black text-nexoraText">{t(`${TK}.title`)}</h2>
-          <IconButton label={t(`${TK}.close`)} onClick={onClose} className="min-h-11 min-w-11">
-            <X className="h-5 w-5" aria-hidden />
-          </IconButton>
-        </header>
+        <IconButton label={t(`${TK}.close`)} onClick={onClose} className="absolute right-2 top-2 z-10 min-h-11 min-w-11">
+          <X className="h-5 w-5" aria-hidden />
+        </IconButton>
 
-        <div ref={contentRef} className="community-job-detail-body min-h-0 flex-1 overflow-y-auto bg-nexoraCanvas p-3 sm:p-6">
-          <CommunityHiringDetailContent posting={posting} relatedPostings={relatedPostings} onOpenRelated={onOpenRelated} />
+        <div ref={contentRef} className="community-job-detail-body min-h-0 flex-1 overflow-y-auto bg-white p-5 pt-6 sm:p-8">
+          <CommunityHiringDetailContent posting={posting} />
         </div>
 
-        <footer className={`community-job-detail-footer grid gap-2 border-t border-nexoraRule bg-white px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:flex sm:justify-end sm:px-6 ${canApply ? 'grid-cols-2' : 'grid-cols-1'}`}>
+        <footer className="community-job-detail-footer flex flex-wrap items-center justify-end gap-2 border-t border-nexoraRule bg-white px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:px-6">
           <button
             type="button"
             onClick={() => onChat(posting)}
-            className={`community-job-detail-action inline-flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-bold sm:w-44 sm:px-4 ${canApply ? 'community-job-detail-action--secondary' : 'community-job-detail-action--primary'}`}
+            className="community-job-detail-action inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border-nexoraBorder bg-white px-4 text-sm font-bold text-nexoraText hover:bg-nexoraSurfaceMuted"
           >
-            <MessagesSquare className="h-4 w-4" aria-hidden />{t(`${TK}.chatAction`)}
+            <MessagesSquare className="h-4 w-4" aria-hidden />{t('community_jobs_browser.hiringDetail.messageAction')}
           </button>
           {!canApply ? null : alreadyApplied ? (
-            <span className="community-job-detail-action community-job-detail-action--success inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-2 text-xs font-bold sm:w-44 sm:px-4">
+            <span className="community-job-detail-action community-job-detail-action--success inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-bold">
               <CheckCircle2 className="h-4 w-4" aria-hidden />{t('staff_dashboard.community.jobs.card.alreadyApplied')}
             </span>
           ) : (
             <button
               type="button"
               onClick={() => onApply(posting)}
-              className="community-job-detail-action community-job-detail-action--primary min-h-11 min-w-0 rounded-lg px-2 text-xs font-black sm:w-44 sm:px-4"
+              className="community-job-detail-action community-job-detail-action--primary min-h-11 rounded-lg px-4 text-sm font-black"
             >
               {t(`${TK}.applyAction`)}
             </button>
           )}
+          <button
+            type="button"
+            onClick={onClose}
+            className="community-job-detail-action inline-flex min-h-11 items-center justify-center rounded-lg border-nexoraBorder bg-white px-4 text-sm font-bold text-nexoraText hover:bg-nexoraSurfaceMuted"
+          >
+            {t(`${TK}.close`)}
+          </button>
         </footer>
       </div>
     </div>,

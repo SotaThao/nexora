@@ -5,6 +5,7 @@ import {
   JobPostingStatus,
   JobVisibilityPreset,
   JobWorkType,
+  RecruitmentBenefit,
   RecruitmentSkill,
   POS_RECRUITMENT_PATHS,
 } from '../../constants/posRecruitment'
@@ -45,8 +46,17 @@ function createSeedPostings(salon: PosRecruitmentSalonContext, businessId: strin
       payUnit: null,
       payText: null,
       isUrgent: false,
-      benefits: [],
+      benefits: [RecruitmentBenefit.HousingSupport, RecruitmentBenefit.FlexibleSchedule],
       body: 'Tiệm cần tuyển thợ nail biết làm Acrylic và Dip. Ưu tiên người có kinh nghiệm, làm việc cẩn thận và có tinh thần hợp tác.',
+      postingContent: {
+        html: '<p>Tiệm cần tuyển thợ nail biết làm Acrylic và Dip. Ưu tiên người có kinh nghiệm, làm việc cẩn thận và có tinh thần hợp tác. Khách ổn định, môi trường sạch sẽ, vui vẻ và chuyên nghiệp.</p>',
+        coverImage: { url: '/assets/images/marketing/nail/nail_art_luxury.jpg', name: 'cover' },
+        images: [
+          { url: '/assets/images/marketing/nail/nail_spa_treatment.jpg', name: 'salon-1' },
+          { url: '/assets/images/marketing/nail/nail_zen_minimalist.jpg', name: 'salon-2' },
+        ],
+        videoUrls: ['https://www.youtube.com/watch?v=5qap5aO4i9A'],
+      },
       deadline: '2026-10-15',
       businessName: salon.name,
       address: salon.address,
@@ -55,6 +65,8 @@ function createSeedPostings(salon: PosRecruitmentSalonContext, businessId: strin
       zipCode: salon.zipCode,
       contactName: 'Quản lý tiệm',
       phone: salon.phone,
+      contactEmail: 'hr@bitcoinnailbar.example',
+      website: 'https://bitcoinnailbar.example',
       visibilityPreset: JobVisibilityPreset.ShowAll,
       visibility: {
         showBusinessName: true,

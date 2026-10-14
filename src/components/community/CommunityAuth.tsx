@@ -1,6 +1,6 @@
 import type { Session, User } from '@supabase/supabase-js'
 import { useQueryClient } from '@tanstack/react-query'
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { mapSupabaseError, type SupabaseDisplayError } from '../../lib/supabaseError'
 import { supabaseClient } from '../../lib/supabaseClient'
 
@@ -59,6 +59,7 @@ export function CommunityAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<SupabaseDisplayError | null>(null)
+  const identityIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     let active = true
@@ -92,7 +93,12 @@ export function CommunityAuthProvider({ children }: { children: ReactNode }) {
       // Identity changed: drop cached community data so queries refetch under the
       // new session's JWT (RLS is user-scoped). Without this, switching persona
       // shows the previous identity's rows until a manual reload.
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+      // Supabase also re-emits SIGNED_IN for the SAME user (tab refocus / token
+      // recovery); clearing then would wipe the cache and flicker every list.
+      const nextId = nextSession?.user?.id ?? null
+      const identityChanged = nextId !== identityIdRef.current
+      identityIdRef.current = nextId
+      if ((event === 'SIGNED_IN' || event === 'SIGNED_OUT') && identityChanged) {
         queryClient.clear()
       }
     })

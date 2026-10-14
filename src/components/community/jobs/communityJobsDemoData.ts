@@ -17,7 +17,7 @@ export const BNB_BUSINESS_INFO: MerchantBusinessInfo = {
   city: 'Houston',
   state: 'TX',
   zipCode: '77002',
-  phone: '(713) 555-01xx',
+  phone: '(713) 555-0188',
   logo: null,
 }
 

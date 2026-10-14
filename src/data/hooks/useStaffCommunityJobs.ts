@@ -92,12 +92,25 @@ export function useStaffJobApplications(staffKey: string | undefined) {
   })
 }
 
+export function useCancelStaffJobApplication(staffKey: string | undefined) {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, string>({
+    mutationFn: (applicationId) => communityJobsRepository.cancelApplication(staffKey as string, applicationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staffCommunityJobs', 'myApplications'] })
+      queryClient.invalidateQueries({ queryKey: ['staffCommunityJobs', 'ownerApplicants'] })
+      queryClient.invalidateQueries({ queryKey: ['staffCommunityJobs', 'feed'] })
+    },
+  })
+}
+
 export function useApplyToHiringPosting(staffKey: string | undefined) {
   const queryClient = useQueryClient()
   return useMutation<JobApplication, Error, JobApplicationInput>({
     mutationFn: (input) => communityJobsRepository.applyToPosting(staffKey as string, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staffCommunityJobs', 'myApplications'] })
+      queryClient.invalidateQueries({ queryKey: ['staffCommunityJobs', 'ownerApplicants'] })
       queryClient.invalidateQueries({ queryKey: ['staffCommunityJobs', 'feed'] })
     },
   })

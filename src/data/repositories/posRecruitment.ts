@@ -44,6 +44,8 @@ export function normalizePosting(dto: PosJobPostingDto): PosJobPosting {
     zipCode: String(dto.zipCode ?? ''),
     contactName: String(dto.contactName ?? ''),
     phone: String(dto.phone ?? ''),
+    ...(typeof dto.contactEmail === 'string' && dto.contactEmail.trim() ? { contactEmail: dto.contactEmail.trim() } : {}),
+    ...(typeof dto.website === 'string' && /^https?:\/\//i.test(dto.website.trim()) ? { website: dto.website.trim() } : {}),
     visibilityPreset: dto.visibilityPreset,
     visibility: { ...dto.visibility },
     selectedServices: Array.isArray(dto.selectedServices)

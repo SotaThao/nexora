@@ -10,6 +10,7 @@ import type {
   JobWorkType,
   RecruitmentSkill,
 } from '../constants/posRecruitment'
+import type { PublicTechnicianProfile } from '../components/community/jobs/technicianProfileModel'
 import type { PosJobPosting, PosJobPostingDto } from './posRecruitment'
 
 export interface SeekingPostVisibility {
@@ -87,6 +88,19 @@ export interface JobApplicationDto {
   status: JobApplicationStatus
   createdAt: string
   posting?: PosJobPostingDto | null
+}
+
+/** Owner-side view of one worker's application to one of the owner's postings. */
+export interface PostingApplicant {
+  applicationId: string
+  postingId: string
+  applicantName: string
+  note: string
+  /** Only present when the worker opted to share it. */
+  phone: string | null
+  /** Public technician profile (license number never included). Null if the worker has none. */
+  profile: PublicTechnicianProfile | null
+  createdAt: string
 }
 
 export interface JobApplication {

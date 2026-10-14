@@ -5,6 +5,7 @@ import type {
   JobApplication,
   JobApplicationDto,
   JobApplicationInput,
+  PostingApplicant,
   SeekingPost,
   SeekingPostDto,
   SeekingPostUpsertInput,
@@ -120,6 +121,14 @@ export function createCommunityJobsRepository(client: CommunityJobsClient = comm
     async applyToPosting(staffKey: string, input: JobApplicationInput): Promise<JobApplication> {
       const dto = await client.applyToPosting(staffKey, input)
       return normalizeJobApplication(dto)
+    },
+
+    listPostingApplicants(postingIds: string[]): Promise<PostingApplicant[]> {
+      return client.listPostingApplicants(postingIds)
+    },
+
+    async cancelApplication(staffKey: string, applicationId: string): Promise<void> {
+      await client.cancelApplication(staffKey, applicationId)
     },
 
     async listMyApplications(staffKey: string): Promise<PaginatedResponse<JobApplication>> {

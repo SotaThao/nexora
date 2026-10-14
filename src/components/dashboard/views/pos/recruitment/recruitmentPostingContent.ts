@@ -55,6 +55,8 @@ function imageSignature(bytes: Uint8Array, type: string): boolean {
 function safeImage(value: unknown): RecruitmentPostingImage | undefined {
   if (!value || typeof value !== 'object' || !('url' in value) || typeof value.url !== 'string') return undefined
   const name = 'name' in value && typeof value.name === 'string' ? value.name.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 120) : ''
+  // Bundled demo media: same-origin raster files under /assets only (no traversal, no SVG/HTML).
+  if (/^\/assets\/[A-Za-z0-9_\-/]+\.(?:jpe?g|png|webp)$/i.test(value.url) && !value.url.includes('..')) return { url: value.url, name }
   if (value.url.startsWith('https://')) {
     try {
       const url = new URL(value.url)
