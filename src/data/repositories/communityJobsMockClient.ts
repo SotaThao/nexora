@@ -38,6 +38,7 @@ export interface CommunityJobsClient {
   applyToPosting(staffKey: string, input: JobApplicationInput): Promise<JobApplicationDto>
   listMyApplications(staffKey: string): Promise<PaginatedResponse<JobApplicationDto>>
   cancelApplication(staffKey: string, applicationId: string): Promise<void>
+  reapplyApplication(staffKey: string, applicationId: string): Promise<JobApplicationDto>
   listPostingApplicants(postingIds: string[]): Promise<PostingApplicant[]>
 }
 
@@ -614,7 +615,7 @@ export const communityJobsMockClient: CommunityJobsClient = {
   async applyToPosting(staffKey: string, input: JobApplicationInput): Promise<JobApplicationDto> {
     await waitForLatency()
     const store = getStore(staffKey)
-    if (store.applications.some((application) => application.postingId === input.postingId)) {
+    if (store.applications.some((application) => application.postingId === input.postingId && application.status !== JobApplicationStatus.Cancelled)) {
       throw Object.assign(new Error('You have already applied to this posting.'), {
         errorCode: 'ALREADY_APPLIED',
       })
@@ -630,7 +631,8 @@ export const communityJobsMockClient: CommunityJobsClient = {
       createdAt: new Date().toISOString(),
       posting: postingSnapshot ? clone(postingSnapshot) : null,
     }
-    store.applications = [application, ...store.applications]
+    // A fresh application replaces the cancelled one for the same posting.
+    store.applications = [application, ...store.applications.filter((item) => item.postingId !== input.postingId)]
     return clone(application)
   },
 
@@ -640,7 +642,19 @@ export const communityJobsMockClient: CommunityJobsClient = {
     if (!store.applications.some((application) => application.id === applicationId)) {
       throw new Error(`Application not found: ${applicationId}`)
     }
-    store.applications = store.applications.filter((application) => application.id !== applicationId)
+    store.applications = store.applications.map((application) => (
+      application.id === applicationId ? { ...application, status: JobApplicationStatus.Cancelled } : application
+    ))
+  },
+
+  async reapplyApplication(staffKey: string, applicationId: string): Promise<JobApplicationDto> {
+    await waitForLatency()
+    const store = getStore(staffKey)
+    const existing = store.applications.find((application) => application.id === applicationId)
+    if (!existing) throw new Error(`Application not found: ${applicationId}`)
+    const reapplied: JobApplicationDto = { ...existing, status: JobApplicationStatus.Submitted, createdAt: new Date().toISOString() }
+    store.applications = store.applications.map((application) => (application.id === applicationId ? reapplied : application))
+    return clone(reapplied)
   },
 
   async listPostingApplicants(postingIds: string[]): Promise<PostingApplicant[]> {
@@ -652,7 +666,7 @@ export const communityJobsMockClient: CommunityJobsClient = {
       const identity = MOCK_APPLICANTS[staffKey]
       if (!identity) return
       for (const application of store.applications) {
-        if (!wanted.has(application.postingId)) continue
+        if (!wanted.has(application.postingId) || application.status === JobApplicationStatus.Cancelled) continue
         applicants.push({
           applicationId: application.id,
           postingId: application.postingId,

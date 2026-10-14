@@ -683,10 +683,14 @@
           "cancelConfirmAction": "Hủy ứng tuyển",
           "cancelSuccess": "Đã hủy ứng tuyển.",
           "cancelFailed": "Không thể hủy ứng tuyển. Vui lòng thử lại.",
+          "reapplyAction": "Ứng tuyển lại",
+          "reapplySuccess": "Đã ứng tuyển lại.",
+          "reapplyFailed": "Không thể ứng tuyển lại. Vui lòng thử lại.",
           "postingUnavailable": "Tin không còn khả dụng"
         },
         "applicationStatus": {
-          "Submitted": "Đã nộp"
+          "Submitted": "Đã nộp",
+          "Cancelled": "Đã hủy"
         },
         "composer": {
           "title": "Đăng tin tìm việc",
@@ -5372,8 +5376,8 @@
               "applicantAppliedOn": "Ứng tuyển {{date}}",
               "applicantNoNote": "Không có ghi chú.",
               "applicantMessage": "Nhắn tin",
-              "viewProfile": "Xem hồ sơ",
-              "hideProfile": "Ẩn hồ sơ",
+              "viewProfile": "Hồ sơ",
+              "hideProfile": "Ẩn",
               "applicantNoProfile": "Thợ chưa tạo hồ sơ.",
               "previewDialogEyebrow": "Góc nhìn người tìm việc",
               "previewDialogTitle": "Bài trên NailHub",

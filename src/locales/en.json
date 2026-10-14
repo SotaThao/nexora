@@ -683,10 +683,14 @@
           "cancelConfirmAction": "Cancel application",
           "cancelSuccess": "Application cancelled.",
           "cancelFailed": "Could not cancel the application. Please try again.",
+          "reapplyAction": "Re-apply",
+          "reapplySuccess": "Application re-submitted.",
+          "reapplyFailed": "Could not re-apply. Please try again.",
           "postingUnavailable": "Posting no longer available"
         },
         "applicationStatus": {
-          "Submitted": "Submitted"
+          "Submitted": "Submitted",
+          "Cancelled": "Cancelled"
         },
         "composer": {
           "title": "Post that you're seeking work",
@@ -5372,8 +5376,8 @@
               "applicantAppliedOn": "Applied {{date}}",
               "applicantNoNote": "No note.",
               "applicantMessage": "Message",
-              "viewProfile": "View profile",
-              "hideProfile": "Hide profile",
+              "viewProfile": "Profile",
+              "hideProfile": "Hide",
               "applicantNoProfile": "This worker has no profile yet.",
               "previewDialogEyebrow": "Job seeker's view",
               "previewDialogTitle": "Posting on NailHub",

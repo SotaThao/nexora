@@ -12,6 +12,7 @@ import { useNotification } from '../../../../contexts/NotificationContext'
 import {
   useCancelStaffJobApplication,
   useCloseStaffSeekingPost,
+  useReapplyStaffJobApplication,
   useStaffHiringFeed,
   useStaffJobApplications,
   useStaffSeekingFeed,
@@ -86,6 +87,7 @@ export default function StaffCommunityJobsView() {
   const applicationsQuery = useStaffJobApplications(staffKey)
   const closeMutation = useCloseStaffSeekingPost(staffKey)
   const cancelMutation = useCancelStaffJobApplication(staffKey)
+  const reapplyMutation = useReapplyStaffJobApplication(staffKey)
 
   // POS writes invalidate only their own list. Refresh this existing feed when returning.
   useEffect(() => {
@@ -195,6 +197,16 @@ export default function StaffCommunityJobsView() {
     }
   }
 
+  const handleReapplyApplication = async (application: JobApplication) => {
+    if (reapplyMutation.isPending) return
+    try {
+      await reapplyMutation.mutateAsync(application.id)
+      showToast(t(`${TK}.applied.reapplySuccess`), 'success', 3000)
+    } catch {
+      showToast(t(`${TK}.applied.reapplyFailed`), 'error', 3500)
+    }
+  }
+
   const openCreateSeekingPost = () => {
     setComposer({ postId: null })
   }
@@ -301,6 +313,8 @@ export default function StaffCommunityJobsView() {
           onChat={handleChat}
           onDetail={setAppliedDetailPosting}
           onCancel={setCancellingApplication}
+          onReapply={handleReapplyApplication}
+          reapplyingId={reapplyMutation.isPending ? reapplyMutation.variables ?? null : null}
         />
       ) : null}
 
